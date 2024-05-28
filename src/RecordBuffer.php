@@ -7,7 +7,7 @@ class RecordBuffer
     /** @var non-negative-int */
     private int $length = 0;
 
-    /** @var  list<non-empty-string> */
+    /** @var list<non-empty-string> */
     protected array $content = [];
 
     /** @param non-negative-int $threshold */
@@ -39,4 +39,3 @@ class RecordBuffer
         return '{"records":['.implode(',', $this->content).']}';
     }
 }
-
