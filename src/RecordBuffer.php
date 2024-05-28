@@ -34,6 +34,7 @@ class RecordBuffer
         return $this->length >= $this->threshold;
     }
 
+    /** @return non-empty-string */
     public function flush(): string
     {
         return '{"records":['.implode(',', $this->content).']}';
