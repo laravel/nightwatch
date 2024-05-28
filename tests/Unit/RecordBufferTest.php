@@ -48,13 +48,25 @@ it('ignores empty strings', function () {
 });
 
 it('does not want flushing before reaching the threshold', function () {
+    $buffer = new RecordBuffer(100);
 
+    $buffer->write(str_repeat('a', 99));
+
+    expect($buffer->wantsFlushing())->toBeFalse();
 });
 
 it('wants flushing once the thresold has been reached', function () {
+    $buffer = new RecordBuffer(100);
 
+    $buffer->write(str_repeat('a', 100));
+
+    expect($buffer->wantsFlushing())->toBeTrue();
 });
 
 it('wants flushing once the thresold has been exceeded', function () {
+    $buffer = new RecordBuffer(100);
 
+    $buffer->write(str_repeat('a', 101));
+
+    expect($buffer->wantsFlushing())->toBeTrue();
 });
