@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Benchmark;
+use Illuminate\Support\Str;
 use Laravel\Package\RecordBuffer;
 
 it('can flsuh an empty buffer', function () {
@@ -47,6 +49,12 @@ it('ignores empty strings', function () {
     expect($buffer->flush())->toBe('{"records":[{"request":{"id":2}},{"request":{"id":4}}]}');
 });
 
+it('does does not want flushing without writes', function () {
+    $buffer = new RecordBuffer(100);
+
+    $this->assertFalse($buffer->wantsFlushing());
+});
+
 it('does not want flushing before reaching the threshold', function () {
     $buffer = new RecordBuffer(100);
 
@@ -69,4 +77,22 @@ it('wants flushing once the thresold has been exceeded', function () {
     $buffer->write(str_repeat('a', 101));
 
     expect($buffer->wantsFlushing())->toBeTrue();
+});
+
+it('does does not want flushing after flushed', function () {
+    $buffer = new RecordBuffer(100);
+
+    $buffer->write(str_repeat('a', 101));
+    $buffer->flush();
+
+    expect($buffer->wantsFlushing())->toBeFalse();
+});
+
+it('empties the buffer while flushing', function () {
+    $buffer = new RecordBuffer(100);
+
+    $buffer->write('{"request":{"id":1}}');
+
+    expect($buffer->flush())->toBe('{"records":[{"request":{"id":1}}]}');
+    expect($buffer->flush())->toBe('{"records":[]}');
 });

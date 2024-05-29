@@ -37,6 +37,11 @@ class RecordBuffer
     /** @return non-empty-string */
     public function flush(): string
     {
-        return '{"records":['.implode(',', $this->content).']}';
+        $output = '{"records":['.implode(',', $this->content).']}';
+
+        $this->content = [];
+        $this->length = 0;
+
+        return $output;
     }
 }
