@@ -18,7 +18,8 @@
         "php": "^8.2",
         "illuminate/console": "^11.0",
         "illuminate/support": "^11.0",
-        "illuminate/routing": "^11.0"
+        "react/http": "^1.10.0",
+        "react/socket": "^1.15.0"
     },
     "require-dev": {
         "mockery/mockery": "^1.6",

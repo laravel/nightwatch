@@ -2,7 +2,7 @@
 
 namespace Laravel\Package;
 
-class RecordBuffer
+class Buffer
 {
     /** @var non-negative-int */
     private int $length = 0;

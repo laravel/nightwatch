@@ -1,44 +1,28 @@
 <?php
 
 return [
+    'app_id' => '123',
 
-    /*
-    |--------------------------------------------------------------------------
-    | LaravelPackage Domain
-    |--------------------------------------------------------------------------
-    |
-    | This is the subdomain where LaravelPackage will be accessible from. If this
-    | setting is null, LaravelPackage will reside under the same domain as the
-    | application. Otherwise, this value will serve as the subdomain.
-    |
-    */
+    'collector' => [
+        'buffer_threshold' => '??', // ?
+        'connection_timeout' => '??', // seconds
+        'timeout' => '??', // seconds
+    ],
 
-    'domain' => env('LARAVEL_PACKAGE_DOMAIN', null),
-
-    /*
-    |--------------------------------------------------------------------------
-    | LaravelPackage Path
-    |--------------------------------------------------------------------------
-    |
-    | This is the URI path where LaravelPackage will be accessible from. Feel free
-    | to change this path to anything you like. Note that the URI will not
-    | affect the paths of its internal API that aren't exposed to users.
-    |
-    */
-
-    'path' => env('LARAVEL_PACKAGE_PATH', 'laravel-package'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | LaravelPackage Route Middleware
-    |--------------------------------------------------------------------------
-    |
-    | These middleware will get attached onto each LaravelPackage route, giving you
-    | the chance to add your own middleware to this list or change any of
-    | the existing middleware. Or, you can simply stick with this list.
-    |
-    */
-
-    'middleware' => ['web'],
-
+    'agent' => [
+        'buffer_threshold' => 2 * 1_000 * 1_000, // 2 MB
+        'concurrent_request_limit' => 2,
+        'server' => [
+            'address' => '127.0.0.1',
+            'port' => '8080',
+            'connection_limit' => 20,
+            // local tcp connections...
+            // these can be reused for the collector
+            'connection_timeout' => 1, // seconds
+            'timeout' => 3, // seconds
+        ],
+        // http requests...
+        'connection_timeout' => 1, // seconds
+        'timeout' => 3, // seconds
+    ],
 ];
