@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Benchmark;
-use Illuminate\Support\Str;
 use Laravel\Package\RecordBuffer;
 
 it('can flsuh an empty buffer', function () {

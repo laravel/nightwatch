@@ -4,7 +4,7 @@ namespace Tests;
 
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Package\LaravelPackage;
-use Laravel\Package\LaravelPackageServiceProvider;
+use Laravel\Package\NightwatchServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 abstract class TestCase extends OrchestraTestCase
@@ -32,6 +32,6 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function getPackageProviders($app)
     {
-        return [LaravelPackageServiceProvider::class];
+        return [NightwatchServiceProvider::class];
     }
 }

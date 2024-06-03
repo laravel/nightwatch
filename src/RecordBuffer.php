@@ -2,15 +2,18 @@
 
 namespace Laravel\Package;
 
-class Buffer
+class RecordBuffer
 {
-    /** @var non-negative-int */
+    /**
+     * @var non-negative-int
+     */
     private int $length = 0;
 
-    /** @var list<non-empty-string> */
-    protected array $content = [];
+    protected string $content = '';
 
-    /** @param non-negative-int $threshold */
+    /**
+     * @param  non-negative-int  $threshold
+     */
     public function __construct(
         private int $threshold,
     ) {
@@ -26,7 +29,7 @@ class Buffer
         }
 
         $this->length += $length;
-        $this->content[] = $input;
+        $this->content .= $input;
     }
 
     public function wantsFlushing(): bool
@@ -34,14 +37,24 @@ class Buffer
         return $this->length >= $this->threshold;
     }
 
-    /** @return non-empty-string */
+    /**
+     * @return non-empty-string
+     */
     public function flush(): string
     {
-        $output = '{"records":['.implode(',', $this->content).']}';
+        $output = $this->toString();
 
-        $this->content = [];
+        $this->content = '';
         $this->length = 0;
 
         return $output;
+    }
+
+    /**
+     * @return non-empty-string
+     */
+    public function toString(): string
+    {
+        return '{"records":['.$this->content.']}';
     }
 }
