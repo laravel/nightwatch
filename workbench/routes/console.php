@@ -3,82 +3,85 @@
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
+use React\EventLoop\Loop;
+use React\Socket\ConnectionInterface;
 use React\Socket\TcpConnector;
 use React\Socket\TimeoutConnector;
 
 use function React\Async\await;
 
 Artisan::command('nightwatch:client {--once}', function () {
+    $executionContext = 'request';
     $entries = fn () => [
-        'execution_context' => $executionContext = 'request',
-        'request' => [
-            'deploy_id' => $deployId = 'v1.0.5', // shared with other data points
-            'trace_id' => $trace = Str::uuid()->toString(),
-            'server' => $server = 'web-01',
-            'user' => '123', // not shared.
 
-            'timestamp' => date('Y-m-d H:i:s', time()),
-            'group' => str_repeat('a', 32),
-            'method' => 'GET',
-            'route' => '/users/{user}',
-            'path' => '/users/123',
-            'ip' => '127.0.0.1',
-            'duration' => 0,
-            'status_code' => '200',
-            'request_size_bytes' => 0,
-            'response_size_bytes' => 0,
-            'query_count' => 0,
-            'query_duration' => 0,
-            'lazy_loaded_query_count' => 0,
-            'lazy_loaded_query_duration' => 0,
-            'job_queued_count' => 0,
-            'mail_unqueued_count' => 0,
-            'mail_unqueued_duration' => 0,
-            'mail_queued_count' => 0,
-            'notification_unqueued_count' => 0,
-            'notification_unqueued_duration' => 0,
-            'notification_queued_count' => 0,
-            'outgoing_request_count' => 0,
-            'outgoing_request_duration' => 0,
-            'files_read_count' => 0,
-            'files_read_duration' => 0,
-            'files_written_count' => 0,
-            'files_written_duration' => 0,
-            'peak_memory_usage' => 0,
-            'hydrated_model_count' => 0,
-            'cache_hits' => 0,
-            'cache_misses' => 0,
+        'requests' => [
+            [
+                'timestamp' => date('Y-m-d H:i:s', time()),
+                'deploy_id' => $deployId = rand(0, 1) ? 'v1.0.5' : null, // shared with other data points
+                'server' => $server = 'web-01',
+                'group' => str_repeat('a', 64),
+                'trace_id' => $trace = Str::uuid()->toString(),
+                'method' => 'GET',
+                'route' => '/users/{user}',
+                'path' => '/users/123',
+                'user' => rand(0, 1) ? '123' : null, // not shared.
+                'ip' => '127.0.0.1',
+                'duration' => 0,
+                'status_code' => '200',
+                'request_size_bytes' => 0,
+                'response_size_bytes' => 0,
+                'queries' => 0,
+                'queries_duration' => 0,
+                'lazy_loads' => 0,
+                'lazy_loads_duration' => 0,
+                'jobs_queued' => 0,
+                'mail_queued' => 0,
+                'mail_sent' => 0,
+                'mail_duration' => 0,
+                'notifications_queued' => 0,
+                'notifications_sent' => 0,
+                'notifications_duration' => 0,
+                'outgoing_requests' => 0,
+                'outgoing_requests_duration' => 0,
+                'files_read' => 0,
+                'files_read_duration' => 0,
+                'files_written' => 0,
+                'files_written_duration' => 0,
+                'peak_memory_usage' => 0,
+                'hydrated_models' => 0,
+                'cache_hits' => 0,
+                'cache_misses' => 0,
+            ],
         ],
+
         'queries' => [
             [
+                'timestamp' => date('Y-m-d H:i:s', time()),
                 'deploy_id' => $deployId,
+                'server' => $server,
+                'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
                 'execution_context' => $executionContext,
                 'execution_id' => $trace,
-                'server' => $server,
-                'user' => '123',
-
-                'timestamp' => date('Y-m-d H:i:s', time()),
-                'group' => str_repeat('a', 32),
+                'user' => rand(0, 1) ? '123' : null, // not shared.
                 'sql' => 'select count(*) from `users`',
                 'category' => 'select',
                 'location' => 'app/Http/Controllers/UserController.php:41',
                 'duration' => 0,
                 'connection' => 'mysql',
             ],
-            // ...
         ],
+
         'exceptions' => [
             [
+                'timestamp' => date('Y-m-d H:i:s', time()),
                 'deploy_id' => $deployId,
+                'server' => $server,
+                'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
                 'execution_context' => $executionContext,
                 'execution_id' => $trace,
-                'server' => $server,
-                'user' => '123',
-
-                'timestamp' => date('Y-m-d H:i:s', time()),
-                'group' => str_repeat('a', 32),
+                'user' => rand(0, 1) ? '123' : null, // not shared.
                 'class' => 'App\\Exceptions\\Whoops',
                 'file' => 'app/Http/Controllers/UserController.php',
                 'line' => 41,
@@ -86,19 +89,18 @@ Artisan::command('nightwatch:client {--once}', function () {
                 'code' => 0,
                 'trace' => '...',
             ],
-            // ...
         ],
+
         'outgoing_requests' => [
             [
+                'timestamp' => date('Y-m-d H:i:s', time()),
                 'deploy_id' => $deployId,
+                'server' => $server,
+                'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
                 'execution_context' => $executionContext,
                 'execution_id' => $trace,
-                'server' => $server,
-                'user' => '123',
-
-                'timestamp' => date('Y-m-d H:i:s', time()),
-                'group' => str_repeat('a', 32),
+                'user' => rand(0, 1) ? '123' : null, // not shared.
                 'method' => 'POST',
                 'url' => 'https://laravel.com',
                 'duration' => 0,
@@ -106,116 +108,165 @@ Artisan::command('nightwatch:client {--once}', function () {
                 'response_size_bytes' => 0,
                 'status_code' => '200',
             ],
-            // ...
         ],
+
         'queued_jobs' => [
             [
+                'timestamp' => date('Y-m-d H:i:s', time()),
                 'deploy_id' => $deployId,
+                'server' => $server,
+                'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
                 'execution_context' => $executionContext,
                 'execution_id' => $trace,
-                'server' => $server,
-                'user' => '123',
-
-                'timestamp' => date('Y-m-d H:i:s', time()),
-                'group' => str_repeat('a', 32),
+                'user' => rand(0, 1) ? '123' : null, // not shared.
                 'job_id' => Str::uuid()->toString(),
                 'class' => 'App\Jobs\MyJob',
                 'connection' => 'redis',
                 'queue' => 'high_priority',
             ],
-            // ...
         ],
+
         'cache_events' => [
             [
+                'timestamp' => date('Y-m-d H:i:s', time()),
                 'deploy_id' => $deployId,
+                'server' => $server,
+                'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
                 'execution_context' => $executionContext,
                 'execution_id' => $trace,
-                'server' => $server,
-                'user' => '123',
-
-                'timestamp' => date('Y-m-d H:i:s', time()),
-                'group' => str_repeat('a', 32),
+                'user' => rand(0, 1) ? '123' : null, // not shared.
                 'store' => 'redis',
                 'key' => 'user:5',
                 'type' => 'hit',
             ],
-            // ...
         ],
+
         'lazy_loads' => [
             [
+                'timestamp' => date('Y-m-d H:i:s', time()),
                 'deploy_id' => $deployId,
+                'server' => $server,
+                'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
                 'execution_context' => $executionContext,
                 'execution_id' => $trace,
-                'server' => $server,
-                'user' => '123',
-
-                'timestamp' => date('Y-m-d H:i:s', time()),
-                'group' => str_repeat('a', 32),
+                'user' => rand(0, 1) ? '123' : null, // not shared.
                 'model' => 'App\Models\User',
                 'relation' => 'posts',
                 'count' => 5,
                 // connection / query?
             ],
-            // ...
         ],
+
         'logs' => [
             [
+                'timestamp' => date('Y-m-d H:i:s', time()),
                 'deploy_id' => $deployId,
-                'trace_id' => $trace,
+                'server' => $server,
                 'execution_context' => $executionContext,
                 'execution_id' => $trace,
-                'server' => $server,
-                'user' => '123',
-
-                'timestamp' => date('Y-m-d H:i:s', time()),
+                'user' => rand(0, 1) ? '123' : null, // not shared.
+                'trace_id' => $trace,
                 'level' => 'info',
                 'message' => 'Hello world.',
                 'context' => '{}',
                 'extra' => '{}',
             ],
-            // ...
         ],
+
         'mail' => [
             [
+                'timestamp' => date('Y-m-d H:i:s', time()),
                 'deploy_id' => $deployId,
+                'server' => $server,
+                'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
                 'execution_context' => $executionContext,
                 'execution_id' => $trace,
-                'server' => $server,
-                'user' => '123',
-
-                'timestamp' => date('Y-m-d H:i:s', time()),
+                'user' => rand(0, 1) ? '123' : null, // not shared.
                 'mailer' => 'postmark',
-                'group' => str_repeat('a', 32),
                 'class' => 'App\Mail\Welcome',
                 'recipients' => 1,
                 'duration' => 0,
                 'queued' => false,
             ],
-            // ...
         ],
+
         'notifications' => [
             [
+                'timestamp' => date('Y-m-d H:i:s', time()),
                 'deploy_id' => $deployId,
+                'server' => $server,
+                'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
                 'execution_context' => $executionContext,
                 'execution_id' => $trace,
-                'server' => $server,
-                'user' => '123',
-
-                'timestamp' => date('Y-m-d H:i:s', time()),
-                'group' => str_repeat('a', 32),
+                'user' => rand(0, 1) ? '123' : null, // not shared.
                 'class' => 'App\Notifications\InvoiceReminder',
                 'recipients' => 1,
                 'duration' => 0,
                 'queued' => false,
                 'channel' => 'slack',
             ],
-            // ...
         ],
+
+        'commands' => [
+            [
+                'timestamp' => date('Y-m-d H:i:s', time()),
+                'deploy_id' => $deployId,
+                'server' => $server,
+                'group' => str_repeat('a', 64),
+                'trace_id' => $trace,
+                'user' => rand(0, 1) ? '123' : null,
+                'command' => 'inspire',
+                'exit_code' => 0,
+                'duration' => 0,
+                'queries' => 0,
+                'queries_duration' => 0,
+                'lazy_loads' => 0,
+                'lazy_loads_duration' => 0,
+                'jobs_queued' => 0,
+                'mail_queued' => 0,
+                'mail_sent' => 0,
+                'mail_duration' => 0,
+                'notifications_queued' => 0,
+                'notifications_sent' => 0,
+                'notifications_duration' => 0,
+                'outgoing_requests' => 0,
+                'outgoing_requests_duration' => 0,
+                'files_read' => 0,
+                'files_read_duration' => 0,
+                'files_written' => 0,
+                'files_written_duration' => 0,
+                'peak_memory_usage' => 0,
+                'hydrated_models' => 0,
+                'cache_hits' => 0,
+                'cache_misses' => 0,
+            ],
+        ],
+
+        'job_attempts' => [
+            [
+                'deploy_id' => $deployId,
+                'server' => $server,
+                'group' => str_repeat('a', 64),
+                'trace_id' => $trace,
+                'user' => rand(0, 1) ? '123' : null,
+                'started_at' => date('Y-m-d H:i:s', time()),
+                'finished_at' => date('Y-m-d H:i:s', time() + 5),
+                'job_id' => Str::uuid()->toString(),
+                'attempt' => 1,
+                'attempt_id' => Str::uuid()->toString(),
+                'class' => 'App\\Jobs\\MyJob',
+                'connection' => 'redis',
+                'queue' => 'high_priority',
+                'status' => 'processed',
+                'duration' => 5,
+            ],
+        ],
+
     ];
 
     /* --------------------------------------------------- */
@@ -237,27 +288,47 @@ Artisan::command('nightwatch:client {--once}', function () {
     $sent = 0;
 
     while (true) {
-        $connector = new TimeoutConnector(new TcpConnector, $config['connection_timeout']);
+        $connector = new TcpConnector(null);
 
-        // TODO: custom protocol?
+        $connector = new TimeoutConnector($connector, $config['connection_timeout']);
+
+        $timeoutTimer = null;
+
+        // TODO we probably need some way to send meta information about the
+        // payload to the client. We should build in a headers mechanism, even
+        // if we don't need it right now - because the client just pipes everything
+        // it gets to the endpoint - even if it is not valid.
+        // $headers = [
+        //     'version: 1',
+        // ];
+        // $payload = implode("\n", $headers)."\nEND_HEADERS\n".json_encode($entries(), flags: JSON_THROW_ON_ERROR);
+
         $payload = json_encode($entries(), flags: JSON_THROW_ON_ERROR);
 
-        $connection = null;
-        $start = hrtime(true);
+        $start = microtime(true);
 
-        try {
-            $connection = await($connector->connect($config['address'].':'.$config['port']));
+        await($connector->connect('tcp://'.$config['address'].':'.$config['port'])
+            ->then(function (ConnectionInterface $connection) use ($payload, $config, &$timeoutTimer): void {
+                $timeoutTimer = Loop::addTimer($config['timeout'], function () use ($connection): void {
+                    $this->error('Sending data timed out.');
 
-            echo '.';
+                    $connection->close();
+                });
 
-            $connection->end('foo');
-        } catch (Throwable $e) {
-            $this->error('Unable to establish connection ['.$e->getMessage().'].');
-        }
+                echo '.';
 
-        $connection?->close();
+                $connection->end($payload);
+            }, function (Throwable $e): void {
+                $this->error('Connection error ['.$e->getMessage().'].');
+            })->catch(function (Throwable $e): void {
+                $this->error('Unknown error ['.$e->getMessage().'].');
+            })->finally(function () use (&$timeoutTimer) {
+                if ($timeoutTimer !== null) {
+                    Loop::cancelTimer($timeoutTimer);
+                }
+            }));
 
-        $duration = (hrtime(true) - $start) / 1000000;
+        $duration = (int) ((microtime(true) - $start) * 1000);
 
         $sent++;
         $perSecond[$t = time()] = ($perSecond[$t] ?? 0) + 1;
@@ -278,7 +349,6 @@ Artisan::command('nightwatch:client {--once}', function () {
             return;
         }
 
-        // Sleep::for(rand(8, 400))->milliseconds();
-        // Sleep::for(1000)->milliseconds();
+        Sleep::for(rand(8, 400))->milliseconds();
     }
 });

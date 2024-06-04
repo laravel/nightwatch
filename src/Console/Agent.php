@@ -17,8 +17,6 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 use WeakMap;
 
-use function React\Async\await;
-
 #[AsCommand(name: 'nightwatch:agent')]
 final class Agent extends Command
 {
@@ -81,13 +79,12 @@ final class Agent extends Command
                         $this->line($records, verbosity: 'vvv');
                     },
                     after: function (PromiseInterface $response): void {
-                        try {
-                            $result = await($response);
-
+                        $response->then(function (IngestSucceededResult $result) {
                             $this->line("Records successfully ingested after {$result->duration} seconds", verbosity: 'v');
-                        } catch (Throwable $e) {
+                        }, function (Throwable $e) {
                             if ($e instanceof IngestFailedException) {
                                 $this->error("Records failed ingesting after {$e->duration} seconds", verbosity: 'v');
+                                $this->line("Reason: {$e->getMessage()}", verbosity: 'v');
 
                                 /** @var Throwable */
                                 $e = $e->getPrevious();
@@ -96,7 +93,7 @@ final class Agent extends Command
                             $this->error("Ingesting error [{$e->getMessage()}].");
 
                             report($e);
-                        }
+                        });
                     });
             });
 
@@ -186,7 +183,7 @@ final class Agent extends Command
 
             $after($this->ingest->write($records));
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(10, function () use ($before, $after): void {
+            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(1, function () use ($before, $after): void {
                 $records = $this->buffer->flush();
 
                 $before($records);
