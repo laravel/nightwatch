@@ -20,7 +20,7 @@ use WeakMap;
 use function React\Async\await;
 
 #[AsCommand(name: 'nightwatch:agent')]
-class Agent extends Command
+final class Agent extends Command
 {
     /**
      * @var string

@@ -12,7 +12,7 @@ use React\Socket\Connector;
 use React\Socket\LimitingServer;
 use React\Socket\TcpServer;
 
-class NightwatchServiceProvider extends ServiceProvider
+final class NightwatchServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
@@ -57,6 +57,14 @@ class NightwatchServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../config/nightwatch.php' => config_path('nightwatch.php'),
+            ], ['nightwatch', 'nightwatch-config']);
+
+            $this->commands([
+                Console\Agent::class,
+            ]);
+        }
     }
 }

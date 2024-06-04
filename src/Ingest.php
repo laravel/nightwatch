@@ -8,7 +8,7 @@ use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
 use Throwable;
 
-class Ingest
+final class Ingest
 {
     /**
      * @var non-negative-int

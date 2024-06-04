@@ -4,7 +4,7 @@ namespace Laravel\Package;
 
 use RuntimeException;
 
-class ConnectionTimedOutException extends RuntimeException
+final class ConnectionTimedOutException extends RuntimeException
 {
     /**
      * @param  array<string, mixed>  $context

@@ -4,7 +4,7 @@ namespace Laravel\Package;
 
 use RuntimeException;
 
-class ExceededConcurrentRequestLimit extends RuntimeException
+final class ExceededConcurrentRequestLimit extends RuntimeException
 {
     //
 }
