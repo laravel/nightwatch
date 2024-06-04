@@ -185,7 +185,7 @@ final class Agent extends Command
             }
 
             $after($this->ingest->write($records));
-        } else if ($this->buffer->isNotEmpty()) {
+        } elseif ($this->buffer->isNotEmpty()) {
             $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(10, function () use ($before, $after): void {
                 $records = $this->buffer->flush();
 

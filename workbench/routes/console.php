@@ -1,11 +1,8 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
-use React\EventLoop\Loop;
-use React\Socket\ConnectionInterface;
 use React\Socket\TcpConnector;
 use React\Socket\TimeoutConnector;
 
@@ -268,10 +265,10 @@ Artisan::command('nightwatch:client {--once}', function () {
 
         if (($sent % 100) === 0) {
             $this->line(PHP_EOL."Sent {$sent} payloads.");
-            $this->line("Average per second: ".$perSecond->average());
-            $this->line("Average duration: ".$durations->average().' ms');
-            $this->line("Max duration: ".$durations->max().' ms');
-            $this->line("Min duration: ".$durations->min().' ms');
+            $this->line('Average per second: '.$perSecond->average());
+            $this->line('Average duration: '.$durations->average().' ms');
+            $this->line('Max duration: '.$durations->max().' ms');
+            $this->line('Min duration: '.$durations->min().' ms');
             $sent = 0;
             $perSecond = collect();
             $durations = collect();
