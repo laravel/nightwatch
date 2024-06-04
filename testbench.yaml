@@ -1,0 +1,10 @@
+providers:
+  - Laravel\Nightwatch\NightwatchServiceProvider
+
+workbench:
+  start: '/'
+  install: true
+  discovers:
+    web: true
+    commands: true
+    views: true

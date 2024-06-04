@@ -24,6 +24,7 @@
     },
     "require-dev": {
         "mockery/mockery": "^1.6",
+        "orchestra/pest-plugin-testbench": "^2.0",
         "orchestra/testbench": "^9.0",
         "pestphp/pest": "^2.32",
         "phpstan/phpstan": "^1.10"
@@ -35,8 +36,22 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
         }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "@php vendor/bin/testbench package:purge-skeleton --ansi",
+            "@php vendor/bin/testbench package:discover --ansi"
+        ],
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php vendor/bin/testbench workbench:build --ansi",
+            "@php vendor/bin/testbench serve"
+        ]
     },
     "extra": {
         "branch-alias": {

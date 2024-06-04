@@ -45,6 +45,8 @@ final class Agent extends Command
         private Server $server,
         private LoopInterface $loop,
     ) {
+        parent::__construct();
+
         $this->connections = new WeakMap;
     }
 
@@ -57,35 +59,35 @@ final class Agent extends Command
     public function handle(): void
     {
         $this->server->on('connection', function (ConnectionInterface $connection): void {
-            $this->line('Connection accepted.', 'v');
+            $this->line('Connection accepted.', verbosity: 'v');
 
             $this->accept($connection);
 
             $connection->on('data', function (string $chunk) use ($connection): void {
-                $this->line('Data recieved.', 'v');
-                $this->line($chunk, 'vvv');
+                $this->line('Data recieved.', verbosity: 'v');
+                $this->line($chunk, verbosity: 'vvv');
 
                 $this->bufferConnectionChunk($connection, $chunk);
             });
 
             $connection->on('end', function () use ($connection): void {
-                $this->line('Connection ended.', 'v');
+                $this->line('Connection ended.', verbosity: 'v');
 
                 $this->buffer->write($this->flushConnectionBuffer($connection));
 
                 $this->queueOrPerformIngest(
                     before: function (string $records): void {
-                        $this->line('Ingesting started.', 'v');
-                        $this->line($records, 'vvv');
+                        $this->line('Ingesting started.', verbosity: 'v');
+                        $this->line($records, verbosity: 'vvv');
                     },
                     after: function (PromiseInterface $response): void {
                         try {
                             $result = await($response);
 
-                            $this->line("Records successfully ingested after {$result->duration} seconds", 'v');
+                            $this->line("Records successfully ingested after {$result->duration} seconds", verbosity: 'v');
                         } catch (Throwable $e) {
                             if ($e instanceof IngestFailedException) {
-                                $this->error("Records failed ingesting after {$e->duration} seconds", 'v');
+                                $this->error("Records failed ingesting after {$e->duration} seconds", verbosity: 'v');
 
                                 /** @var Throwable */
                                 $e = $e->getPrevious();
@@ -99,7 +101,7 @@ final class Agent extends Command
             });
 
             $connection->on('close', function () use ($connection) {
-                $this->line('Connection closed.', 'v');
+                $this->line('Connection closed.', verbosity: 'v');
 
                 $this->evict($connection);
             });
@@ -159,9 +161,9 @@ final class Agent extends Command
 
     private function evict(ConnectionInterface $connection): void
     {
-        $this->loop->cancelTimer($this->connections[$connection][1]); // @phpstan-ignore offsetAccess.notFound
-
         $connection->close();
+
+        $this->loop->cancelTimer($this->connections[$connection][1]); // @phpstan-ignore offsetAccess.notFound
 
         unset($this->connections[$connection]);
     }
@@ -183,7 +185,7 @@ final class Agent extends Command
             }
 
             $after($this->ingest->write($records));
-        } else {
+        } else if ($this->buffer->isNotEmpty()) {
             $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(10, function () use ($before, $after): void {
                 $records = $this->buffer->flush();
 

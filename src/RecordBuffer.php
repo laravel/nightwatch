@@ -38,18 +38,15 @@ final class RecordBuffer
      */
     public function flush(): string
     {
-        $output = $this->toString();
+        $output = '{"records":['.$this->content.']}';
 
         $this->content = '';
 
         return $output;
     }
 
-    /**
-     * @return non-empty-string
-     */
-    public function toString(): string
+    public function isNotEmpty(): bool
     {
-        return '{"records":['.$this->content.']}';
+        return $this->content !== '';
     }
 }
