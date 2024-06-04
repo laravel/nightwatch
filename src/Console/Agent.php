@@ -17,6 +17,8 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 use WeakMap;
 
+use function React\Async\await;
+
 #[AsCommand(name: 'nightwatch:agent')]
 class Agent extends Command
 {
@@ -55,7 +57,7 @@ class Agent extends Command
     public function handle(): void
     {
         $this->server->on('connection', function (ConnectionInterface $connection): void {
-            $this->line('Connection received.', 'v');
+            $this->line('Connection accepted.', 'v');
 
             $this->accept($connection);
 
@@ -67,29 +69,33 @@ class Agent extends Command
             });
 
             $connection->on('end', function () use ($connection): void {
-                $this->line('Finished recieving data from connection.', 'v');
+                $this->line('Connection ended.', 'v');
 
                 $this->buffer->write($this->flushConnectionBuffer($connection));
 
-                $this->performOrQueueIngest(function (string $records): void {
-                    $this->line('Ingesting records.', 'v');
-                    $this->line($records, 'vvv');
-                }, function (PromiseInterface $promise): void {
-                    $promise->then(function (IngestSucceededResult $result): void {
-                        $this->line("Finished ingesting records after {$result->duration} seconds", 'v');
-                    }, function (Throwable $e): void {
-                        if ($e instanceof IngestFailedException) {
-                            $this->line("Failed ingesting records after {$e->duration} seconds", 'v');
+                $this->queueOrPerformIngest(
+                    before: function (string $records): void {
+                        $this->line('Ingesting started.', 'v');
+                        $this->line($records, 'vvv');
+                    },
+                    after: function (PromiseInterface $response): void {
+                        try {
+                            $result = await($response);
 
-                            /** @var Throwable */
-                            $e = $e->getPrevious();
+                            $this->line("Records successfully ingested after {$result->duration} seconds", 'v');
+                        } catch (Throwable $e) {
+                            if ($e instanceof IngestFailedException) {
+                                $this->error("Records failed ingesting after {$e->duration} seconds", 'v');
+
+                                /** @var Throwable */
+                                $e = $e->getPrevious();
+                            }
+
+                            $this->error("Ingesting error [{$e->getMessage()}].");
+
+                            report($e);
                         }
-
-                        $this->error("Ingesting error [{$e->getMessage()}].");
-
-                        report($e);
                     });
-                });
             });
 
             $connection->on('close', function () use ($connection) {
@@ -124,7 +130,7 @@ class Agent extends Command
             report($e);
         });
 
-        $this->line('Nightwatch agent initiated.');
+        $this->line('🌗 Nightwatch agent initiated.');
         $this->loop->run();
     }
 
@@ -162,9 +168,9 @@ class Agent extends Command
 
     /**
      * @param  (callable(string): void)  $before
-     * @param  (callable(PromiseInterface<IngestSuccessResult>): void)  $after
+     * @param  (callable(PromiseInterface<IngestSucceededResult>): void)  $after
      */
-    private function performOrQueueIngest(callable $before, callable $after): void
+    private function queueOrPerformIngest(callable $before, callable $after): void
     {
         if ($this->buffer->wantsFlushing()) {
             $records = $this->buffer->flush();
