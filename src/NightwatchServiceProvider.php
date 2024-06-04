@@ -38,7 +38,12 @@ class NightwatchServiceProvider extends ServiceProvider
             $browser = (new Browser($connector, $loop))
                 ->withTimeout($config->get('nightwatch.agent.timeout'))
                 ->withHeader('User-Agent', 'NightwatchAgent/1.0.0') // TODO use actual version instead of 1.0.0
-                ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'));
+                ->withHeader('Content-Type', 'application/json') // TODO: gzip...
+                // ->withHeader('Content-Type', 'application/octet-stream')
+                // ->withHeader('Content-Encoding', 'gzip')
+                ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
+                ->withHeader('Authorization', "Bearer {$config->get('nightwatch.app_secret')}")
+                ->withBase("https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.{$config->get('nightwatch.http.region')}.on.aws");
 
             $ingest = new Ingest($browser, $config->get('nightwatch.http.concurrent_request_limit'));
 

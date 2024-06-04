@@ -5,9 +5,12 @@ namespace Laravel\Package\Console;
 use Illuminate\Console\Command;
 use Laravel\Package\ConnectionTimedOutException;
 use Laravel\Package\Ingest;
+use Laravel\Package\IngestFailedException;
+use Laravel\Package\IngestSucceededResult;
 use Laravel\Package\RecordBuffer;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
+use React\Promise\PromiseInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\ServerInterface as Server;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -66,13 +69,26 @@ class Agent extends Command
             $connection->on('end', function () use ($connection): void {
                 $this->line('Finished recieving data from connection.', 'v');
 
-                $this->buffer->write(
-                    $this->flushConnectionBuffer($connection)
-                );
+                $this->buffer->write($this->flushConnectionBuffer($connection));
 
                 $this->performOrQueueIngest(function (string $records): void {
                     $this->line('Ingesting records.', 'v');
                     $this->line($records, 'vvv');
+                }, function (PromiseInterface $promise): void {
+                    $promise->then(function (IngestSucceededResult $result): void {
+                        $this->line("Finished ingesting records after {$result->duration} seconds", 'v');
+                    }, function (Throwable $e): void {
+                        if ($e instanceof IngestFailedException) {
+                            $this->line("Failed ingesting records after {$e->duration} seconds", 'v');
+
+                            /** @var Throwable */
+                            $e = $e->getPrevious();
+                        }
+
+                        $this->error("Ingesting error [{$e->getMessage()}].");
+
+                        report($e);
+                    });
                 });
             });
 
@@ -94,7 +110,7 @@ class Agent extends Command
             });
 
             $connection->on('error', function (Throwable $e) use ($connection) {
-                $this->error("Connection error [{$e}].");
+                $this->error("Connection error [{$e->getMessage()}].");
 
                 $this->evict($connection);
 
@@ -145,30 +161,31 @@ class Agent extends Command
     }
 
     /**
-     * @param  (callable(string): void)  $callback
+     * @param  (callable(string): void)  $before
+     * @param  (callable(PromiseInterface<IngestSuccessResult>): void)  $after
      */
-    private function performOrQueueIngest(callable $callback): void
+    private function performOrQueueIngest(callable $before, callable $after): void
     {
         if ($this->buffer->wantsFlushing()) {
             $records = $this->buffer->flush();
 
-            $callback($records);
+            $before($records);
 
             if ($this->flushBufferAfterDelayTimer !== null) {
                 $this->loop->cancelTimer($this->flushBufferAfterDelayTimer);
                 $this->flushBufferAfterDelayTimer = null;
             }
 
-            $this->ingest->write($records);
+            $after($this->ingest->write($records));
         } else {
-            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(10, function () use ($callback): void {
+            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(10, function () use ($before, $after): void {
                 $records = $this->buffer->flush();
 
-                $callback($records);
+                $before($records);
 
                 $this->flushBufferAfterDelayTimer = null;
 
-                $this->ingest->write($records);
+                $after($this->ingest->write($records));
             });
         }
     }

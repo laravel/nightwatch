@@ -2,6 +2,7 @@
 
 return [
     'app_id' => '123',
+    'app_secret' => 'abc',
 
     'collector' => [
         'buffer_threshold' => '??', // ?
@@ -17,6 +18,8 @@ return [
     ],
 
     'http' => [
+        'url' => 'https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.us-east-1.on.aws',
+        'region' => 'us-east-1',
         'timeout' => 3, // seconds
         'connection_timeout' => 1, // seconds
         'concurrent_request_limit' => 2,
