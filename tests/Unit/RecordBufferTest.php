@@ -1,8 +1,8 @@
 <?php
 
-use Laravel\Package\RecordBuffer;
+use Laravel\Nightwatch\RecordBuffer;
 
-it('can flsuh an empty buffer', function () {
+it('can flush an empty buffer', function () {
     $buffer = new RecordBuffer(100);
 
     expect($buffer->flush())->toBe('{"records":[]}');

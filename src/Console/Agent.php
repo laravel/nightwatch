@@ -1,13 +1,13 @@
 <?php
 
-namespace Laravel\Package\Console;
+namespace Laravel\Nightwatch\Console;
 
 use Illuminate\Console\Command;
-use Laravel\Package\ConnectionTimedOutException;
-use Laravel\Package\Ingest;
-use Laravel\Package\IngestFailedException;
-use Laravel\Package\IngestSucceededResult;
-use Laravel\Package\RecordBuffer;
+use Laravel\Nightwatch\Exceptions\ConnectionTimedOutException;
+use Laravel\Nightwatch\Ingest;
+use Laravel\Nightwatch\IngestFailedException;
+use Laravel\Nightwatch\IngestSucceededResult;
+use Laravel\Nightwatch\RecordBuffer;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
 use React\Promise\PromiseInterface;

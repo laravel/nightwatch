@@ -1,7 +1,8 @@
 <?php
 
-namespace Laravel\Package;
+namespace Laravel\Nightwatch;
 
+use Laravel\Nightwatch\Exceptions\ExceededConcurrentRequestLimitException;
 use Psr\Http\Message\ResponseInterface;
 use React\Http\Browser;
 use React\Promise\Internal\RejectedPromise;
@@ -31,7 +32,7 @@ final class Ingest
     public function write(string $records): PromiseInterface
     {
         if ($this->activeRequests === $this->concurrentRequestLimit) {
-            return new RejectedPromise(new ExceededConcurrentRequestLimit("Exceeded concurrent request limit [{$this->concurrentRequestLimit}]."));
+            return new RejectedPromise(new ExceededConcurrentRequestLimitException("Exceeded concurrent request limit [{$this->concurrentRequestLimit}]."));
         }
 
         $this->activeRequests++;

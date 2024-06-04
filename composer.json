@@ -30,8 +30,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Laravel\\Package\\": "src/",
-            "Laravel\\Package\\Database\\Factories\\": "database/factories"
+            "Laravel\\Nightwatch\\": "src/"
         }
     },
     "autoload-dev": {
@@ -45,7 +44,7 @@
         },
         "laravel": {
             "providers": [
-                "Laravel\\Package\\LaravelPackageServiceProvider"
+                "Laravel\\Nightwatch\\NightwatchServiceProvider"
             ]
         }
     },

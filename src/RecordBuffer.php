@@ -1,14 +1,9 @@
 <?php
 
-namespace Laravel\Package;
+namespace Laravel\Nightwatch;
 
 final class RecordBuffer
 {
-    /**
-     * @var non-negative-int
-     */
-    private int $length = 0;
-
     protected string $content = '';
 
     /**
@@ -22,19 +17,20 @@ final class RecordBuffer
 
     public function write(string $input): void
     {
-        $length = strlen($input);
-
-        if ($length === 0) {
+        if ($input === '') {
             return;
         }
 
-        $this->length += $length;
-        $this->content .= $input;
+        if ($this->content === '') {
+            $this->content = $input;
+        } else {
+            $this->content .= ",{$input}";
+        }
     }
 
     public function wantsFlushing(): bool
     {
-        return $this->length >= $this->threshold;
+        return strlen($this->content) >= $this->threshold;
     }
 
     /**
@@ -45,7 +41,6 @@ final class RecordBuffer
         $output = $this->toString();
 
         $this->content = '';
-        $this->length = 0;
 
         return $output;
     }

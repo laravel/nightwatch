@@ -1,11 +1,11 @@
 <?php
 
-namespace Laravel\Package;
+namespace Laravel\Nightwatch;
 
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ServiceProvider;
-use Laravel\Package\Console\Agent;
+use Laravel\Nightwatch\Console\Agent;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
 use React\Socket\Connector;

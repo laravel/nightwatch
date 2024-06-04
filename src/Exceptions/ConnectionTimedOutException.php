@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Package;
+namespace Laravel\Nightwatch\Exceptions;
 
 use RuntimeException;
 
