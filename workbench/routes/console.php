@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
 use React\EventLoop\Loop;
@@ -10,21 +11,31 @@ use React\Socket\TimeoutConnector;
 
 use function React\Async\await;
 
-Artisan::command('nightwatch:client {--once}', function () {
+Artisan::command('nightwatch:client {--times=} {--fast}', function () {
+    // 'job' | 'request'
+    // TODO: trim must **not** be mulitbyte.
     $executionContext = 'request';
     $entries = fn () => [
-
         'requests' => [
             [
                 'timestamp' => date('Y-m-d H:i:s', time()),
-                'deploy_id' => $deployId = rand(0, 1) ? 'v1.0.5' : null, // shared with other data points
+                // shared with other data points.
+                // TODO never `null`. always a string.
+                // TODO make sure we `trim` the value to 500
+                // TODO "alert" when exceeding
+                // TODO should we trim whitespace across all of these?
+                'deploy_id' => $deployId = rand(0, 1) ? 'v1.0.5' : '',
+                // TODO: trim to 500 chars.
+                // TODO: "alert" when exceeded by sending something to nightwatch
                 'server' => $server = 'web-01',
                 'group' => str_repeat('a', 64),
                 'trace_id' => $trace = Str::uuid()->toString(),
                 'method' => 'GET',
                 'route' => '/users/{user}',
                 'path' => '/users/123',
-                'user' => rand(0, 1) ? '123' : null, // not shared.
+                // TODO: trim to 500
+                // TODO: "alert" when exceeded by sending something to nightwatch
+                'user' => rand(0, 1) ? '123' : '', // not shared.
                 'ip' => '127.0.0.1',
                 'duration' => 0,
                 'status_code' => '200',
@@ -63,7 +74,7 @@ Artisan::command('nightwatch:client {--once}', function () {
                 'trace_id' => $trace,
                 'execution_context' => $executionContext,
                 'execution_id' => $trace,
-                'user' => rand(0, 1) ? '123' : null, // not shared.
+                'user' => rand(0, 1) ? '123' : '', // not shared.
                 'sql' => 'select count(*) from `users`',
                 'category' => 'select',
                 'location' => 'app/Http/Controllers/UserController.php:41',
@@ -86,7 +97,7 @@ Artisan::command('nightwatch:client {--once}', function () {
                 'file' => 'app/Http/Controllers/UserController.php',
                 'line' => 41,
                 'message' => 'Whoops!',
-                'code' => 0,
+                'code' => 0, // int32. May be negative.
                 'trace' => '...',
             ],
         ],
@@ -137,7 +148,9 @@ Artisan::command('nightwatch:client {--once}', function () {
                 'execution_context' => $executionContext,
                 'execution_id' => $trace,
                 'user' => rand(0, 1) ? '123' : null, // not shared.
+                // reasonable max
                 'store' => 'redis',
+                // max: 10_000
                 'key' => 'user:5',
                 'type' => 'hit',
             ],
@@ -220,7 +233,8 @@ Artisan::command('nightwatch:client {--once}', function () {
                 'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
                 'user' => rand(0, 1) ? '123' : null,
-                'command' => 'inspire',
+                'name' => 'inspire',
+                'command' => 'inspire --help',
                 'exit_code' => 0,
                 'duration' => 0,
                 'queries' => 0,
@@ -266,50 +280,25 @@ Artisan::command('nightwatch:client {--once}', function () {
                 'duration' => 5,
             ],
         ],
-
     ];
 
-    /* --------------------------------------------------- */
-
-    $config = [
-        'address' => '127.0.0.1',
-        'port' => '8080',
-        'connection_timeout' => 0.5, // seconds
-        'timeout' => 0.5, // seconds
-        // 'compression' => false,
-    ];
-
-    // Do this before we even attempt to create the connection. That way we
-    // minimise the work done while the connection is open and do not even
-    // open it if we cannot encode the value.
-    // $value = Str::unwrap(json_encode($entries(), flags: JSON_THROW_ON_ERROR), '{', '}');
+    $uri = Config::get('nightwatch.agent.address').':'.Config::get('nightwatch.agent.port');
+    $timeout = Config::get('nightwatch.collector.timeout');
+    $connectionTimeout = Config::get('nightwatch.collector.connection_timeout');
     $perSecond = collect([]);
     $durations = collect([]);
     $sent = 0;
 
     while (true) {
-        $connector = new TcpConnector(null);
-
-        $connector = new TimeoutConnector($connector, $config['connection_timeout']);
-
-        $timeoutTimer = null;
-
-        // TODO we probably need some way to send meta information about the
-        // payload to the client. We should build in a headers mechanism, even
-        // if we don't need it right now - because the client just pipes everything
-        // it gets to the endpoint - even if it is not valid.
-        // $headers = [
-        //     'version: 1',
-        // ];
-        // $payload = implode("\n", $headers)."\nEND_HEADERS\n".json_encode($entries(), flags: JSON_THROW_ON_ERROR);
-
         $payload = json_encode($entries(), flags: JSON_THROW_ON_ERROR);
-
+        $timeoutTimer = null;
         $start = microtime(true);
 
-        await($connector->connect('tcp://'.$config['address'].':'.$config['port'])
-            ->then(function (ConnectionInterface $connection) use ($payload, $config, &$timeoutTimer): void {
-                $timeoutTimer = Loop::addTimer($config['timeout'], function () use ($connection): void {
+        $connector = new TimeoutConnector(new TcpConnector, $connectionTimeout);
+
+        await($connector->connect($uri)
+            ->then(function (ConnectionInterface $connection) use ($payload, $timeout, &$timeoutTimer): void {
+                $timeoutTimer = Loop::addTimer($timeout, function () use ($connection): void {
                     $this->error('Sending data timed out.');
 
                     $connection->close();
@@ -317,6 +306,7 @@ Artisan::command('nightwatch:client {--once}', function () {
 
                 echo '.';
 
+                // TODO protocol?
                 $connection->end($payload);
             }, function (Throwable $e): void {
                 $this->error('Connection error ['.$e->getMessage().'].');
@@ -328,27 +318,27 @@ Artisan::command('nightwatch:client {--once}', function () {
                 }
             }));
 
+        // Stat collection...
         $duration = (int) ((microtime(true) - $start) * 1000);
-
         $sent++;
         $perSecond[$t = time()] = ($perSecond[$t] ?? 0) + 1;
         $durations[] = $duration;
-
         if (($sent % 100) === 0) {
-            $this->line(PHP_EOL."Sent {$sent} payloads.");
+            $this->line("Stats for the last 100 payloads:");
             $this->line('Average per second: '.$perSecond->average());
             $this->line('Average duration: '.$durations->average().' ms');
             $this->line('Max duration: '.$durations->max().' ms');
             $this->line('Min duration: '.$durations->min().' ms');
-            $sent = 0;
             $perSecond = collect();
             $durations = collect();
         }
 
-        if ($this->option('once')) {
+        if ($this->option('times') && $sent == $this->option('times')) {
             return;
         }
 
-        Sleep::for(rand(8, 400))->milliseconds();
+        if (! $this->option('fast')) {
+            Sleep::for(rand(8, 400))->milliseconds();
+        }
     }
 });

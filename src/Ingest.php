@@ -14,7 +14,7 @@ final class Ingest
     /**
      * @var non-negative-int
      */
-    private int $activeRequests = 0;
+    private int $concurrentRequests = 0;
 
     /**
      * @param  non-negative-int  $concurrentRequestLimit
@@ -31,11 +31,11 @@ final class Ingest
      */
     public function write(string $records): PromiseInterface
     {
-        if ($this->activeRequests === $this->concurrentRequestLimit) {
+        if ($this->concurrentRequests === $this->concurrentRequestLimit) {
             return new RejectedPromise(new ExceededConcurrentRequestLimitException("Exceeded concurrent request limit [{$this->concurrentRequestLimit}]."));
         }
 
-        $this->activeRequests++;
+        $this->concurrentRequests++;
 
         // TODO: HTTP retry logic in here or the command?
         // TODO gzip
@@ -52,7 +52,15 @@ final class Ingest
                     previous: $e
                 );
             })->finally(function (): void {
-                $this->activeRequests--; // @phpstan-ignore assign.propertyType
+                $this->concurrentRequests--; // @phpstan-ignore assign.propertyType
             });
+    }
+
+    /**
+     * @return non-negative-int
+     */
+    public function concurrentRequests(): int
+    {
+        return $this->concurrentRequests;
     }
 }

@@ -42,6 +42,7 @@ final class Agent extends Command
         private Ingest $ingest,
         private Server $server,
         private LoopInterface $loop,
+        private int|float $timeout,
     ) {
         parent::__construct();
 
@@ -51,10 +52,10 @@ final class Agent extends Command
     /**
      * TODO
      * - Limit incoming stream length on both ends?
-     * - Stop collecting stats when we have too many in-flight requests?
-     * - Locally buffer data in files? Worried about build up.
+     * - Locally buffer data in files? Worried about build up. Opt-in failover
+     * mechanism, esp if we gzip the contents first. Might not be too bad.
      */
-    public function handle(): void
+    public function handle(): int
     {
         $this->server->on('connection', function (ConnectionInterface $connection): void {
             $this->line('Connection accepted.', verbosity: 'v');
@@ -80,10 +81,10 @@ final class Agent extends Command
                     },
                     after: function (PromiseInterface $response): void {
                         $response->then(function (IngestSucceededResult $result) {
-                            $this->line("Records successfully ingested after {$result->duration} seconds", verbosity: 'v');
+                            $this->line("Records successfully ingested after {$result->duration} ms", verbosity: 'v');
                         }, function (Throwable $e) {
                             if ($e instanceof IngestFailedException) {
-                                $this->error("Records failed ingesting after {$e->duration} seconds", verbosity: 'v');
+                                $this->error("Records failed ingesting after {$e->duration} ms", verbosity: 'v');
                                 $this->line("Reason: {$e->getMessage()}", verbosity: 'v');
 
                                 /** @var Throwable */
@@ -109,7 +110,7 @@ final class Agent extends Command
                 $connection->close();
 
                 report(new ConnectionTimedOutException('Incoming connection timed out.', [
-                    'timeout' => 10,
+                    'timeout' => $this->timeout,
                     'remote_address' => $connection->getRemoteAddress(),
                 ]));
             });
@@ -135,7 +136,7 @@ final class Agent extends Command
 
     private function accept(ConnectionInterface $connection): void
     {
-        $timeoutTimer = $this->loop->addPeriodicTimer(10, function () use ($connection): void {
+        $timeoutTimer = $this->loop->addPeriodicTimer($this->timeout, function () use ($connection): void {
             $connection->emit('timeout');
         });
 
@@ -183,6 +184,7 @@ final class Agent extends Command
 
             $after($this->ingest->write($records));
         } elseif ($this->buffer->isNotEmpty()) {
+            // TODO update flush timer duration from 1 to 10
             $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(1, function () use ($before, $after): void {
                 $records = $this->buffer->flush();
 
