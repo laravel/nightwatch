@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch;
 
 use Laravel\Nightwatch\Exceptions\ExceededConcurrentRequestLimitException;
 use Psr\Http\Message\ResponseInterface;
-use React\Http\Browser;
 use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
 use Throwable;

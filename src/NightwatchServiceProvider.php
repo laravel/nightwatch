@@ -124,7 +124,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         });
     }
 
-
     protected function registerPublications(): void
     {
         $this->publishes([
@@ -161,6 +160,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(TcpIngest::class, function () {
             $uri = Config::get('nightwatch.agent.address').':'.Config::get('nightwatch.agent.port');
+
             return new TcpIngest();
         });
     }

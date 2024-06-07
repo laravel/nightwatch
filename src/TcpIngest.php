@@ -2,13 +2,12 @@
 
 namespace Laravel\Nightwatch;
 
-use React\Socket\ConnectionInterface;
 use React\Socket\ConnectorInterface;
 use Throwable;
 
 use function React\Async\await;
 
-class TcpIngest
+final class TcpIngest
 {
     public function __construct(
         private ConnectorInterface $connector,
