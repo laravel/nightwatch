@@ -40,7 +40,6 @@ final class Agent extends Command
     public function __construct(
         private RecordBuffer $buffer,
         private Ingest $ingest,
-        private Server $server,
         private LoopInterface $loop,
         private int|float $timeout,
     ) {
@@ -55,9 +54,9 @@ final class Agent extends Command
      * - Locally buffer data in files? Worried about build up. Opt-in failover
      * mechanism, esp if we gzip the contents first. Might not be too bad.
      */
-    public function handle(): int
+    public function handle(Server $server): int
     {
-        $this->server->on('connection', function (ConnectionInterface $connection) {
+        $server->on('connection', function (ConnectionInterface $connection) {
             $this->line('Connection accepted.', verbosity: 'v');
 
             $this->accept($connection);
@@ -124,7 +123,7 @@ final class Agent extends Command
             });
         });
 
-        $this->server->on('error', function (Throwable $e) {
+        $server->on('error', function (Throwable $e) {
             $this->error("Server error [{$e->getMessage()}].");
 
             report($e);

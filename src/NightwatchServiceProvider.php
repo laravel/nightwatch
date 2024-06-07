@@ -2,20 +2,29 @@
 
 namespace Laravel\Nightwatch;
 
+use DateTimeInterface;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\Client as ClientContract;
+use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
+use Laravel\Nightwatch\Providers\PeakMemory;
 use Laravel\Nightwatch\Sensors\RequestSensor;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
 use React\Socket\Connector;
 use React\Socket\LimitingServer;
+use React\Socket\ServerInterface;
+use React\Socket\TcpConnector;
 use React\Socket\TcpServer;
+use React\Socket\TimeoutConnector;
+use Symfony\Component\HttpFoundation\Response;
 
 final class NightwatchServiceProvider extends ServiceProvider
 {
@@ -26,6 +35,8 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->configureRecordsCollection();
         $this->configureAgent();
         $this->configureClient();
+        $this->configureIngest();
+        $this->configureTraceId();
         $this->mergeConfig();
     }
 
@@ -37,7 +48,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         }
 
         $this->registerSensors();
-        $this->registerTcpIngest();
     }
 
     protected function mergeConfig(): void
@@ -71,6 +81,17 @@ final class NightwatchServiceProvider extends ServiceProvider
                 'hydrated_models' => 0,
             ],
             'requests' => new Collection(),
+            'cache_events' => new Collection(),
+            'commands' => new Collection(),
+            'exceptions' => new Collection(),
+            'job_attempts' => new Collection(),
+            'lazy_loads' => new Collection(),
+            'logs' => new Collection(),
+            'mail' => new Collection(),
+            'notifications' => new Collection(),
+            'outgoing_requests' => new Collection(),
+            'queries' => new Collection(),
+            'queued_jobs' => new Collection(),
         ]));
     }
 
@@ -84,12 +105,16 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             $buffer = new RecordBuffer($config->get('nightwatch.agent.buffer_threshold'));
 
-            $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
+            $app->when([Agent::class, 'handle'])
+                ->needs(ServerInterface::class)
+                ->give(function () use ($config, $loop) {
+                    $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
 
-            $server = new LimitingServer(
-                new TcpServer($uri, $loop),
-                $config->get('nightwatch.agent.connection_limit')
-            );
+                    return new LimitingServer(
+                        new TcpServer($uri, $loop),
+                        $config->get('nightwatch.agent.connection_limit')
+                    );
+                });
 
             $connector = new Connector([
                 'timeout' => $config->get('nightwatch.http.connection_timeout'), // TODO: test if this is the connection only or total duration.
@@ -100,17 +125,17 @@ final class NightwatchServiceProvider extends ServiceProvider
                 'connector' => $connector,
             ]), $config->get('nightwatch.http.concurrent_request_limit'));
 
-            return new Agent($buffer, $ingest, $server, $loop, $config->get('nightwatch.collector.timeout'));
+            return new Agent($buffer, $ingest, $loop, $config->get('nightwatch.collector.timeout'));
         });
     }
 
     protected function configureClient(): void
     {
         $this->app->singleton(ClientContract::class, function (Container $app, array $args) {
-            $args = $args + ['connector' => null, 'loop' => null];
-
             /** @var Config */
             $config = $app->make(Config::class);
+
+            $args = $args + ['connector' => null, 'loop' => null];
 
             return new Client((new Browser($args['connector'], $args['loop']))
                 ->withTimeout($config->get('nightwatch.agent.timeout'))
@@ -140,28 +165,44 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     protected function registerSensors(): void
     {
-        // $this->callAfterResolving(Kernel::class, function (Kernel $kernel, Container $app) {
-        //     if (method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
-        //         $kernel->whenRequestLifecycleIsLongerThan(-1, $app->make(RequestSensor::class));
-        //     } else {
-        //         // create alert? use another mechanism?
-        //     }
+        $this->callAfterResolving(HttpKernel::class, function (HttpKernel $kernel, Container $app) {
+            if (method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
+                $kernel->whenRequestLifecycleIsLongerThan(-1, function (DateTimeInterface $startedAt, Request $request, Response $response) use ($app) {
+                    /** @var RequestSensor */
+                    $sensor = $app->make(RequestSensor::class);
 
-        //     /** @var TcpIngest */
-        //     $ingest = $app->make(TcpIngest::class);
-        //     /** @var RecordCollection */
-        //     $records = $app->make(RecordCollection::class);
+                    $sensor($startedAt, $request, $response);
 
-        //     $ingest->write($records->toJson());
-        // });
+                    /** @var IngestContract */
+                    $ingest = $app->make(IngestContract::class);
+                    /** @var RecordCollection */
+                    $records = $app->make(RecordCollection::class);
+
+                    $ingest->write($records->forget('execution_parent')->toJson());
+                });
+            } else {
+                // create alert? use another mechanism?
+            }
+        });
     }
 
-    protected function registerTcpIngest(): void
+    protected function configureIngest(): void
     {
-        $this->app->singleton(TcpIngest::class, function () {
-            $uri = Config::get('nightwatch.agent.address').':'.Config::get('nightwatch.agent.port');
+        $this->app->singleton(IngestContract::class, function (Container $app) {
+            /** @var Config */
+            $config = $app->make(Config::class);
 
-            return new TcpIngest();
+            $connector = new TimeoutConnector(new TcpConnector, $config->get('nightwatch.collector.connection_timeout'));
+
+            $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
+
+            return new TcpIngest($connector, $uri);
         });
+    }
+
+    protected function configureTraceId(): void
+    {
+        // TODO: on the queue we need to restore the trace ID from the request / command.
+        $this->app->scoped(TraceId::class, fn () => new TraceId(Str::uuid()->toString()));
     }
 }

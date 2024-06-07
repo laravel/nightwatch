@@ -2,12 +2,13 @@
 
 namespace Laravel\Nightwatch;
 
+use Laravel\Nightwatch\Contracts\Ingest;
 use React\Socket\ConnectorInterface;
 use Throwable;
 
 use function React\Async\await;
 
-final class TcpIngest
+final class TcpIngest implements Ingest
 {
     public function __construct(
         private ConnectorInterface $connector,
@@ -28,12 +29,8 @@ final class TcpIngest
      */
     public function write(string $payload): void
     {
-        try {
-            $connection = await($this->connector->connect($this->uri));
+        $connection = await($this->connector->connect($this->uri));
 
-            $connection->end($payload);
-        } catch (Throwable $e) {
-            // TODO
-        }
+        $connection->end($payload);
     }
 }

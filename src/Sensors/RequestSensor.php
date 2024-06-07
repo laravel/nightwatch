@@ -3,10 +3,13 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use DateTimeInterface;
+use Illuminate\Config\Repository as Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\RecordCollection;
+use Laravel\Nightwatch\TraceId;
 use Symfony\Component\HttpFoundation\Response;
 
 final class RequestSensor
@@ -14,6 +17,8 @@ final class RequestSensor
     public function __construct(
         private RecordCollection $records,
         private PeakMemoryProvider $peakMemory,
+        private TraceId $traceId,
+        private Config $config,
     ) {
         //
     }
@@ -24,10 +29,11 @@ final class RequestSensor
 
         $this->records['requests'][] = [
             'timestamp' => $startedAt->format('Y-m-d H:i:s'),
-            // 'deploy_id' => '',
-            // 'server' => '',
-            // 'group' => hash('sha256', ''),
-            // 'trace_id' => '',
+            'deploy_id' => (string) $this->config->get('nightwatch.deploy_id'),
+            'server' => (string) $this->config->get('nightwatch.server'),
+            'group' => hash('sha256', ''),  // TODO
+            'trace_id' => $this->traceId->value(),
+            // TODO domain as individual key?
             'method' => $request->getMethod(),
             'route' => '/'.$request->route()->uri(), // TODO handle nullable routes.
             'path' => '/'.$request->path(),
@@ -52,10 +58,10 @@ final class RequestSensor
             // - chunked requests
             // - Content-Encoding requests
             'response_size_kilobytes' => $this->parseResponseKilobytes($response),
+            'peak_memory_usage_kilobytes' => $this->peakMemory->kilobytes(),
             ...$this->records['execution_parent'],
             // TODO: do we need to reset this in Octane, Queue worker, or other
             // long running processes?
-            'peak_memory_usage_kilobytes' => $this->peakMemory->inKilobytes(),
         ];
     }
 

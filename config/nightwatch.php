@@ -4,6 +4,9 @@ return [
     'app_id' => '123',
     'app_secret' => 'abc',
 
+    'deploy_id' => env('NIGHTWATCH_DEPLOY_ID'),
+    'server' => gethostname(),
+
     'collector' => [
         'buffer_threshold' => '??', // ?
         'connection_timeout' => 0.2, // seconds
@@ -12,7 +15,7 @@ return [
 
     'agent' => [
         'address' => '127.0.0.1',
-        'port' => '8080',
+        'port' => '9247',
         'connection_limit' => 20,
         'buffer_threshold' => 2 * 1_000 * 1_000, // 2 MB
     ],
