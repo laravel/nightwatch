@@ -57,29 +57,29 @@ final class Agent extends Command
      */
     public function handle(): int
     {
-        $this->server->on('connection', function (ConnectionInterface $connection): void {
+        $this->server->on('connection', function (ConnectionInterface $connection) {
             $this->line('Connection accepted.', verbosity: 'v');
 
             $this->accept($connection);
 
-            $connection->on('data', function (string $chunk) use ($connection): void {
+            $connection->on('data', function (string $chunk) use ($connection) {
                 $this->line('Data recieved.', verbosity: 'v');
                 $this->line($chunk, verbosity: 'vvv');
 
                 $this->bufferConnectionChunk($connection, $chunk);
             });
 
-            $connection->on('end', function () use ($connection): void {
+            $connection->on('end', function () use ($connection) {
                 $this->line('Connection ended.', verbosity: 'v');
 
                 $this->buffer->write($this->flushConnectionBuffer($connection));
 
                 $this->queueOrPerformIngest(
-                    before: function (string $records): void {
+                    before: function (string $records) {
                         $this->line('Ingesting started.', verbosity: 'v');
                         $this->line($records, verbosity: 'vvv');
                     },
-                    after: function (PromiseInterface $response): void {
+                    after: function (PromiseInterface $response) {
                         $response->then(function (IngestSucceededResult $result) {
                             $this->line("Records successfully ingested after {$result->duration} ms", verbosity: 'v');
                         }, function (Throwable $e) {
@@ -124,7 +124,7 @@ final class Agent extends Command
             });
         });
 
-        $this->server->on('error', function (Throwable $e): void {
+        $this->server->on('error', function (Throwable $e) {
             $this->error("Server error [{$e->getMessage()}].");
 
             report($e);
@@ -136,7 +136,7 @@ final class Agent extends Command
 
     private function accept(ConnectionInterface $connection): void
     {
-        $timeoutTimer = $this->loop->addPeriodicTimer($this->timeout, function () use ($connection): void {
+        $timeoutTimer = $this->loop->addPeriodicTimer($this->timeout, function () use ($connection) {
             $connection->emit('timeout');
         });
 
@@ -185,7 +185,7 @@ final class Agent extends Command
             $after($this->ingest->write($records));
         } elseif ($this->buffer->isNotEmpty()) {
             // TODO update flush timer duration from 1 to 10
-            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(1, function () use ($before, $after): void {
+            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(1, function () use ($before, $after) {
                 $records = $this->buffer->flush();
 
                 $before($records);

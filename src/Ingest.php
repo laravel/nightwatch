@@ -42,16 +42,16 @@ final class Ingest
         $start = hrtime(true);
 
         return $this->browser->post('/', body: $records)
-            ->then(function (ResponseInterface $response) use ($start): IngestSucceededResult {
+            ->then(function (ResponseInterface $response) use ($start) {
                 return new IngestSucceededResult(
                     duration: (hrtime(true) - $start) / 1_000_000,
                 );
-            }, function (Throwable $e) use ($start): void {
+            }, function (Throwable $e) use ($start) {
                 throw new IngestFailedException(
                     duration: (hrtime(true) - $start) / 1_000_000,
                     previous: $e
                 );
-            })->finally(function (): void {
+            })->finally(function () {
                 $this->concurrentRequests--; // @phpstan-ignore assign.propertyType
             });
     }

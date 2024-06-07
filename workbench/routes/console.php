@@ -297,8 +297,8 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
         $connector = new TimeoutConnector(new TcpConnector, $connectionTimeout);
 
         await($connector->connect($uri)
-            ->then(function (ConnectionInterface $connection) use ($payload, $timeout, &$timeoutTimer): void {
-                $timeoutTimer = Loop::addTimer($timeout, function () use ($connection): void {
+            ->then(function (ConnectionInterface $connection) use ($payload, $timeout, &$timeoutTimer) {
+                $timeoutTimer = Loop::addTimer($timeout, function () use ($connection) {
                     $this->error('Sending data timed out.');
 
                     $connection->close();
@@ -308,9 +308,9 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
 
                 // TODO protocol?
                 $connection->end($payload);
-            }, function (Throwable $e): void {
+            }, function (Throwable $e) {
                 $this->error('Connection error ['.$e->getMessage().'].');
-            })->catch(function (Throwable $e): void {
+            })->catch(function (Throwable $e) {
                 $this->error('Unknown error ['.$e->getMessage().'].');
             })->finally(function () use (&$timeoutTimer) {
                 if ($timeoutTimer !== null) {

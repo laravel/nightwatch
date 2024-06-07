@@ -20,7 +20,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->scoped(RecordCollection::class, fn (): RecordCollection => new RecordCollection([
+        $this->app->scoped(RecordCollection::class, fn () => new RecordCollection([
             'execution_parent' => [
                 'queries' => 0,
                 'queries_duration' => 0,
@@ -51,7 +51,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->app->singleton(PeakMemoryUsage::class);
         $this->app->scoped(RequestSensor::class);
 
-        $this->app->bind(ClientContract::class, fn (): ClientContract => new Client((new Browser($connector, $loop))
+        $this->app->bind(ClientContract::class, fn () => new Client((new Browser($connector, $loop))
             ->withTimeout($config->get('nightwatch.agent.timeout'))
             ->withHeader('User-Agent', 'NightwatchAgent/1.0.0') // TODO use actual version instead of 1.0.0
             ->withHeader('Content-Type', 'application/json') // TODO: gzip...
@@ -61,7 +61,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             ->withHeader('Authorization', "Bearer {$config->get('nightwatch.app_secret')}")
             ->withBase("https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.{$config->get('nightwatch.http.region')}.on.aws")));
 
-        $this->app->bind(Agent::class, function (Container $app): Agent {
+        $this->app->bind(Agent::class, function (Container $app) {
             /** @var Config */
             $config = $app->make(Config::class);
 
