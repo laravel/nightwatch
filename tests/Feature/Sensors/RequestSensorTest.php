@@ -1,14 +1,7 @@
 <?php
 
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
-use Laravel\Nightwatch\Contracts\Ingest;
-use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\RecordCollection;
-use Laravel\Nightwatch\TraceId;
 
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\travelTo;

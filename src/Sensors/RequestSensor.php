@@ -6,7 +6,6 @@ use DateTimeInterface;
 use Illuminate\Config\Repository as Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\RecordCollection;
 use Laravel\Nightwatch\TraceId;

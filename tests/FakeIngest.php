@@ -4,7 +4,7 @@ namespace Tests;
 
 use Laravel\Nightwatch\Contracts\Ingest;
 
-class FakeIngest implements Ingest
+final class FakeIngest implements Ingest
 {
     /**
      * @var list<string>

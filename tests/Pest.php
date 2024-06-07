@@ -10,24 +10,30 @@ use Tests\FakeIngest;
 
 uses(Tests\TestCase::class)->in('Feature');
 
-function records(): RecordCollection {
+function records(): RecordCollection
+{
     return App::make(RecordCollection::class);
 }
 
-function setDeployId(string $deployId): void {
+function setDeployId(string $deployId): void
+{
     Config::set('nightwatch.deploy_id', $deployId);
 }
 
-function setServerName(string $name): void {
+function setServerName(string $name): void
+{
     Config::set('nightwatch.server', $name);
 }
 
-function setTraceId(string $traceId): void {
+function setTraceId(string $traceId): void
+{
     App::singleton(TraceId::class, fn () => new TraceId($traceId));
 }
 
-function setPeakMemoryInKilobytes(int $value): void {
-    App::singleton(PeakMemoryProvider::class, fn () => new class($value) implements PeakMemoryProvider {
+function setPeakMemoryInKilobytes(int $value): void
+{
+    App::singleton(PeakMemoryProvider::class, fn () => new class($value) implements PeakMemoryProvider
+    {
         public function __construct(private int $kilobytes)
         {
             //
@@ -40,6 +46,7 @@ function setPeakMemoryInKilobytes(int $value): void {
     });
 }
 
-function fakeIngest(): FakeIngest {
+function fakeIngest(): FakeIngest
+{
     return App::instance(Ingest::class, new FakeIngest);
 }
