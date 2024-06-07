@@ -324,7 +324,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
         $perSecond[$t = time()] = ($perSecond[$t] ?? 0) + 1;
         $durations[] = $duration;
         if (($sent % 100) === 0) {
-            $this->line("Stats for the last 100 payloads:");
+            $this->line('Stats for the last 100 payloads:');
             $this->line('Average per second: '.$perSecond->average());
             $this->line('Average duration: '.$durations->average().' ms');
             $this->line('Max duration: '.$durations->max().' ms');

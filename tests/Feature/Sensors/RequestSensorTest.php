@@ -3,21 +3,18 @@
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\PeakMemoryUsage;
+use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\RecordCollection;
-use Laravel\Nightwatch\Sensors\RequestSensor;
 
-use function Pest\Laravel\call;
-use function Pest\Laravel\freezeTime;
-use function Pest\Laravel\get;
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
-    App::instance(PeakMemoryUsage::class, new class extends PeakMemoryUsage {
-        public function __invoke(): int
+    App::instance(PeakMemoryProvider::class, new class implements PeakMemoryProvider
+    {
+        public function inKilobytes(): int
         {
-            return 123456789;
+            return 123456;
         }
     });
 });
@@ -34,7 +31,7 @@ it('returns a request record', function () {
     });
 
     $response = postJson('/users/345', [
-        'foo' => 'bar'
+        'foo' => 'bar',
     ]);
 
     $response->assertOk();

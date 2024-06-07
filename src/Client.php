@@ -6,7 +6,7 @@ use Laravel\Nightwatch\Contracts\Client as ClientContract;
 use React\Http\Browser;
 use React\Promise\PromiseInterface;
 
-class Client implements ClientContract
+final class Client implements ClientContract
 {
     public function __construct(private Browser $browser)
     {

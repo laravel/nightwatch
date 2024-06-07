@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\Client as ClientContract;
+use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Sensors\RequestSensor;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
@@ -19,6 +20,36 @@ use React\Socket\TcpServer;
 final class NightwatchServiceProvider extends ServiceProvider
 {
     public function register(): void
+    {
+        $this->app->scoped(RequestSensor::class);
+        $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
+        $this->configurePeakMemoryProvider();
+        $this->configureRecordsCollection();
+        $this->configureAgent();
+        $this->configureClient();
+        $this->mergeConfig();
+    }
+
+    public function boot(): void
+    {
+        if ($this->app->runningInConsole()) {
+            $this->registerPublications();
+            $this->registerCommands();
+        }
+
+        $this->registerSensors();
+    }
+
+    protected function mergeConfig(): void
+    {
+        $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
+    }
+
+    protected function configurePeakMemoryProvider(): void
+    {
+    }
+
+    protected function configureRecordsCollection(): void
     {
         $this->app->scoped(RecordCollection::class, fn () => new RecordCollection([
             'execution_parent' => [
@@ -48,9 +79,10 @@ final class NightwatchServiceProvider extends ServiceProvider
             ],
             'requests' => new Collection(),
         ]));
-        $this->app->singleton(PeakMemoryUsage::class);
-        $this->app->scoped(RequestSensor::class);
+    }
 
+    protected function configureClient(): void
+    {
         $this->app->bind(ClientContract::class, fn () => new Client((new Browser($connector, $loop))
             ->withTimeout($config->get('nightwatch.agent.timeout'))
             ->withHeader('User-Agent', 'NightwatchAgent/1.0.0') // TODO use actual version instead of 1.0.0
@@ -60,7 +92,10 @@ final class NightwatchServiceProvider extends ServiceProvider
             ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
             ->withHeader('Authorization', "Bearer {$config->get('nightwatch.app_secret')}")
             ->withBase("https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.{$config->get('nightwatch.http.region')}.on.aws")));
+    }
 
+    protected function configureAgent(): void
+    {
         $this->app->bind(Agent::class, function (Container $app) {
             /** @var Config */
             $config = $app->make(Config::class);
@@ -84,28 +119,28 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             return new Agent($buffer, $ingest, $server, $loop, $config->get('nightwatch.collector.timeout'));
         });
+    }
 
+    protected function registerPublications(): void
+    {
+        $this->publishes([
+            __DIR__.'/../config/nightwatch.php' => $this->app->configPath('nightwatch.php'),
+        ], ['nightwatch', 'nightwatch-config']);
+    }
+
+    protected function registerCommands(): void
+    {
+        $this->commands([
+            Console\Agent::class,
+        ]);
+    }
+
+    protected function registerSensors(): void
+    {
         $this->callAfterResolving(Kernel::class, function (Kernel $kernel, Container $app) {
             if (method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
                 $kernel->whenRequestLifecycleIsLongerThan(-1, $app->make(RequestSensor::class));
             }
         });
-
-        $this->mergeConfigFrom(
-            __DIR__.'/../config/nightwatch.php', 'nightwatch'
-        );
-    }
-
-    public function boot(): void
-    {
-        if ($this->app->runningInConsole()) {
-            $this->publishes([
-                __DIR__.'/../config/nightwatch.php' => config_path('nightwatch.php'),
-            ], ['nightwatch', 'nightwatch-config']);
-
-            $this->commands([
-                Console\Agent::class,
-            ]);
-        }
     }
 }

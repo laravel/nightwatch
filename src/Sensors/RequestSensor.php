@@ -2,22 +2,18 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Route;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
-use Laravel\Nightwatch\PeakMemoryUsage;
+use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\RecordCollection;
 use Symfony\Component\HttpFoundation\Response;
 
-class RequestSensor
+final class RequestSensor
 {
     public function __construct(
         private RecordCollection $records,
-        private PeakMemoryUsage $peakMemoryUsage,
+        private PeakMemoryProvider $peakMemory,
     ) {
         //
     }
@@ -59,7 +55,7 @@ class RequestSensor
             ...$this->records['execution_parent'],
             // TODO: do we need to reset this in Octane, Queue worker, or other
             // long running processes?
-            'peak_memory_usage_kilobytes' => (int) (($this->peakMemoryUsage)() / 1000),
+            'peak_memory_usage_kilobytes' => $this->peakMemory->inKilobytes(),
         ];
     }
 
