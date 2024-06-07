@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\Client as ClientContract;
@@ -17,15 +18,39 @@ use React\Socket\TcpServer;
 
 final class NightwatchServiceProvider extends ServiceProvider
 {
-    /**
-     * @var array<class-string>
-     */
-    public array $singletons = [
-        RequestSensor::class,
-    ];
-
     public function register(): void
     {
+        $this->app->scoped(RecordCollection::class, fn (): RecordCollection => new RecordCollection([
+            'execution_parent' => [
+                'queries' => 0,
+                'queries_duration' => 0,
+                'lazy_loads' => 0,
+                'queries' => 0,
+                'queries_duration' => 0,
+                'lazy_loads' => 0,
+                'lazy_loads_duration' => 0,
+                'jobs_queued' => 0,
+                'mail_queued' => 0,
+                'mail_sent' => 0,
+                'mail_duration' => 0,
+                'notifications_queued' => 0,
+                'notifications_sent' => 0,
+                'notifications_duration' => 0,
+                'outgoing_requests' => 0,
+                'outgoing_requests_duration' => 0,
+                'files_read' => 0,
+                'files_read_duration' => 0,
+                'files_written' => 0,
+                'files_written_duration' => 0,
+                'cache_hits' => 0,
+                'cache_misses' => 0,
+                'hydrated_models' => 0,
+            ],
+            'requests' => new Collection(),
+        ]));
+        $this->app->singleton(PeakMemoryUsage::class);
+        $this->app->scoped(RequestSensor::class);
+
         $this->app->bind(ClientContract::class, fn (): ClientContract => new Client((new Browser($connector, $loop))
             ->withTimeout($config->get('nightwatch.agent.timeout'))
             ->withHeader('User-Agent', 'NightwatchAgent/1.0.0') // TODO use actual version instead of 1.0.0
