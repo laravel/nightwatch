@@ -33,7 +33,7 @@ class RequestSensor
             // 'group' => hash('sha256', ''),
             // 'trace_id' => '',
             'method' => $request->getMethod(),
-            'route' => '/'.$request->route()->uri(),
+            'route' => '/'.$request->route()->uri(), // TODO handle nullable routes.
             'path' => '/'.$request->path(),
             'user' => '',
             'ip' => $request->ip(),
@@ -79,11 +79,11 @@ class RequestSensor
 
         // Something bad happened...
 
-        $this->records['alerts'][] = [
-            // TODO need ot flesh this out more with info.
-            'error' => 'code_here',
-            'key' => 'response_size_kilobytes',
-        ];
+        // $this->records['alerts'][] = [
+        //     // TODO need ot flesh this out more with info.
+        //     'error' => 'code_here',
+        //     'key' => 'response_size_kilobytes',
+        // ];
 
         return 0;
     }
