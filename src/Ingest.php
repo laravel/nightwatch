@@ -20,7 +20,7 @@ final class Ingest
      * @param  non-negative-int  $concurrentRequestLimit
      */
     public function __construct(
-        private Browser $browser,
+        private Client $client,
         private int $concurrentRequestLimit,
     ) {
         //
@@ -41,7 +41,7 @@ final class Ingest
         // TODO gzip
         $start = hrtime(true);
 
-        return $this->browser->post('/', body: $records)
+        return $this->client->send($records)
             ->then(function (ResponseInterface $response) use ($start) {
                 return new IngestSucceededResult(
                     duration: (hrtime(true) - $start) / 1_000_000,

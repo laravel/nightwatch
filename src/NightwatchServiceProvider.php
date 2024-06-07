@@ -23,7 +23,6 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->scoped(RequestSensor::class);
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
-        $this->configurePeakMemoryProvider();
         $this->configureRecordsCollection();
         $this->configureAgent();
         $this->configureClient();
@@ -38,6 +37,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         }
 
         $this->registerSensors();
+        $this->registerTcpIngest();
     }
 
     protected function mergeConfig(): void
@@ -45,17 +45,10 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
     }
 
-    protected function configurePeakMemoryProvider(): void
-    {
-    }
-
     protected function configureRecordsCollection(): void
     {
         $this->app->scoped(RecordCollection::class, fn () => new RecordCollection([
             'execution_parent' => [
-                'queries' => 0,
-                'queries_duration' => 0,
-                'lazy_loads' => 0,
                 'queries' => 0,
                 'queries_duration' => 0,
                 'lazy_loads' => 0,
@@ -81,22 +74,9 @@ final class NightwatchServiceProvider extends ServiceProvider
         ]));
     }
 
-    protected function configureClient(): void
-    {
-        $this->app->bind(ClientContract::class, fn () => new Client((new Browser($connector, $loop))
-            ->withTimeout($config->get('nightwatch.agent.timeout'))
-            ->withHeader('User-Agent', 'NightwatchAgent/1.0.0') // TODO use actual version instead of 1.0.0
-            ->withHeader('Content-Type', 'application/json') // TODO: gzip...
-            // ->withHeader('Content-Type', 'application/octet-stream')
-            // ->withHeader('Content-Encoding', 'gzip')
-            ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
-            ->withHeader('Authorization', "Bearer {$config->get('nightwatch.app_secret')}")
-            ->withBase("https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.{$config->get('nightwatch.http.region')}.on.aws")));
-    }
-
     protected function configureAgent(): void
     {
-        $this->app->bind(Agent::class, function (Container $app) {
+        $this->app->singleton(Agent::class, function (Container $app) {
             /** @var Config */
             $config = $app->make(Config::class);
 
@@ -115,11 +95,35 @@ final class NightwatchServiceProvider extends ServiceProvider
                 'timeout' => $config->get('nightwatch.http.connection_timeout'), // TODO: test if this is the connection only or total duration.
             ], $loop);
 
-            $ingest = new Ingest($app->make(ClientContract::class), $config->get('nightwatch.http.concurrent_request_limit'));
+            $ingest = new Ingest($app->make(ClientContract::class, [
+                'loop' => $loop,
+                'connector' => $connector,
+            ]), $config->get('nightwatch.http.concurrent_request_limit'));
 
             return new Agent($buffer, $ingest, $server, $loop, $config->get('nightwatch.collector.timeout'));
         });
     }
+
+    protected function configureClient(): void
+    {
+        $this->app->singleton(ClientContract::class, function (Container $app, array $args) {
+            $args = $args + ['connector' => null, 'loop' => null];
+
+            /** @var Config */
+            $config = $app->make(Config::class);
+
+            return new Client((new Browser($args['connector'], $args['loop']))
+                ->withTimeout($config->get('nightwatch.agent.timeout'))
+                ->withHeader('User-Agent', 'NightwatchAgent/1.0.0') // TODO use actual version instead of 1.0.0
+                ->withHeader('Content-Type', 'application/json') // TODO: gzip...
+                // ->withHeader('Content-Type', 'application/octet-stream')
+                // ->withHeader('Content-Encoding', 'gzip')
+                ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
+                ->withHeader('Authorization', "Bearer {$config->get('nightwatch.app_secret')}")
+                ->withBase("https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.{$config->get('nightwatch.http.region')}.on.aws"));
+        });
+    }
+
 
     protected function registerPublications(): void
     {
@@ -137,10 +141,27 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     protected function registerSensors(): void
     {
-        $this->callAfterResolving(Kernel::class, function (Kernel $kernel, Container $app) {
-            if (method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
-                $kernel->whenRequestLifecycleIsLongerThan(-1, $app->make(RequestSensor::class));
-            }
+        // $this->callAfterResolving(Kernel::class, function (Kernel $kernel, Container $app) {
+        //     if (method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
+        //         $kernel->whenRequestLifecycleIsLongerThan(-1, $app->make(RequestSensor::class));
+        //     } else {
+        //         // create alert? use another mechanism?
+        //     }
+
+        //     /** @var TcpIngest */
+        //     $ingest = $app->make(TcpIngest::class);
+        //     /** @var RecordCollection */
+        //     $records = $app->make(RecordCollection::class);
+
+        //     $ingest->write($records->toJson());
+        // });
+    }
+
+    protected function registerTcpIngest(): void
+    {
+        $this->app->singleton(TcpIngest::class, function () {
+            $uri = Config::get('nightwatch.agent.address').':'.Config::get('nightwatch.agent.port');
+            return new TcpIngest();
         });
     }
 }
