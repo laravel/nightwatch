@@ -51,12 +51,12 @@ final class RequestSensor
                 // - Content-Encoding requests
                 // are there potential memory issues if the body is a resource
                 // and not a string?
-                $request->headers->get('content-length') ?? strlen($request->getContent())
+                ($request->headers->get('content-length') ?? strlen($request->getContent())) / 1000
             ),
             // TODO test how this handles:
             // - chunked requests
             // - Content-Encoding requests
-            'response_size_kilobytes' => $this->parseResponseKilobytes($response),
+            'response_size_kilobytes' => $this->parseResponseSizeKilobytes($response),
             'peak_memory_usage_kilobytes' => $this->peakMemory->kilobytes(),
             ...$this->records['execution_parent'],
             // TODO: do we need to reset this in Octane, Queue worker, or other
@@ -64,18 +64,18 @@ final class RequestSensor
         ];
     }
 
-    private function parseResponseKilobytes(Response $response): int
+    private function parseResponseSizeKilobytes(Response $response): int
     {
         // chunked responses...
         if ($response->headers->has('content-length')) {
-            return (int) $response->headers->get('content-length');
+            return (int) ($response->headers->get('content-length') / 1000);
         }
 
         // normal requests...
         $content = $response->getContent();
 
         if ($content !== false) {
-            return strlen($content);
+            return (int) (strlen($content) / 1000);
         }
 
         // Something bad happened...

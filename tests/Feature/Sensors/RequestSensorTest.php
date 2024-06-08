@@ -3,6 +3,7 @@
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 
+use function Pest\Laravel\call;
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\travelTo;
 
@@ -11,27 +12,25 @@ beforeEach(function () {
     setServerName('web-01');
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
+    travelTo(Carbon::parse('2000-01-01 00:00:00'));
 });
 
 it('returns a request record', function () {
     $ingest = fakeIngest();
-    travelTo(Carbon::parse('2000-01-01 01:02:03'));
     Route::post('/users/{user}', function () {
-        travelTo(now()->addSecond()->addMilliseconds(234));
+        travelTo(now()->addMilliseconds(1234));
 
-        return 'OK';
+        return str_repeat('a', 2000);
     });
 
-    $response = postJson('/users/345', [
-        'foo' => 'bar',
-    ]);
+    $response = call('POST', '/users/345', content: str_repeat('b', 3000));
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite([
         'requests' => [
             [
-                'timestamp' => '2000-01-01 01:02:03',
+                'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',
                 'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
@@ -43,7 +42,7 @@ it('returns a request record', function () {
                 'ip' => '127.0.0.1',
                 'duration' => 1234,
                 'status_code' => '200',
-                'request_size_kilobytes' => 13,
+                'request_size_kilobytes' => 3,
                 'response_size_kilobytes' => 2,
                 'peak_memory_usage_kilobytes' => 1234,
                 'queries' => 0,
