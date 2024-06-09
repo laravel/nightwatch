@@ -24,7 +24,7 @@ final class RequestSensor
 
     public function __invoke(DateTimeInterface $startedAt, Request $request, Response $response): void
     {
-        $duration = (int) CarbonImmutable::now()->diffInMilliseconds($startedAt, true);
+        $duration = (int) CarbonImmutable::now()->diffInMilliseconds($startedAt, true); // TODO: can I do this without using Carbon?
 
         $this->records['requests'][] = [
             'timestamp' => $startedAt->format('Y-m-d H:i:s'),
@@ -37,7 +37,7 @@ final class RequestSensor
             'route' => '/'.$request->route()->uri(), // TODO handle nullable routes.
             'path' => '/'.$request->path(),
             'user' => '',
-            'ip' => $request->ip(),
+            'ip' => $request->ip(), // TODO: can be nullable
             'duration' => $duration,
             'status_code' => (string) $response->getStatusCode(),
             // Although we usually should not trust random header input, it
@@ -59,8 +59,6 @@ final class RequestSensor
             'response_size_kilobytes' => $this->parseResponseSizeKilobytes($response),
             'peak_memory_usage_kilobytes' => $this->peakMemory->kilobytes(),
             ...$this->records['execution_parent'],
-            // TODO: do we need to reset this in Octane, Queue worker, or other
-            // long running processes?
         ];
     }
 

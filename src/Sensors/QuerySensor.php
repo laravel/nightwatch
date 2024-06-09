@@ -26,7 +26,7 @@ final class QuerySensor
         $now = CarbonImmutable::now();
 
         $this->records['queries'][] = [
-            'timestamp' => $now->subMilliseconds($event->time)->format('Y-m-d H:i:s'),
+            'timestamp' => $now->subMilliseconds($event->time)->format('Y-m-d H:i:s'), // Can I do this without Carbon?
             'deploy_id' => $this->config->get('nightwatch.deploy_id'),
             'server' => $this->config->get('nightwatch.server'),
             'group' => hash('sha256', ''), // TODO
@@ -42,7 +42,9 @@ final class QuerySensor
             'connection' => $event->connectionName,
         ];
 
-        $this->records['execution_parent']['queries'] = $this->records['execution_parent']['queries'] + 1;
-        $this->records['execution_parent']['queries_duration'] = $this->records['execution_parent']['queries_duration'] + $event->time;
+        $executionParent = $this->records['execution_parent'];
+
+        $executionParent['queries'] += 1;
+        $executionParent['queries_duration'] += $event->time;
     }
 }
