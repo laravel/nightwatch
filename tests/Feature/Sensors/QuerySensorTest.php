@@ -12,6 +12,7 @@ use Laravel\Nightwatch\Sensors\QuerySensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
@@ -27,6 +28,7 @@ it('lazily resolves the sensor', function () {
 });
 
 it('can ingest queries', function () {
+    withoutExceptionHandling();
     $ingest = fakeIngest();
     prependListener(QueryExecuted::class, fn (QueryExecuted $event) => $event->time = 5);
     Route::post('/users', function () {

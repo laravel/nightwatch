@@ -13,6 +13,7 @@ use Laravel\Nightwatch\Sensors\CacheSensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
@@ -22,12 +23,14 @@ beforeEach(function () {
     travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
 });
 
+// TODO we might not need this if we manually create the objects.
 it('lazily resolves the sensor', function () {
     expect(app()->resolved(CacheSensor::class))->toBeFalse();
 });
 
 it('can ingest cache misses', function () {
     $ingest = fakeIngest();
+    withoutExceptionHandling();
     Route::post('/users', function () {
         Cache::driver('array')->get('users:345');
     });
@@ -84,10 +87,10 @@ it('can ingest cache misses', function () {
                 'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_context' => 'request',
-                'execution_id' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                'execution_id' => '00000000-0000-0000-0000-000000000000',
                 'user' => '',
                 'store' => 'array',
-                'key' => 'user:345',
+                'key' => 'users:345',
                 'type' => 'miss',
             ]
         ],

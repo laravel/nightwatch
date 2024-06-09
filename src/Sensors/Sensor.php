@@ -39,7 +39,7 @@ class Sensor
     public function queries(QueryExecuted $event): void
     {
         /** @var QuerySensor */
-        $sensor = $this->sensors['queries'] ??= $this->app->make(QueryExecuted::class);
+        $sensor = $this->sensors['queries'] ??= $this->app->make(QuerySensor::class);
 
         $sensor($event);
     }
