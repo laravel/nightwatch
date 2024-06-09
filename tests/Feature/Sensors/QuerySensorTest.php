@@ -27,8 +27,8 @@ it('lazily resolves the sensor', function () {
 });
 
 it('can ingest queries', function () {
-    prependListener(QueryExecuted::class, fn (QueryExecuted $event) => $event->time = 5);
     $ingest = fakeIngest();
+    prependListener(QueryExecuted::class, fn (QueryExecuted $event) => $event->time = 5);
     Route::post('/users', function () {
         DB::table('users')->get();
     });
