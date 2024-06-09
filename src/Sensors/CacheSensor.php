@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Config\Repository as Config;
 use Laravel\Nightwatch\RecordCollection;
@@ -21,12 +22,13 @@ final class CacheSensor
     }
 
     // TODO: "tags"?
-    public function __invoke(CacheMissed $event)
+    public function __invoke(CacheMissed|CacheHit $event)
     {
         $now = CarbonImmutable::now();
 
         [$type, $key] = match ($event::class) {
             CacheMissed::class => ['miss', 'cache_misses'],
+            CacheHit::class => ['hit', 'cache_hits'],
         };
 
         // TODO: the cache events collection could be injected and then we

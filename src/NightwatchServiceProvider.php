@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch;
 
 use DateTimeInterface;
+use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
@@ -133,7 +134,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $sensor = $this->app->make(Sensor::class);
 
         $events->listen(QueryExecuted::class, $sensor->queries(...));
-        $events->listen(CacheMissed::class, $sensor->cacheEvents(...));
+        $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvents(...));
 
         $this->callAfterResolving(HttpKernel::class, function (HttpKernel $kernel, Container $app) use ($sensor) {
             if (! method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {

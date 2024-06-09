@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use DateTimeInterface;
+use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Events\QueryExecuted;
@@ -43,7 +44,7 @@ final class Sensor
         $sensor($event);
     }
 
-    public function cacheEvents(CacheMissed $event): void
+    public function cacheEvents(CacheMissed|CacheHit $event): void
     {
         /** @var CacheSensor */
         $sensor = $this->sensors['cache_events'] ??= $this->app->make(CacheSensor::class);
