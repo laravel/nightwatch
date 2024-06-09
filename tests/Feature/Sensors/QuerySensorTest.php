@@ -30,7 +30,7 @@ it('lazily resolves the sensor', function () {
 it('can ingest queries', function () {
     withoutExceptionHandling();
     $ingest = fakeIngest();
-    prependListener(QueryExecuted::class, fn (QueryExecuted $event) => $event->time = 5);
+    prependListener(QueryExecuted::class, fn (QueryExecuted $event) => $event->time = 5.2);
     Route::post('/users', function () {
         DB::table('users')->get();
     });
@@ -103,9 +103,11 @@ it('can ingest queries', function () {
                 'file' => 'app/Models/User.php',
                 'line' => 5,
                 'duration' => 5,
-                'connection' => 'testing',
+                'connection' => 'sqlite',
             ],
         ],
         'queued_jobs' => [],
     ]);
 });
+
+it('has a deploy_id fallback')->todo();

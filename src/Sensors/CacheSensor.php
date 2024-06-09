@@ -33,7 +33,7 @@ final class CacheSensor
         // just modify it directly. Execution parent can also be injected.
         $this->records['cache_events'][] = [
             'timestamp' => $now->format('Y-m-d H:i:s'),
-            'deploy_id' => $this->config->get('nightwatch.deploy_id'),
+            'deploy_id' => (string) $this->config->get('nightwatch.deploy_id'),
             'server' => $this->config->get('nightwatch.server'),
             'group' => hash('sha256', ''), // TODO
             'trace_id' => $this->traceId->value(),

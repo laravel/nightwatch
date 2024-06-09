@@ -8,3 +8,6 @@ workbench:
     web: true
     commands: true
     views: true
+  build:
+    - create-sqlite-db
+    - migrate-refresh
