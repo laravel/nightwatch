@@ -3,13 +3,13 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
-use Illuminate\Config\Repository as Config;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Config\Repository as Config;
 use Laravel\Nightwatch\RecordCollection;
 use Laravel\Nightwatch\TraceId;
 
-class CacheSensor
+final class CacheSensor
 {
     public function __construct(
         private RecordCollection $records,
@@ -25,7 +25,7 @@ class CacheSensor
     {
         $now = CarbonImmutable::now();
 
-        [$type, $key] = match($event::class) {
+        [$type, $key] = match ($event::class) {
             CacheMissed::class => ['miss', 'cache_misses'],
         };
 

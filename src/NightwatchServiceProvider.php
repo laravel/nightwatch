@@ -3,13 +3,11 @@
 namespace Laravel\Nightwatch;
 
 use DateTimeInterface;
-use Illuminate\Cache\CacheManager;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
-use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
@@ -19,8 +17,6 @@ use Laravel\Nightwatch\Contracts\Client as ClientContract;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Providers\PeakMemory;
-use Laravel\Nightwatch\Sensors\QuerySensor;
-use Laravel\Nightwatch\Sensors\RequestSensor;
 use Laravel\Nightwatch\Sensors\Sensor;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;

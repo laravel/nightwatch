@@ -1,14 +1,8 @@
 <?php
 
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Events\MigrationsEnded;
-use Illuminate\Database\Events\QueryExecuted;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\RecordCollection;
 use Laravel\Nightwatch\Sensors\CacheSensor;
 
 use function Pest\Laravel\post;
@@ -92,7 +86,7 @@ it('can ingest cache misses', function () {
                 'store' => 'array',
                 'key' => 'users:345',
                 'type' => 'miss',
-            ]
+            ],
         ],
         'commands' => [],
         'exceptions' => [],
@@ -106,6 +100,5 @@ it('can ingest cache misses', function () {
         'queued_jobs' => [],
     ]);
 });
-
 
 it('can ingest cache hits')->todo();

@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use DateTimeInterface;
-use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Events\QueryExecuted;
@@ -12,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 // TODO: flush and setContainer
 // TODO: maybe this should just new them up directly. It does know how to, after all and would be better performance-wise.
-class Sensor
+final class Sensor
 {
     /**
      * @var array{
