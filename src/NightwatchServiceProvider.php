@@ -3,8 +3,11 @@
 namespace Laravel\Nightwatch;
 
 use DateTimeInterface;
+use Illuminate\Cache\CacheManager;
+use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Events\QueryExecuted;
@@ -18,6 +21,7 @@ use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Providers\PeakMemory;
 use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
+use Laravel\Nightwatch\Sensors\Sensor;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
 use React\Socket\Connector;
@@ -32,7 +36,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->scoped(RequestSensor::class);
+        $this->app->singleton(Sensor::class);
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
         $this->app->scoped(RecordCollection::class);
         $this->configureAgent();
@@ -127,35 +131,30 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     protected function registerSensors(): void
     {
-        $this->callAfterResolving('db', function (DatabaseManager $db, Container $app) {
-            /** @var QuerySensor|null */
-            $sensor = null;
+        /** @var Dispatcher */
+        $events = $this->app->make(Dispatcher::class);
+        /** @var Sensor */
+        $sensor = $this->app->make(Sensor::class);
 
-            $db->listen(function (QueryExecuted $event) use ($app, &$sensor) {
-                $sensor ??= $app->make(QuerySensor::class);
+        $events->listen(QueryExecuted::class, $sensor->queries(...));
+        $events->listen(CacheMissed::class, $sensor->cacheEvents(...));
 
-                $sensor($event);
-            });
-        });
-
-        $this->callAfterResolving(HttpKernel::class, function (HttpKernel $kernel, Container $app) {
-            if (method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
-                $kernel->whenRequestLifecycleIsLongerThan(-1, function (DateTimeInterface $startedAt, Request $request, Response $response) use ($app) {
-                    /** @var RequestSensor */
-                    $sensor = $app->make(RequestSensor::class);
-
-                    $sensor($startedAt, $request, $response);
-
-                    /** @var IngestContract */
-                    $ingest = $app->make(IngestContract::class);
-                    /** @var RecordCollection */
-                    $records = $app->make(RecordCollection::class);
-
-                    $ingest->write($records->forget('execution_parent')->toJson());
-                });
-            } else {
-                // create alert? use another mechanism?
+        $this->callAfterResolving(HttpKernel::class, function (HttpKernel $kernel, Container $app) use ($sensor) {
+            if (! method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
+                // TODO implement an alternative approach
+                return;
             }
+
+            $kernel->whenRequestLifecycleIsLongerThan(-1, function (DateTimeInterface $startedAt, Request $request, Response $response) use ($sensor, $app) {
+                $sensor->requests($startedAt, $request, $response);
+
+                /** @var IngestContract */
+                $ingest = $app->make(IngestContract::class);
+                /** @var RecordCollection */
+                $records = $app->make(RecordCollection::class);
+
+                $ingest->write($records->forget('execution_parent')->toJson());
+            });
         });
     }
 
