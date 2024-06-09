@@ -1,10 +1,16 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Events\MigrationsEnded;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\Sensors\RequestSensor;
+use Laravel\Nightwatch\RecordCollection;
+use Laravel\Nightwatch\Sensors\QuerySensor;
 
-use function Pest\Laravel\call;
+use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
@@ -13,21 +19,21 @@ beforeEach(function () {
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
+    Event::listen(MigrationsEnded::class, fn () => App::make(RecordCollection::class)->flush());
 });
 
 it('lazily resolves the sensor', function () {
-    expect(app()->resolved(RequestSensor::class))->toBeFalse();
+    expect(app()->resolved(QuerySensor::class))->toBeFalse();
 });
 
-it('can ingest requests', function () {
+it('can ingest queries', function () {
+    prependListener(QueryExecuted::class, fn (QueryExecuted $event) => $event->time = 5);
     $ingest = fakeIngest();
-    Route::post('/users/{user}', function () {
-        travelTo(now()->addMilliseconds(1234));
-
-        return str_repeat('a', 2000);
+    Route::post('/users', function () {
+        DB::table('users')->get();
     });
 
-    $response = call('POST', '/users/345', content: str_repeat('b', 3000));
+    $response = post('/users');
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
@@ -40,17 +46,17 @@ it('can ingest requests', function () {
                 'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'method' => 'POST',
-                'route' => '/users/{user}',
-                'path' => '/users/345',
+                'route' => '/users',
+                'path' => '/users',
                 'user' => '',
                 'ip' => '127.0.0.1',
-                'duration' => 1234,
+                'duration' => 0,
                 'status_code' => '200',
-                'request_size_kilobytes' => 3,
-                'response_size_kilobytes' => 2,
+                'request_size_kilobytes' => 0,
+                'response_size_kilobytes' => 0,
                 'peak_memory_usage_kilobytes' => 1234,
-                'queries' => 0,
-                'queries_duration' => 0,
+                'queries' => 1,
+                'queries_duration' => 5,
                 'lazy_loads' => 0,
                 'lazy_loads_duration' => 0,
                 'jobs_queued' => 0,
@@ -80,25 +86,24 @@ it('can ingest requests', function () {
         'mail' => [],
         'notifications' => [],
         'outgoing_requests' => [],
-        'queries' => [],
+        'queries' => [
+            [
+                'timestamp' => '1999-12-31 23:59:59',
+                'deploy_id' => 'v1.2.3',
+                'server' => 'web-01',
+                'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                'trace_id' => '00000000-0000-0000-0000-000000000000',
+                'execution_context' => 'request',
+                'execution_id' => '00000000-0000-0000-0000-000000000000',
+                'user' => '',
+                'sql' => 'select * from "users"',
+                'category' => 'select',
+                'file' => 'app/Models/User.php',
+                'line' => 5,
+                'duration' => 5,
+                'connection' => 'testing',
+            ],
+        ],
         'queued_jobs' => [],
     ]);
 });
-
-it('handles requests with no content-length header, such as chunked requests')->todo();
-
-it('handles routes with domains')->todo(); // 'path' field or dedicated column
-
-it('handles unknown routes')->todo(); // 'route' field
-
-it('records authenticated user')->todo(); // 'user' field
-
-it('handles streams')->todo(); // Content-Length
-
-it('handles 304 Not Modified responses')->todo(); // Content-Length
-
-it('handles HEAD requests')->todo(); // Content-Length
-
-it('handles responses using Transfer-Encoding headers')->todo(); // Content-Length
-
-it('captures query count')->todo(); // `queries` field + for the request of the execution context.

@@ -2,10 +2,10 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Config\Repository as Config;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\RecordCollection;
 use Laravel\Nightwatch\TraceId;
@@ -24,12 +24,12 @@ final class RequestSensor
 
     public function __invoke(DateTimeInterface $startedAt, Request $request, Response $response): void
     {
-        $duration = (int) Carbon::now()->diffInMilliseconds($startedAt, true);
+        $duration = (int) CarbonImmutable::now()->diffInMilliseconds($startedAt, true);
 
         $this->records['requests'][] = [
             'timestamp' => $startedAt->format('Y-m-d H:i:s'),
-            'deploy_id' => (string) $this->config->get('nightwatch.deploy_id'),
-            'server' => (string) $this->config->get('nightwatch.server'),
+            'deploy_id' => (string) $this->config->get('nightwatch.deploy_id'), // TODO extract to class
+            'server' => (string) $this->config->get('nightwatch.server'), // TODO extract to class
             'group' => hash('sha256', ''),  // TODO
             'trace_id' => $this->traceId->value(),
             // TODO domain as individual key?

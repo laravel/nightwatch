@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\RecordCollection;
@@ -49,4 +50,13 @@ function setPeakMemoryInKilobytes(int $value): void
 function fakeIngest(): FakeIngest
 {
     return App::instance(Ingest::class, new FakeIngest);
+}
+
+function prependListener(string $event, callable $listener): void
+{
+    $listeners = Event::getRawListeners()[$event];
+
+    Event::forget($event);
+
+    collect([$listener, ...$listeners])->each(fn ($listener) => Event::listen($event, $listener));
 }

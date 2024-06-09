@@ -6,8 +6,9 @@ use DateTimeInterface;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Database\DatabaseManager;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\Agent;
@@ -15,6 +16,7 @@ use Laravel\Nightwatch\Contracts\Client as ClientContract;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Providers\PeakMemory;
+use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
@@ -32,7 +34,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->scoped(RequestSensor::class);
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
-        $this->configureRecordsCollection();
+        $this->app->scoped(RecordCollection::class);
         $this->configureAgent();
         $this->configureClient();
         $this->configureIngest();
@@ -53,46 +55,6 @@ final class NightwatchServiceProvider extends ServiceProvider
     protected function mergeConfig(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
-    }
-
-    protected function configureRecordsCollection(): void
-    {
-        $this->app->scoped(RecordCollection::class, fn () => new RecordCollection([
-            'execution_parent' => [
-                'queries' => 0,
-                'queries_duration' => 0,
-                'lazy_loads' => 0,
-                'lazy_loads_duration' => 0,
-                'jobs_queued' => 0,
-                'mail_queued' => 0,
-                'mail_sent' => 0,
-                'mail_duration' => 0,
-                'notifications_queued' => 0,
-                'notifications_sent' => 0,
-                'notifications_duration' => 0,
-                'outgoing_requests' => 0,
-                'outgoing_requests_duration' => 0,
-                'files_read' => 0,
-                'files_read_duration' => 0,
-                'files_written' => 0,
-                'files_written_duration' => 0,
-                'cache_hits' => 0,
-                'cache_misses' => 0,
-                'hydrated_models' => 0,
-            ],
-            'requests' => new Collection(),
-            'cache_events' => new Collection(),
-            'commands' => new Collection(),
-            'exceptions' => new Collection(),
-            'job_attempts' => new Collection(),
-            'lazy_loads' => new Collection(),
-            'logs' => new Collection(),
-            'mail' => new Collection(),
-            'notifications' => new Collection(),
-            'outgoing_requests' => new Collection(),
-            'queries' => new Collection(),
-            'queued_jobs' => new Collection(),
-        ]));
     }
 
     protected function configureAgent(): void
@@ -165,6 +127,17 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     protected function registerSensors(): void
     {
+        $this->callAfterResolving('db', function (DatabaseManager $db, Container $app) {
+            /** @var QuerySensor|null */
+            $sensor = null;
+
+            $db->listen(function (QueryExecuted $event) use ($app, &$sensor) {
+                $sensor ??= $app->make(QuerySensor::class);
+
+                $sensor($event);
+            });
+        });
+
         $this->callAfterResolving(HttpKernel::class, function (HttpKernel $kernel, Container $app) {
             if (method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
                 $kernel->whenRequestLifecycleIsLongerThan(-1, function (DateTimeInterface $startedAt, Request $request, Response $response) use ($app) {
@@ -203,6 +176,11 @@ final class NightwatchServiceProvider extends ServiceProvider
     protected function configureTraceId(): void
     {
         // TODO: on the queue we need to restore the trace ID from the request / command.
+        // TODO make the UUID lazy, so that it isn't calculated until it is resolved? or will it
+        // *always* be used if it is resolved? I don't think so. We will resolve it when
+        // create a listener, but the listener may not be triggered. Also, we should
+        // probably not use the `Str` helper here so we have full control over the
+        // UUID generated and it isn't impacted by user modifications.
         $this->app->scoped(TraceId::class, fn () => new TraceId(Str::uuid()->toString()));
     }
 }
