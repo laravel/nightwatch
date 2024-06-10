@@ -103,7 +103,7 @@ it('ingests outgoing requests', function () {
                 'request_size_kilobytes' => 2,
                 'response_size_kilobytes' => 3,
                 'status_code' => '200',
-            ]
+            ],
         ],
         'queries' => [],
         'queued_jobs' => [],

@@ -28,7 +28,7 @@ final class GuzzleMiddleware
                     $this->sensor->outgoingRequests($startedAt, $request, $response);
 
                     return $response;
-                }, function (Throwable $exception) use ($request, $startedAt) {
+                }, function (Throwable $exception) {
                     // TODO does this only get RequestExceptions and can we
                     // get the response from it?
                     // $this->sensor->outgoingRequests($startedAt, $request, $response);
