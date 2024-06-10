@@ -24,7 +24,6 @@ it('lazily resolves the sensor', function () {
 
 it('can ingest cache misses', function () {
     $ingest = fakeIngest();
-    withoutExceptionHandling();
     Route::post('/users', function () {
         Cache::driver('array')->get('users:345');
     });
@@ -103,7 +102,6 @@ it('can ingest cache misses', function () {
 
 it('can ingest cache hits', function () {
     $ingest = fakeIngest();
-    withoutExceptionHandling();
     Cache::driver('array')->put('users:345', 'xxxx');
     Route::post('/users', function () {
         Cache::driver('array')->get('users:345');

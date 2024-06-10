@@ -3,6 +3,8 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use DateTimeInterface;
+use GuzzleHttp\Psr7\Request as Psr7Request;
+use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Container\Container;
@@ -50,5 +52,12 @@ final class Sensor
         $sensor = $this->sensors['cache_events'] ??= $this->app->make(CacheEventsSensor::class);
 
         $sensor($event);
+    }
+
+    public function outgoingRequests(DateTimeInterface $startedAt, Psr7Request $request, Psr7Response $response): void
+    {
+        $sensor = $this->sensors['outgoing_requests'] ??= $this->app->make(OutgoingRequestsSensor::class);
+
+        $sensor($startedAt, $request, $response);
     }
 }

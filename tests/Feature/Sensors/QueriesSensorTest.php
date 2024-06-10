@@ -20,6 +20,7 @@ beforeEach(function () {
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
+
     Event::listen(MigrationsEnded::class, fn () => App::make(RecordCollection::class)->flush());
 });
 
@@ -28,7 +29,6 @@ it('lazily resolves the sensor', function () {
 });
 
 it('can ingest queries', function () {
-    withoutExceptionHandling();
     $ingest = fakeIngest();
     prependListener(QueryExecuted::class, fn (QueryExecuted $event) => $event->time = 5.2);
     Route::post('/users', function () {

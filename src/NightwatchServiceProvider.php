@@ -10,6 +10,7 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -135,6 +136,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $events->listen(QueryExecuted::class, $sensor->queries(...));
         $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvents(...));
+        $this->callAfterResolving(Http::class, fn (Http $http) => $http->globalMiddleware(new GuzzleMiddleware($sensor)));
 
         $this->callAfterResolving(HttpKernel::class, function (HttpKernel $kernel, Container $app) use ($sensor) {
             if (! method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
