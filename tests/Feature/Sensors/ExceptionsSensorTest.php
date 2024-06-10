@@ -26,13 +26,20 @@ final class MyException extends RuntimeException
 
 it('ingests exceptions', function () {
     $ingest = fakeIngest();
-    Route::post('/users', function () {
-        throw new MyException('Whoops!');
+    // TODO make trace controlled by ius via a resolver.
+    $trace = null;
+    Route::post('/users', function () use (&$trace) {
+        $e = new MyException('Whoops!');
+
+        $trace = $e->getTraceAsString();
+
+        throw $e;
     });
 
     $response = post('/users');
 
     $response->assertServerError();
+    expect($trace)->toBeString();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite([
         'requests' => [
@@ -91,7 +98,7 @@ it('ingests exceptions', function () {
                 'line' => 5,
                 'message' => 'Whoops!',
                 'code' => 0,
-                'trace' => '',
+                'trace' => $trace,
             ],
         ],
         'job_attempts' => [],
@@ -107,13 +114,19 @@ it('ingests exceptions', function () {
 
 it('ingests reported exceptions', function () {
     $ingest = fakeIngest();
-    Route::post('/users', function () {
-        report(new MyException('Whoops!'));
+    $trace = null;
+    Route::post('/users', function () use (&$trace) {
+        $e = new MyException('Whoops!');
+
+        $trace = $e->getTraceAsString();
+
+        report($e);
     });
 
     $response = post('/users');
 
     $response->assertOk();
+    expect($trace)->toBeString();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite([
         'requests' => [
@@ -172,7 +185,7 @@ it('ingests reported exceptions', function () {
                 'line' => 5,
                 'message' => 'Whoops!',
                 'code' => 0,
-                'trace' => '',
+                'trace' => $trace,
             ],
         ],
         'job_attempts' => [],

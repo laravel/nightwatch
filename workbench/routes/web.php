@@ -19,6 +19,9 @@ Route::get('/', function () {
     // Outgoing requests:
     Http::get('https://laravel.com');
 
+    // Exceptions:
+    report('Whoops!');
+
     // Requests:
     return view('welcome');
 });

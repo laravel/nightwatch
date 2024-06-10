@@ -38,7 +38,7 @@ final class ExceptionsSensor
             'line' => 5,
             'message' => $e->getMessage(),
             'code' => $e->getCode(),
-            'trace' => '', // TODO
+            'trace' => $e->getTraceAsString(),
         ];
 
         $executionParent = $this->records['execution_parent'];
