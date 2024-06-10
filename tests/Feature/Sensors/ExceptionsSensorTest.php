@@ -2,11 +2,9 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Http;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
-use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
@@ -16,7 +14,7 @@ beforeEach(function () {
     travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
 });
 
-class MyException extends RuntimeException
+final class MyException extends RuntimeException
 {
     public function render()
     {

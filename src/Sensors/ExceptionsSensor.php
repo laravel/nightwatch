@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\RecordCollection;
 use Throwable;
@@ -47,4 +46,3 @@ final class ExceptionsSensor
         // TODO we should track the number of exceptions.
     }
 }
-
