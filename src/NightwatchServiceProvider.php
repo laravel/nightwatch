@@ -20,7 +20,6 @@ use Laravel\Nightwatch\Contracts\Client as ClientContract;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Providers\PeakMemory;
-use Laravel\Nightwatch\SensorManager;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
 use React\Socket\Connector;

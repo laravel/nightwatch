@@ -3,8 +3,6 @@
 namespace Laravel\Nightwatch;
 
 use DateTimeInterface;
-use GuzzleHttp\Psr7\Request as Psr7Request;
-use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Config\Repository as Config;
@@ -12,7 +10,6 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\RecordCollection;
 use Laravel\Nightwatch\Sensors\CacheEventsSensor;
 use Laravel\Nightwatch\Sensors\ExceptionsSensor;
 use Laravel\Nightwatch\Sensors\OutgoingRequestsSensor;

@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
-class CacheEvent
+final class CacheEvent
 {
     /**
      * @param  non-empty-string  $timestamp
@@ -12,7 +12,7 @@ class CacheEvent
      * @param  non-empty-string  $execution_id
      * @param  non-empty-string  $store
      * @param  non-empty-string  $key
-     * @param  'hit'|'miss' $type
+     * @param  'hit'|'miss'  $type
      */
     public function __construct(
         public string $timestamp,

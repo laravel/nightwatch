@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch;
 
 use Carbon\CarbonImmutable;
 use GuzzleHttp\Promise\RejectedPromise;
-use Laravel\Nightwatch\SensorManager;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;

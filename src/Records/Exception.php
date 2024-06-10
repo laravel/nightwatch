@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
-class Exception
+final class Exception
 {
     /**
      * @param  non-empty-string  $timestamp
@@ -10,10 +10,10 @@ class Exception
      * @param  non-empty-string  $trace_id
      * @param  'job'|'request'  $execution_context
      * @param  non-empty-string  $execution_id
-     * @param class-string $class
-     * @param  non-empty-string $file
-     * @param non-negative-int $line
-     * @param non-empty-string $trace
+     * @param  class-string  $class
+     * @param  non-empty-string  $file
+     * @param  non-negative-int  $line
+     * @param  non-empty-string  $trace
      */
     public function __construct(
         public string $timestamp,
