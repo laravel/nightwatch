@@ -8,16 +8,16 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Config\Repository as Config;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\RecordCollection;
-use Laravel\Nightwatch\TraceId;
 
 final class OutgoingRequestsSensor
 {
     public function __construct(
         private RecordCollection $records,
-        private Config $config,
-        private TraceId $traceId,
-        private AuthManager $auth,
+        private string $deployId,
+        private string $server,
+        private string $traceId,
     ) {
         //
     }
@@ -28,13 +28,13 @@ final class OutgoingRequestsSensor
 
         $this->records['outgoing_requests'][] = [
             'timestamp' => $startedAt->format('Y-m-d H:i:s'), // TODO make sure this is when the request started, not ended.
-            'deploy_id' => (string) $this->config->get('nightwatch.deploy_id'),
-            'server' => $this->config->get('nightwatch.server'),
+            'deploy_id' => $this->deployId,
+            'server' => $this->server,
             'group' => hash('sha256', ''),  // TODO
-            'trace_id' => $this->traceId->value(),
+            'trace_id' => $this->traceId,
             'execution_context' => 'request', // TODO
             'execution_id' => '00000000-0000-0000-0000-000000000000', // TODO
-            'user' => $this->auth->id() ?? '',
+            'user' => Auth::id() ?? '', // TODO: allow this to be customised
             'method' => $request->getMethod(),
             'url' => $request->getUri(),
             'duration' => $duration,

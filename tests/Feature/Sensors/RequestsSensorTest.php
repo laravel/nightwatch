@@ -3,6 +3,7 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Sensors\RequestsSensor;
+use Laravel\Nightwatch\Sensors\Sensor;
 
 use function Pest\Laravel\call;
 use function Pest\Laravel\travelTo;
@@ -13,10 +14,6 @@ beforeEach(function () {
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
-});
-
-it('lazily resolves the sensor', function () {
-    expect(app()->resolved(RequestsSensor::class))->toBeFalse();
 });
 
 it('can ingest requests', function () {

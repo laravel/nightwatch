@@ -34,7 +34,17 @@ final class NightwatchServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(Sensor::class);
+        $this->app->singleton(Sensor::class, function (Container $app) {
+            /** @var Config */
+            $config = $app->make(Config::class);
+            /** @var RecordCollection */
+            $records = $app->make(RecordCollection::class);
+
+            /** @var array{ server: string|false, deploy_id: string|null } */
+            $nightwatchConfig = $config->get('nightwatch');
+
+            return new Sensor($app);
+        });
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
         $this->app->scoped(RecordCollection::class);
         $this->configureAgent();
@@ -179,6 +189,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         // create a listener, but the listener may not be triggered. Also, we should
         // probably not use the `Str` helper here so we have full control over the
         // UUID generated and it isn't impacted by user modifications.
-        $this->app->scoped(TraceId::class, fn () => new TraceId(Str::uuid()->toString()));
+        $this->app->scoped('nightwatch.trace_id', fn () => Str::uuid()->toString());
     }
 }

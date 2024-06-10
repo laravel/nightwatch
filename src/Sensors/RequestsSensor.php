@@ -8,7 +8,6 @@ use Illuminate\Config\Repository as Config;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\RecordCollection;
-use Laravel\Nightwatch\TraceId;
 use Symfony\Component\HttpFoundation\Response;
 
 final class RequestsSensor
@@ -16,8 +15,9 @@ final class RequestsSensor
     public function __construct(
         private RecordCollection $records,
         private PeakMemoryProvider $peakMemory,
-        private TraceId $traceId,
-        private Config $config,
+        private string $traceId,
+        private string $deployId,
+        private string $server,
     ) {
         //
     }
@@ -28,10 +28,10 @@ final class RequestsSensor
 
         $this->records['requests'][] = [
             'timestamp' => $startedAt->format('Y-m-d H:i:s'),
-            'deploy_id' => (string) $this->config->get('nightwatch.deploy_id'), // TODO extract to class
-            'server' => (string) $this->config->get('nightwatch.server'), // TODO extract to class
+            'deploy_id' => $this->deployId,
+            'server' => $this->server,
             'group' => hash('sha256', ''),  // TODO
-            'trace_id' => $this->traceId->value(),
+            'trace_id' => $this->traceId,
             // TODO domain as individual key?
             'method' => $request->getMethod(),
             'route' => '/'.$request->route()->uri(), // TODO handle nullable routes.
@@ -65,8 +65,8 @@ final class RequestsSensor
     private function parseResponseSizeKilobytes(Response $response): int
     {
         // chunked responses...
-        if ($response->headers->has('content-length')) {
-            return (int) ($response->headers->get('content-length') / 1000);
+        if ($length = $response->headers->get('content-length')) {
+            return (int) ($length / 1000);
         }
 
         // normal requests...

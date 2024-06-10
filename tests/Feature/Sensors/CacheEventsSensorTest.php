@@ -7,6 +7,7 @@ use Laravel\Nightwatch\Sensors\CacheEventsSensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
@@ -100,6 +101,7 @@ it('can ingest cache misses', function () {
 });
 
 it('can ingest cache hits', function () {
+    withoutExceptionHandling();
     $ingest = fakeIngest();
     Cache::driver('array')->put('users:345', 'xxxx');
     Route::post('/users', function () {

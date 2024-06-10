@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Event;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\RecordCollection;
-use Laravel\Nightwatch\TraceId;
 use Tests\FakeIngest;
 
 uses(Tests\TestCase::class)->in('Feature');
@@ -28,7 +27,7 @@ function setServerName(string $name): void
 
 function setTraceId(string $traceId): void
 {
-    App::singleton(TraceId::class, fn () => new TraceId($traceId));
+    App::instance('nightwatch.trace_id', $traceId);
 }
 
 function setPeakMemoryInKilobytes(int $value): void
