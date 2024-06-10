@@ -11,7 +11,6 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\Providers\PeakMemory;
 use Laravel\Nightwatch\RecordCollection;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,10 +26,15 @@ final class Sensor
      * }
      */
     private array $sensors = [];
+
     private string $traceId;
+
     private string $deployId;
+
     private string $server;
+
     private RecordCollection $records;
+
     private PeakMemoryProvider $peakMemoryProvider;
 
     public function __construct(

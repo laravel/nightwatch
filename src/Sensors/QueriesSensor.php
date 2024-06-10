@@ -3,8 +3,6 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
-use Illuminate\Auth\AuthManager;
-use Illuminate\Config\Repository as Config;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\RecordCollection;

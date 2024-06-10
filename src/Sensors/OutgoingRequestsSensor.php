@@ -6,8 +6,6 @@ use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use Illuminate\Auth\AuthManager;
-use Illuminate\Config\Repository as Config;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\RecordCollection;
 

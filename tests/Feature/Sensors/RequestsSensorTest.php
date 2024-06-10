@@ -2,8 +2,6 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\Sensors\RequestsSensor;
-use Laravel\Nightwatch\Sensors\Sensor;
 
 use function Pest\Laravel\call;
 use function Pest\Laravel\travelTo;
