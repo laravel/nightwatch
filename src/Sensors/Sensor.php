@@ -7,14 +7,17 @@ use GuzzleHttp\Psr7\Request as Psr7Request;
 use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\RecordCollection;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 // TODO: flush caches (peak memory does not need to be flushed)
+// Do we need to refresh the application instance?
 final class Sensor
 {
     /**
@@ -23,6 +26,7 @@ final class Sensor
      *     queries?: QueriesSensor,
      *     cache_events?: CacheEventsSensor,
      *     outgoing_requests?: OutgoingRequestsSensor,
+     *     exceptions?: ExceptionsSensor,
      * }
      */
     private array $sensors = [];
@@ -93,9 +97,21 @@ final class Sensor
         $sensor($startedAt, $request, $response);
     }
 
+    public function exceptions(Throwable $e): void
+    {
+        $sensor = $this->sensors['exceptions'] ??= new ExceptionsSensor(
+            records: $this->records(),
+            traceId: $this->traceId(),
+            deployId: $this->deployId(),
+            server: $this->server(),
+        );
+
+        $sensor($e);
+    }
+
     private function traceId(): string
     {
-        return $this->traceId ??= $this->app->make('nightwatch.trace_id');
+        return $this->traceId ??= $this->app->make('laravel.nightwatch.trace_id');
     }
 
     private function peakMemoryProvider(): PeakMemoryProvider
@@ -105,12 +121,12 @@ final class Sensor
 
     private function deployId(): string
     {
-        return $this->deployId ??= $this->app->make('config')->get('nightwatch.deploy_id');
+        return $this->deployId ??= (string) $this->app->make(Config::class)->get('nightwatch.deploy_id');
     }
 
     private function server(): string
     {
-        return $this->server ??= $this->app->make('config')->get('nightwatch.server');
+        return $this->server ??= (string) $this->app->make(Config::class)->get('nightwatch.server');
     }
 
     private function records(): RecordCollection

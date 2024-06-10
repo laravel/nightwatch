@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch;
 
 use Illuminate\Support\Collection;
 
+// TODO: don't have this extend collection.
 final class RecordCollection extends Collection
 {
     public function __construct()
@@ -15,6 +16,7 @@ final class RecordCollection extends Collection
 
     public function flush(): void
     {
+        // TODO treat execution parent differently.
         $this->items = [
             'execution_parent' => new Collection([
                 'queries' => 0,

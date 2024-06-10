@@ -27,7 +27,7 @@ function setServerName(string $name): void
 
 function setTraceId(string $traceId): void
 {
-    App::instance('nightwatch.trace_id', $traceId);
+    App::instance('laravel.nightwatch.trace_id', $traceId);
 }
 
 function setPeakMemoryInKilobytes(int $value): void

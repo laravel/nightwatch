@@ -7,6 +7,7 @@ use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Database\Events\QueryExecuted;
@@ -30,21 +31,13 @@ use React\Socket\TcpServer;
 use React\Socket\TimeoutConnector;
 use Symfony\Component\HttpFoundation\Response;
 
+// TODO:
+// - any config values throughout should be type checked.
 final class NightwatchServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(Sensor::class, function (Container $app) {
-            /** @var Config */
-            $config = $app->make(Config::class);
-            /** @var RecordCollection */
-            $records = $app->make(RecordCollection::class);
-
-            /** @var array{ server: string|false, deploy_id: string|null } */
-            $nightwatchConfig = $config->get('nightwatch');
-
-            return new Sensor($app);
-        });
+        $this->app->singleton(Sensor::class);
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
         $this->app->scoped(RecordCollection::class);
         $this->configureAgent();
@@ -147,7 +140,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $events->listen(QueryExecuted::class, $sensor->queries(...));
         $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvents(...));
         $this->callAfterResolving(Http::class, fn (Http $http) => $http->globalMiddleware(new GuzzleMiddleware($sensor)));
-
+        $this->callAfterResolving(ExceptionHandler::class, fn (ExceptionHandler $handler) => $handler->reportable($sensor->exceptions(...)));
         $this->callAfterResolving(HttpKernel::class, function (HttpKernel $kernel, Container $app) use ($sensor) {
             if (! method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
                 // TODO implement an alternative approach
@@ -189,6 +182,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         // create a listener, but the listener may not be triggered. Also, we should
         // probably not use the `Str` helper here so we have full control over the
         // UUID generated and it isn't impacted by user modifications.
-        $this->app->scoped('nightwatch.trace_id', fn () => Str::uuid()->toString());
+        $this->app->scoped('laravel.nightwatch.trace_id', fn () => Str::uuid()->toString());
     }
 }
