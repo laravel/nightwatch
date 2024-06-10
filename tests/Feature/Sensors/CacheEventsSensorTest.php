@@ -49,7 +49,6 @@ it('can ingest cache misses', function () {
                 'status_code' => '200',
                 'request_size_kilobytes' => 0,
                 'response_size_kilobytes' => 0,
-                'peak_memory_usage_kilobytes' => 1234,
                 'queries' => 0,
                 'queries_duration' => 0,
                 'lazy_loads' => 0,
@@ -70,6 +69,7 @@ it('can ingest cache misses', function () {
                 'cache_hits' => 0,
                 'cache_misses' => 1,
                 'hydrated_models' => 0,
+                'peak_memory_usage_kilobytes' => 1234,
             ],
         ],
         'cache_events' => [
@@ -129,7 +129,6 @@ it('can ingest cache hits', function () {
                 'status_code' => '200',
                 'request_size_kilobytes' => 0,
                 'response_size_kilobytes' => 0,
-                'peak_memory_usage_kilobytes' => 1234,
                 'queries' => 0,
                 'queries_duration' => 0,
                 'lazy_loads' => 0,
@@ -150,6 +149,7 @@ it('can ingest cache hits', function () {
                 'cache_hits' => 1,
                 'cache_misses' => 0,
                 'hydrated_models' => 0,
+                'peak_memory_usage_kilobytes' => 1234,
             ],
         ],
         'cache_events' => [
