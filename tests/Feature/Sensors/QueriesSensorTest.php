@@ -7,11 +7,12 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\RecordCollection;
+use Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\Sensors\QuerySensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
@@ -20,7 +21,7 @@ beforeEach(function () {
     setTraceId('00000000-0000-0000-0000-000000000000');
     travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
 
-    Event::listen(MigrationsEnded::class, fn () => App::make(RecordCollection::class)->flush());
+    Event::listen(MigrationsEnded::class, fn () => App::make(Records::class)->flush());
 });
 
 it('lazily resolves the sensor', function () {

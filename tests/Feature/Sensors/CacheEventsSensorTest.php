@@ -101,7 +101,6 @@ it('can ingest cache misses', function () {
 });
 
 it('can ingest cache hits', function () {
-    withoutExceptionHandling();
     $ingest = fakeIngest();
     Cache::driver('array')->put('users:345', 'xxxx');
     Route::post('/users', function () {

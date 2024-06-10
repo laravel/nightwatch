@@ -6,14 +6,14 @@ use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\RecordCollection;
+use Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Symfony\Component\HttpFoundation\Response;
 
 final class RequestSensor
 {
     public function __construct(
-        private RecordCollection $records,
+        private Records $records,
         private PeakMemoryProvider $peakMemory,
         private string $traceId,
         private string $deployId,
@@ -26,7 +26,7 @@ final class RequestSensor
     {
         $duration = (int) CarbonImmutable::now()->diffInMilliseconds($startedAt, true); // TODO: can I do this without using Carbon?
 
-        $this->records['requests'][] = new RequestRecord(
+        $this->records->addRequest(new RequestRecord(
             timestamp: $startedAt->format('Y-m-d H:i:s'),
             deploy_id: $this->deployId,
             server: $this->server,
@@ -57,28 +57,28 @@ final class RequestSensor
             // - chunked requests
             // - Content-Encoding requests
             response_size_kilobytes: $this->parseResponseSizeKilobytes($response),
-            queries: $this->records['execution_parent']['queries'],
-            queries_duration: $this->records['execution_parent']['queries_duration'],
-            lazy_loads: $this->records['execution_parent']['lazy_loads'],
-            lazy_loads_duration: $this->records['execution_parent']['lazy_loads_duration'],
-            jobs_queued: $this->records['execution_parent']['jobs_queued'],
-            mail_queued: $this->records['execution_parent']['mail_queued'],
-            mail_sent: $this->records['execution_parent']['mail_sent'],
-            mail_duration: $this->records['execution_parent']['mail_duration'],
-            notifications_queued: $this->records['execution_parent']['notifications_queued'],
-            notifications_sent: $this->records['execution_parent']['notifications_sent'],
-            notifications_duration: $this->records['execution_parent']['notifications_duration'],
-            outgoing_requests: $this->records['execution_parent']['outgoing_requests'],
-            outgoing_requests_duration: $this->records['execution_parent']['outgoing_requests_duration'],
-            files_read: $this->records['execution_parent']['files_read'],
-            files_read_duration: $this->records['execution_parent']['files_read_duration'],
-            files_written: $this->records['execution_parent']['files_written'],
-            files_written_duration: $this->records['execution_parent']['files_written_duration'],
-            cache_hits: $this->records['execution_parent']['cache_hits'],
-            cache_misses: $this->records['execution_parent']['cache_misses'],
-            hydrated_models: $this->records['execution_parent']['hydrated_models'],
+            queries: $this->records->executionParent->queries,
+            queries_duration: $this->records->executionParent->queries_duration,
+            lazy_loads: $this->records->executionParent->lazy_loads,
+            lazy_loads_duration: $this->records->executionParent->lazy_loads_duration,
+            jobs_queued: $this->records->executionParent->jobs_queued,
+            mail_queued: $this->records->executionParent->mail_queued,
+            mail_sent: $this->records->executionParent->mail_sent,
+            mail_duration: $this->records->executionParent->mail_duration,
+            notifications_queued: $this->records->executionParent->notifications_queued,
+            notifications_sent: $this->records->executionParent->notifications_sent,
+            notifications_duration: $this->records->executionParent->notifications_duration,
+            outgoing_requests: $this->records->executionParent->outgoing_requests,
+            outgoing_requests_duration: $this->records->executionParent->outgoing_requests_duration,
+            files_read: $this->records->executionParent->files_read,
+            files_read_duration: $this->records->executionParent->files_read_duration,
+            files_written: $this->records->executionParent->files_written,
+            files_written_duration: $this->records->executionParent->files_written_duration,
+            cache_hits: $this->records->executionParent->cache_hits,
+            cache_misses: $this->records->executionParent->cache_misses,
+            hydrated_models: $this->records->executionParent->hydrated_models,
             peak_memory_usage_kilobytes: $this->peakMemory->kilobytes(),
-        );
+        ));
     }
 
     private function parseResponseSizeKilobytes(Response $response): int

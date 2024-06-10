@@ -7,13 +7,13 @@ use DateTimeInterface;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Nightwatch\RecordCollection;
+use Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 
 final class OutgoingRequestSensor
 {
     public function __construct(
-        private RecordCollection $records,
+        private Records $records,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -25,7 +25,7 @@ final class OutgoingRequestSensor
     {
         $duration = (int) CarbonImmutable::now()->diffInMilliseconds($startedAt, true); // TODO: can I do this without using Carbon?
 
-        $this->records['outgoing_requests'][] = new OutgoingRequest(
+        $this->records->addOutgoingRequest(new OutgoingRequest(
             timestamp: $startedAt->format('Y-m-d H:i:s'), // TODO make sure this is when the request started, not ended.
             deploy_id: $this->deployId,
             server: $this->server,
@@ -48,11 +48,6 @@ final class OutgoingRequestSensor
                 ($response->getHeader('content-length')[0] ?? $response->getBody()->getSize() ?? strlen((string) $response->getBody())) / 1000
             ),
             status_code: (string) $response->getStatusCode(),
-        );
-
-        $executionParent = $this->records['execution_parent'];
-
-        $executionParent['outgoing_requests'] += 1;
-        $executionParent['outgoing_requests_duration'] += $duration;
+        ));
     }
 }

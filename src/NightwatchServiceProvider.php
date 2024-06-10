@@ -38,7 +38,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(SensorManager::class);
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
-        $this->app->scoped(RecordCollection::class);
+        $this->app->scoped(Records::class);
         $this->configureAgent();
         $this->configureClient();
         $this->configureIngest();
@@ -151,10 +151,11 @@ final class NightwatchServiceProvider extends ServiceProvider
 
                 /** @var IngestContract */
                 $ingest = $app->make(IngestContract::class);
-                /** @var RecordCollection */
-                $records = $app->make(RecordCollection::class);
+                /** @var Records */
 
-                $ingest->write($records->forget('execution_parent')->toJson());
+                $records = $app->make(Records::class);
+
+                $ingest->write($records->toJson());
             });
         });
     }

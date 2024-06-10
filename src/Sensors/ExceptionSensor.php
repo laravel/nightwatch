@@ -4,14 +4,14 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Nightwatch\RecordCollection;
+use Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\Records\Exception;
 use Throwable;
 
 final class ExceptionSensor
 {
     public function __construct(
-        private RecordCollection $records,
+        private Records $records,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -23,7 +23,7 @@ final class ExceptionSensor
     {
         $now = CarbonImmutable::now();
 
-        $this->records['exceptions'][] = new Exception(
+        $this->records->addException(new Exception(
             // TODO Can I do this without Carbon?
             // TODO `time` is a float. Does this correctly adjust?
             timestamp: $now->format('Y-m-d H:i:s'),
@@ -40,10 +40,6 @@ final class ExceptionSensor
             message: $e->getMessage(),
             code: $e->getCode(),
             trace: $e->getTraceAsString(),
-        );
-
-        $executionParent = $this->records['execution_parent'];
-
-        // TODO we should track the number of exceptions.
+        ));
     }
 }

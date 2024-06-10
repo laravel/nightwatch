@@ -34,7 +34,6 @@ it('ingests outgoing requests', function () {
             return Http::response(str_repeat('a', 3000));
         },
     ]);
-    withoutExceptionHandling();
     $response = post('/users');
 
     $response->assertOk();

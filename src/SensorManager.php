@@ -40,7 +40,7 @@ final class SensorManager
 
     private string $server;
 
-    private RecordCollection $records;
+    private Records $records;
 
     private PeakMemoryProvider $peakMemoryProvider;
 
@@ -132,8 +132,8 @@ final class SensorManager
         return $this->server ??= (string) $this->app->make(Config::class)->get('nightwatch.server');
     }
 
-    private function records(): RecordCollection
+    private function records(): Records
     {
-        return $this->records ??= $this->app->make(RecordCollection::class);
+        return $this->records ??= $this->app->make(Records::class);
     }
 }

@@ -5,13 +5,13 @@ namespace Laravel\Nightwatch\Sensors;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Nightwatch\RecordCollection;
+use Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\Records\Query;
 
 final class QuerySensor
 {
     public function __construct(
-        private RecordCollection $records,
+        private Records $records,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -23,7 +23,7 @@ final class QuerySensor
     {
         $now = CarbonImmutable::now();
 
-        $this->records['queries'][] = new Query(
+        $this->records->addQuery(new Query(
             // TODO Can I do this without Carbon?
             // TODO `time` is a float. Does this correctly adjust?
             timestamp: $now->subMilliseconds($event->time)->format('Y-m-d H:i:s'),
@@ -42,13 +42,6 @@ final class QuerySensor
             // microseconds instead of milliseconds, though?
             duration: (int) $event->time,
             connection: $event->connectionName,
-        );
-
-        $executionParent = $this->records['execution_parent'];
-
-        $executionParent['queries'] += 1;
-        // TODO this is done to support the validation. Do we want to track
-        // microseconds instead of milliseconds, though?
-        $executionParent['queries_duration'] += (int) $event->time;
+        ));
     }
 }

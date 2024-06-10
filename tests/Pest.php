@@ -5,14 +5,14 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\RecordCollection;
+use Laravel\Nightwatch\Records;
 use Tests\FakeIngest;
 
 uses(Tests\TestCase::class)->in('Feature');
 
-function records(): RecordCollection
+function records(): Records
 {
-    return App::make(RecordCollection::class);
+    return App::make(Records::class);
 }
 
 function setDeployId(string $deployId): void
