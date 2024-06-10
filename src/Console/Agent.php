@@ -54,7 +54,7 @@ final class Agent extends Command
      * - Locally buffer data in files? Worried about build up. Opt-in failover
      * mechanism, esp if we gzip the contents first. Might not be too bad.
      */
-    public function handle(Server $server): int
+    public function handle(Server $server): void
     {
         $server->on('connection', function (ConnectionInterface $connection) {
             $this->line('Connection accepted.', verbosity: 'v');

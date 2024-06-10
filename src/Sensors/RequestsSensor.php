@@ -11,7 +11,7 @@ use Laravel\Nightwatch\RecordCollection;
 use Laravel\Nightwatch\TraceId;
 use Symfony\Component\HttpFoundation\Response;
 
-final class RequestSensor
+final class RequestsSensor
 {
     public function __construct(
         private RecordCollection $records,

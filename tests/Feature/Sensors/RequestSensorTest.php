@@ -2,7 +2,7 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\Sensors\RequestSensor;
+use Laravel\Nightwatch\Sensors\RequestsSensor;
 
 use function Pest\Laravel\call;
 use function Pest\Laravel\travelTo;
@@ -16,7 +16,7 @@ beforeEach(function () {
 });
 
 it('lazily resolves the sensor', function () {
-    expect(app()->resolved(RequestSensor::class))->toBeFalse();
+    expect(app()->resolved(RequestsSensor::class))->toBeFalse();
 });
 
 it('can ingest requests', function () {

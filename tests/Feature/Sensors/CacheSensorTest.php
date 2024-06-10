@@ -3,7 +3,7 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\Sensors\CacheSensor;
+use Laravel\Nightwatch\Sensors\CacheEventsSensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
@@ -19,7 +19,7 @@ beforeEach(function () {
 
 // TODO we might not need this if we manually create the objects.
 it('lazily resolves the sensor', function () {
-    expect(app()->resolved(CacheSensor::class))->toBeFalse();
+    expect(app()->resolved(CacheEventsSensor::class))->toBeFalse();
 });
 
 it('can ingest cache misses', function () {

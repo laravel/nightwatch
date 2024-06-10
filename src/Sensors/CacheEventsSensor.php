@@ -10,7 +10,7 @@ use Illuminate\Config\Repository as Config;
 use Laravel\Nightwatch\RecordCollection;
 use Laravel\Nightwatch\TraceId;
 
-final class CacheSensor
+final class CacheEventsSensor
 {
     public function __construct(
         private RecordCollection $records,

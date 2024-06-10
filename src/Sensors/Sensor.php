@@ -18,7 +18,7 @@ final class Sensor
      * @var array{
      *     requests?: RequestSensor,
      *     queries?: QuerySensor,
-     *     cache_events?: CacheSensor,
+     *     cache_events?: CacheEventsSensor,
      * }
      */
     private array $sensors = [];
@@ -31,7 +31,7 @@ final class Sensor
     public function requests(DateTimeInterface $startedAt, Request $request, Response $response): void
     {
         /** @var RequestSensor */
-        $sensor = $this->sensors['requests'] ??= $this->app->make(RequestSensor::class);
+        $sensor = $this->sensors['requests'] ??= $this->app->make(RequestsSensor::class);
 
         $sensor($startedAt, $request, $response);
     }
@@ -39,15 +39,15 @@ final class Sensor
     public function queries(QueryExecuted $event): void
     {
         /** @var QuerySensor */
-        $sensor = $this->sensors['queries'] ??= $this->app->make(QuerySensor::class);
+        $sensor = $this->sensors['queries'] ??= $this->app->make(QueriesSensor::class);
 
         $sensor($event);
     }
 
     public function cacheEvents(CacheMissed|CacheHit $event): void
     {
-        /** @var CacheSensor */
-        $sensor = $this->sensors['cache_events'] ??= $this->app->make(CacheSensor::class);
+        // TODO extract enum for all these keys we use throughout
+        $sensor = $this->sensors['cache_events'] ??= $this->app->make(CacheEventsSensor::class);
 
         $sensor($event);
     }

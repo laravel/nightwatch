@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\RecordCollection;
 use Laravel\Nightwatch\TraceId;
 
-final class QuerySensor
+final class QueriesSensor
 {
     public function __construct(
         private RecordCollection $records,
