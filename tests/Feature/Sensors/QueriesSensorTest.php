@@ -102,7 +102,7 @@ it('can ingest queries', function () {
                 'file' => 'app/Models/User.php',
                 'line' => 5,
                 'duration' => 5,
-                'connection' => 'sqlite',
+                'connection' => 'testing',
             ],
         ],
         'queued_jobs' => [],

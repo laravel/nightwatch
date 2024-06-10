@@ -20,7 +20,7 @@ use Laravel\Nightwatch\Contracts\Client as ClientContract;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Providers\PeakMemory;
-use Laravel\Nightwatch\Sensors\Sensor;
+use Laravel\Nightwatch\SensorManager;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
 use React\Socket\Connector;
@@ -37,7 +37,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(Sensor::class);
+        $this->app->singleton(SensorManager::class);
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
         $this->app->scoped(RecordCollection::class);
         $this->configureAgent();
@@ -135,7 +135,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Dispatcher */
         $events = $this->app->make(Dispatcher::class);
         /** @var Sensor */
-        $sensor = $this->app->make(Sensor::class);
+        $sensor = $this->app->make(SensorManager::class);
 
         $events->listen(QueryExecuted::class, $sensor->queries(...));
         $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvents(...));

@@ -1,0 +1,32 @@
+<?php
+
+namespace Laravel\Nightwatch\Records;
+
+class CacheEvent
+{
+    /**
+     * @param  non-empty-string  $timestamp
+     * @param  non-empty-string  $group
+     * @param  non-empty-string  $trace_id
+     * @param  'job'|'request'  $execution_context
+     * @param  non-empty-string  $execution_id
+     * @param  non-empty-string  $store
+     * @param  non-empty-string  $key
+     * @param  'hit'|'miss' $type
+     */
+    public function __construct(
+        public string $timestamp,
+        public string $deploy_id,
+        public string $server,
+        public string $group,
+        public string $trace_id,
+        public string $execution_context,
+        public string $execution_id,
+        public string $user,
+        public string $store,
+        public string $key,
+        public string $type,
+    ) {
+        //
+    }
+}

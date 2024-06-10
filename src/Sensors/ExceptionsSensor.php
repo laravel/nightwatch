@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\RecordCollection;
+use Laravel\Nightwatch\Records\Exception;
 use Throwable;
 
 final class ExceptionsSensor
@@ -22,24 +23,24 @@ final class ExceptionsSensor
     {
         $now = CarbonImmutable::now();
 
-        $this->records['exceptions'][] = [
+        $this->records['exceptions'][] = new Exception(
             // TODO Can I do this without Carbon?
             // TODO `time` is a float. Does this correctly adjust?
-            'timestamp' => $now->format('Y-m-d H:i:s'),
-            'deploy_id' => $this->deployId,
-            'server' => $this->server,
-            'group' => hash('sha256', ''), // TODO
-            'trace_id' => $this->traceId,
-            'execution_context' => 'request', // TODO
-            'execution_id' => '00000000-0000-0000-0000-000000000000', // TODO
-            'user' => Auth::id() ?? '', // TODO allow this to be customised
-            'class' => $e::class,
-            'file' => 'app/Models/User.php', //TODO
-            'line' => 5,
-            'message' => $e->getMessage(),
-            'code' => $e->getCode(),
-            'trace' => $e->getTraceAsString(),
-        ];
+            timestamp: $now->format('Y-m-d H:i:s'),
+            deploy_id: $this->deployId,
+            server: $this->server,
+            group: hash('sha256', ''), // TODO
+            trace_id: $this->traceId,
+            execution_context: 'request', // TODO
+            execution_id: '00000000-0000-0000-0000-000000000000', // TODO
+            user: Auth::id() ?? '', // TODO allow this to be customised
+            class: $e::class,
+            file: 'app/Models/User.php', //TODO
+            line: 5,
+            message: $e->getMessage(),
+            code: $e->getCode(),
+            trace: $e->getTraceAsString(),
+        );
 
         $executionParent = $this->records['execution_parent'];
 

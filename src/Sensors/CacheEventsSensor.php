@@ -7,6 +7,7 @@ use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\RecordCollection;
+use Laravel\Nightwatch\Records\CacheEvent;
 
 final class CacheEventsSensor
 {
@@ -29,21 +30,22 @@ final class CacheEventsSensor
             CacheHit::class => ['hit', 'cache_hits'],
         };
 
+        // TODO limit length of keys when needed for validation
         // TODO: the cache events collection could be injected and then we
         // just modify it directly. Execution parent can also be injected.
-        $this->records['cache_events'][] = [
-            'timestamp' => $now->format('Y-m-d H:i:s'),
-            'deploy_id' => $this->deployId,
-            'server' => $this->server,
-            'group' => hash('sha256', ''), // TODO
-            'trace_id' => $this->traceId,
-            'execution_context' => 'request', // TODO
-            'execution_id' => '00000000-0000-0000-0000-000000000000', // TODO
-            'user' => Auth::id() ?? '', // TODO allow this to be customised
-            'store' => $event->storeName, // this can be nullable? fallback to default?
-            'key' => $event->key,
-            'type' => $type,
-        ];
+        $this->records['cache_events'][] = new CacheEvent(
+            timestamp: $now->format('Y-m-d H:i:s'),
+            deploy_id: $this->deployId,
+            server: $this->server,
+            group: hash('sha256', ''), // TODO
+            trace_id: $this->traceId,
+            execution_context: 'request', // TODO
+            execution_id: '00000000-0000-0000-0000-000000000000', // TODO
+            user: Auth::id() ?? '', // TODO allow this to be customised
+            store: $event->storeName, // this can be nullable? fallback to default?
+            key: $event->key,
+            type: $type,
+        );
 
         $executionParent = $this->records['execution_parent'];
 

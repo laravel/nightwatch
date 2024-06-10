@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Nightwatch\Sensors;
+namespace Laravel\Nightwatch;
 
 use DateTimeInterface;
 use GuzzleHttp\Psr7\Request as Psr7Request;
@@ -13,16 +13,22 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\RecordCollection;
+use Laravel\Nightwatch\Sensors\CacheEventsSensor;
+use Laravel\Nightwatch\Sensors\ExceptionsSensor;
+use Laravel\Nightwatch\Sensors\OutgoingRequestsSensor;
+use Laravel\Nightwatch\Sensors\QueriesSensor;
+use Laravel\Nightwatch\Sensors\RequestsSensor;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 // TODO: flush caches (peak memory does not need to be flushed)
 // Do we need to refresh the application instance?
-final class Sensor
+final class SensorManager
 {
     /**
      * @var array{
-     *     requests?: RequestsSensor,
      *     queries?: QueriesSensor,
      *     cache_events?: CacheEventsSensor,
      *     outgoing_requests?: OutgoingRequestsSensor,
@@ -49,7 +55,7 @@ final class Sensor
 
     public function requests(DateTimeInterface $startedAt, Request $request, Response $response): void
     {
-        $sensor = $this->sensors['requests'] ??= new RequestsSensor(
+        $sensor = new RequestsSensor(
             records: $this->records(),
             peakMemory: $this->peakMemoryProvider(),
             traceId: $this->traceId(),
@@ -85,7 +91,7 @@ final class Sensor
         $sensor($event);
     }
 
-    public function outgoingRequests(DateTimeInterface $startedAt, Psr7Request $request, Psr7Response $response): void
+    public function outgoingRequests(DateTimeInterface $startedAt, RequestInterface $request, ResponseInterface $response): void
     {
         $sensor = $this->sensors['outgoing_requests'] ??= new OutgoingRequestsSensor(
             records: $this->records(),
