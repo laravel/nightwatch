@@ -2,20 +2,19 @@
 
 namespace Laravel\Nightwatch\Records;
 
-class Request
+final class Request
 {
     /**
      * @param  non-empty-string  $timestamp
      * @param  non-empty-string  $group
      * @param  non-empty-string  $trace_id
-     * @param 'GET'|'HEAD'|'POST'|'PUT'|'DELETE'|'CONNECT'|'OPTIONS'|'TRACE'|'PATCH' $method
-     * @param non-empty-string  $path
+     * @param  'GET'|'HEAD'|'POST'|'PUT'|'DELETE'|'CONNECT'|'OPTIONS'|'TRACE'|'PATCH'  $method
+     * @param  non-empty-string  $path
      * @param  non-empty-string  $ip
-     * @param non-negative-int  $duration
-     * @param  string  $status_code
-     * @param  non-negative-int $request_size_kilobytes
-     * @param  non-negative-int $request_size_kilobytes
-     * @param  non-negative-int $response_size_kilobytes
+     * @param  non-negative-int  $duration
+     * @param  non-negative-int  $request_size_kilobytes
+     * @param  non-negative-int  $request_size_kilobytes
+     * @param  non-negative-int  $response_size_kilobytes
      */
     public function __construct(
         public string $timestamp,

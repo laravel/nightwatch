@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
-class Query
+final class Query
 {
     /**
      * @param  non-empty-string  $timestamp

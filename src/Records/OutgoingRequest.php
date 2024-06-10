@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
-class OutgoingRequest
+final class OutgoingRequest
 {
     /**
      * @param  non-empty-string  $timestamp
@@ -10,11 +10,11 @@ class OutgoingRequest
      * @param  non-empty-string  $trace_id
      * @param  'job'|'request'  $execution_context
      * @param  non-empty-string  $execution_id
-     * @param 'GET'|'HEAD'|'POST'|'PUT'|'DELETE'|'CONNECT'|'OPTIONS'|'TRACE'|'PATCH' $method
-     * @param non-empty-string $url
+     * @param  'GET'|'HEAD'|'POST'|'PUT'|'DELETE'|'CONNECT'|'OPTIONS'|'TRACE'|'PATCH'  $method
+     * @param  non-empty-string  $url
      * @param  non-negative-int  $duration
-     * @param  non-negative-int $request_size_kilobytes
-     * @param  non-negative-int $response_size_kilobytes
+     * @param  non-negative-int  $request_size_kilobytes
+     * @param  non-negative-int  $response_size_kilobytes
      * @param  non-empty-string  $status_code,
      */
     public function __construct(

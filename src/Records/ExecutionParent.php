@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
-class ExecutionParent
+final class ExecutionParent
 {
     public function __construct(
         public int $queries = 0,

@@ -38,14 +38,14 @@ final class OutgoingRequestsSensor
             url: $request->getUri(),
             duration: $duration,
             request_size_kilobytes: (int) (
-               // TODO test how this handles:
-               // - chunked requests
-               // - Content-Encoding requests
-               // are there potential memory issues if the body is a resource. Could be a lot.
-               ($request->getHeader('content-length')[0] ?? $request->getBody()->getSize() ?? strlen((string) $request->getBody())) / 1000
+                // TODO test how this handles:
+                // - chunked requests
+                // - Content-Encoding requests
+                // are there potential memory issues if the body is a resource. Could be a lot.
+                ($request->getHeader('content-length')[0] ?? $request->getBody()->getSize() ?? strlen((string) $request->getBody())) / 1000
             ),
             response_size_kilobytes: (int) (
-               ($response->getHeader('content-length')[0] ?? $response->getBody()->getSize() ?? strlen((string) $response->getBody())) / 1000
+                ($response->getHeader('content-length')[0] ?? $response->getBody()->getSize() ?? strlen((string) $response->getBody())) / 1000
             ),
             status_code: (string) $response->getStatusCode(),
         );
