@@ -133,13 +133,13 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         /** @var Dispatcher */
         $events = $this->app->make(Dispatcher::class);
-        /** @var Sensor */
+        /** @var SensorManager */
         $sensor = $this->app->make(SensorManager::class);
 
-        $events->listen(QueryExecuted::class, $sensor->queries(...));
-        $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvents(...));
+        $events->listen(QueryExecuted::class, $sensor->query(...));
+        $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvent(...));
         $this->callAfterResolving(Http::class, fn (Http $http) => $http->globalMiddleware(new GuzzleMiddleware($sensor)));
-        $this->callAfterResolving(ExceptionHandler::class, fn (ExceptionHandler $handler) => $handler->reportable($sensor->exceptions(...)));
+        $this->callAfterResolving(ExceptionHandler::class, fn (ExceptionHandler $handler) => $handler->reportable($sensor->exception(...)));
         $this->callAfterResolving(HttpKernel::class, function (HttpKernel $kernel, Container $app) use ($sensor) {
             if (! method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
                 // TODO implement an alternative approach
@@ -147,7 +147,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             }
 
             $kernel->whenRequestLifecycleIsLongerThan(-1, function (DateTimeInterface $startedAt, Request $request, Response $response) use ($sensor, $app) {
-                $sensor->requests($startedAt, $request, $response);
+                $sensor->request($startedAt, $request, $response);
 
                 /** @var IngestContract */
                 $ingest = $app->make(IngestContract::class);

@@ -8,7 +8,7 @@ use Laravel\Nightwatch\RecordCollection;
 use Laravel\Nightwatch\Records\Exception;
 use Throwable;
 
-final class ExceptionsSensor
+final class ExceptionSensor
 {
     public function __construct(
         private RecordCollection $records,

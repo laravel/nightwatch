@@ -10,11 +10,11 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\Sensors\CacheEventsSensor;
-use Laravel\Nightwatch\Sensors\ExceptionsSensor;
-use Laravel\Nightwatch\Sensors\OutgoingRequestsSensor;
-use Laravel\Nightwatch\Sensors\QueriesSensor;
-use Laravel\Nightwatch\Sensors\RequestsSensor;
+use Laravel\Nightwatch\Sensors\CacheEventSensor;
+use Laravel\Nightwatch\Sensors\ExceptionSensor;
+use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
+use Laravel\Nightwatch\Sensors\QuerySensor;
+use Laravel\Nightwatch\Sensors\RequestSensor;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -50,9 +50,9 @@ final class SensorManager
         //
     }
 
-    public function requests(DateTimeInterface $startedAt, Request $request, Response $response): void
+    public function request(DateTimeInterface $startedAt, Request $request, Response $response): void
     {
-        $sensor = new RequestsSensor(
+        $sensor = new RequestSensor(
             records: $this->records(),
             peakMemory: $this->peakMemoryProvider(),
             traceId: $this->traceId(),
@@ -63,9 +63,9 @@ final class SensorManager
         $sensor($startedAt, $request, $response);
     }
 
-    public function queries(QueryExecuted $event): void
+    public function query(QueryExecuted $event): void
     {
-        $sensor = $this->sensors['queries'] ??= new QueriesSensor(
+        $sensor = $this->sensors['queries'] ??= new QuerySensor(
             records: $this->records(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
@@ -75,10 +75,10 @@ final class SensorManager
         $sensor($event);
     }
 
-    public function cacheEvents(CacheMissed|CacheHit $event): void
+    public function cacheEvent(CacheMissed|CacheHit $event): void
     {
         // TODO extract enum for all these keys we use throughout
-        $sensor = $this->sensors['cache_events'] ??= new CacheEventsSensor(
+        $sensor = $this->sensors['cache_events'] ??= new CacheEventSensor(
             records: $this->records(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
@@ -88,9 +88,9 @@ final class SensorManager
         $sensor($event);
     }
 
-    public function outgoingRequests(DateTimeInterface $startedAt, RequestInterface $request, ResponseInterface $response): void
+    public function outgoingRequest(DateTimeInterface $startedAt, RequestInterface $request, ResponseInterface $response): void
     {
-        $sensor = $this->sensors['outgoing_requests'] ??= new OutgoingRequestsSensor(
+        $sensor = $this->sensors['outgoing_requests'] ??= new OutgoingRequestSensor(
             records: $this->records(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
@@ -100,9 +100,9 @@ final class SensorManager
         $sensor($startedAt, $request, $response);
     }
 
-    public function exceptions(Throwable $e): void
+    public function exception(Throwable $e): void
     {
-        $sensor = $this->sensors['exceptions'] ??= new ExceptionsSensor(
+        $sensor = $this->sensors['exceptions'] ??= new ExceptionSensor(
             records: $this->records(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\RecordCollection;
-use Laravel\Nightwatch\Sensors\QueriesSensor;
+use Laravel\Nightwatch\Sensors\QuerySensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
@@ -24,7 +24,7 @@ beforeEach(function () {
 });
 
 it('lazily resolves the sensor', function () {
-    expect(app()->resolved(QueriesSensor::class))->toBeFalse();
+    expect(app()->resolved(QuerySensor::class))->toBeFalse();
 });
 
 it('can ingest queries', function () {

@@ -10,7 +10,7 @@ use Laravel\Nightwatch\RecordCollection;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Symfony\Component\HttpFoundation\Response;
 
-final class RequestsSensor
+final class RequestSensor
 {
     public function __construct(
         private RecordCollection $records,

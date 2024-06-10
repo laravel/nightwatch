@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\RecordCollection;
 use Laravel\Nightwatch\Records\Query;
 
-final class QueriesSensor
+final class QuerySensor
 {
     public function __construct(
         private RecordCollection $records,

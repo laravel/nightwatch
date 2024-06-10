@@ -24,7 +24,7 @@ final class GuzzleMiddleware
 
             return $handler($request, $options)
                 ->then(function (ResponseInterface $response) use ($request, $startedAt) {
-                    $this->sensor->outgoingRequests($startedAt, $request, $response);
+                    $this->sensor->outgoingRequest($startedAt, $request, $response);
 
                     return $response;
                 }, function (Throwable $exception) {

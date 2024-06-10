@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\RecordCollection;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 
-final class OutgoingRequestsSensor
+final class OutgoingRequestSensor
 {
     public function __construct(
         private RecordCollection $records,
