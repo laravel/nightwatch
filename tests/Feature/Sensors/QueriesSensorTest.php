@@ -8,10 +8,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Records;
+use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\Sensors\QuerySensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
@@ -20,7 +22,7 @@ beforeEach(function () {
     setTraceId('00000000-0000-0000-0000-000000000000');
     travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
 
-    Event::listen(MigrationsEnded::class, fn () => App::make(Records::class)->flush());
+    Event::listen(MigrationsEnded::class, fn () => App::make(SensorManager::class)->prepareForNextExecution());
 });
 
 it('lazily resolves the sensor', function () {
@@ -29,6 +31,7 @@ it('lazily resolves the sensor', function () {
 
 it('can ingest queries', function () {
     $ingest = fakeIngest();
+    withoutExceptionHandling();
     prependListener(QueryExecuted::class, fn (QueryExecuted $event) => $event->time = 5.2);
     Route::post('/users', function () {
         DB::table('users')->get();
@@ -102,7 +105,7 @@ it('can ingest queries', function () {
                 'file' => 'app/Models/User.php',
                 'line' => 5,
                 'duration' => 5,
-                'connection' => 'testing',
+                'connection' => 'sqlite',
             ],
         ],
         'queued_jobs' => [],

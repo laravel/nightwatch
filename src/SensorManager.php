@@ -10,6 +10,7 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
+use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
 use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
@@ -34,26 +35,30 @@ final class SensorManager
      */
     private array $sensors = [];
 
-    private string $traceId;
+    private ?string $traceId;
 
-    private string $deployId;
+    private ?string $deployId;
 
-    private string $server;
+    private ?string $server;
 
-    private Records $records;
+    public Records $records;
 
-    private PeakMemoryProvider $peakMemoryProvider;
+    private ExecutionParent $executionParent;
+
+    private ?PeakMemoryProvider $peakMemoryProvider = null;
 
     public function __construct(
         private Container $app,
     ) {
-        //
+        $this->records = new Records;
+        $this->executionParent = new ExecutionParent;
     }
 
     public function request(DateTimeInterface $startedAt, Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
-            records: $this->records(),
+            records: $this->records,
+            executionParent: $this->executionParent,
             peakMemory: $this->peakMemoryProvider(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
@@ -66,7 +71,8 @@ final class SensorManager
     public function query(QueryExecuted $event): void
     {
         $sensor = $this->sensors['queries'] ??= new QuerySensor(
-            records: $this->records(),
+            records: $this->records,
+            executionParent: $this->executionParent,
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -79,7 +85,8 @@ final class SensorManager
     {
         // TODO extract enum for all these keys we use throughout
         $sensor = $this->sensors['cache_events'] ??= new CacheEventSensor(
-            records: $this->records(),
+            records: $this->records,
+            executionParent: $this->executionParent,
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -91,7 +98,8 @@ final class SensorManager
     public function outgoingRequest(DateTimeInterface $startedAt, RequestInterface $request, ResponseInterface $response): void
     {
         $sensor = $this->sensors['outgoing_requests'] ??= new OutgoingRequestSensor(
-            records: $this->records(),
+            records: $this->records,
+            executionParent: $this->executionParent,
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -103,7 +111,7 @@ final class SensorManager
     public function exception(Throwable $e): void
     {
         $sensor = $this->sensors['exceptions'] ??= new ExceptionSensor(
-            records: $this->records(),
+            records: $this->records,
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -132,8 +140,16 @@ final class SensorManager
         return $this->server ??= (string) $this->app->make(Config::class)->get('nightwatch.server');
     }
 
-    private function records(): Records
+    public function flush(): string
     {
-        return $this->records ??= $this->app->make(Records::class);
+        return $this->records->flush();
+    }
+
+    public function prepareForNextExecution()
+    {
+        $this->records = new Records;
+        $this->executionParent = new ExecutionParent;
+        $this->sensors = [];
+        $this->traceId = null;
     }
 }

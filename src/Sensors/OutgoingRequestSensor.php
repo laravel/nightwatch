@@ -8,12 +8,14 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\Records;
+use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 
 final class OutgoingRequestSensor
 {
     public function __construct(
         private Records $records,
+        private ExecutionParent $executionParent,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -49,5 +51,8 @@ final class OutgoingRequestSensor
             ),
             status_code: (string) $response->getStatusCode(),
         ));
+
+        $this->executionParent->outgoing_requests++;
+        $this->executionParent->outgoing_requests_duration = $duration;
     }
 }

@@ -41,5 +41,7 @@ final class ExceptionSensor
             code: $e->getCode(),
             trace: $e->getTraceAsString(),
         ));
+
+        // TODO: track the exception count?
     }
 }

@@ -8,11 +8,13 @@ use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\ExecutionParent;
 
 final class CacheEventSensor
 {
     public function __construct(
         private Records $records,
+        private ExecutionParent $executionParent,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -23,12 +25,16 @@ final class CacheEventSensor
     // TODO: "tags"?
     public function __invoke(CacheMissed|CacheHit $event)
     {
+        // TODO can we ditch Carbon?
         $now = CarbonImmutable::now();
 
-        [$type, $key] = match ($event::class) {
-            CacheMissed::class => ['miss', 'cache_misses'],
-            CacheHit::class => ['hit', 'cache_hits'],
-        };
+        if ($event::class === CacheHit::class) {
+            $type = 'hit';
+            $this->executionParent->cache_hits++;
+        } else {
+            $type = 'miss';
+            $this->executionParent->cache_misses++;
+        }
 
         // TODO limit length of keys when needed for validation
         // TODO: the cache events collection could be injected and then we

@@ -6,12 +6,14 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\Records;
+use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Query;
 
 final class QuerySensor
 {
     public function __construct(
         private Records $records,
+        private ExecutionParent $executionParent,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -22,6 +24,8 @@ final class QuerySensor
     public function __invoke(QueryExecuted $event): void
     {
         $now = CarbonImmutable::now();
+
+        $duration = (int) $event->time;
 
         $this->records->addQuery(new Query(
             // TODO Can I do this without Carbon?
@@ -40,8 +44,13 @@ final class QuerySensor
             line: 5, // TODO
             // TODO this is done to support the validation. Do we want to track
             // microseconds instead of milliseconds, though?
-            duration: (int) $event->time,
+            duration: $duration,
             connection: $event->connectionName,
         ));
+
+        $this->executionParent->queries++;
+        // TODO this is done to support the validation. Do we want to track
+        // microseconds instead of milliseconds, though?
+        $this->executionParent->queries_duration += $duration;
     }
 }
