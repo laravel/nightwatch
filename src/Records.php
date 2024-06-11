@@ -2,11 +2,8 @@
 
 namespace Laravel\Nightwatch;
 
-use Illuminate\Support\Collection;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Exception;
-use Laravel\Nightwatch\Records\ExecutionParent;
-
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\Request;
@@ -15,19 +12,19 @@ final class Records
 {
     /**
      * @var array {
-     *     requests: list<Request>,
-     *     cache_events: list<CacheEvent>,
-     *     commands: list<Command>,
-     *     exceptions: list<Exception>,
-     *     job_attempts: list<JobAttempt>,
-     *     lazy_loads: list<LazyLoad>,
-     *     logs: list<Log>,
-     *     mail: list<Mail>,
-     *     notifications: list<Notification>,
-     *     outgoing_requests: list<OutgoingRequest>,
-     *     queries: list<Query>,
-     *     queued_jobs: list<QueuedJob>,
-     * }
+     *            requests: list<Request>,
+     *            cache_events: list<CacheEvent>,
+     *            commands: list<Command>,
+     *            exceptions: list<Exception>,
+     *            job_attempts: list<JobAttempt>,
+     *            lazy_loads: list<LazyLoad>,
+     *            logs: list<Log>,
+     *            mail: list<Mail>,
+     *            notifications: list<Notification>,
+     *            outgoing_requests: list<OutgoingRequest>,
+     *            queries: list<Query>,
+     *            queued_jobs: list<QueuedJob>,
+     *            }
      */
     private array $records = [
         'requests' => [],

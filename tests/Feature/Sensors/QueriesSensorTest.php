@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\Sensors\QuerySensor;
 
