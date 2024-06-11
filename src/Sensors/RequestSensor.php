@@ -5,10 +5,10 @@ namespace Laravel\Nightwatch\Sensors;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Http\Request;
+use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
-use Laravel\Nightwatch\RecordsBuffer;
 use Symfony\Component\HttpFoundation\Response;
 
 final class RequestSensor
@@ -34,11 +34,11 @@ final class RequestSensor
             server: $this->server,
             group: hash('sha256', ''),  // TODO
             trace_id: $this->traceId,
+            user: '',
             // TODO domain as individual key?
             method: $request->getMethod(),
             route: '/'.$request->route()->uri(), // TODO handle nullable routes.
             path: '/'.$request->path(),
-            user: '',
             ip: $request->ip(), // TODO: can be nullable
             duration: $duration,
             status_code: (string) $response->getStatusCode(),

@@ -1,14 +1,16 @@
 <?php
 
-namespace Laravel\Nightwatch;
+namespace Laravel\Nightwatch\Ingests;
 
+use Laravel\Nightwatch\Contracts\Client;
 use Laravel\Nightwatch\Exceptions\ExceededConcurrentRequestLimitException;
+use Laravel\Nightwatch\IngestSucceededResult;
 use Psr\Http\Message\ResponseInterface;
 use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
 use Throwable;
 
-final class Ingest
+final class RemoteIngest
 {
     /**
      * @var non-negative-int

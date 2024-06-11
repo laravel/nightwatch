@@ -2,6 +2,9 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\MediumText;
+use Laravel\Nightwatch\TinyText;
+
 final class Query
 {
     /**
@@ -26,6 +29,7 @@ final class Query
         public string $execution_context,
         public string $execution_id,
         public string $user,
+        // --- //
         public string $sql,
         public string $category,
         public string $file,
@@ -33,6 +37,8 @@ final class Query
         public int $duration,
         public string $connection,
     ) {
-        //
+        $this->sql = MediumText::limit($this->sql);
+        $this->file = TinyText::limit($this->file);
+        $this->connection = TinyText::limit($this->connection);
     }
 }

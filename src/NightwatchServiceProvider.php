@@ -15,10 +15,14 @@ use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Nightwatch\Buffers\PayloadBuffer;
+use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\Client as ClientContract;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
+use Laravel\Nightwatch\Ingests\LocalIngest;
+use Laravel\Nightwatch\Ingests\RemoteIngest;
 use Laravel\Nightwatch\Providers\PeakMemory;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
@@ -86,7 +90,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 'timeout' => $config->get('nightwatch.http.connection_timeout'), // TODO: test if this is the connection only or total duration.
             ], $loop);
 
-            $ingest = new Ingest($app->make(ClientContract::class, [
+            $ingest = new RemoteIngest($app->make(ClientContract::class, [
                 'loop' => $loop,
                 'connector' => $connector,
             ]), $config->get('nightwatch.http.concurrent_request_limit'));
@@ -167,7 +171,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
 
-            return new TcpIngest($connector, $uri);
+            return new LocalIngest($connector, $uri);
         });
     }
 

@@ -7,9 +7,9 @@ use DateTimeInterface;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\OutgoingRequest;
-use Laravel\Nightwatch\RecordsBuffer;
 
 final class OutgoingRequestSensor
 {

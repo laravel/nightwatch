@@ -1,10 +1,10 @@
 <?php
 
-namespace Laravel\Nightwatch;
+namespace Laravel\Nightwatch\Buffers;
 
 final class PayloadBuffer
 {
-    protected string $content = '';
+    protected string $records = '';
 
     /**
      * @param  non-negative-int  $threshold
@@ -21,16 +21,16 @@ final class PayloadBuffer
             return;
         }
 
-        if ($this->content === '') {
-            $this->content = $input;
+        if ($this->records === '') {
+            $this->records = $input;
         } else {
-            $this->content .= ",{$input}";
+            $this->records .= ",{$input}";
         }
     }
 
     public function wantsFlushing(): bool
     {
-        return strlen($this->content) >= $this->threshold;
+        return strlen($this->records) >= $this->threshold;
     }
 
     /**
@@ -38,15 +38,15 @@ final class PayloadBuffer
      */
     public function flush(): string
     {
-        $output = '{"records":['.$this->content.']}';
+        $payload = '{"records":['.$this->records.']}';
 
-        $this->content = '';
+        $this->records = '';
 
-        return $output;
+        return $payload;
     }
 
     public function isNotEmpty(): bool
     {
-        return $this->content !== '';
+        return $this->records !== '';
     }
 }

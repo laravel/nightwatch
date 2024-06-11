@@ -1,13 +1,13 @@
 <?php
 
-namespace Laravel\Nightwatch;
+namespace Laravel\Nightwatch\Ingests;
 
 use Laravel\Nightwatch\Contracts\Ingest;
 use React\Socket\ConnectorInterface;
 
 use function React\Async\await;
 
-final class TcpIngest implements Ingest
+final class LocalIngest implements Ingest
 {
     public function __construct(
         private ConnectorInterface $connector,

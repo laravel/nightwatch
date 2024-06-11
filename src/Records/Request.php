@@ -2,6 +2,8 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\Text;
+
 final class Request
 {
     /**
@@ -22,13 +24,15 @@ final class Request
         public string $server,
         public string $group,
         public string $trace_id,
+        public string $user,
+        // --- //
         public string $method,
         public string $route,
         public string $path,
-        public string $user,
         public string $ip,
         public int $duration,
         public string $status_code,
+        // --- //
         public int $request_size_kilobytes,
         public int $response_size_kilobytes,
         public int $queries,
@@ -53,6 +57,7 @@ final class Request
         public int $hydrated_models,
         public int $peak_memory_usage_kilobytes,
     ) {
-        //
+        $this->route = Text::limit($this->route);
+        $this->path = Text::limit($this->path);
     }
 }

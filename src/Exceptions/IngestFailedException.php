@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Nightwatch;
+namespace Laravel\Nightwatch\Exceptions;
 
 use React\Http\Message\ResponseException;
 use RuntimeException;

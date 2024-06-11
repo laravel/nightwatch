@@ -1,6 +1,6 @@
 <?php
 
-use Laravel\Nightwatch\PayloadBuffer;
+use Laravel\Nightwatch\Buffers\PayloadBuffer;
 
 it('can flush an empty buffer', function () {
     $buffer = new PayloadBuffer(100);

@@ -5,9 +5,9 @@ namespace Laravel\Nightwatch\Sensors;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Query;
-use Laravel\Nightwatch\RecordsBuffer;
 
 final class QuerySensor
 {

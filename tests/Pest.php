@@ -3,9 +3,9 @@
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
+use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\RecordsBuffer;
 use Tests\FakeIngest;
 
 uses(Tests\TestCase::class)->in('Feature');

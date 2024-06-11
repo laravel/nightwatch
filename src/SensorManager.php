@@ -9,6 +9,7 @@ use Illuminate\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
+use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
@@ -132,12 +133,12 @@ final class SensorManager
 
     private function deployId(): string
     {
-        return $this->deployId ??= (string) $this->app->make(Config::class)->get('nightwatch.deploy_id');
+        return $this->deployId ??= TinyText::limit((string) $this->app->make(Config::class)->get('nightwatch.deploy_id'));
     }
 
     private function server(): string
     {
-        return $this->server ??= (string) $this->app->make(Config::class)->get('nightwatch.server');
+        return $this->server ??= TinyText::limit((string) $this->app->make(Config::class)->get('nightwatch.server'));
     }
 
     public function flush(): string

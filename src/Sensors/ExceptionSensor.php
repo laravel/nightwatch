@@ -4,8 +4,8 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Records\Exception;
-use Laravel\Nightwatch\RecordsBuffer;
 use Throwable;
 
 final class ExceptionSensor

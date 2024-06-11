@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Nightwatch;
+namespace Laravel\Nightwatch\Buffers;
 
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Exception;
@@ -26,7 +26,7 @@ final class RecordsBuffer
      *            queued_jobs: list<QueuedJob>,
      *            }
      */
-    private array $buffer = [
+    private array $records = [
         'requests' => [],
         'cache_events' => [],
         'commands' => [],
@@ -44,48 +44,48 @@ final class RecordsBuffer
     /**
      * @var non-negative-int
      */
-    private int $bufferCount = 0;
+    private int $recordsCount = 0;
 
     public function writeRequest(Request $request): void
     {
-        $this->buffer['requests'][] = $request;
+        $this->records['requests'][] = $request;
 
-        $this->bufferCount++;
+        $this->recordsCount++;
     }
 
     public function writeQuery(Query $query): void
     {
-        $this->buffer['queries'][] = $query;
+        $this->records['queries'][] = $query;
 
-        $this->bufferCount++;
+        $this->recordsCount++;
     }
 
     public function writeException(Exception $exception): void
     {
-        $this->buffer['exceptions'][] = $exception;
+        $this->records['exceptions'][] = $exception;
 
-        $this->bufferCount++;
+        $this->recordsCount++;
     }
 
     public function writeCacheEvent(CacheEvent $cacheEvent): void
     {
-        $this->buffer['cache_events'][] = $cacheEvent;
+        $this->records['cache_events'][] = $cacheEvent;
 
-        $this->bufferCount++;
+        $this->recordsCount++;
     }
 
     public function writeOutgoingRequest(OutgoingRequest $outgoingRequest): void
     {
-        $this->buffer['outgoing_requests'][] = $outgoingRequest;
+        $this->records['outgoing_requests'][] = $outgoingRequest;
 
-        $this->bufferCount++;
+        $this->recordsCount++;
     }
 
     public function flush(): string
     {
-        $payload = json_encode($this->buffer, flags: JSON_THROW_ON_ERROR);
+        $records = json_encode($this->records, flags: JSON_THROW_ON_ERROR);
 
-        $this->buffer = [
+        $this->records = [
             'requests' => [],
             'cache_events' => [],
             'commands' => [],
@@ -100,8 +100,8 @@ final class RecordsBuffer
             'queued_jobs' => [],
         ];
 
-        $this->bufferCount = 0;
+        $this->recordsCount = 0;
 
-        return $payload;
+        return $records;
     }
 }

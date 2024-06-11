@@ -6,9 +6,9 @@ use Carbon\CarbonImmutable;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\ExecutionParent;
-use Laravel\Nightwatch\RecordsBuffer;
 
 final class CacheEventSensor
 {

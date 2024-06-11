@@ -3,11 +3,11 @@
 namespace Laravel\Nightwatch\Console;
 
 use Illuminate\Console\Command;
+use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Exceptions\ConnectionTimedOutException;
-use Laravel\Nightwatch\Ingest;
-use Laravel\Nightwatch\IngestFailedException;
+use Laravel\Nightwatch\Exceptions\IngestFailedException;
+use Laravel\Nightwatch\Ingests\RemoteIngest;
 use Laravel\Nightwatch\IngestSucceededResult;
-use Laravel\Nightwatch\PayloadBuffer;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
 use React\Promise\PromiseInterface;
@@ -39,7 +39,7 @@ final class Agent extends Command
 
     public function __construct(
         private PayloadBuffer $buffer,
-        private Ingest $ingest,
+        private RemoteIngest $ingest,
         private LoopInterface $loop,
         private int|float $timeout,
     ) {
