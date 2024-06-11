@@ -7,14 +7,14 @@ use DateTimeInterface;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\OutgoingRequest;
+use Laravel\Nightwatch\RecordsBuffer;
 
 final class OutgoingRequestSensor
 {
     public function __construct(
-        private Records $records,
+        private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
         private string $deployId,
         private string $server,
@@ -27,7 +27,7 @@ final class OutgoingRequestSensor
     {
         $duration = (int) CarbonImmutable::now()->diffInMilliseconds($startedAt, true); // TODO: can I do this without using Carbon?
 
-        $this->records->addOutgoingRequest(new OutgoingRequest(
+        $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
             timestamp: $startedAt->format('Y-m-d H:i:s'), // TODO make sure this is when the request started, not ended.
             deploy_id: $this->deployId,
             server: $this->server,

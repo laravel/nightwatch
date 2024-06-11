@@ -7,7 +7,7 @@ use Laravel\Nightwatch\Exceptions\ConnectionTimedOutException;
 use Laravel\Nightwatch\Ingest;
 use Laravel\Nightwatch\IngestFailedException;
 use Laravel\Nightwatch\IngestSucceededResult;
-use Laravel\Nightwatch\RecordBuffer;
+use Laravel\Nightwatch\PayloadBuffer;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
 use React\Promise\PromiseInterface;
@@ -38,7 +38,7 @@ final class Agent extends Command
     private ?TimerInterface $flushBufferAfterDelayTimer = null;
 
     public function __construct(
-        private RecordBuffer $buffer,
+        private PayloadBuffer $buffer,
         private Ingest $ingest,
         private LoopInterface $loop,
         private int|float $timeout,
@@ -149,11 +149,11 @@ final class Agent extends Command
 
     private function flushConnectionBuffer(ConnectionInterface $connection): string
     {
-        $data = $this->connections[$connection][0]; // @phpstan-ignore offsetAccess.notFound
+        $payload = $this->connections[$connection][0]; // @phpstan-ignore offsetAccess.notFound
 
         $this->connections[$connection][0] = '';
 
-        return $data;
+        return $payload;
     }
 
     private function evict(ConnectionInterface $connection): void

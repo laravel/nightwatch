@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
-final class RecordBuffer
+final class PayloadBuffer
 {
     protected string $content = '';
 

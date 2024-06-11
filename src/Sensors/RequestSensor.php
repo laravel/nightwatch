@@ -6,15 +6,15 @@ use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
+use Laravel\Nightwatch\RecordsBuffer;
 use Symfony\Component\HttpFoundation\Response;
 
 final class RequestSensor
 {
     public function __construct(
-        private Records $records,
+        private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
         private PeakMemoryProvider $peakMemory,
         private string $traceId,
@@ -28,7 +28,7 @@ final class RequestSensor
     {
         $duration = (int) CarbonImmutable::now()->diffInMilliseconds($startedAt, true); // TODO: can I do this without using Carbon?
 
-        $this->records->addRequest(new RequestRecord(
+        $this->recordsBuffer->writeRequest(new RequestRecord(
             timestamp: $startedAt->format('Y-m-d H:i:s'),
             deploy_id: $this->deployId,
             server: $this->server,

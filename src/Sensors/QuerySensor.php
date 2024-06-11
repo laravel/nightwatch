@@ -5,14 +5,14 @@ namespace Laravel\Nightwatch\Sensors;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Query;
+use Laravel\Nightwatch\RecordsBuffer;
 
 final class QuerySensor
 {
     public function __construct(
-        private Records $records,
+        private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
         private string $deployId,
         private string $server,
@@ -27,7 +27,7 @@ final class QuerySensor
 
         $duration = (int) $event->time;
 
-        $this->records->addQuery(new Query(
+        $this->recordsBuffer->writeQuery(new Query(
             // TODO Can I do this without Carbon?
             // TODO `time` is a float. Does this correctly adjust?
             timestamp: $now->subMilliseconds($event->time)->format('Y-m-d H:i:s'),

@@ -38,7 +38,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(SensorManager::class);
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
-        $this->app->scoped(Records::class);
+        $this->app->scoped(RecordsBuffer::class);
         $this->configureAgent();
         $this->configureClient();
         $this->configureIngest();
@@ -69,7 +69,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             $loop = new StreamSelectLoop;
 
-            $buffer = new RecordBuffer($config->get('nightwatch.agent.buffer_threshold'));
+            $buffer = new PayloadBuffer($config->get('nightwatch.agent.buffer_threshold'));
 
             $app->when([Agent::class, 'handle'])
                 ->needs(ServerInterface::class)

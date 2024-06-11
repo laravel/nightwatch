@@ -28,7 +28,7 @@ final class Ingest
     /**
      * @return PromiseInterface<IngestSucceededResult>
      */
-    public function write(string $records): PromiseInterface
+    public function write(string $payload): PromiseInterface
     {
         if ($this->concurrentRequests === $this->concurrentRequestLimit) {
             return new RejectedPromise(new ExceededConcurrentRequestLimitException("Exceeded concurrent request limit [{$this->concurrentRequestLimit}]."));
@@ -40,7 +40,7 @@ final class Ingest
         // TODO gzip
         $start = hrtime(true);
 
-        return $this->client->send($records)
+        return $this->client->send($payload)
             ->then(function (ResponseInterface $response) use ($start) {
                 return new IngestSucceededResult(
                     duration: (hrtime(true) - $start) / 1_000_000,

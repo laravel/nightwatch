@@ -6,14 +6,14 @@ use Carbon\CarbonImmutable;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\ExecutionParent;
+use Laravel\Nightwatch\RecordsBuffer;
 
 final class CacheEventSensor
 {
     public function __construct(
-        private Records $records,
+        private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
         private string $deployId,
         private string $server,
@@ -39,7 +39,7 @@ final class CacheEventSensor
         // TODO limit length of keys when needed for validation
         // TODO: the cache events collection could be injected and then we
         // just modify it directly. Execution parent can also be injected.
-        $this->records->addCacheEvent(new CacheEvent(
+        $this->recordsBuffer->writeCacheEvent(new CacheEvent(
             timestamp: $now->format('Y-m-d H:i:s'),
             deploy_id: $this->deployId,
             server: $this->server,

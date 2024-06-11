@@ -1,15 +1,15 @@
 <?php
 
-use Laravel\Nightwatch\RecordBuffer;
+use Laravel\Nightwatch\PayloadBuffer;
 
 it('can flush an empty buffer', function () {
-    $buffer = new RecordBuffer(100);
+    $buffer = new PayloadBuffer(100);
 
     expect($buffer->flush())->toBe('{"records":[]}');
 });
 
 it('can write and flush a single record', function () {
-    $buffer = new RecordBuffer(100);
+    $buffer = new PayloadBuffer(100);
 
     $buffer->write('{"request":{"id":1}}');
 
@@ -17,7 +17,7 @@ it('can write and flush a single record', function () {
 });
 
 it('can write and flush two records', function () {
-    $buffer = new RecordBuffer(100);
+    $buffer = new PayloadBuffer(100);
 
     $buffer->write('{"request":{"id":1}}');
     $buffer->write('{"request":{"id":2}}');
@@ -26,7 +26,7 @@ it('can write and flush two records', function () {
 });
 
 it('can write and flush many records', function () {
-    $buffer = new RecordBuffer(100);
+    $buffer = new PayloadBuffer(100);
 
     $buffer->write('{"request":{"id":1}}');
     $buffer->write('{"request":{"id":2}}');
@@ -37,7 +37,7 @@ it('can write and flush many records', function () {
 });
 
 it('ignores empty strings', function () {
-    $buffer = new RecordBuffer(100);
+    $buffer = new PayloadBuffer(100);
 
     $buffer->write('');
     $buffer->write('{"request":{"id":2}}');
@@ -48,13 +48,13 @@ it('ignores empty strings', function () {
 });
 
 it('does does not want flushing without writes', function () {
-    $buffer = new RecordBuffer(100);
+    $buffer = new PayloadBuffer(100);
 
     $this->assertFalse($buffer->wantsFlushing());
 });
 
 it('does not want flushing before reaching the threshold', function () {
-    $buffer = new RecordBuffer(100);
+    $buffer = new PayloadBuffer(100);
 
     $buffer->write(str_repeat('a', 99));
 
@@ -62,7 +62,7 @@ it('does not want flushing before reaching the threshold', function () {
 });
 
 it('wants flushing once the thresold has been reached', function () {
-    $buffer = new RecordBuffer(100);
+    $buffer = new PayloadBuffer(100);
 
     $buffer->write(str_repeat('a', 100));
 
@@ -70,7 +70,7 @@ it('wants flushing once the thresold has been reached', function () {
 });
 
 it('wants flushing once the thresold has been exceeded', function () {
-    $buffer = new RecordBuffer(100);
+    $buffer = new PayloadBuffer(100);
 
     $buffer->write(str_repeat('a', 101));
 
@@ -78,7 +78,7 @@ it('wants flushing once the thresold has been exceeded', function () {
 });
 
 it('does does not want flushing after flushed', function () {
-    $buffer = new RecordBuffer(100);
+    $buffer = new PayloadBuffer(100);
 
     $buffer->write(str_repeat('a', 101));
     $buffer->flush();
@@ -87,7 +87,7 @@ it('does does not want flushing after flushed', function () {
 });
 
 it('empties the buffer while flushing', function () {
-    $buffer = new RecordBuffer(100);
+    $buffer = new PayloadBuffer(100);
 
     $buffer->write('{"request":{"id":1}}');
 

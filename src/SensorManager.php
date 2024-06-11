@@ -41,7 +41,7 @@ final class SensorManager
 
     private ?string $server;
 
-    public Records $records;
+    public RecordsBuffer $recordsBuffer;
 
     private ExecutionParent $executionParent;
 
@@ -50,14 +50,14 @@ final class SensorManager
     public function __construct(
         private Container $app,
     ) {
-        $this->records = new Records;
+        $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
     }
 
     public function request(DateTimeInterface $startedAt, Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
-            records: $this->records,
+            recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             peakMemory: $this->peakMemoryProvider(),
             traceId: $this->traceId(),
@@ -71,7 +71,7 @@ final class SensorManager
     public function query(QueryExecuted $event): void
     {
         $sensor = $this->sensors['queries'] ??= new QuerySensor(
-            records: $this->records,
+            recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             traceId: $this->traceId(),
             deployId: $this->deployId(),
@@ -85,7 +85,7 @@ final class SensorManager
     {
         // TODO extract enum for all these keys we use throughout
         $sensor = $this->sensors['cache_events'] ??= new CacheEventSensor(
-            records: $this->records,
+            recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             traceId: $this->traceId(),
             deployId: $this->deployId(),
@@ -98,7 +98,7 @@ final class SensorManager
     public function outgoingRequest(DateTimeInterface $startedAt, RequestInterface $request, ResponseInterface $response): void
     {
         $sensor = $this->sensors['outgoing_requests'] ??= new OutgoingRequestSensor(
-            records: $this->records,
+            recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             traceId: $this->traceId(),
             deployId: $this->deployId(),
@@ -111,7 +111,7 @@ final class SensorManager
     public function exception(Throwable $e): void
     {
         $sensor = $this->sensors['exceptions'] ??= new ExceptionSensor(
-            records: $this->records,
+            recordsBuffer: $this->recordsBuffer,
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -142,12 +142,12 @@ final class SensorManager
 
     public function flush(): string
     {
-        return $this->records->flush();
+        return $this->recordsBuffer->flush();
     }
 
     public function prepareForNextExecution()
     {
-        $this->records = new Records;
+        $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
         $this->sensors = [];
         $this->traceId = null;
