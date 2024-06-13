@@ -3,18 +3,16 @@
 namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\Types\Text;
+use Laravel\Nightwatch\Types\TinyText;
 
-final class Request
+final class Command
 {
     /**
      * @param  non-empty-string  $timestamp
      * @param  non-empty-string  $group
      * @param  non-empty-string  $trace_id
-     * @param  'GET'|'HEAD'|'POST'|'PUT'|'DELETE'|'CONNECT'|'OPTIONS'|'TRACE'|'PATCH'  $method
-     * @param  non-empty-string  $path
-     * @param  non-empty-string  $ip
+     * @param  non-negative-int  $exit_code
      * @param  non-negative-int  $duration
-     * @param  non-negative-int  $request_size_kilobytes
      * @param  non-negative-int  $request_size_kilobytes
      * @param  non-negative-int  $response_size_kilobytes
      * @param  non-negative-int  $queries
@@ -47,15 +45,11 @@ final class Request
         public string $trace_id,
         public string $user,
         // --- //
-        public string $method,
-        public string $route,
-        public string $path,
-        public string $ip,
+        public string $name,
+        public string $command,
+        public int $exit_code,
         public int $duration,
-        public string $status_code,
         // --- //
-        public int $request_size_kilobytes,
-        public int $response_size_kilobytes,
         public int $queries,
         public int $queries_duration,
         public int $lazy_loads,
@@ -78,7 +72,7 @@ final class Request
         public int $hydrated_models,
         public int $peak_memory_usage_kilobytes,
     ) {
-        $this->route = Text::limit($this->route);
-        $this->path = Text::limit($this->path);
+        $this->name = TinyText::limit($this->name);
+        $this->command = Text::limit($this->command);
     }
 }

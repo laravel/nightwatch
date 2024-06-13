@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
-use DateTimeInterface;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Auth;
@@ -23,12 +22,13 @@ final class OutgoingRequestSensor
         //
     }
 
-    public function __invoke(DateTimeInterface $startedAt, Request $request, Response $response): void
+    public function __invoke(float $start, float $duration, Request $request, Response $response): void
     {
-        $duration = (int) CarbonImmutable::now()->diffInMilliseconds($startedAt, true); // TODO: can I do this without using Carbon?
+        $duration = round($duration * 1000);
 
         $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
-            timestamp: $startedAt->format('Y-m-d H:i:s'), // TODO make sure this is when the request started, not ended.
+
+            timestamp: CarbonImmutable::parse($start, 'UTC')->toDateTimeString(),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),  // TODO
@@ -37,16 +37,17 @@ final class OutgoingRequestSensor
             execution_id: '00000000-0000-0000-0000-000000000000', // TODO
             user: Auth::id() ?? '', // TODO: allow this to be customised
             method: $request->getMethod(),
-            url: $request->getUri(),
+            url: (string) $request->getUri(),
             duration: $duration,
-            request_size_kilobytes: (int) (
+            request_size_kilobytes: round(
                 // TODO test how this handles:
                 // - chunked requests
                 // - Content-Encoding requests
                 // are there potential memory issues if the body is a resource. Could be a lot.
                 ($request->getHeader('content-length')[0] ?? $request->getBody()->getSize() ?? strlen((string) $request->getBody())) / 1000
             ),
-            response_size_kilobytes: (int) (
+            response_size_kilobytes: round(
+                // TODO: we might be reading a stream into memory here. We need to improve this.
                 ($response->getHeader('content-length')[0] ?? $response->getBody()->getSize() ?? strlen((string) $response->getBody())) / 1000
             ),
             status_code: (string) $response->getStatusCode(),

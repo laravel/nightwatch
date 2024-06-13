@@ -7,7 +7,7 @@ use React\Socket\ConnectorInterface;
 
 use function React\Async\await;
 
-final class LocalIngest implements Ingest
+final class SocketIngest implements Ingest
 {
     public function __construct(
         private ConnectorInterface $connector,

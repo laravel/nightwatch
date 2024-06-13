@@ -7,6 +7,7 @@ use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
+    syncClock();
     setDeployId('v1.2.3');
     setServerName('web-01');
     setPeakMemoryInKilobytes(1234);

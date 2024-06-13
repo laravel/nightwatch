@@ -21,12 +21,10 @@ final class ExceptionSensor
 
     public function __invoke(Throwable $e): void
     {
-        $now = CarbonImmutable::now();
+        $now = CarbonImmutable::now('UTC');
 
         $this->recordsBuffer->writeException(new Exception(
-            // TODO Can I do this without Carbon?
-            // TODO `time` is a float. Does this correctly adjust?
-            timestamp: $now->format('Y-m-d H:i:s'),
+            timestamp: $now->toDateTimeString(),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''), // TODO
@@ -36,12 +34,10 @@ final class ExceptionSensor
             user: Auth::id() ?? '', // TODO allow this to be customised
             class: $e::class,
             file: 'app/Models/User.php', //TODO
-            line: 5,
+            line: 5, // TODO
             message: $e->getMessage(),
             code: $e->getCode(),
             trace: $e->getTraceAsString(),
         ));
-
-        // TODO: track the exception count?
     }
 }

@@ -2,10 +2,10 @@
 
 namespace Laravel\Nightwatch;
 
-use DateTimeInterface;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Config\Repository as Config;
+use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -13,16 +13,17 @@ use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Console\Agent;
-use Laravel\Nightwatch\Contracts\Client as ClientContract;
+use Laravel\Nightwatch\Contracts\Clock as ClockContract;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\Ingests\LocalIngest;
-use Laravel\Nightwatch\Ingests\RemoteIngest;
+use Laravel\Nightwatch\Ingests\HttpIngest;
+use Laravel\Nightwatch\Ingests\SocketIngest;
 use Laravel\Nightwatch\Providers\PeakMemory;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
@@ -32,6 +33,7 @@ use React\Socket\ServerInterface;
 use React\Socket\TcpConnector;
 use React\Socket\TcpServer;
 use React\Socket\TimeoutConnector;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 // TODO:
@@ -41,10 +43,10 @@ final class NightwatchServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(SensorManager::class);
+        $this->app->singleton(ClockContract::class, Clock::class);
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
         $this->app->scoped(RecordsBuffer::class);
         $this->configureAgent();
-        $this->configureClient();
         $this->configureIngest();
         $this->configureTraceId();
         $this->mergeConfig();
@@ -90,32 +92,20 @@ final class NightwatchServiceProvider extends ServiceProvider
                 'timeout' => $config->get('nightwatch.http.connection_timeout'), // TODO: test if this is the connection only or total duration.
             ], $loop);
 
-            $ingest = new RemoteIngest($app->make(ClientContract::class, [
-                'loop' => $loop,
-                'connector' => $connector,
-            ]), $config->get('nightwatch.http.concurrent_request_limit'));
-
-            return new Agent($buffer, $ingest, $loop, $config->get('nightwatch.collector.timeout'));
-        });
-    }
-
-    protected function configureClient(): void
-    {
-        $this->app->singleton(ClientContract::class, function (Container $app, array $args) {
-            /** @var Config */
-            $config = $app->make(Config::class);
-
-            $args = $args + ['connector' => null, 'loop' => null];
-
-            return new Client((new Browser($args['connector'], $args['loop']))
+            $client = new Client((new Browser($connector, $loop))
                 ->withTimeout($config->get('nightwatch.agent.timeout'))
                 ->withHeader('User-Agent', 'NightwatchAgent/1.0.0') // TODO use actual version instead of 1.0.0
-                ->withHeader('Content-Type', 'application/json') // TODO: gzip...
-                // ->withHeader('Content-Type', 'application/octet-stream')
-                // ->withHeader('Content-Encoding', 'gzip')
+                // ->withHeader('Content-Type', 'application/json') // TODO: gzip...
+                ->withHeader('Content-Type', 'application/octet-stream')
+                ->withHeader('Content-Encoding', 'gzip')
                 ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
-                ->withHeader('Authorization', "Bearer {$config->get('nightwatch.app_secret')}")
-                ->withBase("https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.{$config->get('nightwatch.http.region')}.on.aws"));
+                // ->withHeader('Authorization', "Bearer {$config->get('nightwatch.app_secret')}")
+                // ->withBase("https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.{$config->get('nightwatch.http.region')}.on.aws"));
+                ->withBase('https://0i2w8g5zai.execute-api.us-east-1.amazonaws.com'));
+
+            $ingest = new HttpIngest($client, new Clock, $config->get('nightwatch.http.concurrent_request_limit'));
+
+            return new Agent($buffer, $ingest, $loop, $config->get('nightwatch.collector.timeout'));
         });
     }
 
@@ -142,7 +132,12 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $events->listen(QueryExecuted::class, $sensor->query(...));
         $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvent(...));
-        $this->callAfterResolving(Http::class, fn (Http $http) => $http->globalMiddleware(new GuzzleMiddleware($sensor)));
+        $this->callAfterResolving(Http::class, function (Http $http, Container $app) {
+            /** @var GuzzleMiddleware */
+            $middleware = $app->make(GuzzleMiddleware::class);
+
+            $http->globalMiddleware($middleware);
+        });
         $this->callAfterResolving(ExceptionHandler::class, fn (ExceptionHandler $handler) => $handler->reportable($sensor->exception(...)));
         $this->callAfterResolving(HttpKernel::class, function (HttpKernel $kernel, Container $app) use ($sensor) {
             if (! method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
@@ -150,8 +145,24 @@ final class NightwatchServiceProvider extends ServiceProvider
                 return;
             }
 
-            $kernel->whenRequestLifecycleIsLongerThan(-1, function (DateTimeInterface $startedAt, Request $request, Response $response) use ($sensor, $app) {
+            $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
                 $sensor->request($startedAt, $request, $response);
+
+                /** @var IngestContract */
+                $ingest = $app->make(IngestContract::class);
+
+                $ingest->write($sensor->flush());
+            });
+        });
+
+        $this->callAfterResolving(ConsoleKernel::class, function (ConsoleKernel $kernel, Container $app) use ($sensor) {
+            if (! method_exists($kernel, 'whenCommandLifecycleIsLongerThan')) {
+                // TODO implement an alternative approach
+                return;
+            }
+
+            $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
+                $sensor->command($startedAt, $input, $status);
 
                 /** @var IngestContract */
                 $ingest = $app->make(IngestContract::class);
@@ -171,7 +182,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
 
-            return new LocalIngest($connector, $uri);
+            return new SocketIngest($connector, $uri);
         });
     }
 

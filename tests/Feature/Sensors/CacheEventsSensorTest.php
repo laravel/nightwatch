@@ -7,8 +7,10 @@ use Laravel\Nightwatch\Sensors\CacheEventSensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
+    syncClock();
     setDeployId('v1.2.3');
     setServerName('web-01');
     setPeakMemoryInKilobytes(1234);
@@ -22,6 +24,7 @@ it('lazily resolves the sensor', function () {
 });
 
 it('can ingest cache misses', function () {
+    withoutExceptionHandling();
     $ingest = fakeIngest();
     Route::post('/users', function () {
         Cache::driver('array')->get('users:345');

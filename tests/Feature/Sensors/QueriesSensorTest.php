@@ -15,13 +15,14 @@ use function Pest\Laravel\travelTo;
 use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
+    syncClock();
     setDeployId('v1.2.3');
     setServerName('web-01');
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
 
-    Event::listen(MigrationsEnded::class, fn () => App::make(SensorManager::class)->prepareForNextExecution());
+    Event::listen(MigrationsEnded::class, fn () => App::make(SensorManager::class)->prepareForNextInvocation());
 });
 
 it('lazily resolves the sensor', function () {

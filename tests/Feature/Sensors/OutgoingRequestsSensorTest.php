@@ -1,20 +1,23 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Http;
+use Laravel\Nightwatch\Contracts\Clock;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
+    syncClock();
     setDeployId('v1.2.3');
     setServerName('web-01');
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
+    travelTo(CarbonImmutable::parse('2000-01-01 00:00:00.000'));
 
-    Http::preventStrayRequests();
+    Http::resolved(fn () => Http::preventStrayRequests());
 });
 
 it('lazily resolves the sensor', function () {

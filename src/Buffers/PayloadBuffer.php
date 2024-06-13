@@ -9,9 +9,8 @@ final class PayloadBuffer
     /**
      * @param  non-negative-int  $threshold
      */
-    public function __construct(
-        private int $threshold,
-    ) {
+    public function __construct(private int $threshold)
+    {
         //
     }
 

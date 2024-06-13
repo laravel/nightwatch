@@ -2,9 +2,9 @@
 
 namespace Laravel\Nightwatch\Records;
 
-use Laravel\Nightwatch\MediumText;
-use Laravel\Nightwatch\Text;
-use Laravel\Nightwatch\TinyText;
+use Laravel\Nightwatch\Types\MediumText;
+use Laravel\Nightwatch\Types\Text;
+use Laravel\Nightwatch\Types\TinyText;
 
 final class Exception
 {

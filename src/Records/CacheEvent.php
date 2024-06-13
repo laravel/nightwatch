@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
-use Laravel\Nightwatch\TinyText;
+use Laravel\Nightwatch\Types\TinyText;
 
 final class CacheEvent
 {

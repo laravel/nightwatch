@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
-use Laravel\Nightwatch\Text;
+use Laravel\Nightwatch\Types\Text;
 
 final class OutgoingRequest
 {

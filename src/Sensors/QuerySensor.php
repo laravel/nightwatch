@@ -23,14 +23,11 @@ final class QuerySensor
 
     public function __invoke(QueryExecuted $event): void
     {
-        $now = CarbonImmutable::now();
-
-        $duration = (int) $event->time;
+        $now = CarbonImmutable::now('UTC');
+        $duration = (int) $event->time; // TODO we want to capture this at a higher resolution
 
         $this->recordsBuffer->writeQuery(new Query(
-            // TODO Can I do this without Carbon?
-            // TODO `time` is a float. Does this correctly adjust?
-            timestamp: $now->subMilliseconds($event->time)->format('Y-m-d H:i:s'),
+            timestamp: $now->subMilliseconds($duration)->toDateTimeString(),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''), // TODO
@@ -42,15 +39,11 @@ final class QuerySensor
             category: 'select', // TODO
             file: 'app/Models/User.php', // TODO
             line: 5, // TODO
-            // TODO this is done to support the validation. Do we want to track
-            // microseconds instead of milliseconds, though?
-            duration: $duration,
+            duration: $duration, // TODO we need to increase the validation size in lambda now we are collecting microseconds
             connection: $event->connectionName,
         ));
 
         $this->executionParent->queries++;
-        // TODO this is done to support the validation. Do we want to track
-        // microseconds instead of milliseconds, though?
-        $this->executionParent->queries_duration += $duration;
+        $this->executionParent->queries_duration += $duration; // TODO we need to increase the validation size in lambda now we are collecting microseconds
     }
 }

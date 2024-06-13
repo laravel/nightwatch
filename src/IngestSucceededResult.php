@@ -4,9 +4,8 @@ namespace Laravel\Nightwatch;
 
 final class IngestSucceededResult
 {
-    public function __construct(
-        public float|int $duration,
-    ) {
+    public function __construct(public int $duration)
+    {
         //
     }
 }

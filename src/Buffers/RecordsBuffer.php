@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Buffers;
 
 use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
@@ -11,7 +12,7 @@ use Laravel\Nightwatch\Records\Request;
 final class RecordsBuffer
 {
     /**
-     * @var array {
+     * @var array{
      *            requests: list<Request>,
      *            cache_events: list<CacheEvent>,
      *            commands: list<Command>,
@@ -49,6 +50,13 @@ final class RecordsBuffer
     public function writeRequest(Request $request): void
     {
         $this->records['requests'][] = $request;
+
+        $this->recordsCount++;
+    }
+
+    public function writeCommand(Command $command): void
+    {
+        $this->records['commands'][] = $command;
 
         $this->recordsCount++;
     }

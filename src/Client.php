@@ -2,11 +2,10 @@
 
 namespace Laravel\Nightwatch;
 
-use Laravel\Nightwatch\Contracts\Client as ClientContract;
 use React\Http\Browser;
 use React\Promise\PromiseInterface;
 
-final class Client implements ClientContract
+final class Client
 {
     public function __construct(private Browser $browser)
     {
@@ -15,6 +14,6 @@ final class Client implements ClientContract
 
     public function send(string $payload): PromiseInterface
     {
-        return $this->browser->post('/', body: $payload);
+        return $this->browser->post('/nightwatch-ingest', body: $payload);
     }
 }

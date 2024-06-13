@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
-use DateTimeInterface;
+use Carbon\Carbon;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Config\Repository as Config;
@@ -13,16 +13,18 @@ use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
+use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
 use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
 use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
+use Laravel\Nightwatch\Types\TinyText;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-// TODO: flush caches (peak memory does not need to be flushed)
 // Do we need to refresh the application instance?
 final class SensorManager
 {
@@ -48,14 +50,13 @@ final class SensorManager
 
     private ?PeakMemoryProvider $peakMemoryProvider = null;
 
-    public function __construct(
-        private Container $app,
-    ) {
+    public function __construct(private Container $app)
+    {
         $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
     }
 
-    public function request(DateTimeInterface $startedAt, Request $request, Response $response): void
+    public function request(Carbon $startedAt, Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
             recordsBuffer: $this->recordsBuffer,
@@ -67,6 +68,21 @@ final class SensorManager
         );
 
         $sensor($startedAt, $request, $response);
+    }
+
+    public function command(Carbon $startedAt, InputInterface $input, int $status): void
+    {
+        // TODO should we cache this for commands that are run within a request? Do they even register here?
+        $sensor = new CommandSensor(
+            recordsBuffer: $this->recordsBuffer,
+            executionParent: $this->executionParent,
+            peakMemory: $this->peakMemoryProvider(),
+            traceId: $this->traceId(),
+            deployId: $this->deployId(),
+            server: $this->server(),
+        );
+
+        $sensor($startedAt, $input, $status);
     }
 
     public function query(QueryExecuted $event): void
@@ -96,7 +112,7 @@ final class SensorManager
         $sensor($event);
     }
 
-    public function outgoingRequest(DateTimeInterface $startedAt, RequestInterface $request, ResponseInterface $response): void
+    public function outgoingRequest(float $start, float $duration, RequestInterface $request, ResponseInterface $response): void
     {
         $sensor = $this->sensors['outgoing_requests'] ??= new OutgoingRequestSensor(
             recordsBuffer: $this->recordsBuffer,
@@ -106,7 +122,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        $sensor($startedAt, $request, $response);
+        $sensor($start, $duration, $request, $response);
     }
 
     public function exception(Throwable $e): void
@@ -146,7 +162,7 @@ final class SensorManager
         return $this->recordsBuffer->flush();
     }
 
-    public function prepareForNextExecution()
+    public function prepareForNextInvocation(): void
     {
         $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;

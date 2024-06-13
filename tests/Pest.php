@@ -4,11 +4,29 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
+use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Tests\FakeIngest;
 
 uses(Tests\TestCase::class)->in('Feature');
+
+function syncClock(): void
+{
+    App::instance(Clock::class, new class implements Clock {
+        public function microtime(): float
+        {
+            $now = now();
+
+            return (float) "{$now->timestamp}.{$now->micro}";
+        }
+
+        public function diffInMicrotime(float $start): float
+        {
+            return $this->microtime() - $start;
+        }
+    });
+}
 
 function records(): RecordsBuffer
 {

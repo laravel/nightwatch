@@ -7,6 +7,7 @@ use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
+use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\ExecutionParent;
 
@@ -22,10 +23,9 @@ final class CacheEventSensor
         //
     }
 
-    // TODO: "tags"?
     public function __invoke(CacheMissed|CacheHit $event)
     {
-        // TODO can we ditch Carbon?
+        // TODO capture the microtime before hitting the cache on the event.
         $now = CarbonImmutable::now();
 
         if ($event::class === CacheHit::class) {
@@ -36,11 +36,8 @@ final class CacheEventSensor
             $this->executionParent->cache_misses++;
         }
 
-        // TODO limit length of keys when needed for validation
-        // TODO: the cache events collection could be injected and then we
-        // just modify it directly. Execution parent can also be injected.
         $this->recordsBuffer->writeCacheEvent(new CacheEvent(
-            timestamp: $now->format('Y-m-d H:i:s'),
+            timestamp: $now->toDateTimeString(),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''), // TODO

@@ -1,9 +1,9 @@
 <?php
 
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+use Symfony\Component\Console\Input\StringInput;
 
-use function Pest\Laravel\call;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
@@ -17,18 +17,21 @@ beforeEach(function () {
 
 it('can ingest requests', function () {
     $ingest = fakeIngest();
-    Route::post('/users/{user}', function () {
+    Artisan::command('app:build {destination} {--force} {--compress}', function () {
         travelTo(now()->addMilliseconds(1234));
 
-        return str_repeat('a', 2000);
+        return 3;
     });
 
-    $response = call('POST', '/users/345', content: str_repeat('b', 3000));
+    $status = Artisan::handle($input = new StringInput('app:build path/to/output --force'));
+    Artisan::terminate($input, $status);
 
-    $response->assertOk();
+    expect($status)->toBe(3);
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite([
-        'requests' => [
+        'requests' => [],
+        'cache_events' => [],
+        'commands' => [
             [
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
@@ -36,14 +39,10 @@ it('can ingest requests', function () {
                 'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'user' => '',
-                'method' => 'POST',
-                'route' => '/users/{user}',
-                'path' => '/users/345',
-                'ip' => '127.0.0.1',
+                'name' => 'app:build',
+                'command' => 'app:build path/to/output --force',
+                'exit_code' => 3,
                 'duration' => 1234,
-                'status_code' => '200',
-                'request_size_kilobytes' => 3,
-                'response_size_kilobytes' => 2,
                 'queries' => 0,
                 'queries_duration' => 0,
                 'lazy_loads' => 0,
@@ -67,8 +66,6 @@ it('can ingest requests', function () {
                 'peak_memory_usage_kilobytes' => 1234,
             ],
         ],
-        'cache_events' => [],
-        'commands' => [],
         'exceptions' => [],
         'job_attempts' => [],
         'lazy_loads' => [],
@@ -81,22 +78,8 @@ it('can ingest requests', function () {
     ]);
 });
 
-it('handles requests with no content-length header, such as chunked requests')->todo();
+it('handles commands run via fuzzy matching, e.g., "build" and not "app:build"')->todo();
 
-it('handles routes with domains')->todo(); // 'path' field or dedicated column
+it('handles commands run with confirmation, e.g., "gelp" and not "help"')->todo();
 
-it('handles unknown routes')->todo(); // 'route' field
-
-it('records authenticated user')->todo(); // 'user' field
-
-it('handles streams')->todo(); // Content-Length
-
-it('handles 304 Not Modified responses')->todo(); // Content-Length
-
-it('handles HEAD requests')->todo(); // Content-Length
-
-it('handles responses using Transfer-Encoding headers')->todo(); // Content-Length
-
-it('captures query count')->todo(); // `queries` field + for the request of the execution context.
-
-it('has a deploy_id fallback')->todo();
+it('handles commands called within a request')->todo();

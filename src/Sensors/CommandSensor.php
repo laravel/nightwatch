@@ -3,14 +3,15 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\Carbon;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
+use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\ExecutionParent;
-use Laravel\Nightwatch\Records\Request as RequestRecord;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputInterface;
 
-final class RequestSensor
+final class CommandSensor
 {
     public function __construct(
         private RecordsBuffer $recordsBuffer,
@@ -23,41 +24,25 @@ final class RequestSensor
         //
     }
 
-    public function __invoke(Carbon $startedAt, Request $request, Response $response): void
+    public function __invoke(Carbon $startedAt, InputInterface $input, int $status): void
     {
         $duration = round($startedAt->diffInMilliseconds());
 
-        $this->recordsBuffer->writeRequest(new RequestRecord(
+        // TODO this needs to better collect this information, likely via events, as the events give us the normalised
+        // values and we can better filter out the `list` command.
+        $this->recordsBuffer->writeCommand(new Command(
             timestamp: $startedAt->toDateTimeString(),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),  // TODO
             trace_id: $this->traceId,
-            user: '',
-            // TODO domain as individual key?
-            method: $request->getMethod(),
-            route: '/'.$request->route()->uri(), // TODO handle nullable routes.
-            path: '/'.$request->path(),
-            ip: $request->ip(), // TODO: can be nullable
+            user: Auth::id() ?? '', // TODO allow customisation
+            name: $input->getFirstArgument(), // TODO
+            command: $input instanceof ArgvInput
+                ? implode(' ', $input->getRawTokens())
+                : (string) $input,
+            exit_code: $status,
             duration: $duration,
-            status_code: (string) $response->getStatusCode(),
-            // Although we usually should not trust random header input, it
-            // seems that the header input is respected by web servers and PHP,
-            // so we should be able to trust this if it exists. In some cases
-            // it is even required in order to indicate the entire request has
-            // been received.
-            request_size_kilobytes: round(
-                // TODO test how this handles:
-                // - chunked requests
-                // - Content-Encoding requests
-                // are there potential memory issues if the body is a resource
-                // and not a string?
-                ($request->headers->get('content-length') ?? strlen($request->getContent())) / 1000
-            ),
-            // TODO test how this handles:
-            // - chunked requests
-            // - Content-Encoding requests
-            response_size_kilobytes: $this->parseResponseSizeKilobytes($response),
             queries: $this->executionParent->queries,
             queries_duration: $this->executionParent->queries_duration,
             lazy_loads: $this->executionParent->lazy_loads,
@@ -80,30 +65,5 @@ final class RequestSensor
             hydrated_models: $this->executionParent->hydrated_models,
             peak_memory_usage_kilobytes: $this->peakMemory->kilobytes(),
         ));
-    }
-
-    private function parseResponseSizeKilobytes(Response $response): int
-    {
-        // chunked responses...
-        if ($length = $response->headers->get('content-length')) {
-            return round($length / 1000);
-        }
-
-        // normal requests...
-        $content = $response->getContent();
-
-        if ($content !== false) {
-            return round(strlen($content) / 1000);
-        }
-
-        // Something bad happened...
-
-        // $this->records['alerts'][] = [
-        //     // TODO need ot flesh this out more with info.
-        //     'error' => 'code_here',
-        //     'key' => 'response_size_kilobytes',
-        // ];
-
-        return 0;
     }
 }
