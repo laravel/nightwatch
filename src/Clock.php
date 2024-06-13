@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch;
 
-use Carbon\CarbonImmutable;
 use Laravel\Nightwatch\Contracts\Clock as ClockContract;
 
 final class Clock implements ClockContract

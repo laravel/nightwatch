@@ -13,7 +13,8 @@ uses(Tests\TestCase::class)->in('Feature');
 
 function syncClock(): void
 {
-    App::instance(Clock::class, new class implements Clock {
+    App::instance(Clock::class, new class implements Clock
+    {
         public function microtime(): float
         {
             $now = now();

@@ -8,7 +8,6 @@ use Laravel\Nightwatch\Exceptions\ExceededConcurrentRequestLimitException;
 use Laravel\Nightwatch\Exceptions\IngestFailedException;
 use Laravel\Nightwatch\IngestSucceededResult;
 use Psr\Http\Message\ResponseInterface;
-use React\Http\Browser;
 use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
 use Throwable;

@@ -1,9 +1,7 @@
 <?php
 
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Http;
-use Laravel\Nightwatch\Contracts\Clock;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
