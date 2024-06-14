@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Records\ExecutionParent;
@@ -23,40 +24,34 @@ final class RequestSensor
         //
     }
 
+    /**
+     * TODO group,
+     * TODO make auth customisable? Inject auth manager class.
+     * TODO when the request is a `resource`, calling `getContent` may re-read
+     * the stream into memory. How can we handle this better?
+     * TODO how can we better flag that a response is streamed and we don't
+     * know the length?
+     */
     public function __invoke(Carbon $startedAt, Request $request, Response $response): void
     {
-        $duration = round($startedAt->diffInMilliseconds());
+        $durationInMilliseconds = (int) round($startedAt->diffInMilliseconds());
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
             timestamp: $startedAt->toDateTimeString(),
             deploy_id: $this->deployId,
             server: $this->server,
-            group: hash('sha256', ''),  // TODO
+            group: hash('sha256', ''),
             trace_id: $this->traceId,
-            user: '',
-            // TODO domain as individual key?
+            user: (string) Auth::id(),
             method: $request->getMethod(),
-            route: '/'.$request->route()->uri(), // TODO handle nullable routes.
+            route: '/'.$request->route()?->uri() ?? '',
             path: '/'.$request->path(),
-            ip: $request->ip(), // TODO: can be nullable
-            duration: $duration,
+            ip: $request->ip() ?? '',
+            duration: $durationInMilliseconds,
             status_code: (string) $response->getStatusCode(),
-            // Although we usually should not trust random header input, it
-            // seems that the header input is respected by web servers and PHP,
-            // so we should be able to trust this if it exists. In some cases
-            // it is even required in order to indicate the entire request has
-            // been received.
-            request_size_kilobytes: round(
-                // TODO test how this handles:
-                // - chunked requests
-                // - Content-Encoding requests
-                // are there potential memory issues if the body is a resource
-                // and not a string?
+            request_size_kilobytes: (int) round(
                 ($request->headers->get('content-length') ?? strlen($request->getContent())) / 1000
             ),
-            // TODO test how this handles:
-            // - chunked requests
-            // - Content-Encoding requests
             response_size_kilobytes: $this->parseResponseSizeKilobytes($response),
             queries: $this->executionParent->queries,
             queries_duration: $this->executionParent->queries_duration,
@@ -84,25 +79,15 @@ final class RequestSensor
 
     private function parseResponseSizeKilobytes(Response $response): int
     {
-        // chunked responses...
         if ($length = $response->headers->get('content-length')) {
-            return round($length / 1000);
+            return (int) round($length / 1000);
         }
 
-        // normal requests...
         $content = $response->getContent();
 
-        if ($content !== false) {
-            return round(strlen($content) / 1000);
+        if (is_string($content)) {
+            return (int) round(strlen($content) / 1000);
         }
-
-        // Something bad happened...
-
-        // $this->records['alerts'][] = [
-        //     // TODO need ot flesh this out more with info.
-        //     'error' => 'code_here',
-        //     'key' => 'response_size_kilobytes',
-        // ];
 
         return 0;
     }
