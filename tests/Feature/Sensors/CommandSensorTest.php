@@ -33,6 +33,7 @@ it('can ingest requests', function () {
         'cache_events' => [],
         'commands' => [
             [
+                'v' => 1,
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',

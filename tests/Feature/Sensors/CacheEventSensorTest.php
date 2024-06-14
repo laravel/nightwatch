@@ -37,6 +37,7 @@ it('can ingest cache misses', function () {
     $ingest->assertLatestWrite([
         'requests' => [
             [
+                'v' => 1,
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',
@@ -76,6 +77,7 @@ it('can ingest cache misses', function () {
         ],
         'cache_events' => [
             [
+                'v' => 1,
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',
@@ -116,6 +118,7 @@ it('can ingest cache hits', function () {
     $ingest->assertLatestWrite([
         'requests' => [
             [
+                'v' => 1,
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',
@@ -155,6 +158,7 @@ it('can ingest cache hits', function () {
         ],
         'cache_events' => [
             [
+                'v' => 1,
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',

@@ -45,6 +45,7 @@ it('ingests exceptions', function () {
     $ingest->assertLatestWrite([
         'requests' => [
             [
+                'v' => 1,
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',
@@ -86,6 +87,7 @@ it('ingests exceptions', function () {
         'commands' => [],
         'exceptions' => [
             [
+                'v' => 1,
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',
@@ -132,6 +134,7 @@ it('ingests reported exceptions', function () {
     $ingest->assertLatestWrite([
         'requests' => [
             [
+                'v' => 1,
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',
@@ -173,6 +176,7 @@ it('ingests reported exceptions', function () {
         'commands' => [],
         'exceptions' => [
             [
+                'v' => 1,
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',

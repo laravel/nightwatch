@@ -4,6 +4,8 @@ namespace Laravel\Nightwatch\Records;
 
 final class ExecutionParent
 {
+    public int $v = 1;
+
     /**
      * @param  non-negative-int  $queries
      * @param  non-negative-int  $queries_duration

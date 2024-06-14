@@ -7,6 +7,8 @@ use Laravel\Nightwatch\Types\TinyText;
 
 final class Command
 {
+    public int $v = 1;
+
     /**
      * @param  non-empty-string  $timestamp
      * @param  non-empty-string  $group

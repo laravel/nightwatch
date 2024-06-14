@@ -6,6 +6,8 @@ use Laravel\Nightwatch\Types\Text;
 
 final class Request
 {
+    public int $v = 1;
+
     /**
      * @param  non-empty-string  $timestamp
      * @param  non-empty-string  $group

@@ -44,6 +44,7 @@ it('ingests outgoing requests', function () {
     $ingest->assertLatestWrite([
         'requests' => [
             [
+                'v' => 1,
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',
@@ -91,6 +92,7 @@ it('ingests outgoing requests', function () {
         'notifications' => [],
         'outgoing_requests' => [
             [
+                'v' => 1,
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',

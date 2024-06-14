@@ -44,6 +44,7 @@ it('can ingest queries', function () {
     $ingest->assertLatestWrite([
         'requests' => [
             [
+                'v' => 1,
                 'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',
@@ -92,6 +93,7 @@ it('can ingest queries', function () {
         'outgoing_requests' => [],
         'queries' => [
             [
+                'v' => 1,
                 'timestamp' => '1999-12-31 23:59:59',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',
