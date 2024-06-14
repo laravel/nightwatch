@@ -70,9 +70,13 @@ final class SensorManager
         $sensor($startedAt, $request, $response);
     }
 
+    /**
+     * TODO should we cache this one for commands that run within a request?
+     * TODO if they do trigger, should we not listen to any commands in a request
+     * lifecycle? Push that out to the service provider not here.
+     */
     public function command(Carbon $startedAt, InputInterface $input, int $status): void
     {
-        // TODO should we cache this for commands that are run within a request? Do they even register here?
         $sensor = new CommandSensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
@@ -100,7 +104,6 @@ final class SensorManager
 
     public function cacheEvent(CacheMissed|CacheHit $event): void
     {
-        // TODO extract enum for all these keys we use throughout
         $sensor = $this->sensors['cache_events'] ??= new CacheEventSensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
