@@ -17,14 +17,14 @@ final class SocketIngest implements Ingest
     }
 
     /**
-     * TODO: retry / fallback logic
+     * TODO retry / fallback logic
      * TODO protocol?
-     * TODO: should we put a timeout on this side?
-     * TODO: error handling?
+     * TODO should we put a timeout on this side?
      * $timeoutTimer = Loop::addTimer($timeout, function () use ($connection) {
      *     $this->error('Sending data timed out.');
      *     $connection->close();
      * });
+     * TODO error handling?
      */
     public function write(string $payload): void
     {

@@ -30,10 +30,10 @@ final class SensorManager
 {
     /**
      * @var array{
-     *     queries?: QueriesSensor,
-     *     cache_events?: CacheEventsSensor,
-     *     outgoing_requests?: OutgoingRequestsSensor,
-     *     exceptions?: ExceptionsSensor,
+     *     queries?: QuerySensor,
+     *     cache_events?: CacheEventSensor,
+     *     outgoing_requests?: OutgoingRequestSensor,
+     *     exceptions?: ExceptionSensor,
      * }
      */
     private array $sensors = [];

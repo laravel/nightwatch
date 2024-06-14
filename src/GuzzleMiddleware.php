@@ -15,6 +15,9 @@ final class GuzzleMiddleware
         //
     }
 
+    /**
+     * TODO record the failed responses as well.
+     */
     public function __invoke(callable $handler): callable
     {
         return function (RequestInterface $request, array $options) use ($handler) {
@@ -30,12 +33,6 @@ final class GuzzleMiddleware
                     );
 
                     return $response;
-                }, function (Throwable $exception) {
-                    // TODO does this only get RequestExceptions and can we
-                    // get the response from it?
-                    // $this->sensor->outgoingRequests($startedAt, $request, $response);
-
-                    return new RejectedPromise($exception);
                 });
         };
     }

@@ -36,8 +36,6 @@ use React\Socket\TimeoutConnector;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 
-// TODO:
-// - any config values throughout should be type checked.
 final class NightwatchServiceProvider extends ServiceProvider
 {
     public function register(): void

@@ -31,6 +31,7 @@ final class HttpIngest
     }
 
     /**
+     * TODO retry logic
      * @return PromiseInterface<IngestSucceededResult>
      */
     public function write(string $payload): PromiseInterface
@@ -44,14 +45,14 @@ final class HttpIngest
         $this->concurrentRequests++;
 
         $payload = gzencode($payload);
+
         $start = $this->clock->microtime();
 
-        // TODO: retry logic
         return $this->client->send($payload)
             ->then(fn (ResponseInterface $response) => new IngestSucceededResult(
-                duration: round($this->clock->diffInMicrotime($start) * 1000),
+                duration: (int) round($this->clock->diffInMicrotime($start) * 1000),
             ), fn (Throwable $e) => throw new IngestFailedException(
-                duration: round($this->diffInMicrotime($start) * 1000),
+                duration: (int) round($this->diffInMicrotime($start) * 1000),
                 previous: $e
             ))->finally(function () {
                 $this->concurrentRequests--; // @phpstan-ignore assign.propertyType

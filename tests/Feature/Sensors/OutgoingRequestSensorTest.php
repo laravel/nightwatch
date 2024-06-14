@@ -3,6 +3,7 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Http;
 
+use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 use function Pest\Laravel\withoutExceptionHandling;
@@ -19,7 +20,7 @@ beforeEach(function () {
 });
 
 it('lazily resolves the sensor', function () {
-    expect(app()->resolved(OutgoingRequestsSensor::class))->toBeFalse();
+    expect(app()->resolved(OutgoingRequestSensor::class))->toBeFalse();
 });
 
 it('ingests outgoing requests', function () {
