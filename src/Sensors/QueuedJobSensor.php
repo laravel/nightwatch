@@ -9,7 +9,7 @@ use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\UserProvider;
 
-class QueuedJobSensor
+final class QueuedJobSensor
 {
     public function __construct(
         private RecordsBuffer $recordsBuffer,

@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\Sensors\QuerySensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;

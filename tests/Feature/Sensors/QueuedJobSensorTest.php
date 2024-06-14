@@ -5,15 +5,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\Sensors\CacheEventSensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
@@ -103,7 +99,7 @@ it('can ingest cache misses', function () {
     ]);
 });
 
-class MyJob implements ShouldQueue
+final class MyJob implements ShouldQueue
 {
     use Dispatchable;
 }

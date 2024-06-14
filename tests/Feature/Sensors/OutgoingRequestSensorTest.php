@@ -2,7 +2,6 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Http;
-use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;

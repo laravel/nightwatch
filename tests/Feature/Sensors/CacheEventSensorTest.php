@@ -3,7 +3,6 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\Sensors\CacheEventSensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
