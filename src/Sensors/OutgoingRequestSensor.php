@@ -25,7 +25,7 @@ final class OutgoingRequestSensor
 
     /**
      * TODO group, execution_context, execution_id
-     * TODO test against checked requests / responses.
+     * TODO test against streamed requests / responses.
      * TODO decide how to handle streams where we do not know the payload size.
      * TODO It seems like `getSize` may throw an exception in some cases. We may need to `rescue`.
      */

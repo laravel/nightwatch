@@ -98,6 +98,7 @@ it('can ingest queries', function () {
                 'connection' => 'sqlite',
             ],
         ],
+        'queued_jobs' => [],
     ]);
 });
 

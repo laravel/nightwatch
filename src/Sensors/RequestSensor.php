@@ -26,7 +26,7 @@ final class RequestSensor
     }
 
     /**
-     * TODO group,
+     * TODO group
      * TODO when the request is a `resource`, calling `getContent` may re-read
      * the stream into memory. How can we handle this better?
      * TODO how can we better flag that a response is streamed and we don't

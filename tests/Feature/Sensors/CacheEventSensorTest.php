@@ -87,6 +87,7 @@ it('can ingest cache misses', function () {
         'exceptions' => [],
         'outgoing_requests' => [],
         'queries' => [],
+        'queued_jobs' => [],
     ]);
 });
 
@@ -162,5 +163,6 @@ it('can ingest cache hits', function () {
         'exceptions' => [],
         'outgoing_requests' => [],
         'queries' => [],
+        'queued_jobs' => [],
     ]);
 });

@@ -98,5 +98,6 @@ it('ingests outgoing requests', function () {
             ],
         ],
         'queries' => [],
+        'queued_jobs' => [],
     ]);
 });

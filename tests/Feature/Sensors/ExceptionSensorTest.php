@@ -97,6 +97,7 @@ it('ingests exceptions', function () {
         ],
         'outgoing_requests' => [],
         'queries' => [],
+        'queued_jobs' => [],
     ]);
 });
 
@@ -180,6 +181,7 @@ it('ingests reported exceptions', function () {
         ],
         'outgoing_requests' => [],
         'queries' => [],
+        'queued_jobs' => [],
     ]);
 });
 

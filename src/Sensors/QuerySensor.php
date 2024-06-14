@@ -24,9 +24,6 @@ final class QuerySensor
 
     /**
      * TODO group, execution_context, execution_id, category, file, line
-     * TODO we need to increase the validation size in lambd and column size in
-     * clickhouse now we are collecting microseconds for both `duration` and
-     * `queries_duration`.
      */
     public function __invoke(QueryExecuted $event): void
     {

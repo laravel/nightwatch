@@ -25,7 +25,7 @@ final class ExceptionSensor
      */
     public function __invoke(Throwable $e): void
     {
-        $timestamp = CarbonImmutable::now('UTC')->toDateString();
+        $timestamp = CarbonImmutable::now('UTC')->toDateTimeString();
 
         $this->recordsBuffer->writeException(new Exception(
             timestamp: $timestamp,

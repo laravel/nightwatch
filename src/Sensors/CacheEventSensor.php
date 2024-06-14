@@ -33,7 +33,7 @@ final class CacheEventSensor
      */
     public function __invoke(CacheMissed|CacheHit $event): void
     {
-        $timestamp = CarbonImmutable::now('UTC')->toDateString();
+        $timestamp = CarbonImmutable::now('UTC')->toDateTimeString();
 
         if ($event::class === CacheHit::class) {
             $type = 'hit';

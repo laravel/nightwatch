@@ -73,6 +73,7 @@ it('can ingest requests', function () {
         'exceptions' => [],
         'outgoing_requests' => [],
         'queries' => [],
+        'queued_jobs' => [],
     ]);
 });
 
