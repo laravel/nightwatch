@@ -29,4 +29,6 @@ Route::get('/', function () {
 
 Route::get('hammer', function () {
     Artisan::call('nightwatch:hammer');
+
+    return 'ok';
 });
