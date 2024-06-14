@@ -104,14 +104,8 @@ it('ingests exceptions', function () {
                 'trace' => $trace,
             ],
         ],
-        'job_attempts' => [],
-        'lazy_loads' => [],
-        'logs' => [],
-        'mail' => [],
-        'notifications' => [],
         'outgoing_requests' => [],
         'queries' => [],
-        'queued_jobs' => [],
     ]);
 });
 
@@ -193,14 +187,8 @@ it('ingests reported exceptions', function () {
                 'trace' => $trace,
             ],
         ],
-        'job_attempts' => [],
-        'lazy_loads' => [],
-        'logs' => [],
-        'mail' => [],
-        'notifications' => [],
         'outgoing_requests' => [],
         'queries' => [],
-        'queued_jobs' => [],
     ]);
 });
 it('can ingest arbitrary exceptions via an event')->todo();

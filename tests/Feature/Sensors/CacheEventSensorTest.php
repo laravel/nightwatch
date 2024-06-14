@@ -93,14 +93,8 @@ it('can ingest cache misses', function () {
         ],
         'commands' => [],
         'exceptions' => [],
-        'job_attempts' => [],
-        'lazy_loads' => [],
-        'logs' => [],
-        'mail' => [],
-        'notifications' => [],
         'outgoing_requests' => [],
         'queries' => [],
-        'queued_jobs' => [],
     ]);
 });
 
@@ -174,14 +168,8 @@ it('can ingest cache hits', function () {
         ],
         'commands' => [],
         'exceptions' => [],
-        'job_attempts' => [],
-        'lazy_loads' => [],
-        'logs' => [],
-        'mail' => [],
-        'notifications' => [],
         'outgoing_requests' => [],
         'queries' => [],
-        'queued_jobs' => [],
     ]);
 });
 

@@ -85,11 +85,6 @@ it('ingests outgoing requests', function () {
         'cache_events' => [],
         'commands' => [],
         'exceptions' => [],
-        'job_attempts' => [],
-        'lazy_loads' => [],
-        'logs' => [],
-        'mail' => [],
-        'notifications' => [],
         'outgoing_requests' => [
             [
                 'v' => 1,
@@ -110,6 +105,5 @@ it('ingests outgoing requests', function () {
             ],
         ],
         'queries' => [],
-        'queued_jobs' => [],
     ]);
 });
