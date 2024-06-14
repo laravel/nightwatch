@@ -76,7 +76,6 @@ final class Agent extends Command
                 $this->queueOrPerformIngest(
                     before: function (string $records) {
                         $this->line('Ingesting started.', verbosity: 'v');
-                        $this->line($records, verbosity: 'vvv');
                     },
                     after: function (PromiseInterface $response) {
                         $response->then(function (IngestSucceededResult $result) {
@@ -183,8 +182,7 @@ final class Agent extends Command
 
             $after($this->ingest->write($records));
         } elseif ($this->buffer->isNotEmpty()) {
-            // TODO update flush timer duration from 1 to 10
-            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(1, function () use ($before, $after) {
+            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(10, function () use ($before, $after) {
                 $records = $this->buffer->flush();
 
                 $before($records);

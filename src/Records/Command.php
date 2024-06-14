@@ -7,7 +7,7 @@ use Laravel\Nightwatch\Types\TinyText;
 
 final class Command
 {
-    public int $v = 1;
+    // public int $v = 1;
 
     /**
      * TODO limit size of all int values across all record types.
