@@ -7,6 +7,7 @@ use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
+use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Records\Request;
 
 final class RecordsBuffer
@@ -19,6 +20,7 @@ final class RecordsBuffer
      *            exceptions: list<Exception>,
      *            outgoing_requests: list<OutgoingRequest>,
      *            queries: list<Query>,
+     *            queued_jobs: list<QueuedJob>,
      *            }
      */
     private array $records = [
@@ -33,7 +35,7 @@ final class RecordsBuffer
         // 'notifications' => [],
         'outgoing_requests' => [],
         'queries' => [],
-        // 'queued_jobs' => [],
+        'queued_jobs' => [],
     ];
 
     private int $recordsCount = 0;
@@ -76,6 +78,13 @@ final class RecordsBuffer
     public function writeOutgoingRequest(OutgoingRequest $outgoingRequest): void
     {
         $this->records['outgoing_requests'][] = $outgoingRequest;
+
+        $this->recordsCount++;
+    }
+
+    public function writeQueuedJob(QueuedJob $queuedJob): void
+    {
+        $this->records['queued_jobs'][] = $queuedJob;
 
         $this->recordsCount++;
     }

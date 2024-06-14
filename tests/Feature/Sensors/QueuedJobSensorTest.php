@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 
@@ -30,10 +31,13 @@ beforeEach(function () {
 });
 
 it('can ingest cache misses', function () {
+    withoutExceptionHandling();
     $ingest = fakeIngest();
     prependListener(QueryExecuted::class, fn (QueryExecuted $event) => $event->time = 5.2);
     Route::post('/users', function () {
+        Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
         MyJob::dispatch();
+        Str::createUuidsNormally();
     });
 
     $response = post('/users');
@@ -82,6 +86,7 @@ it('can ingest cache misses', function () {
     ]);
     $ingest->assertLatestWrite('queued_jobs', [
         [
+            'v' => 1,
             'timestamp' => '2000-01-01 00:00:00',
             'deploy_id' => 'v1.2.3',
             'server' => 'web-01',
@@ -90,7 +95,7 @@ it('can ingest cache misses', function () {
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000000',
             'user' => '',
-            'job_id' => '',
+            'job_id' => '00000000-0000-0000-0000-000000000000',
             'name' => 'MyJob',
             'connection' => 'database',
             'queue' => 'default',

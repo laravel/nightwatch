@@ -154,10 +154,19 @@ final class SensorManager
         $sensor($e);
     }
 
-    public function queuedJob(JobQueued $event)
+    public function queuedJob(JobQueued $event): void
     {
+        if ($event->connectionName === 'sync') {
+            return;
+        }
+
         $sensor = $this->sensors['queued_jobs'] ??= new QueuedJobSensor(
+            recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
+            user: $this->user(),
+            traceId: $this->traceId(),
+            deployId: $this->deployId(),
+            server: $this->server(),
         );
 
         $sensor($event);

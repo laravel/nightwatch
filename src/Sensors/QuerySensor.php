@@ -30,11 +30,12 @@ final class QuerySensor
      */
     public function __invoke(QueryExecuted $event): void
     {
-        $now = CarbonImmutable::now('UTC');
         $durationInMicroseconds = (int) round($event->time * 1000);
 
+        $timestamp = CarbonImmutable::now('UTC')->subMicroseconds($durationInMicroseconds)->toDateTimeString();
+
         $this->recordsBuffer->writeQuery(new Query(
-            timestamp: $now->subMicroseconds($durationInMicroseconds)->toDateTimeString(),
+            timestamp: $timestamp,
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),

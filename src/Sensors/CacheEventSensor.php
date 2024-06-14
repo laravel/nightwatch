@@ -33,7 +33,7 @@ final class CacheEventSensor
      */
     public function __invoke(CacheMissed|CacheHit $event): void
     {
-        $now = CarbonImmutable::now();
+        $timestamp = CarbonImmutable::now('UTC')->toDateString();
 
         if ($event::class === CacheHit::class) {
             $type = 'hit';
@@ -44,7 +44,7 @@ final class CacheEventSensor
         }
 
         $this->recordsBuffer->writeCacheEvent(new CacheEvent(
-            timestamp: $now->toDateTimeString(),
+            timestamp: $timestamp,
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),
