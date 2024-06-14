@@ -22,9 +22,18 @@ final class CacheEventSensor
         //
     }
 
+    /**
+     * TODO capture the microtime before hitting the cache on the event instead
+     * of the current time. Requires a framework modification. Would be cool to
+     * capture the duration as well.
+     * TODO allow auth to be customised?
+     * TODO inject auth manager into the class.
+     * TODO `$event->storeName` can be nullable. We should likely fallback to
+     * the default value.
+     * TODO grouping, execution_context, execution_id
+     */
     public function __invoke(CacheMissed|CacheHit $event)
     {
-        // TODO capture the microtime before hitting the cache on the event.
         $now = CarbonImmutable::now();
 
         if ($event::class === CacheHit::class) {
@@ -39,12 +48,12 @@ final class CacheEventSensor
             timestamp: $now->toDateTimeString(),
             deploy_id: $this->deployId,
             server: $this->server,
-            group: hash('sha256', ''), // TODO
+            group: hash('sha256', ''),
             trace_id: $this->traceId,
-            execution_context: 'request', // TODO
-            execution_id: '00000000-0000-0000-0000-000000000000', // TODO
-            user: Auth::id() ?? '', // TODO allow this to be customised
-            store: $event->storeName, // this can be nullable? fallback to default?
+            execution_context: 'request',
+            execution_id: '00000000-0000-0000-0000-000000000000',
+            user: (string) Auth::id(),
+            store: $event->storeName,
             key: $event->key,
             type: $type,
         ));

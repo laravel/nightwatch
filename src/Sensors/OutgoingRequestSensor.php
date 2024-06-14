@@ -22,38 +22,39 @@ final class OutgoingRequestSensor
         //
     }
 
-    public function __invoke(float $start, float $duration, Request $request, Response $response): void
+    /**
+     * TODO group, execution_context, execution_id
+     * TODO allow auth to be customised? Inject auth manager into class.
+     * TODO test against checked requests / responses.
+     * TODO decide how to handle streams where we do not know the payload size.
+     * TODO It seems like `getSize` may throw an exception in some cases. We may need to `rescue`.
+     */
+    public function __invoke(float $startInMicrotime, float $durationInMicrotime, Request $request, Response $response): void
     {
-        $duration = round($duration * 1000);
+        $durationInMilliseconds = (int) round($durationInMicrotime * 1000);
 
         $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
-
-            timestamp: CarbonImmutable::parse($start, 'UTC')->toDateTimeString(),
+            timestamp: CarbonImmutable::parse($startInMicrotime, 'UTC')->toDateTimeString(),
             deploy_id: $this->deployId,
             server: $this->server,
-            group: hash('sha256', ''),  // TODO
+            group: hash('sha256', ''),
             trace_id: $this->traceId,
-            execution_context: 'request', // TODO
-            execution_id: '00000000-0000-0000-0000-000000000000', // TODO
-            user: Auth::id() ?? '', // TODO: allow this to be customised
+            execution_context: 'request',
+            execution_id: '00000000-0000-0000-0000-000000000000',
+            user: (string) Auth::id(),
             method: $request->getMethod(),
             url: (string) $request->getUri(),
-            duration: $duration,
-            request_size_kilobytes: round(
-                // TODO test how this handles:
-                // - chunked requests
-                // - Content-Encoding requests
-                // are there potential memory issues if the body is a resource. Could be a lot.
-                ($request->getHeader('content-length')[0] ?? $request->getBody()->getSize() ?? strlen((string) $request->getBody())) / 1000
+            duration: $durationInMilliseconds,
+            request_size_kilobytes: (int) round(
+                ($request->getHeader('content-length')[0] ?? $request->getBody()->getSize() ?? 0) / 1000
             ),
-            response_size_kilobytes: round(
-                // TODO: we might be reading a stream into memory here. We need to improve this.
-                ($response->getHeader('content-length')[0] ?? $response->getBody()->getSize() ?? strlen((string) $response->getBody())) / 1000
+            response_size_kilobytes: (int) round(
+                ($response->getHeader('content-length')[0] ?? $response->getBody()->getSize() ?? 0) / 1000
             ),
             status_code: (string) $response->getStatusCode(),
         ));
 
         $this->executionParent->outgoing_requests++;
-        $this->executionParent->outgoing_requests_duration = $duration;
+        $this->executionParent->outgoing_requests_duration += $durationInMilliseconds;
     }
 }

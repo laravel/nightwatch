@@ -19,6 +19,10 @@ final class ExceptionSensor
         //
     }
 
+    /**
+     * TODO group, execution_context, execution_id, file, line
+     * TODO allow auth to be customised? Inject auth manager into the class.
+     */
     public function __invoke(Throwable $e): void
     {
         $now = CarbonImmutable::now('UTC');
@@ -27,14 +31,14 @@ final class ExceptionSensor
             timestamp: $now->toDateTimeString(),
             deploy_id: $this->deployId,
             server: $this->server,
-            group: hash('sha256', ''), // TODO
+            group: hash('sha256', ''),
             trace_id: $this->traceId,
-            execution_context: 'request', // TODO
-            execution_id: '00000000-0000-0000-0000-000000000000', // TODO
-            user: Auth::id() ?? '', // TODO allow this to be customised
+            execution_context: 'request',
+            execution_id: '00000000-0000-0000-0000-000000000000',
+            user: (string) Auth::id(),
             class: $e::class,
-            file: 'app/Models/User.php', //TODO
-            line: 5, // TODO
+            file: 'app/Models/User.php',
+            line: 5,
             message: $e->getMessage(),
             code: $e->getCode(),
             trace: $e->getTraceAsString(),

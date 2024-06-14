@@ -112,7 +112,7 @@ final class SensorManager
         $sensor($event);
     }
 
-    public function outgoingRequest(float $start, float $duration, RequestInterface $request, ResponseInterface $response): void
+    public function outgoingRequest(float $startInMicrotime, float $durationInMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
         $sensor = $this->sensors['outgoing_requests'] ??= new OutgoingRequestSensor(
             recordsBuffer: $this->recordsBuffer,
@@ -122,7 +122,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        $sensor($start, $duration, $request, $response);
+        $sensor($startInMicrotime, $durationInMicrotime, $request, $response);
     }
 
     public function exception(Throwable $e): void

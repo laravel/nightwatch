@@ -24,25 +24,30 @@ final class CommandSensor
         //
     }
 
+    /**
+     * TODO this needs to better collect this information, likely via events,
+     * as the events give us the normalised values and we can better filter out
+     * the `list` command.
+     * TODO group,
+     * TODO allow auth cutomisation? Inject AuthManager into class.
+     */
     public function __invoke(Carbon $startedAt, InputInterface $input, int $status): void
     {
-        $duration = round($startedAt->diffInMilliseconds());
+        $durationInMilliseconds = (int) round($startedAt->diffInMilliseconds());
 
-        // TODO this needs to better collect this information, likely via events, as the events give us the normalised
-        // values and we can better filter out the `list` command.
         $this->recordsBuffer->writeCommand(new Command(
             timestamp: $startedAt->toDateTimeString(),
             deploy_id: $this->deployId,
             server: $this->server,
-            group: hash('sha256', ''),  // TODO
+            group: hash('sha256', ''),
             trace_id: $this->traceId,
-            user: Auth::id() ?? '', // TODO allow customisation
-            name: $input->getFirstArgument(), // TODO
+            user: (string) Auth::id(),
+            name: $input->getFirstArgument() ?? 'list',
             command: $input instanceof ArgvInput
                 ? implode(' ', $input->getRawTokens())
                 : (string) $input,
             exit_code: $status,
-            duration: $duration,
+            duration: $durationInMilliseconds,
             queries: $this->executionParent->queries,
             queries_duration: $this->executionParent->queries_duration,
             lazy_loads: $this->executionParent->lazy_loads,

@@ -17,9 +17,7 @@ function syncClock(): void
     {
         public function microtime(): float
         {
-            $now = now();
-
-            return (float) "{$now->timestamp}.{$now->micro}";
+            return (float) now()->format('U.u');
         }
 
         public function diffInMicrotime(float $start): float
