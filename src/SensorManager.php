@@ -9,6 +9,7 @@ use Illuminate\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
+use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Records\ExecutionParent;
@@ -17,6 +18,7 @@ use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
 use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
 use Laravel\Nightwatch\Sensors\QuerySensor;
+use Laravel\Nightwatch\Sensors\QueuedJobSensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
 use Laravel\Nightwatch\Types\TinyText;
 use Psr\Http\Message\RequestInterface;
@@ -25,7 +27,10 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-// Do we need to refresh the application instance?
+/**
+ * TODO refresh application instance.
+ * TODO migrate from array of sensors individual properties
+ */
 final class SensorManager
 {
     /**
@@ -34,6 +39,7 @@ final class SensorManager
      *     cache_events?: CacheEventSensor,
      *     outgoing_requests?: OutgoingRequestSensor,
      *     exceptions?: ExceptionSensor,
+     *     queued_jobs?: QueuedJobSensor,
      * }
      */
     private array $sensors = [];
@@ -146,6 +152,15 @@ final class SensorManager
         );
 
         $sensor($e);
+    }
+
+    public function queuedJob(JobQueued $event)
+    {
+        $sensor = $this->sensors['queued_jobs'] ??= new QueuedJobSensor(
+            executionParent: $this->executionParent,
+        );
+
+        $sensor($event);
     }
 
     private function traceId(): string

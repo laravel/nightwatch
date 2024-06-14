@@ -16,6 +16,7 @@ use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\Request;
+use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -166,6 +167,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $events->listen(QueryExecuted::class, $sensor->query(...));
         $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvent(...));
+        $events->listen(JobQueued::class, $sensor->queuedJob(...));
 
         $this->callAfterResolving(Http::class, function (Http $http, Container $app) use ($sensor) {
             /** @var GuzzleMiddleware */

@@ -42,7 +42,7 @@ final class FakeIngest implements Ingest
         $payload = json_decode($this->writes[0], true, flags: JSON_THROW_ON_ERROR);
 
         if ($key) {
-            return Arr::get($payload, $key);
+            return Arr::get($payload, $key, []);
         } else {
             return $payload;
         }
