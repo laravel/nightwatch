@@ -9,19 +9,6 @@ final class Query
 {
     public int $v = 1;
 
-    /**
-     * @param  non-empty-string  $timestamp
-     * @param  non-empty-string  $group
-     * @param  non-empty-string  $trace_id
-     * @param  'job'|'request'  $execution_context
-     * @param  non-empty-string  $execution_id
-     * @param  non-empty-string  $sql
-     * @param  'select'|'insert'|'update'|'delete'  $category
-     * @param  non-empty-string  $file
-     * @param  non-negative-int  $line
-     * @param  non-negative-int  $duration
-     * @param  non-empty-string  $connection
-     */
     public function __construct(
         public string $timestamp,
         public string $deploy_id,

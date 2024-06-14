@@ -4,16 +4,17 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\QueryExecuted;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Query;
+use Laravel\Nightwatch\UserProvider;
 
 final class QuerySensor
 {
     public function __construct(
         private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
+        private UserProvider $user,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -23,7 +24,6 @@ final class QuerySensor
 
     /**
      * TODO group, execution_context, execution_id, category, file, line
-     * TODO allow auth to be customised? Inject auth manager into class.
      * TODO we need to increase the validation size in lambd and column size in
      * clickhouse now we are collecting microseconds for both `duration` and
      * `queries_duration`.
@@ -41,7 +41,7 @@ final class QuerySensor
             trace_id: $this->traceId,
             execution_context: 'request',
             execution_id: '00000000-0000-0000-0000-000000000000',
-            user: (string) Auth::id(),
+            user: $this->user->id(),
             sql: $event->sql,
             category: 'select',
             file: 'app/Models/User.php',

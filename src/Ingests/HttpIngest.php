@@ -10,18 +10,13 @@ use Laravel\Nightwatch\IngestSucceededResult;
 use Psr\Http\Message\ResponseInterface;
 use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
+use RuntimeException;
 use Throwable;
 
 final class HttpIngest
 {
-    /**
-     * @var non-negative-int
-     */
     private int $concurrentRequests = 0;
 
-    /**
-     * @param  non-negative-int  $concurrentRequestLimit
-     */
     public function __construct(
         private Client $client,
         private Clock $clock,
@@ -47,22 +42,23 @@ final class HttpIngest
 
         $payload = gzencode($payload);
 
+        if ($payload === false) {
+            return new RejectedPromise(new RuntimeException('Unable to compress payload'));
+        }
+
         $start = $this->clock->microtime();
 
         return $this->client->send($payload)
             ->then(fn (ResponseInterface $response) => new IngestSucceededResult(
                 duration: (int) round($this->clock->diffInMicrotime($start) * 1000),
             ), fn (Throwable $e) => throw new IngestFailedException(
-                duration: (int) round($this->diffInMicrotime($start) * 1000),
+                duration: (int) round($this->clock->diffInMicrotime($start) * 1000),
                 previous: $e
             ))->finally(function () {
-                $this->concurrentRequests--; // @phpstan-ignore assign.propertyType
+                $this->concurrentRequests--;
             });
     }
 
-    /**
-     * @return non-negative-int
-     */
     public function concurrentRequests(): int
     {
         return $this->concurrentRequests;

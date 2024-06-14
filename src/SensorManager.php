@@ -50,6 +50,8 @@ final class SensorManager
 
     private ?PeakMemoryProvider $peakMemoryProvider = null;
 
+    private ?UserProvider $userProvider = null;
+
     public function __construct(private Container $app)
     {
         $this->recordsBuffer = new RecordsBuffer;
@@ -62,6 +64,7 @@ final class SensorManager
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             peakMemory: $this->peakMemoryProvider(),
+            user: $this->user(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -81,6 +84,7 @@ final class SensorManager
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             peakMemory: $this->peakMemoryProvider(),
+            user: $this->user(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -94,6 +98,7 @@ final class SensorManager
         $sensor = $this->sensors['queries'] ??= new QuerySensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
+            user: $this->user(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -107,6 +112,7 @@ final class SensorManager
         $sensor = $this->sensors['cache_events'] ??= new CacheEventSensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
+            user: $this->user(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -120,6 +126,7 @@ final class SensorManager
         $sensor = $this->sensors['outgoing_requests'] ??= new OutgoingRequestSensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
+            user: $this->user(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -132,6 +139,7 @@ final class SensorManager
     {
         $sensor = $this->sensors['exceptions'] ??= new ExceptionSensor(
             recordsBuffer: $this->recordsBuffer,
+            user: $this->user(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -163,6 +171,11 @@ final class SensorManager
     public function flush(): string
     {
         return $this->recordsBuffer->flush();
+    }
+
+    public function user(): UserProvider
+    {
+        return $this->userProvider ??= $this->app->make(UserProvider::class);
     }
 
     public function prepareForNextInvocation(): void

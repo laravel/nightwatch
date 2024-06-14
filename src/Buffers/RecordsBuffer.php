@@ -17,14 +17,8 @@ final class RecordsBuffer
      *            cache_events: list<CacheEvent>,
      *            commands: list<Command>,
      *            exceptions: list<Exception>,
-     *            job_attempts: list<JobAttempt>,
-     *            lazy_loads: list<LazyLoad>,
-     *            logs: list<Log>,
-     *            mail: list<Mail>,
-     *            notifications: list<Notification>,
      *            outgoing_requests: list<OutgoingRequest>,
      *            queries: list<Query>,
-     *            queued_jobs: list<QueuedJob>,
      *            }
      */
     private array $records = [
@@ -32,19 +26,16 @@ final class RecordsBuffer
         'cache_events' => [],
         'commands' => [],
         'exceptions' => [],
-        'job_attempts' => [],
-        'lazy_loads' => [],
-        'logs' => [],
-        'mail' => [],
-        'notifications' => [],
+        // 'job_attempts' => [],
+        // 'lazy_loads' => [],
+        // 'logs' => [],
+        // 'mail' => [],
+        // 'notifications' => [],
         'outgoing_requests' => [],
         'queries' => [],
-        'queued_jobs' => [],
+        // 'queued_jobs' => [],
     ];
 
-    /**
-     * @var non-negative-int
-     */
     private int $recordsCount = 0;
 
     public function writeRequest(Request $request): void
@@ -98,14 +89,14 @@ final class RecordsBuffer
             'cache_events' => [],
             'commands' => [],
             'exceptions' => [],
-            'job_attempts' => [],
-            'lazy_loads' => [],
-            'logs' => [],
-            'mail' => [],
-            'notifications' => [],
+            // 'job_attempts' => [],
+            // 'lazy_loads' => [],
+            // 'logs' => [],
+            // 'mail' => [],
+            // 'notifications' => [],
             'outgoing_requests' => [],
             'queries' => [],
-            'queued_jobs' => [],
+            // 'queued_jobs' => [],
         ];
 
         $this->recordsCount = 0;

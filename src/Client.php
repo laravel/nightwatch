@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
+use Psr\Http\Message\ResponseInterface;
 use React\Http\Browser;
 use React\Promise\PromiseInterface;
 
@@ -12,6 +13,9 @@ final class Client
         //
     }
 
+    /**
+     * @return PromiseInterface<ResponseInterface>
+     */
     public function send(string $payload): PromiseInterface
     {
         return $this->browser->post('/nightwatch-ingest', body: $payload);

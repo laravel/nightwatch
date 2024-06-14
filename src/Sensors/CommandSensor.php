@@ -3,11 +3,11 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\ExecutionParent;
+use Laravel\Nightwatch\UserProvider;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -17,6 +17,7 @@ final class CommandSensor
         private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
         private PeakMemoryProvider $peakMemory,
+        private UserProvider $user,
         private string $traceId,
         private string $deployId,
         private string $server,
@@ -28,8 +29,7 @@ final class CommandSensor
      * TODO this needs to better collect this information, likely via events,
      * as the events give us the normalised values and we can better filter out
      * the `list` command.
-     * TODO group,
-     * TODO allow auth cutomisation? Inject AuthManager into class.
+     * TODO group
      */
     public function __invoke(Carbon $startedAt, InputInterface $input, int $status): void
     {
@@ -41,7 +41,7 @@ final class CommandSensor
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,
-            user: (string) Auth::id(),
+            user: $this->user->id(),
             name: $input->getFirstArgument() ?? 'list',
             command: $input instanceof ArgvInput
                 ? implode(' ', $input->getRawTokens())

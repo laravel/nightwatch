@@ -9,8 +9,11 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Foundation\Console\Kernel as ConsoleKernelContract;
+use Illuminate\Foundation\Exceptions\Handler;
+use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -65,6 +68,10 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
     }
 
+    /**
+     * TODO test if the timeout connector timeout only applies to connection
+     * time and not transfer time.
+     */
     protected function configureAgent(): void
     {
         $this->app->singleton(Agent::class, function (Container $app) {
@@ -73,100 +80,37 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             $loop = new StreamSelectLoop;
 
-            $buffer = new PayloadBuffer($config->get('nightwatch.agent.buffer_threshold'));
-
+            // Creating an instance of the `TcpServer` will automatically start
+            // the server.  To ensure do not start the server when the command
+            // is constructed, but only when called, we make sure to resolve
+            // the server in the handle method instead.
             $app->when([Agent::class, 'handle'])
                 ->needs(ServerInterface::class)
                 ->give(function () use ($config, $loop) {
                     $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
 
-                    return new LimitingServer(
-                        new TcpServer($uri, $loop),
-                        $config->get('nightwatch.agent.connection_limit')
-                    );
+                    $server = new TcpServer($uri, $loop);
+
+                    return new LimitingServer($server, $config->get('nightwatch.agent.connection_limit'));
                 });
 
+            $buffer = new PayloadBuffer($config->get('nightwatch.agent.buffer_threshold'));
+
             $connector = new Connector([
-                'timeout' => $config->get('nightwatch.http.connection_timeout'), // TODO: test if this is the connection only or total duration.
+                'timeout' => $config->get('nightwatch.http.connection_timeout'),
             ], $loop);
 
             $client = new Client((new Browser($connector, $loop))
                 ->withTimeout($config->get('nightwatch.agent.timeout'))
-                ->withHeader('User-Agent', 'NightwatchAgent/1.0.0') // TODO use actual version instead of 1.0.0
-                // ->withHeader('Content-Type', 'application/json') // TODO: gzip...
+                ->withHeader('User-Agent', 'NightwatchAgent/1.0.0')
                 ->withHeader('Content-Type', 'application/octet-stream')
                 ->withHeader('Content-Encoding', 'gzip')
                 ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
-                // ->withHeader('Authorization', "Bearer {$config->get('nightwatch.app_secret')}")
-                // ->withBase("https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.{$config->get('nightwatch.http.region')}.on.aws"));
                 ->withBase('https://0i2w8g5zai.execute-api.us-east-1.amazonaws.com'));
 
             $ingest = new HttpIngest($client, new Clock, $config->get('nightwatch.http.concurrent_request_limit'));
 
             return new Agent($buffer, $ingest, $loop, $config->get('nightwatch.collector.timeout'));
-        });
-    }
-
-    protected function registerPublications(): void
-    {
-        $this->publishes([
-            __DIR__.'/../config/nightwatch.php' => $this->app->configPath('nightwatch.php'),
-        ], ['nightwatch', 'nightwatch-config']);
-    }
-
-    protected function registerCommands(): void
-    {
-        $this->commands([
-            Console\Agent::class,
-        ]);
-    }
-
-    protected function registerSensors(): void
-    {
-        /** @var Dispatcher */
-        $events = $this->app->make(Dispatcher::class);
-        /** @var SensorManager */
-        $sensor = $this->app->make(SensorManager::class);
-
-        $events->listen(QueryExecuted::class, $sensor->query(...));
-        $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvent(...));
-        $this->callAfterResolving(Http::class, function (Http $http, Container $app) {
-            /** @var GuzzleMiddleware */
-            $middleware = $app->make(GuzzleMiddleware::class);
-
-            $http->globalMiddleware($middleware);
-        });
-        $this->callAfterResolving(ExceptionHandler::class, fn (ExceptionHandler $handler) => $handler->reportable($sensor->exception(...)));
-        $this->callAfterResolving(HttpKernel::class, function (HttpKernel $kernel, Container $app) use ($sensor) {
-            if (! method_exists($kernel, 'whenRequestLifecycleIsLongerThan')) {
-                // TODO implement an alternative approach
-                return;
-            }
-
-            $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
-                $sensor->request($startedAt, $request, $response);
-
-                /** @var IngestContract */
-                $ingest = $app->make(IngestContract::class);
-
-                $ingest->write($sensor->flush());
-            });
-        });
-
-        $this->callAfterResolving(ConsoleKernel::class, function (ConsoleKernel $kernel, Container $app) use ($sensor) {
-            if (! method_exists($kernel, 'whenCommandLifecycleIsLongerThan')) {
-                // TODO implement an alternative approach
-                return;
-            }
-
-            $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
-                $sensor->command($startedAt, $input, $status);
-
-                /** @var IngestContract */
-                $ingest = $app->make(IngestContract::class);
-
-                $ingest->write($sensor->flush());
-            });
         });
     }
 
@@ -184,14 +128,88 @@ final class NightwatchServiceProvider extends ServiceProvider
         });
     }
 
+    /**
+     * TODO on the queue we need to restore the trace ID from the request / command.
+     */
     protected function configureTraceId(): void
     {
-        // TODO: on the queue we need to restore the trace ID from the request / command.
-        // TODO make the UUID lazy, so that it isn't calculated until it is resolved? or will it
-        // *always* be used if it is resolved? I don't think so. We will resolve it when
-        // create a listener, but the listener may not be triggered. Also, we should
-        // probably not use the `Str` helper here so we have full control over the
-        // UUID generated and it isn't impacted by user modifications.
-        $this->app->scoped('laravel.nightwatch.trace_id', fn () => Str::uuid()->toString());
+        $this->app->scoped('laravel.nightwatch.trace_id', fn () => (string) Str::uuid());
+    }
+
+    protected function registerPublications(): void
+    {
+        $this->publishes([
+            __DIR__.'/../config/nightwatch.php' => $this->app->configPath('nightwatch.php'),
+        ], ['nightwatch', 'nightwatch-config']);
+    }
+
+    protected function registerCommands(): void
+    {
+        $this->commands([
+            Console\Agent::class,
+        ]);
+    }
+
+    /**
+     * TODO Alternative approach to storing when not using Laravel's HTTP and
+     * console kernel. Also for custom exception handlers.
+     * TODO We had special ordering in Pulse to ensure our
+     * recorders were registered early but out ingest was registered last. This
+     * we used the `booted` callback.
+     */
+    protected function registerSensors(): void
+    {
+        /** @var SensorManager */
+        $sensor = $this->app->make(SensorManager::class);
+        /** @var Dispatcher */
+        $events = $this->app->make(Dispatcher::class);
+
+        $events->listen(QueryExecuted::class, $sensor->query(...));
+        $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvent(...));
+
+        $this->callAfterResolving(Http::class, function (Http $http, Container $app) use ($sensor) {
+            /** @var GuzzleMiddleware */
+            $middleware = $app->make(GuzzleMiddleware::class, ['sensor' => $sensor]);
+
+            $http->globalMiddleware($middleware);
+        });
+
+        $this->callAfterResolving(ExceptionHandler::class, function (ExceptionHandler $handler) use ($sensor) {
+            if (! $handler instanceof Handler) {
+                return;
+            }
+
+            $handler->reportable($sensor->exception(...));
+        });
+
+        $this->callAfterResolving(HttpKernelContract::class, function (HttpKernelContract $kernel, Container $app) use ($sensor) {
+            if (! $kernel instanceof HttpKernel) {
+                return;
+            }
+
+            $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
+                $sensor->request($startedAt, $request, $response);
+
+                /** @var IngestContract */
+                $ingest = $app->make(IngestContract::class);
+
+                $ingest->write($sensor->flush());
+            });
+        });
+
+        $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Container $app) use ($sensor) {
+            if (! $kernel instanceof ConsoleKernel) {
+                return;
+            }
+
+            $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
+                $sensor->command($startedAt, $input, $status);
+
+                /** @var IngestContract */
+                $ingest = $app->make(IngestContract::class);
+
+                $ingest->write($sensor->flush());
+            });
+        });
     }
 }

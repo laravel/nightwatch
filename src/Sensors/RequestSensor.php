@@ -4,11 +4,11 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
+use Laravel\Nightwatch\UserProvider;
 use Symfony\Component\HttpFoundation\Response;
 
 final class RequestSensor
@@ -17,6 +17,7 @@ final class RequestSensor
         private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
         private PeakMemoryProvider $peakMemory,
+        private UserProvider $user,
         private string $traceId,
         private string $deployId,
         private string $server,
@@ -26,7 +27,6 @@ final class RequestSensor
 
     /**
      * TODO group,
-     * TODO make auth customisable? Inject auth manager class.
      * TODO when the request is a `resource`, calling `getContent` may re-read
      * the stream into memory. How can we handle this better?
      * TODO how can we better flag that a response is streamed and we don't
@@ -42,15 +42,15 @@ final class RequestSensor
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,
-            user: (string) Auth::id(),
+            user: $this->user->id(),
             method: $request->getMethod(),
-            route: '/'.$request->route()?->uri() ?? '',
+            route: with($request->route()?->uri(), fn (?string $uri) => $uri ? "/{$uri}" : ''), // @phpstan-ignore method.nonObject
             path: '/'.$request->path(),
             ip: $request->ip() ?? '',
             duration: $durationInMilliseconds,
             status_code: (string) $response->getStatusCode(),
             request_size_kilobytes: (int) round(
-                ($request->headers->get('content-length') ?? strlen($request->getContent())) / 1000
+                ((int) ($request->headers->get('content-length') ?? strlen($request->getContent()))) / 1000
             ),
             response_size_kilobytes: $this->parseResponseSizeKilobytes($response),
             queries: $this->executionParent->queries,
@@ -80,7 +80,7 @@ final class RequestSensor
     private function parseResponseSizeKilobytes(Response $response): int
     {
         if ($length = $response->headers->get('content-length')) {
-            return (int) round($length / 1000);
+            return (int) round(((int) $length) / 1000);
         }
 
         $content = $response->getContent();

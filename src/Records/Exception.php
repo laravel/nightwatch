@@ -10,17 +10,6 @@ final class Exception
 {
     public int $v = 1;
 
-    /**
-     * @param  non-empty-string  $timestamp
-     * @param  non-empty-string  $group
-     * @param  non-empty-string  $trace_id
-     * @param  'job'|'request'  $execution_context
-     * @param  non-empty-string  $execution_id
-     * @param  class-string  $class
-     * @param  non-empty-string  $file
-     * @param  non-negative-int  $line
-     * @param  non-empty-string  $trace
-     */
     public function __construct(
         public string $timestamp,
         public string $deploy_id,

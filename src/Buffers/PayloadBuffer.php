@@ -6,9 +6,6 @@ final class PayloadBuffer
 {
     protected string $records = '';
 
-    /**
-     * @param  non-negative-int  $threshold
-     */
     public function __construct(private int $threshold)
     {
         //

@@ -5,16 +5,17 @@ namespace Laravel\Nightwatch\Sensors;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\ExecutionParent;
+use Laravel\Nightwatch\UserProvider;
 
 final class CacheEventSensor
 {
     public function __construct(
         private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
+        private UserProvider $user,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -26,13 +27,11 @@ final class CacheEventSensor
      * TODO capture the microtime before hitting the cache on the event instead
      * of the current time. Requires a framework modification. Would be cool to
      * capture the duration as well.
-     * TODO allow auth to be customised?
-     * TODO inject auth manager into the class.
      * TODO `$event->storeName` can be nullable. We should likely fallback to
      * the default value.
      * TODO grouping, execution_context, execution_id
      */
-    public function __invoke(CacheMissed|CacheHit $event)
+    public function __invoke(CacheMissed|CacheHit $event): void
     {
         $now = CarbonImmutable::now();
 
@@ -52,7 +51,7 @@ final class CacheEventSensor
             trace_id: $this->traceId,
             execution_context: 'request',
             execution_id: '00000000-0000-0000-0000-000000000000',
-            user: (string) Auth::id(),
+            user: $this->user->id(),
             store: $event->storeName,
             key: $event->key,
             type: $type,

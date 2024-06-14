@@ -3,15 +3,16 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Records\Exception;
+use Laravel\Nightwatch\UserProvider;
 use Throwable;
 
 final class ExceptionSensor
 {
     public function __construct(
         private RecordsBuffer $recordsBuffer,
+        private UserProvider $user,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -21,7 +22,6 @@ final class ExceptionSensor
 
     /**
      * TODO group, execution_context, execution_id, file, line
-     * TODO allow auth to be customised? Inject auth manager into the class.
      */
     public function __invoke(Throwable $e): void
     {
@@ -35,7 +35,7 @@ final class ExceptionSensor
             trace_id: $this->traceId,
             execution_context: 'request',
             execution_id: '00000000-0000-0000-0000-000000000000',
-            user: (string) Auth::id(),
+            user: $this->user->id(),
             class: $e::class,
             file: 'app/Models/User.php',
             line: 5,

@@ -8,16 +8,6 @@ final class CacheEvent
 {
     public int $v = 1;
 
-    /**
-     * @param  non-empty-string  $timestamp
-     * @param  non-empty-string  $group
-     * @param  non-empty-string  $trace_id
-     * @param  'job'|'request'  $execution_context
-     * @param  non-empty-string  $execution_id
-     * @param  non-empty-string  $store
-     * @param  non-empty-string  $key
-     * @param  'hit'|'miss'  $type
-     */
     public function __construct(
         public string $timestamp,
         public string $deploy_id,
