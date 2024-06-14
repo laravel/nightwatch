@@ -2,11 +2,9 @@
 
 namespace Laravel\Nightwatch;
 
-use GuzzleHttp\Promise\RejectedPromise;
 use Laravel\Nightwatch\Contracts\Clock;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Throwable;
 
 final class GuzzleMiddleware
 {

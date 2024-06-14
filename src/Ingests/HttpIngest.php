@@ -32,6 +32,7 @@ final class HttpIngest
 
     /**
      * TODO retry logic
+     *
      * @return PromiseInterface<IngestSucceededResult>
      */
     public function write(string $payload): PromiseInterface
