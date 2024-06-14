@@ -57,7 +57,7 @@ final class Agent extends Command
     public function handle(Server $server): void
     {
         $server->on('connection', function (ConnectionInterface $connection) {
-            $this->line('Connection accepted.', verbosity: 'v');
+            $this->line('Connection accepted.', verbosity: 'vv');
 
             $this->accept($connection);
 
@@ -69,7 +69,7 @@ final class Agent extends Command
             });
 
             $connection->on('end', function () use ($connection) {
-                $this->line('Connection ended.', verbosity: 'v');
+                $this->line('Connection ended.', verbosity: 'vv');
 
                 $this->buffer->write($this->flushConnectionBuffer($connection));
 
@@ -97,7 +97,7 @@ final class Agent extends Command
             });
 
             $connection->on('close', function () use ($connection) {
-                $this->line('Connection closed.', verbosity: 'v');
+                $this->line('Connection closed.', verbosity: 'vv');
 
                 $this->evict($connection);
             });
