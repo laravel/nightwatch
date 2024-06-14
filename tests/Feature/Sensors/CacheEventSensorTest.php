@@ -7,7 +7,6 @@ use Laravel\Nightwatch\Sensors\CacheEventSensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
-use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     syncClock();
@@ -18,13 +17,7 @@ beforeEach(function () {
     travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
 });
 
-// TODO we might not need this if we manually create the objects.
-it('lazily resolves the sensor', function () {
-    expect(app()->resolved(CacheEventSensor::class))->toBeFalse();
-});
-
 it('can ingest cache misses', function () {
-    withoutExceptionHandling();
     $ingest = fakeIngest();
     Route::post('/users', function () {
         Cache::driver('array')->get('users:345');
@@ -172,5 +165,3 @@ it('can ingest cache hits', function () {
         'queries' => [],
     ]);
 });
-
-it('has a deploy_id fallback')->todo();

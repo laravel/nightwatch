@@ -17,17 +17,8 @@ beforeEach(function () {
     Config::set('app.debug', false);
 });
 
-final class MyException extends RuntimeException
-{
-    public function render()
-    {
-        return response('', 500);
-    }
-}
-
 it('ingests exceptions', function () {
     $ingest = fakeIngest();
-    // TODO make trace controlled by ius via a resolver.
     $trace = null;
     Route::post('/users', function () use (&$trace) {
         $e = new MyException('Whoops!');
@@ -191,4 +182,13 @@ it('ingests reported exceptions', function () {
         'queries' => [],
     ]);
 });
+
 it('can ingest arbitrary exceptions via an event')->todo();
+
+final class MyException extends RuntimeException
+{
+    public function render()
+    {
+        return response('', 500);
+    }
+}

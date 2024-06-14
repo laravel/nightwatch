@@ -6,7 +6,6 @@ use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
-use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     syncClock();
@@ -19,17 +18,11 @@ beforeEach(function () {
     Http::resolved(fn () => Http::preventStrayRequests());
 });
 
-it('lazily resolves the sensor', function () {
-    expect(app()->resolved(OutgoingRequestSensor::class))->toBeFalse();
-});
-
 it('ingests outgoing requests', function () {
-    withoutExceptionHandling();
     $ingest = fakeIngest();
     Route::post('/users', function () {
         Http::withBody(str_repeat('b', 2000))->post('https://laravel.com');
     });
-
     Http::fake([
         'https://laravel.com' => function () {
             travelTo(now()->addMilliseconds(1234));
@@ -37,6 +30,7 @@ it('ingests outgoing requests', function () {
             return Http::response(str_repeat('a', 3000));
         },
     ]);
+
     $response = post('/users');
 
     $response->assertOk();

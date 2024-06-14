@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Support\Arr;
 use Laravel\Nightwatch\Contracts\Ingest;
 
 final class FakeIngest implements Ingest
@@ -23,17 +24,27 @@ final class FakeIngest implements Ingest
         return $this;
     }
 
-    public function assertLatestWrite(array $payload): self
+    public function assertLatestWrite(string|array $key, array $payload = []): self
     {
         expect(count($this->writes))->toBeGreaterThan(0);
 
-        expect($this->latestWrite())->toBe($payload);
+        [$key, $payload] = is_array($key)
+            ? [null, $key]
+            : [$key, $payload];
+
+        expect($this->latestWrite($key))->toBe($payload);
 
         return $this;
     }
 
-    public function latestWrite(): array
+    public function latestWrite(?string $key = null): array
     {
-        return json_decode($this->writes[0], true, flags: JSON_THROW_ON_ERROR);
+        $payload = json_decode($this->writes[0], true, flags: JSON_THROW_ON_ERROR);
+
+        if ($key) {
+            return Arr::get($payload, $key);
+        } else {
+            return $payload;
+        }
     }
 }

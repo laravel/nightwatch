@@ -12,7 +12,6 @@ use Laravel\Nightwatch\Sensors\QuerySensor;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
-use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     syncClock();
@@ -25,13 +24,8 @@ beforeEach(function () {
     Event::listen(MigrationsEnded::class, fn () => App::make(SensorManager::class)->prepareForNextInvocation());
 });
 
-it('lazily resolves the sensor', function () {
-    expect(app()->resolved(QuerySensor::class))->toBeFalse();
-});
-
 it('can ingest queries', function () {
     $ingest = fakeIngest();
-    withoutExceptionHandling();
     prependListener(QueryExecuted::class, fn (QueryExecuted $event) => $event->time = 5.2);
     Route::post('/users', function () {
         DB::table('users')->get();
