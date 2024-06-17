@@ -75,27 +75,27 @@ final class Agent extends Command
                             echo 'Failed ingest.'.PHP_EOL;
                             report($e);
                         });
-                });
-                    // before: function (string $records) {
-                    //     $this->line('Ingesting started.', verbosity: 'v');
-                    // },
-                        //
-                        // $response->then(function (IngestSucceededResult $result) {
-                        //     echo "Records successfully ingested after {$result->duration} ms";
-                        // }, function (Throwable $e) {
-                        //     if ($e instanceof IngestFailedException) {
-                        //         $this->error("Records failed ingesting after {$e->duration} ms", verbosity: 'v');
-                        //         $this->line("Reason: {$e->getMessage()}", verbosity: 'v');
+                    });
+                // before: function (string $records) {
+                //     $this->line('Ingesting started.', verbosity: 'v');
+                // },
+                //
+                // $response->then(function (IngestSucceededResult $result) {
+                //     echo "Records successfully ingested after {$result->duration} ms";
+                // }, function (Throwable $e) {
+                //     if ($e instanceof IngestFailedException) {
+                //         $this->error("Records failed ingesting after {$e->duration} ms", verbosity: 'v');
+                //         $this->line("Reason: {$e->getMessage()}", verbosity: 'v');
 
-                        //         /** @var Throwable */
-                        //         $e = $e->getPrevious();
-                        //     }
+                //         /** @var Throwable */
+                //         $e = $e->getPrevious();
+                //     }
 
-                        //     $this->error("Ingesting error [{$e->getMessage()}].");
+                //     $this->error("Ingesting error [{$e->getMessage()}].");
 
-                        //     report($e);
-                        // });
-                    // });
+                //     report($e);
+                // });
+                // });
             });
 
             $connection->on('close', function () use ($connection) {
