@@ -2,8 +2,6 @@
 
 namespace Laravel\Nightwatch\Records;
 
-use Laravel\Nightwatch\Types\Text;
-
 final class OutgoingRequest
 {
     public int $v = 1;

@@ -58,7 +58,7 @@ final class RequestSensor
             route_methods: $route?->methods() ?? [],
             route_domain: $route?->getDomain() ?? '',
             route_action: $route?->getActionName() ?? '',
-            route_path: with($route?->uri(), fn (string|null $uri) => $uri ? "/{$uri}" : ''),
+            route_path: with($route?->uri(), fn (?string $uri) => $uri ? "/{$uri}" : ''),
             ip: $request->ip() ?? '',
             duration: $durationInMilliseconds,
             status_code: (string) $response->getStatusCode(),
