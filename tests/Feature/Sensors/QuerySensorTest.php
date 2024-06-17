@@ -1,18 +1,13 @@
 <?php
 
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\SensorManager;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
-use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () use (&$ignore) {
     setDeployId('v1.2.3');

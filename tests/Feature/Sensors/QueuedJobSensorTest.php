@@ -2,15 +2,11 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\SensorManager;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
