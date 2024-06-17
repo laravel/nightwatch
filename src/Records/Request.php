@@ -17,8 +17,17 @@ final class Request
         public string $user,
         // --- //
         public string $method,
-        public string $route,
+        public string $scheme,
+        public string $url_user,
+        public string $host,
+        public string $port,
         public string $path,
+        public string $query,
+        public string $route_name,
+        public array $route_methods,
+        public string $route_domain,
+        public string $route_path,
+        public string $route_action,
         public string $ip,
         public int $duration,
         public string $status_code,
@@ -47,7 +56,6 @@ final class Request
         public int $hydrated_models,
         public int $peak_memory_usage_kilobytes,
     ) {
-        $this->route = Text::limit($this->route);
         $this->path = Text::limit($this->path);
     }
 }

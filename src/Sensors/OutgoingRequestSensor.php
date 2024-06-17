@@ -26,7 +26,7 @@ final class OutgoingRequestSensor
     }
 
     /**
-     * TODO group, execution_context, execution_id
+     * TODO group, execution_context, execution_id, route
      * TODO test against streamed requests / responses.
      * TODO decide how to handle streams where we do not know the payload size.
      * TODO It seems like `getSize` may throw an exception in some cases. We may need to `rescue`.
@@ -46,7 +46,11 @@ final class OutgoingRequestSensor
             execution_offset: $this->clock->executionOffset($startMicrotime),
             user: $this->user->id(),
             method: $request->getMethod(),
-            url: (string) $request->getUri(),
+            scheme: $request->getUri()->getScheme(),
+            host: $request->getUri()->getHost(),
+            port: (string) $request->getUri()->getPort(),
+            path: $request->getUri()->getPath(),
+            route: '',
             duration: $duration,
             request_size_kilobytes: (int) round(
                 ((int) ($request->getHeader('content-length')[0] ?? $request->getBody()->getSize() ?? 0)) / 1000

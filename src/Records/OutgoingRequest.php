@@ -8,6 +8,9 @@ final class OutgoingRequest
 {
     public int $v = 1;
 
+    /**
+     * TODO limit string length
+     */
     public function __construct(
         public string $timestamp,
         public string $deploy_id,
@@ -20,12 +23,16 @@ final class OutgoingRequest
         public string $user,
         // --- /
         public string $method,
-        public string $url,
+        public string $scheme,
+        public string $host,
+        public string $port,
+        public string $path,
+        public string $route,
         public int $duration,
         public int $request_size_kilobytes,
         public int $response_size_kilobytes,
         public string $status_code,
     ) {
-        $this->url = Text::limit($this->url);
+        //
     }
 }

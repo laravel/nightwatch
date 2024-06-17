@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Records\ExecutionParent;
@@ -36,6 +37,9 @@ final class RequestSensor
     {
         $durationInMilliseconds = (int) round($startedAt->diffInMilliseconds());
 
+        /** @var Route|null */
+        $route = $request->route();
+
         $this->recordsBuffer->writeRequest(new RequestRecord(
             timestamp: $startedAt->toDateTimeString(),
             deploy_id: $this->deployId,
@@ -44,8 +48,17 @@ final class RequestSensor
             trace_id: $this->traceId,
             user: $this->user->id(),
             method: $request->getMethod(),
-            route: with($request->route()?->uri(), fn (?string $uri) => $uri ? "/{$uri}" : ''), // @phpstan-ignore method.nonObject
-            path: '/'.$request->path(),
+            scheme: $request->getScheme(),
+            url_user: $request->getUser() ?? '',
+            host: $request->getHost(),
+            port: $request->getPort(),
+            path: $request->getPathInfo(),
+            query: '',
+            route_name: $route?->getName() ?? '',
+            route_methods: $route?->methods() ?? [],
+            route_domain: $route?->getDomain() ?? '',
+            route_action: $route?->getActionName() ?? '',
+            route_path: with($route?->uri(), fn (string|null $uri) => $uri ? "/{$uri}" : ''),
             ip: $request->ip() ?? '',
             duration: $durationInMilliseconds,
             status_code: (string) $response->getStatusCode(),

@@ -37,8 +37,17 @@ it('can ingest requests', function () {
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'user' => '',
                 'method' => 'POST',
-                'route' => '/users/{user}',
+                'scheme' => 'http',
+                'url_user' => '',
+                'host' => 'localhost',
+                'port' => '80',
                 'path' => '/users/345',
+                'query' => '',
+                'route_name' => '',
+                'route_methods' => ['POST'],
+                'route_domain' => '',
+                'route_path' => '/users/{user}',
+                'route_action' => 'Closure',
                 'ip' => '127.0.0.1',
                 'duration' => 1234,
                 'status_code' => '200',
@@ -100,3 +109,7 @@ it('handles responses using Transfer-Encoding headers')->todo(); // Content-Leng
 it('captures query count')->todo(); // `queries` field + for the request of the execution context.
 
 it('has a deploy_id fallback')->todo();
+
+it('masks query parameters')->todo();
+
+it('sorts the route methods')->todo();

@@ -88,7 +88,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             /** @var Config */
             $config = $app->make(Config::class);
             /** @var Clock */
-            $clock = $app->make(Clock::class);
+            $clock = $app->make(ClockContract::class);
 
             $loop = new StreamSelectLoop;
 

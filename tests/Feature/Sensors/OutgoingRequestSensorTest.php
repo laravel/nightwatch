@@ -99,7 +99,11 @@ it('ingests outgoing requests', function () {
                 'execution_offset' => 2500,
                 'user' => '',
                 'method' => 'POST',
-                'url' => 'https://laravel.com',
+                'scheme' => 'https',
+                'host' => 'laravel.com',
+                'port' => '',
+                'path' => '',
+                'route' => '',
                 'duration' => 1234,
                 'request_size_kilobytes' => 2,
                 'response_size_kilobytes' => 3,
@@ -110,3 +114,6 @@ it('ingests outgoing requests', function () {
         'queued_jobs' => [],
     ]);
 });
+
+it('records the port when it is specified in the URL and is the standard protocol port')->todo();
+it('records the port when it is specified in the URL and is a non-standard protocol port')->todo();

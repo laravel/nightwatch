@@ -7,10 +7,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    dd(
-        LARAVEL_START,
-        LARAVEL_START * 1000 * 1000,
-    );
     // Cache events. miss:
     Cache::get('users:345');
 
