@@ -210,7 +210,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 return;
             }
 
-            $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
+            $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor) {
                 $sensor->request($startedAt, $request, $response);
 
                 /** @var IngestContract */
