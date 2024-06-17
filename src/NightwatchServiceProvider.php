@@ -45,7 +45,16 @@ final class NightwatchServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(SensorManager::class);
-        $this->app->singleton(ClockContract::class, Clock::class);
+        $this->app->singleton(ClockContract::class, function (Container $app) {
+            /**
+             * TODO this needs to better handle Laravel Octane and the queue worker.
+             */
+            return new Clock(match (true) {
+                defined('LARAVEL_START') => LARAVEL_START,
+                ($start = $app->make('request')->server('REQUEST_TIME_FLOAT')) => $start,
+                default => microtime(true),
+            });
+        });
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
         $this->app->scoped(RecordsBuffer::class);
         $this->configureAgent();
@@ -78,6 +87,8 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->app->singleton(Agent::class, function (Container $app) {
             /** @var Config */
             $config = $app->make(Config::class);
+            /** @var Clock */
+            $clock = $app->make(Clock::class);
 
             $loop = new StreamSelectLoop;
 
@@ -109,7 +120,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
                 ->withBase('https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.us-east-1.on.aws/'));
 
-            $ingest = new HttpIngest($client, new Clock, $config->get('nightwatch.http.concurrent_request_limit'));
+            $ingest = new HttpIngest($client, $clock, $config->get('nightwatch.http.concurrent_request_limit'));
 
             return new Agent($buffer, $ingest, $loop, $config->get('nightwatch.collector.timeout'));
         });

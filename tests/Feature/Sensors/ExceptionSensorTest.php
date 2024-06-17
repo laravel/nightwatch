@@ -7,12 +7,11 @@ use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
-    syncClock();
     setDeployId('v1.2.3');
     setServerName('web-01');
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
+    syncClock(CarbonImmutable::parse('2000-01-01 00:00:00'));
 
     Config::set('app.debug', false);
 });
@@ -21,6 +20,8 @@ it('ingests exceptions', function () {
     $ingest = fakeIngest();
     $trace = null;
     Route::post('/users', function () use (&$trace) {
+        travelTo(now()->addMilliseconds(2.5));
+
         $e = new MyException('Whoops!');
 
         $trace = $e->getTraceAsString();
@@ -47,7 +48,7 @@ it('ingests exceptions', function () {
                 'route' => '/users',
                 'path' => '/users',
                 'ip' => '127.0.0.1',
-                'duration' => 0,
+                'duration' => 3,
                 'status_code' => '500',
                 'request_size_kilobytes' => 0,
                 'response_size_kilobytes' => 0,
@@ -86,6 +87,7 @@ it('ingests exceptions', function () {
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_context' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000000',
+                'execution_offset' => 2500,
                 'user' => '',
                 'class' => 'MyException',
                 'file' => 'app/Models/User.php',
@@ -110,6 +112,8 @@ it('ingests reported exceptions', function () {
     $ingest = fakeIngest();
     $trace = null;
     Route::post('/users', function () use (&$trace) {
+        travelTo(now()->addMilliseconds(2.5));
+
         $e = new MyException('Whoops!');
 
         $trace = $e->getTraceAsString();
@@ -136,7 +140,7 @@ it('ingests reported exceptions', function () {
                 'route' => '/users',
                 'path' => '/users',
                 'ip' => '127.0.0.1',
-                'duration' => 0,
+                'duration' => 3,
                 'status_code' => '200',
                 'request_size_kilobytes' => 0,
                 'response_size_kilobytes' => 0,
@@ -175,6 +179,7 @@ it('ingests reported exceptions', function () {
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_context' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000000',
+                'execution_offset' => 2500,
                 'user' => '',
                 'class' => 'MyException',
                 'file' => 'app/Models/User.php',

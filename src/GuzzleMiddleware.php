@@ -19,14 +19,14 @@ final class GuzzleMiddleware
     public function __invoke(callable $handler): callable
     {
         return function (RequestInterface $request, array $options) use ($handler) {
-            $startInMicrotime = $this->clock->microtime();
+            $startMicrotime = $this->clock->microtime();
 
             return $handler($request, $options)
-                ->then(function (ResponseInterface $response) use ($request, $startInMicrotime) {
-                    $durationInMicrotime = $this->clock->diffInMicrotime($startInMicrotime);
+                ->then(function (ResponseInterface $response) use ($request, $startMicrotime) {
+                    $endMicrotime = $this->clock->microtime();
 
                     $this->sensor->outgoingRequest(
-                        $startInMicrotime, $durationInMicrotime,
+                        $startMicrotime, $endMicrotime,
                         $request, $response,
                     );
 

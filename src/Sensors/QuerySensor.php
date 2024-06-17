@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\QueryExecuted;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
+use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\UserProvider;
@@ -15,6 +16,7 @@ final class QuerySensor
         private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
         private UserProvider $user,
+        private Clock $clock,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -27,28 +29,31 @@ final class QuerySensor
      */
     public function __invoke(QueryExecuted $event): void
     {
-        $durationInMicroseconds = (int) round($event->time * 1000);
+        $nowMicrotime = $this->clock->microtime();
 
-        $timestamp = CarbonImmutable::now('UTC')->subMicroseconds($durationInMicroseconds)->toDateTimeString();
+        $startMicrotime = $nowMicrotime - ($event->time / 1000);
+
+        $duration = (int) round($event->time * 1000);
 
         $this->recordsBuffer->writeQuery(new Query(
-            timestamp: $timestamp,
+            timestamp: CarbonImmutable::createFromFormat('U', (int) $startMicrotime, 'UTC')->toDateTimeString(),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,
             execution_context: 'request',
             execution_id: '00000000-0000-0000-0000-000000000000',
+            execution_offset: $this->clock->executionOffset($startMicrotime),
             user: $this->user->id(),
             sql: $event->sql,
             category: 'select',
             file: 'app/Models/User.php',
             line: 5,
-            duration: $durationInMicroseconds,
+            duration: $duration,
             connection: $event->connectionName,
         ));
 
         $this->executionParent->queries++;
-        $this->executionParent->queries_duration += $durationInMicroseconds;
+        $this->executionParent->queries_duration += $duration;
     }
 }

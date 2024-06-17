@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Carbon\CarbonImmutable;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
+use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\UserProvider;
@@ -15,6 +16,7 @@ final class QueuedJobSensor
         private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
         private UserProvider $user,
+        private Clock $clock,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -27,16 +29,17 @@ final class QueuedJobSensor
      */
     public function __invoke(JobQueued $event)
     {
-        $timestamp = CarbonImmutable::now('UTC')->toDateTimeString();
+        $nowMicrotime = $this->clock->microtime();
 
         $this->recordsBuffer->writeQueuedJob(new QueuedJob(
-            timestamp: $timestamp,
+            timestamp: CarbonImmutable::createFromFormat('U', (int) $nowMicrotime, 'UTC'),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,
             execution_context: 'request',
             execution_id: '00000000-0000-0000-0000-000000000000',
+            execution_offset: $this->clock->executionOffset($nowMicrotime),
             user: $this->user->id(),
             job_id: $event->payload()['uuid'],
             name: match (true) {

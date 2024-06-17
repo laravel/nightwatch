@@ -6,19 +6,22 @@ use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
-    syncClock();
     setDeployId('v1.2.3');
     setServerName('web-01');
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
+    syncClock(CarbonImmutable::parse('2000-01-01 00:00:00'));
 });
 
 it('can ingest cache misses', function () {
+    withoutExceptionHandling();
     $ingest = fakeIngest();
     Route::post('/users', function () {
+        travelTo(now()->addMilliseconds(2.5));
+
         Cache::driver('array')->get('users:345');
     });
 
@@ -40,7 +43,7 @@ it('can ingest cache misses', function () {
                 'route' => '/users',
                 'path' => '/users',
                 'ip' => '127.0.0.1',
-                'duration' => 0,
+                'duration' => 3,
                 'status_code' => '200',
                 'request_size_kilobytes' => 0,
                 'response_size_kilobytes' => 0,
@@ -77,6 +80,7 @@ it('can ingest cache misses', function () {
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_context' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000000',
+                'execution_offset' => 2500,
                 'user' => '',
                 'store' => 'array',
                 'key' => 'users:345',
@@ -100,6 +104,8 @@ it('can ingest cache hits', function () {
     $ingest = fakeIngest();
     Cache::driver('array')->put('users:345', 'xxxx');
     Route::post('/users', function () {
+        travelTo(now()->addMilliseconds(2.5));
+
         Cache::driver('array')->get('users:345');
     });
 
@@ -121,7 +127,7 @@ it('can ingest cache hits', function () {
                 'route' => '/users',
                 'path' => '/users',
                 'ip' => '127.0.0.1',
-                'duration' => 0,
+                'duration' => 3,
                 'status_code' => '200',
                 'request_size_kilobytes' => 0,
                 'response_size_kilobytes' => 0,
@@ -158,6 +164,7 @@ it('can ingest cache hits', function () {
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_context' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000000',
+                'execution_offset' => 2500,
                 'user' => '',
                 'store' => 'array',
                 'key' => 'users:345',

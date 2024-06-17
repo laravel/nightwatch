@@ -1,5 +1,6 @@
 <?php
 
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
@@ -9,12 +10,24 @@ use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Tests\FakeIngest;
 
+use function Pest\Laravel\travelTo;
+
 uses(Tests\TestCase::class)->in('Feature');
 
-function syncClock(): void
+function syncClock(CarbonImmutable $timestamp): void
 {
-    App::instance(Clock::class, new class implements Clock
+    travelTo($timestamp);
+
+    $executionStartMicrotime = (float) $timestamp->format('U.u');
+
+    App::forgetInstance(Clock::class);
+    App::instance(Clock::class, new class($executionStartMicrotime) implements Clock
     {
+        public function __construct(private int $executionStartMicrotime)
+        {
+            //
+        }
+
         public function microtime(): float
         {
             return (float) now()->format('U.u');
@@ -23,6 +36,11 @@ function syncClock(): void
         public function diffInMicrotime(float $start): float
         {
             return $this->microtime() - $start;
+        }
+
+        public function executionOffset(float $nowMicrotime): float
+        {
+            return (int) round(($nowMicrotime - $this->executionStartMicrotime) * 1000 * 1000);
         }
     });
 }

@@ -5,6 +5,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -16,21 +17,27 @@ use function Pest\Laravel\travelTo;
 use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
-    syncClock();
     setDeployId('v1.2.3');
     setServerName('web-01');
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
-
-    Event::listen(MigrationsEnded::class, fn () => App::make(SensorManager::class)->prepareForNextInvocation());
+    syncClock(CarbonImmutable::parse('2000-01-01 00:00:00'));
 });
 
 it('can ingest cache misses', function () {
     withoutExceptionHandling();
     $ingest = fakeIngest();
-    prependListener(QueryExecuted::class, fn (QueryExecuted $event) => $event->time = 5.2);
+    prependListener(QueryExecuted::class, function (QueryExecuted $event) {
+        if (! RefreshDatabaseState::$migrated) {
+            return false;
+        }
+
+        $event->time = 5.2;
+
+        travelTo(now()->addMilliseconds(5.2));
+    });
     Route::post('/users', function () {
+        travelTo(now()->addMilliseconds(2.5));
         Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
         MyJob::dispatch();
         Str::createUuidsNormally();
@@ -53,7 +60,7 @@ it('can ingest cache misses', function () {
             'route' => '/users',
             'path' => '/users',
             'ip' => '127.0.0.1',
-            'duration' => 0,
+            'duration' => 8,
             'status_code' => '200',
             'request_size_kilobytes' => 0,
             'response_size_kilobytes' => 0,
@@ -90,6 +97,7 @@ it('can ingest cache misses', function () {
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_offset' => 7700,
             'user' => '',
             'job_id' => '00000000-0000-0000-0000-000000000000',
             'name' => 'MyJob',

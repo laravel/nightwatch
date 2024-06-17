@@ -17,6 +17,7 @@ final class Query
         public string $trace_id,
         public string $execution_context,
         public string $execution_id,
+        public int $execution_offset,
         public string $user,
         // --- //
         public string $sql,

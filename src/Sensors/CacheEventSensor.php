@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
+use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\UserProvider;
@@ -16,6 +17,7 @@ final class CacheEventSensor
         private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
         private UserProvider $user,
+        private Clock $clock,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -33,7 +35,7 @@ final class CacheEventSensor
      */
     public function __invoke(CacheMissed|CacheHit $event): void
     {
-        $timestamp = CarbonImmutable::now('UTC')->toDateTimeString();
+        $nowMicrotime = $this->clock->microtime();
 
         if ($event::class === CacheHit::class) {
             $type = 'hit';
@@ -44,13 +46,14 @@ final class CacheEventSensor
         }
 
         $this->recordsBuffer->writeCacheEvent(new CacheEvent(
-            timestamp: $timestamp,
+            timestamp: CarbonImmutable::createFromFormat('U', (int) $nowMicrotime, 'UTC')->toDateTimeString(),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,
             execution_context: 'request',
             execution_id: '00000000-0000-0000-0000-000000000000',
+            execution_offset: $this->clock->executionOffset($nowMicrotime),
             user: $this->user->id(),
             store: $event->storeName,
             key: $event->key,

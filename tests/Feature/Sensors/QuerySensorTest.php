@@ -3,6 +3,7 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -11,22 +12,30 @@ use Laravel\Nightwatch\SensorManager;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
-beforeEach(function () {
-    syncClock();
+beforeEach(function () use (&$ignore) {
     setDeployId('v1.2.3');
     setServerName('web-01');
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    travelTo(CarbonImmutable::parse('2000-01-01 00:00:00'));
-
-    Event::listen(MigrationsEnded::class, fn () => App::make(SensorManager::class)->prepareForNextInvocation());
+    syncClock(CarbonImmutable::parse('2000-01-01 00:00:00'));
 });
 
 it('can ingest queries', function () {
     $ingest = fakeIngest();
-    prependListener(QueryExecuted::class, fn (QueryExecuted $event) => $event->time = 5.2);
+    prependListener(QueryExecuted::class, function (QueryExecuted $event) {
+        if (! RefreshDatabaseState::$migrated) {
+            return false;
+        }
+
+        $event->time = 5.2;
+
+        travelTo(now()->addMilliseconds(5.2));
+    });
     Route::post('/users', function () {
+        travelTo(now()->addMilliseconds(2.5));
+
         DB::table('users')->get();
     });
 
@@ -48,7 +57,7 @@ it('can ingest queries', function () {
                 'route' => '/users',
                 'path' => '/users',
                 'ip' => '127.0.0.1',
-                'duration' => 0,
+                'duration' => 8,
                 'status_code' => '200',
                 'request_size_kilobytes' => 0,
                 'response_size_kilobytes' => 0,
@@ -87,13 +96,14 @@ it('can ingest queries', function () {
         'queries' => [
             [
                 'v' => 1,
-                'timestamp' => '1999-12-31 23:59:59',
+                'timestamp' => '2000-01-01 00:00:00',
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',
                 'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_context' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000000',
+                'execution_offset' => 2500,
                 'user' => '',
                 'sql' => 'select * from "users"',
                 'category' => 'select',

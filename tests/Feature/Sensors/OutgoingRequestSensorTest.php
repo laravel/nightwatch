@@ -5,14 +5,14 @@ use Illuminate\Support\Facades\Http;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
-    syncClock();
     setDeployId('v1.2.3');
     setServerName('web-01');
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    travelTo(CarbonImmutable::parse('2000-01-01 00:00:00.000'));
+    syncClock(CarbonImmutable::parse('2000-01-01 00:00:00.000'));
 
     Http::resolved(fn () => Http::preventStrayRequests());
 });
@@ -20,8 +20,11 @@ beforeEach(function () {
 it('ingests outgoing requests', function () {
     $ingest = fakeIngest();
     Route::post('/users', function () {
+        travelTo(now()->addMilliseconds(2.5));
+
         Http::withBody(str_repeat('b', 2000))->post('https://laravel.com');
     });
+    withoutExceptionHandling();
     Http::fake([
         'https://laravel.com' => function () {
             travelTo(now()->addMilliseconds(1234));
@@ -48,7 +51,7 @@ it('ingests outgoing requests', function () {
                 'route' => '/users',
                 'path' => '/users',
                 'ip' => '127.0.0.1',
-                'duration' => 1234,
+                'duration' => 1237,
                 'status_code' => '200',
                 'request_size_kilobytes' => 0,
                 'response_size_kilobytes' => 0,
@@ -93,6 +96,7 @@ it('ingests outgoing requests', function () {
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_context' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000000',
+                'execution_offset' => 2500,
                 'user' => '',
                 'method' => 'POST',
                 'url' => 'https://laravel.com',

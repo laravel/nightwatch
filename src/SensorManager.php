@@ -11,6 +11,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
+use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
@@ -57,6 +58,8 @@ final class SensorManager
     private ?PeakMemoryProvider $peakMemoryProvider = null;
 
     private ?UserProvider $userProvider = null;
+
+    private ?Clock $clock;
 
     public function __construct(private Container $app)
     {
@@ -105,6 +108,7 @@ final class SensorManager
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             user: $this->user(),
+            clock: $this->clock(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -118,6 +122,7 @@ final class SensorManager
         $sensor = $this->sensors['cache_events'] ??= new CacheEventSensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
+            clock: $this->clock(),
             user: $this->user(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
@@ -127,18 +132,19 @@ final class SensorManager
         $sensor($event);
     }
 
-    public function outgoingRequest(float $startInMicrotime, float $durationInMicrotime, RequestInterface $request, ResponseInterface $response): void
+    public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
         $sensor = $this->sensors['outgoing_requests'] ??= new OutgoingRequestSensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             user: $this->user(),
+            clock: $this->clock(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
         );
 
-        $sensor($startInMicrotime, $durationInMicrotime, $request, $response);
+        $sensor($startMicrotime, $endMicrotime, $request, $response);
     }
 
     public function exception(Throwable $e): void
@@ -146,6 +152,7 @@ final class SensorManager
         $sensor = $this->sensors['exceptions'] ??= new ExceptionSensor(
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
+            clock: $this->clock(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -164,6 +171,7 @@ final class SensorManager
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             user: $this->user(),
+            clock: $this->clock(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -202,10 +210,16 @@ final class SensorManager
         return $this->userProvider ??= $this->app->make(UserProvider::class);
     }
 
+    private function clock(): Clock
+    {
+        return $this->clock ??= $this->app->make(Clock::class);
+    }
+
     public function prepareForNextInvocation(): void
     {
         $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
+        $this->clock = null;
         $this->sensors = [];
         $this->traceId = null;
     }
