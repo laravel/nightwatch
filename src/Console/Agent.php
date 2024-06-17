@@ -7,6 +7,7 @@ use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Exceptions\ConnectionTimedOutException;
 use Laravel\Nightwatch\Exceptions\IngestFailedException;
 use Laravel\Nightwatch\Ingests\HttpIngest;
+use Laravel\Nightwatch\Ingests\NullIngest;
 use Laravel\Nightwatch\IngestSucceededResult;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
@@ -39,7 +40,7 @@ final class Agent extends Command
 
     public function __construct(
         private PayloadBuffer $buffer,
-        private HttpIngest $ingest,
+        private HttpIngest|NullIngest $ingest,
         private LoopInterface $loop,
         private int|float $timeout,
     ) {
@@ -57,47 +58,48 @@ final class Agent extends Command
     public function handle(Server $server): void
     {
         $server->on('connection', function (ConnectionInterface $connection) {
-            $this->line('Connection accepted.', verbosity: 'vv');
-
             $this->accept($connection);
 
             $connection->on('data', function (string $chunk) use ($connection) {
-                $this->line('Data recieved.', verbosity: 'v');
-                $this->line($chunk, verbosity: 'vvv');
-
                 $this->bufferConnectionChunk($connection, $chunk);
             });
 
             $connection->on('end', function () use ($connection) {
-                $this->line('Connection ended.', verbosity: 'vv');
-
                 $this->buffer->write($this->flushConnectionBuffer($connection));
 
                 $this->queueOrPerformIngest(
-                    before: function (string $records) {
-                        $this->line('Ingesting started.', verbosity: 'v');
-                    },
                     after: function (PromiseInterface $response) {
-                        $response->then(function (IngestSucceededResult $result) {
-                            $this->line("Records successfully ingested after {$result->duration} ms", verbosity: 'v');
-                        }, function (Throwable $e) {
-                            if ($e instanceof IngestFailedException) {
-                                $this->error("Records failed ingesting after {$e->duration} ms", verbosity: 'v');
-                                $this->line("Reason: {$e->getMessage()}", verbosity: 'v');
-
-                                /** @var Throwable */
-                                $e = $e->getPrevious();
-                            }
-
-                            $this->error("Ingesting error [{$e->getMessage()}].");
-
+                        $response->then(function () {
+                            echo 'Ingested.'.PHP_EOL;
+                        }, function ($e) {
+                            echo 'Failed ingest.'.PHP_EOL;
                             report($e);
                         });
-                    });
+                });
+                    // before: function (string $records) {
+                    //     $this->line('Ingesting started.', verbosity: 'v');
+                    // },
+                        //
+                        // $response->then(function (IngestSucceededResult $result) {
+                        //     echo "Records successfully ingested after {$result->duration} ms";
+                        // }, function (Throwable $e) {
+                        //     if ($e instanceof IngestFailedException) {
+                        //         $this->error("Records failed ingesting after {$e->duration} ms", verbosity: 'v');
+                        //         $this->line("Reason: {$e->getMessage()}", verbosity: 'v');
+
+                        //         /** @var Throwable */
+                        //         $e = $e->getPrevious();
+                        //     }
+
+                        //     $this->error("Ingesting error [{$e->getMessage()}].");
+
+                        //     report($e);
+                        // });
+                    // });
             });
 
             $connection->on('close', function () use ($connection) {
-                $this->line('Connection closed.', verbosity: 'vv');
+                // $this->line('Connection closed.', verbosity: 'vv');
 
                 $this->evict($connection);
             });
@@ -106,11 +108,10 @@ final class Agent extends Command
                 $this->error('Connection timed out.');
 
                 $connection->close();
-
-                report(new ConnectionTimedOutException('Incoming connection timed out.', [
-                    'timeout' => $this->timeout,
-                    'remote_address' => $connection->getRemoteAddress(),
-                ]));
+                // report(new ConnectionTimedOutException('Incoming connection timed out.', [
+                //     'timeout' => $this->timeout,
+                //     'remote_address' => $connection->getRemoteAddress(),
+                // ]));
             });
 
             $connection->on('error', function (Throwable $e) use ($connection) {
@@ -128,7 +129,7 @@ final class Agent extends Command
             report($e);
         });
 
-        $this->line('🌗 Nightwatch agent initiated.');
+        echo '🌗 Nightwatch agent initiated.'.PHP_EOL;
         $this->loop->run();
     }
 
@@ -165,15 +166,12 @@ final class Agent extends Command
     }
 
     /**
-     * @param  (callable(string): void)  $before
      * @param  (callable(PromiseInterface<IngestSucceededResult>): void)  $after
      */
-    private function queueOrPerformIngest(callable $before, callable $after): void
+    private function queueOrPerformIngest(callable $after): void
     {
         if ($this->buffer->wantsFlushing()) {
             $records = $this->buffer->flush();
-
-            $before($records);
 
             if ($this->flushBufferAfterDelayTimer !== null) {
                 $this->loop->cancelTimer($this->flushBufferAfterDelayTimer);
@@ -182,10 +180,8 @@ final class Agent extends Command
 
             $after($this->ingest->write($records));
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(10, function () use ($before, $after) {
+            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(10, function () use ($after) {
                 $records = $this->buffer->flush();
-
-                $before($records);
 
                 $this->flushBufferAfterDelayTimer = null;
 

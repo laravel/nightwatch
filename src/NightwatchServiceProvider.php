@@ -27,6 +27,7 @@ use Laravel\Nightwatch\Contracts\Clock as ClockContract;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Ingests\HttpIngest;
+use Laravel\Nightwatch\Ingests\NullIngest;
 use Laravel\Nightwatch\Ingests\SocketIngest;
 use Laravel\Nightwatch\Providers\PeakMemory;
 use React\EventLoop\StreamSelectLoop;
@@ -120,7 +121,8 @@ final class NightwatchServiceProvider extends ServiceProvider
                 ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
                 ->withBase('https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.us-east-1.on.aws'));
 
-            $ingest = new HttpIngest($client, $clock, $config->get('nightwatch.http.concurrent_request_limit'));
+            // $ingest = new HttpIngest($client, $clock, $config->get('nightwatch.http.concurrent_request_limit'));
+            $ingest = new NullIngest;
 
             return new Agent($buffer, $ingest, $loop, $config->get('nightwatch.collector.timeout'));
         });
