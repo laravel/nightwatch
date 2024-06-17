@@ -45,6 +45,10 @@ final class NightwatchServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        if ($this->app['config']->get('app.nightwatch_disabled')) {
+            return;
+        }
+
         $this->app->singleton(SensorManager::class);
         $this->app->singleton(ClockContract::class, function (Container $app) {
             /**
@@ -66,6 +70,10 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if ($this->app['config']->get('app.nightwatch_disabled')) {
+            return;
+        }
+
         if ($this->app->runningInConsole()) {
             $this->registerPublications();
             $this->registerCommands();
