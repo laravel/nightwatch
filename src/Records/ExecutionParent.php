@@ -4,7 +4,7 @@ namespace Laravel\Nightwatch\Records;
 
 final class ExecutionParent
 {
-    // public int $v = 1;
+    public int $v = 1;
 
     public function __construct(
         public int $queries = 0,

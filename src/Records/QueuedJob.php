@@ -6,7 +6,7 @@ use Laravel\Nightwatch\Types\TinyText;
 
 final class QueuedJob
 {
-    // public int $v = 1;
+    public int $v = 1;
 
     public function __construct(
         public string $timestamp,

@@ -78,6 +78,11 @@ it('can ingest queries', function () {
         'cache_events' => [],
         'commands' => [],
         'exceptions' => [],
+        'job_attempts' => [],
+        'lazy_loads' => [],
+        'logs' => [],
+        'mail' => [],
+        'notifications' => [],
         'outgoing_requests' => [],
         'queries' => [
             [
