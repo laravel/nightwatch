@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\SensorManager;
@@ -496,32 +497,48 @@ Artisan::command('nightwatch:hammer', function () {
         500,
     ];
 
-    $sensor = App::make(SensorManager::class);
+    // $sensor = App::make(SensorManager::class);
+
+    Http::preventStrayRequests();
+    Http::fake(function () {
+        return Http::response('ok');
+    });
+
+    $uuid = (string) Str::uuid();
 
     for ($i = 0; $i < 100; $i++) {
+        // Event::dispatch(new QueryExecuted(
+        //     sql: $queries[rand(0, count($queries) - 1)],
+        //     bindings: [],
+        //     time: rand(1, 9999999) / 1000,
+        //     connection: $db,
+        // ));
         Event::dispatch(new QueryExecuted(
-            sql: $queries[rand(0, count($queries) - 1)],
+            sql: 'select * from "users"',
             bindings: [],
-            time: rand(1, 9999999) / 1000,
+            time: 5.2,
             connection: $db,
         ));
 
         Event::dispatch(new JobQueued(
-            'database', 'default', (string) Str::uuid(), 'App\\Jobs\\MyJob', json_encode(['uuid' => (string) Str::uuid()]), 0
+            'database', 'default', $uuid, 'App\\Jobs\\MyJob', '{"uuid":"'.$uuid.'"}', 0
         ));
 
         report('Something happend. Not good!');
 
-        Event::dispatch(new CacheHit('database', $cacheKeys[array_rand($cacheKeys)], '', []));
-        Event::dispatch(new CacheMissed('database', $cacheKeys[array_rand($cacheKeys)], []));
+        // Event::dispatch(new CacheHit('database', $cacheKeys[array_rand($cacheKeys)], '', []));
+        // Event::dispatch(new CacheMissed('database', $cacheKeys[array_rand($cacheKeys)], []));
+        Event::dispatch(new CacheHit('database', 'users:123', '', []));
+        Event::dispatch(new CacheMissed('database', 'users:123', []));
 
-        $sensor->outgoingRequest($start = rand(1, 999), $start + 1000, new Request(
-            method: $methods[array_rand($methods)],
-            uri: $uris[array_rand($uris)],
-            body: str_repeat('a', rand(1, 100000)),
-        ), new Response(
-            status: $status[array_rand($status)],
-            body: str_repeat('a', rand(1, 100000)),
-        ));
+        // $sensor->outgoingRequest($start = rand(1, 999), $start + 1000, new Request(
+        //     method: $methods[array_rand($methods)],
+        //     uri: $uris[array_rand($uris)],
+        //     body: str_repeat('a', rand(1, 100000)),
+        // ), new Response(
+        //     status: $status[array_rand($status)],
+        //     body: str_repeat('a', rand(1, 100000)),
+        // ));
+        Http::get('https://laravel.com')->throw()->body();
     }
 });
