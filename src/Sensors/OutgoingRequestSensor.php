@@ -3,6 +3,8 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
+use DateTime;
+use DateTimeZone;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Records\ExecutionParent;
@@ -36,7 +38,7 @@ final class OutgoingRequestSensor
         $duration = (int) round(($endMicrotime - $startMicrotime) * 1000);
 
         $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
-            timestamp: CarbonImmutable::createFromFormat('U', (int) $startMicrotime, 'UTC')->toDateTimeString(),
+            timestamp: DateTime::createFromFormat('U', (int) $startMicrotime, new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),

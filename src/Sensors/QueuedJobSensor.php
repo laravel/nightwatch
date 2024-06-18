@@ -3,6 +3,8 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
+use DateTimeImmutable;
+use DateTimeZone;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
@@ -32,7 +34,7 @@ final class QueuedJobSensor
         $nowMicrotime = $this->clock->microtime();
 
         $this->recordsBuffer->writeQueuedJob(new QueuedJob(
-            timestamp: CarbonImmutable::createFromFormat('U', (int) $nowMicrotime, 'UTC'),
+            timestamp: DateTimeImmutable::createFromFormat('U', (int) $nowMicrotime, new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),

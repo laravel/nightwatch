@@ -3,6 +3,8 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
+use DateTimeImmutable;
+use DateTimeZone;
 use Illuminate\Database\Events\QueryExecuted;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
@@ -36,7 +38,7 @@ final class QuerySensor
         $duration = (int) round($event->time * 1000);
 
         $this->recordsBuffer->writeQuery(new Query(
-            timestamp: CarbonImmutable::createFromFormat('U', (int) $startMicrotime, 'UTC')->toDateTimeString(),
+            timestamp: DateTimeImmutable::createFromFormat('U', (int) $startMicrotime, new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),
