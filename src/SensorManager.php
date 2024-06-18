@@ -79,7 +79,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        $sensor($startedAt, $request, $response);
+        // $sensor($startedAt, $request, $response);
     }
 
     /**
@@ -99,7 +99,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        $sensor($startedAt, $input, $status);
+        // $sensor($startedAt, $input, $status);
     }
 
     public function query(QueryExecuted $event): void
@@ -129,7 +129,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        $sensor($event);
+        // $sensor($event);
     }
 
     public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
@@ -144,7 +144,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        $sensor($startMicrotime, $endMicrotime, $request, $response);
+        // $sensor($startMicrotime, $endMicrotime, $request, $response);
     }
 
     public function exception(Throwable $e): void
@@ -158,7 +158,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        $sensor($e);
+        // $sensor($e);
     }
 
     public function queuedJob(JobQueued $event): void
@@ -177,7 +177,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        $sensor($event);
+        // $sensor($event);
     }
 
     private function traceId(): string
