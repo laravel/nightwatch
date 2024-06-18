@@ -226,7 +226,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 return;
             }
 
-            $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
+            $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor) {
                 $sensor->command($startedAt, $input, $status);
 
                 /** @var IngestContract */
