@@ -13,5 +13,5 @@ it('goes fast', function () {
         function () {
             Artisan::call('nightwatch:hammer');
         },
-    ], 50);
+    ], 100);
 });
