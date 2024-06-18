@@ -43,9 +43,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class NightwatchServiceProvider extends ServiceProvider
 {
+    private bool $disabled = false;
+
     public function register(): void
     {
-        if ($this->app['config']->get('app.nightwatch_disabled')) {
+        if ($this->disabled = (bool) $this->app['config']->get('nightwatch.disabled')) {
             return;
         }
 
@@ -70,7 +72,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        if ($this->app['config']->get('app.nightwatch_disabled')) {
+        if ($this->disabled) {
             return;
         }
 
@@ -228,6 +230,8 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor) {
                 $sensor->command($startedAt, $input, $status);
+
+                $sensor->flush();
 
                 /** @var IngestContract */
                 // $ingest = $app->make(IngestContract::class);

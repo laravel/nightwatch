@@ -3,6 +3,8 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\CarbonImmutable;
+use DateTimeImmutable;
+use DateTimeZone;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
@@ -46,7 +48,7 @@ final class CacheEventSensor
         }
 
         $this->recordsBuffer->writeCacheEvent(new CacheEvent(
-            timestamp: CarbonImmutable::createFromFormat('U', (int) $nowMicrotime, 'UTC')->toDateTimeString(),
+            timestamp: DateTimeImmutable::createFromFormat('U', (int) $nowMicrotime, new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),
