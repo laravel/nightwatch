@@ -230,9 +230,9 @@ final class NightwatchServiceProvider extends ServiceProvider
                 $sensor->command($startedAt, $input, $status);
 
                 /** @var IngestContract */
-                $ingest = $app->make(IngestContract::class);
+                // $ingest = $app->make(IngestContract::class);
 
-                $ingest->write($sensor->flush());
+                // $ingest->write($sensor->flush());
             });
         });
     }
