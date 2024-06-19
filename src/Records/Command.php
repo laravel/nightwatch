@@ -13,7 +13,7 @@ final class Command
      * TODO limit size of all int values across all record types.
      */
     public function __construct(
-        public string $timestamp,
+        public int $timestamp,
         public string $deploy_id,
         public string $server,
         public string $group,

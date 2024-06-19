@@ -39,7 +39,7 @@ final class OutgoingRequestSensor
         $duration = (int) round(($endMicrotime - $startMicrotime) * 1000);
 
         $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
-            timestamp: DateTimeImmutable::createFromFormat('U', (int) $startMicrotime, new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
+            timestamp: (int) $startMicrotime,
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),

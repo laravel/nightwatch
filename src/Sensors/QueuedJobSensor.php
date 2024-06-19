@@ -34,7 +34,7 @@ final class QueuedJobSensor
         $nowMicrotime = $this->clock->microtime();
 
         $this->recordsBuffer->writeQueuedJob(new QueuedJob(
-            timestamp: DateTimeImmutable::createFromFormat('U', (int) $nowMicrotime, new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
+            timestamp: (int) $nowMicrotime,
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),

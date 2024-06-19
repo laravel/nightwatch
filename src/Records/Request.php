@@ -9,7 +9,7 @@ final class Request
     public int $v = 1;
 
     public function __construct(
-        public string $timestamp,
+        public int $timestamp,
         public string $deploy_id,
         public string $server,
         public string $group,

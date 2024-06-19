@@ -43,7 +43,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class NightwatchServiceProvider extends ServiceProvider
 {
-    private bool $disabled = false;
+    private ?bool $disabled = false;
 
     public function register(): void
     {
@@ -216,10 +216,9 @@ final class NightwatchServiceProvider extends ServiceProvider
                 $sensor->request($startedAt, $request, $response);
 
                 /** @var IngestContract */
-                // $ingest = $app->make(IngestContract::class);
+                $ingest = $app->make(IngestContract::class);
 
-                // $ingest->write($sensor->flush());
-                $sensor->flush();
+                $ingest->write($sensor->flush());
             });
         });
 
@@ -234,9 +233,9 @@ final class NightwatchServiceProvider extends ServiceProvider
                 $sensor->flush();
 
                 /** @var IngestContract */
-                // $ingest = $app->make(IngestContract::class);
+                $ingest = $app->make(IngestContract::class);
 
-                // $ingest->write($sensor->flush());
+                $ingest->write($sensor->flush());
             });
         });
     }

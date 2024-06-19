@@ -32,7 +32,7 @@ final class ExceptionSensor
         $nowMicrotime = $this->clock->microtime();
 
         $this->recordsBuffer->writeException(new Exception(
-            timestamp: DateTimeImmutable::createFromFormat('U', (int) $nowMicrotime, new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
+            timestamp: (int) $nowMicrotime,
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),

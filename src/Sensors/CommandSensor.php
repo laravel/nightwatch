@@ -36,7 +36,7 @@ final class CommandSensor
         $durationInMilliseconds = (int) round($startedAt->diffInMilliseconds());
 
         $this->recordsBuffer->writeCommand(new Command(
-            timestamp: $startedAt->toDateTimeString(),
+            timestamp: $startedAt->getTimestamp(),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),

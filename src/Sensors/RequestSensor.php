@@ -41,7 +41,7 @@ final class RequestSensor
         $route = $request->route();
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
-            timestamp: $startedAt->toDateTimeString(),
+            timestamp: $startedAt->getTimestamp(),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),
