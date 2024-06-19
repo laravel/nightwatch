@@ -30,35 +30,22 @@ use Throwable;
 
 /**
  * TODO refresh application instance.
- * TODO migrate from array of sensors individual properties
  */
 final class SensorManager
 {
-    /**
-     * @var array{
-     *     queries?: QuerySensor,
-     *     cache_events?: CacheEventSensor,
-     *     outgoing_requests?: OutgoingRequestSensor,
-     *     exceptions?: ExceptionSensor,
-     *     queued_jobs?: QueuedJobSensor,
-     * }
-     */
-    private array $sensors = [];
+    private ?QuerySensor $querySensor = null;
+    private ?CacheEventSensor $cacheEventSensor = null;
+    private ?OutgoingRequestSensor $outgoingRequestSensor = null;
+    private ?ExceptionSensor $exceptionSensor = null;
+    private ?QueuedJobSensor $queuedJobSensor = null;
 
     private ?string $traceId;
-
     private ?string $deployId;
-
     private ?string $server;
-
     public RecordsBuffer $recordsBuffer;
-
     private ExecutionParent $executionParent;
-
     private ?PeakMemoryProvider $peakMemoryProvider = null;
-
     private ?UserProvider $userProvider = null;
-
     private ?Clock $clock;
 
     public function __construct(private Container $app)
@@ -104,7 +91,7 @@ final class SensorManager
 
     public function query(QueryExecuted $event): void
     {
-        $sensor = $this->sensors['queries'] ??= new QuerySensor(
+        $sensor = $this->querySensor ??= new QuerySensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             user: $this->user(),
@@ -119,7 +106,7 @@ final class SensorManager
 
     public function cacheEvent(CacheMissed|CacheHit $event): void
     {
-        $sensor = $this->sensors['cache_events'] ??= new CacheEventSensor(
+        $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             clock: $this->clock(),
@@ -134,7 +121,7 @@ final class SensorManager
 
     public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
-        $sensor = $this->sensors['outgoing_requests'] ??= new OutgoingRequestSensor(
+        $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             user: $this->user(),
@@ -149,7 +136,7 @@ final class SensorManager
 
     public function exception(Throwable $e): void
     {
-        $sensor = $this->sensors['exceptions'] ??= new ExceptionSensor(
+        $sensor = $this->exceptionSensor ??= new ExceptionSensor(
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
             clock: $this->clock(),
@@ -167,7 +154,7 @@ final class SensorManager
             return;
         }
 
-        $sensor = $this->sensors['queued_jobs'] ??= new QueuedJobSensor(
+        $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             user: $this->user(),
