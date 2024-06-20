@@ -38,9 +38,14 @@ function syncClock(CarbonImmutable $timestamp): void
             return $this->microtime() - $start;
         }
 
-        public function executionOffset(float $nowMicrotime): float
+        public function executionOffset(float $nowMicrotime): int
         {
             return (int) round(($nowMicrotime - $this->executionStartMicrotime) * 1000 * 1000);
+        }
+
+        public function executionStartMicrotime(): float
+        {
+            return $this->executionStartMicrotime;
         }
     });
 }

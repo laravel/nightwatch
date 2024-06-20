@@ -32,10 +32,11 @@ final class QuerySensor
     public function __invoke(QueryExecuted $event): void
     {
         $nowMicrotime = $this->clock->microtime();
-
         $startMicrotime = $nowMicrotime - ($event->time / 1000);
-
         $duration = (int) round($event->time * 1000);
+
+        $this->executionParent->queries++;
+        $this->executionParent->queries_duration += $duration;
 
         $this->recordsBuffer->writeQuery(new Query(
             timestamp: (int) $startMicrotime,
@@ -55,7 +56,5 @@ final class QuerySensor
             connection: $event->connectionName,
         ));
 
-        $this->executionParent->queries++;
-        $this->executionParent->queries_duration += $duration;
     }
 }

@@ -38,7 +38,8 @@ final class OutgoingRequestSensor
     {
         $duration = (int) round(($endMicrotime - $startMicrotime) * 1000);
 
-        $uri = $request->getUri();
+        $this->executionParent->outgoing_requests++;
+        $this->executionParent->outgoing_requests_duration += $duration;
 
         $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
             timestamp: (int) $startMicrotime,
@@ -51,10 +52,10 @@ final class OutgoingRequestSensor
             execution_offset: $this->clock->executionOffset($startMicrotime),
             user: $this->user->id(),
             method: $request->getMethod(),
-            scheme: $uri->getScheme(),
-            host: $uri->getHost(),
-            port: (string) $uri->getPort(),
-            path: $uri->getPath(),
+            scheme: $request->getUri()->getScheme(),
+            host: $request->getUri()->getHost(),
+            port: (string) $request->getUri()->getPort(),
+            path: $request->getUri()->getPath(),
             route: '',
             duration: $duration,
             request_size_kilobytes: (int) round(
@@ -65,8 +66,5 @@ final class OutgoingRequestSensor
             ),
             status_code: (string) $response->getStatusCode(),
         ));
-
-        $this->executionParent->outgoing_requests++;
-        $this->executionParent->outgoing_requests_duration += $duration;
     }
 }

@@ -212,8 +212,8 @@ final class NightwatchServiceProvider extends ServiceProvider
                 return;
             }
 
-            $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor) {
-                $sensor->request($startedAt, $request, $response);
+            $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
+                $sensor->request($request, $response);
 
                 /** @var IngestContract */
                 $ingest = $app->make(IngestContract::class);
@@ -227,10 +227,8 @@ final class NightwatchServiceProvider extends ServiceProvider
                 return;
             }
 
-            $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor) {
+            $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
                 $sensor->command($startedAt, $input, $status);
-
-                $sensor->flush();
 
                 /** @var IngestContract */
                 $ingest = $app->make(IngestContract::class);

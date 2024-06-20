@@ -54,19 +54,20 @@ final class SensorManager
         $this->executionParent = new ExecutionParent;
     }
 
-    public function request(Carbon $startedAt, Request $request, Response $response): void
+    public function request(Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             peakMemory: $this->peakMemoryProvider(),
+            clock: $this->clock(),
             user: $this->user(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
         );
 
-        // $sensor($startedAt, $request, $response);
+        $sensor($request, $response);
     }
 
     /**
@@ -86,7 +87,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        // $sensor($startedAt, $input, $status);
+        $sensor($startedAt, $input, $status);
     }
 
     public function query(QueryExecuted $event): void
@@ -116,7 +117,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        // $sensor($event);
+        $sensor($event);
     }
 
     public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
@@ -145,7 +146,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        // $sensor($e);
+        $sensor($e);
     }
 
     public function queuedJob(JobQueued $event): void
@@ -164,7 +165,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        // $sensor($event);
+        $sensor($event);
     }
 
     private function traceId(): string

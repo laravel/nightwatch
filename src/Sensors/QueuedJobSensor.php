@@ -33,6 +33,8 @@ final class QueuedJobSensor
     {
         $nowMicrotime = $this->clock->microtime();
 
+        $this->executionParent->jobs_queued++;
+
         $this->recordsBuffer->writeQueuedJob(new QueuedJob(
             timestamp: (int) $nowMicrotime,
             deploy_id: $this->deployId,
@@ -52,7 +54,5 @@ final class QueuedJobSensor
             connection: $event->connectionName,
             queue: 'default',
         ));
-
-        $this->executionParent->jobs_queued++;
     }
 }

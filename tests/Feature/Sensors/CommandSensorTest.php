@@ -33,7 +33,7 @@ it('can ingest requests', function () {
         'commands' => [
             [
                 'v' => 1,
-                'timestamp' => '2000-01-01 00:00:00',
+                'timestamp' => 946684800,
                 'deploy_id' => 'v1.2.3',
                 'server' => 'web-01',
                 'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',

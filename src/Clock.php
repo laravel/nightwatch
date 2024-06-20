@@ -21,7 +21,12 @@ final class Clock implements ClockContract
         return microtime(true) - $start;
     }
 
-    public function executionOffset(float $microtime): float
+    public function executionStartMicrotime(): float
+    {
+        return $this->executionStartMicrotime;
+    }
+
+    public function executionOffset(float $microtime): int
     {
         return (int) round(($microtime - $this->executionStartMicrotime) * 1000 * 1000);
     }

@@ -8,5 +8,7 @@ interface Clock
 
     public function diffInMicrotime(float $start): float;
 
-    public function executionOffset(float $nowMicrotime): float;
+    public function executionOffset(float $nowMicrotime): int;
+
+    public function executionStartMicrotime(): float;
 }

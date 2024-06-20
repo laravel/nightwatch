@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
+use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
@@ -19,6 +20,7 @@ final class RequestSensor
         private ExecutionParent $executionParent,
         private PeakMemoryProvider $peakMemory,
         private UserProvider $user,
+        private Clock $clock,
         private string $traceId,
         private string $deployId,
         private string $server,
@@ -32,16 +34,19 @@ final class RequestSensor
      * the stream into memory. How can we handle this better?
      * TODO how can we better flag that a response is streamed and we don't
      * know the length?
+     * TODO this needs to capture the boot duratino, the application duration, and the terminating duration.
      */
-    public function __invoke(Carbon $startedAt, Request $request, Response $response): void
+    public function __invoke(Request $request, Response $response): void
     {
-        $durationInMilliseconds = (int) round($startedAt->diffInMilliseconds());
+        $nowMicrotime = $this->clock->microtime();
 
         /** @var Route|null */
         $route = $request->route();
+        /** string|null */
+        $routeUri = $route?->uri();
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
-            timestamp: $startedAt->getTimestamp(),
+            timestamp: (int) $this->clock->executionStartMicrotime(),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('sha256', ''),
@@ -58,9 +63,9 @@ final class RequestSensor
             route_methods: $route?->methods() ?? [],
             route_domain: $route?->getDomain() ?? '',
             route_action: $route?->getActionName() ?? '',
-            route_path: with($route?->uri(), fn (?string $uri) => $uri ? "/{$uri}" : ''),
+            route_path: $routeUri === null ? '' : "/{$routeUri}",
             ip: $request->ip() ?? '',
-            duration: $durationInMilliseconds,
+            duration: (int) round(($nowMicrotime - $this->clock->executionStartMicrotime()) * 1000),
             status_code: (string) $response->getStatusCode(),
             request_size_kilobytes: (int) round(
                 ((int) ($request->headers->get('content-length') ?? strlen($request->getContent()))) / 1000
