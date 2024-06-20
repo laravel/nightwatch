@@ -131,7 +131,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        // $sensor($startMicrotime, $endMicrotime, $request, $response);
+        $sensor($startMicrotime, $endMicrotime, $request, $response);
     }
 
     public function exception(Throwable $e): void

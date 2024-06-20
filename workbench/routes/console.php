@@ -355,10 +355,10 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
 
 Artisan::command('nightwatch:hammer', function () {
     $db = DB::connection();
-    $response = Http::response('ok');
     $uuid = (string) Str::uuid();
 
     Http::preventStrayRequests();
+    $response = Http::response('ok');
     Http::fake(fn () => $response);
 
     for ($i = 0; $i < 50; $i++) {
