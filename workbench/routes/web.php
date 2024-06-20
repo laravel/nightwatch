@@ -7,21 +7,21 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    // Cache events. miss:
-    Cache::get('users:345');
+    // // Cache events. miss:
+    // Cache::get('users:345');
 
-    // Cache events. hit:
-    Cache::put('users:123', 'xxxx');
-    Cache::get('users:123');
+    // // Cache events. hit:
+    // Cache::put('users:123', 'xxxx');
+    // Cache::get('users:123');
 
-    // Queries:
-    DB::table('users')->get();
+    // // Queries:
+    // DB::table('users')->get();
 
-    // Outgoing requests:
-    Http::get('https://laravel.com');
+    // // Outgoing requests:
+    // Http::get('https://laravel.com');
 
-    // Exceptions:
-    report('Whoops!');
+    // // Exceptions:
+    // report('Whoops!');
 
     // Requests:
     return view('welcome');
