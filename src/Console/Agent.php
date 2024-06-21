@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch\Console;
 
 use Illuminate\Console\Command;
 use Laravel\Nightwatch\Buffers\PayloadBuffer;
-use Laravel\Nightwatch\Exceptions\ConnectionTimedOutException;
 use Laravel\Nightwatch\Exceptions\IngestFailedException;
 use Laravel\Nightwatch\Ingests\HttpIngest;
 use Laravel\Nightwatch\Ingests\NullIngest;

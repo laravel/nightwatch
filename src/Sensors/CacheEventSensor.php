@@ -2,9 +2,6 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Carbon\CarbonImmutable;
-use DateTimeImmutable;
-use DateTimeZone;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;

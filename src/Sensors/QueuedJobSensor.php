@@ -2,9 +2,6 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Carbon\CarbonImmutable;
-use DateTimeImmutable;
-use DateTimeZone;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;

@@ -2,10 +2,6 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Carbon\CarbonImmutable;
-use DateTime;
-use DateTimeImmutable;
-use DateTimeZone;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Records\ExecutionParent;

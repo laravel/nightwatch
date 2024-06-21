@@ -1,7 +1,6 @@
 <?php
 
 use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Response;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Database\Events\QueryExecuted;
@@ -13,7 +12,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\SensorManager;
 use React\EventLoop\Loop;
 use React\Socket\ConnectionInterface;
 use React\Socket\TcpConnector;

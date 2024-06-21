@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;

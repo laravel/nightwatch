@@ -34,20 +34,29 @@ use Throwable;
 final class SensorManager
 {
     private RecordsBuffer $recordsBuffer;
+
     private ExecutionParent $executionParent;
 
     private ?CacheEventSensor $cacheEventSensor = null;
+
     private ?ExceptionSensor $exceptionSensor = null;
+
     private ?OutgoingRequestSensor $outgoingRequestSensor = null;
+
     private ?QuerySensor $querySensor = null;
+
     private ?QueuedJobSensor $queuedJobSensor = null;
 
     private ?Clock $clock;
+
     private ?string $traceId;
 
     private ?string $server;
+
     private ?string $deployId;
+
     private ?PeakMemoryProvider $peakMemoryProvider = null;
+
     private ?UserProvider $userProvider = null;
 
     public function __construct(private Container $app)
