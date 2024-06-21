@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Location;
 
 use function Pest\Laravel\get;
