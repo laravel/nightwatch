@@ -12,7 +12,7 @@ it('goes fast', function () {
 
     $length = null;
     Benchmark::dd([
-        function ()  {
+        function () {
             return base_path('foo/bar/baz');
         },
         function () use (&$length) {

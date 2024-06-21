@@ -8,11 +8,14 @@ use Throwable;
 /**
  * TODO this should be a singleton
  */
-class Location
+final class Location
 {
     private ?int $basePathLength;
+
     private ?string $vendorPath;
+
     private ?string $artisanPath;
+
     private ?string $publicIndexPath;
 
     public function __construct(private Application $app)

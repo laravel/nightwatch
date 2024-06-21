@@ -4,7 +4,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 
-use Illuminate\Support\Str;
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 

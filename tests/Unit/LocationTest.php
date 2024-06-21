@@ -12,7 +12,7 @@ it('can find the file in the trace', function () {
         [
             'file' => base_path('app/Models/User.php'),
             'line' => 5,
-        ]
+        ],
     ]);
 
     $file = $location->find($e);

@@ -1,7 +1,6 @@
 <?php
 
 use Carbon\CarbonImmutable;
-use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\StreamDecoratorTrait;
 use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\StreamInterface;
@@ -238,13 +237,13 @@ it('captures the default port for secure requests when not specified', function 
     $ingest->assertLatestWrite('outgoing_requests.0.port', '443');
 });
 
-class NoReadStream implements StreamInterface
+final class NoReadStream implements StreamInterface
 {
     use StreamDecoratorTrait {
         __construct as __constructParent;
     }
 
-    public function __construct(private int|null $size)
+    public function __construct(private ?int $size)
     {
         //
     }

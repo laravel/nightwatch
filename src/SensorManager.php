@@ -56,7 +56,9 @@ final class SensorManager
     private ?string $deployId;
 
     private ?PeakMemoryProvider $peakMemoryProvider;
+
     private ?Location $location;
+
     private ?UserProvider $userProvider;
 
     public function __construct(private Application $app)

@@ -105,4 +105,3 @@ function fixturePath(string $path): string
 {
     return join_paths(__DIR__, 'fixtures', $path);
 }
-
