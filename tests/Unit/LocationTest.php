@@ -1,6 +1,10 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Location;
+
+use function Pest\Laravel\get;
 
 it('can find the file in the trace', function () {
     $location = app(Location::class);
@@ -156,4 +160,17 @@ it('uses the thrown location when no non-vendor file is found', function () {
     $file = $location->find($e);
 
     expect($file)->toBe(['vendor/foo/bar/Baz1.php', 5]);
+});
+
+it('handles view exceptions', function () {
+    App::setBasePath(realpath(__DIR__.'/../../../nightwatch/workbench'));
+    $ingest = fakeIngest();
+    Route::view('exception', 'exception');
+
+    $response = get('exception');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.line', 0);
+    $ingest->assertLatestWrite('exceptions.0.file', 'resources/views/exception.blade.php');
 });

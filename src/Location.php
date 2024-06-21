@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch;
 
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\View\ViewException;
 use Throwable;
 
 /**
@@ -29,8 +30,19 @@ final class Location
     public function find(Throwable $e): array
     {
         return match (true) {
+            $e instanceof ViewException => $this->fromViewException($e),
             default => $this->fromException($e),
         };
+    }
+
+    private function fromViewException(ViewException $e): array
+    {
+        preg_match('/\(View: (?P<path>.*?)\)$/', $e->getMessage(), $matches);
+
+        return [
+            $this->normalizeFile($matches['path']),
+            null,
+        ];
     }
 
     /**
