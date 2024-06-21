@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Config\Repository as Config;
-use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
@@ -37,15 +37,15 @@ final class SensorManager
 
     private ExecutionParent $executionParent;
 
-    private ?CacheEventSensor $cacheEventSensor = null;
+    private ?CacheEventSensor $cacheEventSensor;
 
-    private ?ExceptionSensor $exceptionSensor = null;
+    private ?ExceptionSensor $exceptionSensor;
 
-    private ?OutgoingRequestSensor $outgoingRequestSensor = null;
+    private ?OutgoingRequestSensor $outgoingRequestSensor;
 
-    private ?QuerySensor $querySensor = null;
+    private ?QuerySensor $querySensor;
 
-    private ?QueuedJobSensor $queuedJobSensor = null;
+    private ?QueuedJobSensor $queuedJobSensor;
 
     private ?Clock $clock;
 
@@ -55,11 +55,11 @@ final class SensorManager
 
     private ?string $deployId;
 
-    private ?PeakMemoryProvider $peakMemoryProvider = null;
+    private ?PeakMemoryProvider $peakMemoryProvider;
+    private ?Location $location;
+    private ?UserProvider $userProvider;
 
-    private ?UserProvider $userProvider = null;
-
-    public function __construct(private Container $app)
+    public function __construct(private Application $app)
     {
         $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
@@ -152,6 +152,7 @@ final class SensorManager
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
             clock: $this->clock(),
+            location: $this->location(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -204,9 +205,14 @@ final class SensorManager
         return $this->recordsBuffer->flush();
     }
 
-    public function user(): UserProvider
+    private function user(): UserProvider
     {
         return $this->userProvider ??= $this->app->make(UserProvider::class);
+    }
+
+    private function location(): Location
+    {
+        return $this->location ??= new Location($this->app);
     }
 
     private function clock(): Clock

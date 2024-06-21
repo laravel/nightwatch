@@ -2,8 +2,10 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\HttpFoundation\File\Stream;
 
 use function Pest\Laravel\call;
+use function Pest\Laravel\get;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
@@ -113,3 +115,17 @@ it('has a deploy_id fallback')->todo();
 it('masks query parameters')->todo();
 
 it('sorts the route methods')->todo();
+
+it('handles streamed response sizes', function () {
+    $ingest = fakeIngest();
+
+    Route::get('test-route', function () {
+        $file = new Stream(__FILE__);
+
+        return response()->file($file);
+    });
+
+    get('test-route');
+
+    $ingest->assertLatestWrite('requests.0.response_size_kilobytes', null);
+});

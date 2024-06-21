@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
+use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\UserProvider;
 use Throwable;
@@ -14,6 +15,7 @@ final class ExceptionSensor
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
         private Clock $clock,
+        private Location $location,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -28,6 +30,8 @@ final class ExceptionSensor
     {
         $nowMicrotime = $this->clock->microtime();
 
+        [$file, $line] = $this->location->find($e);
+
         $this->recordsBuffer->writeException(new Exception(
             timestamp: (int) $nowMicrotime,
             deploy_id: $this->deployId,
@@ -39,8 +43,8 @@ final class ExceptionSensor
             execution_offset: $this->clock->executionOffset($nowMicrotime),
             user: $this->user->id(),
             class: $e::class,
-            file: 'app/Models/User.php',
-            line: 5,
+            file: $file,
+            line: $line,
             message: $e->getMessage(),
             code: $e->getCode(),
             trace: $e->getTraceAsString(),

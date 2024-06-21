@@ -1,8 +1,10 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 
+use Illuminate\Support\Str;
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 
@@ -14,14 +16,17 @@ beforeEach(function () {
     syncClock(CarbonImmutable::parse('2000-01-01 00:00:00'));
 
     Config::set('app.debug', false);
+    App::setBasePath(realpath(__DIR__.'/../../../'));
 });
 
 it('ingests exceptions', function () {
     $ingest = fakeIngest();
     $trace = null;
-    Route::post('/users', function () use (&$trace) {
+    $line = null;
+    Route::post('/users', function () use (&$trace, &$line) {
         travelTo(now()->addMilliseconds(2.5));
 
+        $line = __LINE__ + 1;
         $e = new MyException('Whoops!');
 
         $trace = $e->getTraceAsString();
@@ -32,7 +37,6 @@ it('ingests exceptions', function () {
     $response = post('/users');
 
     $response->assertServerError();
-    expect($trace)->toBeString();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite([
         'requests' => [
@@ -99,8 +103,8 @@ it('ingests exceptions', function () {
                 'execution_offset' => 2500,
                 'user' => '',
                 'class' => 'MyException',
-                'file' => 'app/Models/User.php',
-                'line' => 5,
+                'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
+                'line' => $line,
                 'message' => 'Whoops!',
                 'code' => 0,
                 'trace' => $trace,
@@ -120,9 +124,11 @@ it('ingests exceptions', function () {
 it('ingests reported exceptions', function () {
     $ingest = fakeIngest();
     $trace = null;
-    Route::post('/users', function () use (&$trace) {
+    $line = null;
+    Route::post('/users', function () use (&$trace, &$line) {
         travelTo(now()->addMilliseconds(2.5));
 
+        $line = __LINE__ + 1;
         $e = new MyException('Whoops!');
 
         $trace = $e->getTraceAsString();
@@ -133,7 +139,6 @@ it('ingests reported exceptions', function () {
     $response = post('/users');
 
     $response->assertOk();
-    expect($trace)->toBeString();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite([
         'requests' => [
@@ -200,8 +205,8 @@ it('ingests reported exceptions', function () {
                 'execution_offset' => 2500,
                 'user' => '',
                 'class' => 'MyException',
-                'file' => 'app/Models/User.php',
-                'line' => 5,
+                'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
+                'line' => $line,
                 'message' => 'Whoops!',
                 'code' => 0,
                 'trace' => $trace,

@@ -33,7 +33,7 @@ final class Request
         public string $status_code,
         // --- //
         public int $request_size_kilobytes,
-        public int $response_size_kilobytes,
+        public ?int $response_size_kilobytes,
         public int $queries,
         public int $queries_duration,
         public int $lazy_loads,

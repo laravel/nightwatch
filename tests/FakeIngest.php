@@ -42,6 +42,8 @@ final class FakeIngest implements Ingest
         $payload = json_decode($this->writes[0], true, flags: JSON_THROW_ON_ERROR);
 
         if ($key) {
+            expect(Arr::has($payload, $key))->toBeTrue();
+
             return Arr::get($payload, $key, null);
         } else {
             return $payload;

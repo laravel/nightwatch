@@ -10,11 +10,13 @@ it('goes fast', function () {
     $response = Http::response('ok');
     Http::fake(fn () => $response);
 
+    $length = null;
     Benchmark::dd([
-        function () {
-            Http::get('https://laravel.com');
-            Http::get('https://laravel.com');
-            Http::get('https://laravel.com');
+        function ()  {
+            return base_path('foo/bar/baz');
+        },
+        function () use (&$length) {
+            $length ??= base_path('foo/bar/baz');
         },
     ], 300);
 })->skip();

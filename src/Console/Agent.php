@@ -35,7 +35,7 @@ final class Agent extends Command
      */
     private WeakMap $connections;
 
-    private ?TimerInterface $flushBufferAfterDelayTimer = null;
+    private ?TimerInterface $flushBufferAfterDelayTimer;
 
     public function __construct(
         private PayloadBuffer $buffer,

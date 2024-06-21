@@ -12,7 +12,7 @@ use Tests\FakeIngest;
 
 use function Pest\Laravel\travelTo;
 
-uses(Tests\TestCase::class)->in('Feature');
+uses(Tests\TestCase::class)->in('Feature', 'Unit');
 
 function syncClock(CarbonImmutable $timestamp): void
 {

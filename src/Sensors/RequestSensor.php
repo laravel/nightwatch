@@ -94,7 +94,7 @@ final class RequestSensor
         ));
     }
 
-    private function parseResponseSizeKilobytes(Response $response): int
+    private function parseResponseSizeKilobytes(Response $response): ?int
     {
         if ($length = $response->headers->get('content-length')) {
             return (int) round(((int) $length) / 1000);
@@ -106,6 +106,6 @@ final class RequestSensor
             return (int) round(strlen($content) / 1000);
         }
 
-        return 0;
+        return null;
     }
 }
