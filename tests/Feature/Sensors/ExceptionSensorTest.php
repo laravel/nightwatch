@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Config;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
@@ -222,7 +223,31 @@ it('ingests reported exceptions', function () {
     ]);
 });
 
-it('can ingest arbitrary exceptions via an event')->todo();
+it('handles null lines for internal locations', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('file')->setValue($e, base_path('vendor/foo/bar/Baz.php'));
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            'file' => base_path('app/Models/User.php'),
+        ],
+    ]);
+    Route::post('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = post('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.file', 'app/Models/User.php');
+    $ingest->assertLatestWrite('exceptions.0.line', 0);
+});
+
+it('can ingest arbitrary exceptions via an event', function () {
+    // e.g., Nightwatch::report($e);
+})->todo();
 
 final class MyException extends RuntimeException
 {

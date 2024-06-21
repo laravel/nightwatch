@@ -27,9 +27,6 @@ final class OutgoingRequestSensor
 
     /**
      * TODO group, execution_context, execution_id, route
-     * TODO test against streamed requests / responses.
-     * TODO decide how to handle streams where we do not know the payload size.
-     * TODO It seems like `getSize` may throw an exception in some cases. We may need to `rescue`.
      */
     public function __invoke(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
@@ -51,7 +48,7 @@ final class OutgoingRequestSensor
             method: $request->getMethod(),
             scheme: $request->getUri()->getScheme(),
             host: $request->getUri()->getHost(),
-            port: (string) ($request->getUri()->getPort() ?? match ($request->getUri()->getScheme()) {
+            port: (string) ($request->getUri()->getPort() ?? match ($request->getUri()->getScheme()) { // @phpstan-ignore match.unhandled
                 'http' => 80,
                 'https' => 443,
             }),

@@ -44,7 +44,7 @@ final class ExceptionSensor
             user: $this->user->id(),
             class: $e::class,
             file: $file,
-            line: $line,
+            line: $line ?? 0,
             message: $e->getMessage(),
             code: $e->getCode(),
             trace: $e->getTraceAsString(),

@@ -52,6 +52,5 @@ final class QuerySensor
             duration: $duration,
             connection: $event->connectionName,
         ));
-
     }
 }
