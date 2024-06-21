@@ -1,11 +1,13 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use GuzzleHttp\Psr7\Stream;
+use GuzzleHttp\Psr7\StreamDecoratorTrait;
 use Illuminate\Support\Facades\Http;
+use Psr\Http\Message\StreamInterface;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
-use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
@@ -24,7 +26,6 @@ it('ingests outgoing requests', function () {
 
         Http::withBody(str_repeat('b', 2000))->post('https://laravel.com');
     });
-    withoutExceptionHandling();
     Http::fake([
         'https://laravel.com' => function () {
             travelTo(now()->addMilliseconds(1234));
@@ -110,7 +111,7 @@ it('ingests outgoing requests', function () {
                 'method' => 'POST',
                 'scheme' => 'https',
                 'host' => 'laravel.com',
-                'port' => '',
+                'port' => '443',
                 'path' => '',
                 'route' => '',
                 'duration' => 1234,
@@ -124,5 +125,162 @@ it('ingests outgoing requests', function () {
     ]);
 });
 
-it('records the port when it is specified in the URL and is the standard protocol port')->todo();
-it('records the port when it is specified in the URL and is a non-standard protocol port')->todo();
+it('captures the request / response size kilobytes from the content-length header', function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        Http::withBody(new NoReadStream(null))->withHeader('Content-Length', 9876)->post('https://laravel.com');
+    });
+    Http::fake([
+        'https://laravel.com' => function () {
+            return Http::response(new NoReadStream(null), headers: ['Content-Length' => 5432]);
+        },
+    ]);
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('outgoing_requests.0.request_size_kilobytes', 10);
+    $ingest->assertLatestWrite('outgoing_requests.0.response_size_kilobytes', 5);
+});
+
+it('captures the response size kilobytes from the stream if not present in the content-length header', function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        Http::withBody(new NoReadStream(9876))->post('https://laravel.com');
+    });
+
+    Http::fake([
+        'https://laravel.com' => function ($request) {
+            return Http::response(new NoReadStream(5432));
+        },
+    ]);
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('outgoing_requests.0.request_size_kilobytes', 10);
+    $ingest->assertLatestWrite('outgoing_requests.0.response_size_kilobytes', 5);
+});
+
+it('does not read the stream into memory to determine the size of the response', function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        Http::withBody(new NoReadStream(null))->post('https://laravel.com');
+    });
+
+    Http::fake([
+        'https://laravel.com' => function ($request) {
+            return Http::response(new NoReadStream(null));
+        },
+    ]);
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('outgoing_requests.0.request_size_kilobytes', null);
+    $ingest->assertLatestWrite('outgoing_requests.0.response_size_kilobytes', null);
+});
+
+it('captures the port when specified', function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        Http::post('https://laravel.com:4321');
+    });
+    Http::fake([
+        'https://laravel.com:4321' => function () {
+            return Http::response();
+        },
+    ]);
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('outgoing_requests.0.port', '4321');
+});
+
+it('captures the default port for insecure requests when not specified', function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        Http::post('http://laravel.com');
+    });
+    Http::fake([
+        'http://laravel.com' => function () {
+            return Http::response();
+        },
+    ]);
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('outgoing_requests.0.port', '80');
+});
+
+it('captures the default port for secure requests when not specified', function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        Http::post('https://laravel.com');
+    });
+    Http::fake([
+        'https://laravel.com' => function () {
+            return Http::response();
+        },
+    ]);
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('outgoing_requests.0.port', '443');
+});
+
+class NoReadStream implements StreamInterface
+{
+    use StreamDecoratorTrait {
+        __construct as __constructParent;
+    }
+
+    public function __construct(private int|null $size)
+    {
+        //
+    }
+
+    public function getSize()
+    {
+        return $this->size;
+    }
+
+    public function read($length)
+    {
+        throw new RuntimeException('This stream should not be read!');
+    }
+
+    public function __toString()
+    {
+        throw new RuntimeException('This stream should not be read!');
+    }
+
+    public function detach()
+    {
+        throw new RuntimeException('This stream should not be read!');
+    }
+
+    public function seek($offset, $whence = SEEK_SET): void
+    {
+        throw new RuntimeException('This stream should not be read!');
+    }
+
+    public function isSeekable()
+    {
+        return true;
+    }
+
+    public function getContents()
+    {
+        throw new RuntimeException('This stream should not be read!');
+    }
+}

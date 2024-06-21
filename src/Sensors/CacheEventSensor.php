@@ -25,11 +25,6 @@ final class CacheEventSensor
     }
 
     /**
-     * TODO capture the microtime before hitting the cache on the event instead
-     * of the current time. Requires a framework modification. Would be cool to
-     * capture the duration as well.
-     * TODO `$event->storeName` can be nullable. We should likely fallback to
-     * the default value.
      * TODO grouping, execution_context, execution_id
      */
     public function __invoke(CacheMissed|CacheHit $event): void
@@ -54,7 +49,7 @@ final class CacheEventSensor
             execution_id: '00000000-0000-0000-0000-000000000000',
             execution_offset: $this->clock->executionOffset($nowMicrotime),
             user: $this->user->id(),
-            store: $event->storeName,
+            store: $event->storeName ?? '',
             key: $event->key,
             type: $type,
         ));

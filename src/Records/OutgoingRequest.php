@@ -27,8 +27,8 @@ final class OutgoingRequest
         public string $path,
         public string $route,
         public int $duration,
-        public int $request_size_kilobytes,
-        public int $response_size_kilobytes,
+        public ?int $request_size_kilobytes,
+        public ?int $response_size_kilobytes,
         public string $status_code,
     ) {
         //

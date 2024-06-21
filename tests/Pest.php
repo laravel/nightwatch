@@ -10,6 +10,7 @@ use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Tests\FakeIngest;
 
+use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\travelTo;
 
 uses(Tests\TestCase::class)->in('Feature', 'Unit');
@@ -99,3 +100,9 @@ function prependListener(string $event, callable $listener): void
 
     collect([$listener, ...$listeners])->each(fn ($listener) => Event::listen($event, $listener));
 }
+
+function fixturePath(string $path): string
+{
+    return join_paths(__DIR__, 'fixtures', $path);
+}
+

@@ -10,7 +10,6 @@ use Illuminate\Support\Str;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
-use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
@@ -21,7 +20,6 @@ beforeEach(function () {
 });
 
 it('can ingest cache misses', function () {
-    withoutExceptionHandling();
     $ingest = fakeIngest();
     prependListener(QueryExecuted::class, function (QueryExecuted $event) {
         if (! RefreshDatabaseState::$migrated) {

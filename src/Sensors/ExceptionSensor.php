@@ -24,7 +24,7 @@ final class ExceptionSensor
     }
 
     /**
-     * TODO group, execution_context, execution_id, file, line
+     * TODO group, execution_context, execution_id
      */
     public function __invoke(Throwable $e): void
     {

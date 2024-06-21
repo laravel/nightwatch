@@ -96,7 +96,7 @@ final class RequestSensor
 
     private function parseResponseSizeKilobytes(Response $response): ?int
     {
-        if ($length = $response->headers->get('content-length')) {
+        if (is_numeric($length = $response->headers->get('content-length'))) {
             return (int) round(((int) $length) / 1000);
         }
 

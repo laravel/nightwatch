@@ -1,12 +1,12 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\ArrayStore;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
-use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
@@ -17,7 +17,6 @@ beforeEach(function () {
 });
 
 it('can ingest cache misses', function () {
-    withoutExceptionHandling();
     $ingest = fakeIngest();
     Route::post('/users', function () {
         travelTo(now()->addMilliseconds(2.5));
@@ -200,4 +199,17 @@ it('can ingest cache hits', function () {
         'queries' => [],
         'queued_jobs' => [],
     ]);
+});
+
+it('handles cache drivers with no store configured', function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        Cache::repository(new ArrayStore())->get('users:345');
+    });
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('cache_events.0.store', '');
 });

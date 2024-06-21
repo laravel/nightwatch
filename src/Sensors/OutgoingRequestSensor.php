@@ -7,6 +7,7 @@ use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\UserProvider;
+use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -50,17 +51,33 @@ final class OutgoingRequestSensor
             method: $request->getMethod(),
             scheme: $request->getUri()->getScheme(),
             host: $request->getUri()->getHost(),
-            port: (string) $request->getUri()->getPort(),
+            port: (string) ($request->getUri()->getPort() ?? match ($request->getUri()->getScheme()) {
+                'http' => 80,
+                'https' => 443,
+            }),
             path: $request->getUri()->getPath(),
             route: '',
             duration: $duration,
-            request_size_kilobytes: (int) round(
-                ((int) ($request->getHeader('content-length')[0] ?? $request->getBody()->getSize() ?? 0)) / 1000
-            ),
-            response_size_kilobytes: (int) round(
-                ((int) ($response->getHeader('content-length')[0] ?? $response->getBody()->getSize() ?? 0)) / 1000
-            ),
+            request_size_kilobytes: $this->parseMessageSizeKilobytes($request),
+            response_size_kilobytes: $this->parseMessageSizeKilobytes($response),
             status_code: (string) $response->getStatusCode(),
         ));
+    }
+
+    private function parseMessageSizeKilobytes(MessageInterface $message): ?int
+    {
+        $size = $message->getBody()->getSize();
+
+        if ($size !== null) {
+            return (int) round($size / 1000);
+        }
+
+        $length = $message->getHeader('content-length')[0] ?? null;
+
+        if (is_numeric($length)) {
+            return (int) round($length / 1000);
+        }
+
+        return null;
     }
 }
