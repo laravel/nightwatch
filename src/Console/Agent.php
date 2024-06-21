@@ -67,40 +67,16 @@ final class Agent extends Command
             $connection->on('end', function () use ($connection) {
                 $this->buffer->write($this->flushConnectionBuffer($connection));
 
-                $this->queueOrPerformIngest(
-                    after: function (PromiseInterface $response) {
-                        $response->then(function () {
-                            echo 'Ingested.'.PHP_EOL;
-                        }, function ($e) {
-                            echo 'Failed ingest.'.PHP_EOL;
-                            report($e);
-                        });
+                $this->queueOrPerformIngest(function (PromiseInterface $response) {
+                    $response->then(function (IngestSucceededResult $result) {
+                        echo "Ingest successful. Took {$result->duration} ms.".PHP_EOL;
+                    }, function (IngestFailedException $e) {
+                        echo "Failed failed. Took {$e->duration} ms. [{$e->getPrevious()->getMessage()}].".PHP_EOL;
                     });
-                // before: function (string $records) {
-                //     $this->line('Ingesting started.', verbosity: 'v');
-                // },
-                //
-                // $response->then(function (IngestSucceededResult $result) {
-                //     echo "Records successfully ingested after {$result->duration} ms";
-                // }, function (Throwable $e) {
-                //     if ($e instanceof IngestFailedException) {
-                //         $this->error("Records failed ingesting after {$e->duration} ms", verbosity: 'v');
-                //         $this->line("Reason: {$e->getMessage()}", verbosity: 'v');
-
-                //         /** @var Throwable */
-                //         $e = $e->getPrevious();
-                //     }
-
-                //     $this->error("Ingesting error [{$e->getMessage()}].");
-
-                //     report($e);
-                // });
-                // });
+                });
             });
 
             $connection->on('close', function () use ($connection) {
-                // $this->line('Connection closed.', verbosity: 'vv');
-
                 $this->evict($connection);
             });
 
@@ -108,28 +84,20 @@ final class Agent extends Command
                 $this->error('Connection timed out.');
 
                 $connection->close();
-                // report(new ConnectionTimedOutException('Incoming connection timed out.', [
-                //     'timeout' => $this->timeout,
-                //     'remote_address' => $connection->getRemoteAddress(),
-                // ]));
             });
 
             $connection->on('error', function (Throwable $e) use ($connection) {
-                $this->error("Connection error [{$e->getMessage()}].");
+                $this->error("Connection error. [{$e->getMessage()}].");
 
                 $this->evict($connection);
-
-                report($e);
             });
         });
 
         $server->on('error', function (Throwable $e) {
-            $this->error("Server error [{$e->getMessage()}].");
-
-            report($e);
+            $this->error("Server error. [{$e->getMessage()}].");
         });
 
-        echo '🌗 Nightwatch agent initiated.'.PHP_EOL;
+        echo 'Nightwatch agent initiated.'.PHP_EOL;
         $this->loop->run();
     }
 

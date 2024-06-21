@@ -24,7 +24,7 @@ final class FakeIngest implements Ingest
         return $this;
     }
 
-    public function assertLatestWrite(string|array $key, array $payload = []): self
+    public function assertLatestWrite(string|array $key, mixed $payload = null): self
     {
         expect(count($this->writes))->toBeGreaterThan(0);
 
@@ -37,12 +37,12 @@ final class FakeIngest implements Ingest
         return $this;
     }
 
-    public function latestWrite(?string $key = null): array
+    public function latestWrite(?string $key = null): mixed
     {
         $payload = json_decode($this->writes[0], true, flags: JSON_THROW_ON_ERROR);
 
         if ($key) {
-            return Arr::get($payload, $key, []);
+            return Arr::get($payload, $key, null);
         } else {
             return $payload;
         }
