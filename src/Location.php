@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\View\ViewException;
 use Throwable;
+use Spatie\LaravelIgnition\Exceptions\ViewException as SpatieViewException;
 
 /**
  * TODO this should be a singleton
@@ -31,6 +32,7 @@ final class Location
     {
         return match (true) {
             $e instanceof ViewException => $this->fromViewException($e),
+            $e instanceof \Spatie\LaravelIgnition\Exceptions\ViewException => $this->fromSpatieViewException($e),
             default => $this->fromException($e),
         };
     }
@@ -42,6 +44,14 @@ final class Location
         return [
             $this->normalizeFile($matches['path']),
             null,
+        ];
+    }
+
+    private function fromSpatieViewException(SpatieViewException $e): array
+    {
+        return [
+            $this->normalizeFile($e->getFile()),
+            $e->getLine(),
         ];
     }
 

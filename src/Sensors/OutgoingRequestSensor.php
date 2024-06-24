@@ -35,6 +35,9 @@ final class OutgoingRequestSensor
         $this->executionParent->outgoing_requests++;
         $this->executionParent->outgoing_requests_duration += $duration;
 
+        /** @var 'http'|'https' */
+        $scheme = $request->getUri()->getScheme();
+
         $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
             timestamp: (int) $startMicrotime,
             deploy_id: $this->deployId,
@@ -46,9 +49,9 @@ final class OutgoingRequestSensor
             execution_offset: $this->clock->executionOffset($startMicrotime),
             user: $this->user->id(),
             method: $request->getMethod(),
-            scheme: $request->getUri()->getScheme(),
+            scheme: $scheme,
             host: $request->getUri()->getHost(),
-            port: (string) ($request->getUri()->getPort() ?? match ($request->getUri()->getScheme()) { // @phpstan-ignore match.unhandled
+            port: (string) ($request->getUri()->getPort() ?? match ($scheme) {
                 'http' => 80,
                 'https' => 443,
             }),

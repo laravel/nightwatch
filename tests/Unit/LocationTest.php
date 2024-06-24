@@ -161,3 +161,6 @@ it('uses the thrown location when no non-vendor file is found', function () {
     expect($file)->toBe(['vendor/foo/bar/Baz1.php', 5]);
 });
 
+it('handles Spatie view exceptions', function () {
+    //
+})->todo();

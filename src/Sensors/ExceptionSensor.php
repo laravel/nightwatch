@@ -2,12 +2,14 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\UserProvider;
 use Throwable;
+use Spatie\LaravelIgnition\Exceptions\ViewException as SpatieViewException;
 
 final class ExceptionSensor
 {
@@ -42,7 +44,11 @@ final class ExceptionSensor
             execution_id: '00000000-0000-0000-0000-000000000000',
             execution_offset: $this->clock->executionOffset($nowMicrotime),
             user: $this->user->id(),
-            class: $e::class,
+            class: match (true) {
+                $e instanceof ViewException && $e->getPrevious() => $e->getPrevious()::class,
+                $e instanceof SpatieViewException && $e->getPrevious() => $e->getPrevious()::class,
+                default => $e::class,
+            },
             file: $file,
             line: $line ?? 0,
             message: $e->getMessage(),
