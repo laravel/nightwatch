@@ -161,15 +161,3 @@ it('uses the thrown location when no non-vendor file is found', function () {
     expect($file)->toBe(['vendor/foo/bar/Baz1.php', 5]);
 });
 
-it('handles view exceptions', function () {
-    App::setBasePath(realpath(__DIR__.'/../../../nightwatch/workbench'));
-    $ingest = fakeIngest();
-    Route::view('exception', 'exception');
-
-    $response = get('exception');
-
-    $response->assertServerError();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.line', 0);
-    $ingest->assertLatestWrite('exceptions.0.file', 'resources/views/exception.blade.php');
-});

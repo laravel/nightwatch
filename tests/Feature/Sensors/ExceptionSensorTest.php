@@ -4,6 +4,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 
+use function Pest\Laravel\get;
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 
@@ -243,6 +244,27 @@ it('handles null lines for internal locations', function () {
     $ingest->assertLatestWrite('exceptions.0.file', 'app/Models/User.php');
     $ingest->assertLatestWrite('exceptions.0.line', 0);
 });
+
+it('handles view exceptions', function () {
+    App::setBasePath(realpath(__DIR__.'/../../../../nightwatch/workbench'));
+    $ingest = fakeIngest();
+    Route::view('exception', 'exception');
+
+    $response = get('exception');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.line', 0);
+    $ingest->assertLatestWrite('exceptions.0.file', 'resources/views/exception.blade.php');
+});
+
+it('correctly resolves classes', function () {
+    // see Pulse
+});
+
+it('handles spatie view exceptions', function () {
+    // see Pulse
+})->todo();
 
 it('can ingest arbitrary exceptions via an event', function () {
     // e.g., Nightwatch::report($e);
