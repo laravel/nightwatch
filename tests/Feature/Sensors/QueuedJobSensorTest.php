@@ -8,13 +8,11 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\SensorManager;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
@@ -40,12 +38,12 @@ it('can ingest cache misses', function () {
         travelTo(now()->addMilliseconds(5.2));
     });
     Route::post('/users', function () {
-    Route::post('/users', function () {
-        travelTo(now()->addMilliseconds(2.5));
-        Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
-        MyJob::dispatch();
-        Str::createUuidsNormally();
-    });
+        Route::post('/users', function () {
+            travelTo(now()->addMilliseconds(2.5));
+            Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
+            MyJob::dispatch();
+            Str::createUuidsNormally();
+        });
         travelTo(now()->addMilliseconds(2.5));
         Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
         MyJob::dispatch();
@@ -179,7 +177,7 @@ final class MyJob implements ShouldQueue
     }
 }
 
-class MyListenerWithCustomQueue implements ShouldQueue
+final class MyListenerWithCustomQueue implements ShouldQueue
 {
     use InteractsWithQueue;
 
@@ -191,7 +189,7 @@ class MyListenerWithCustomQueue implements ShouldQueue
     }
 }
 
-class MyListenerWithViaQueue implements ShouldQueue
+final class MyListenerWithViaQueue implements ShouldQueue
 {
     use InteractsWithQueue;
 
@@ -206,7 +204,7 @@ class MyListenerWithViaQueue implements ShouldQueue
     }
 }
 
-class MyEvent
+final class MyEvent
 {
     use Dispatchable;
 }
