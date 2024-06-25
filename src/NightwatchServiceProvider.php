@@ -2,9 +2,9 @@
 
 namespace Laravel\Nightwatch;
 
-use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
