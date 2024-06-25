@@ -49,10 +49,14 @@ final class Location
             // We only want to track the first non-internal file we come across,
             // so once we have that we can ignore any others. Otherwise, we will
             // capture the first non-internal file and line as the fallback:
-            if ($nonInternalFile !== null && ! $this->isInternalFile($frame['file'])) {
+            if ($nonInternalFile === null && ! $this->isInternalFile($frame['file'])) {
                 $nonInternalFile = $frame['file'];
                 $nonInteralLine = $frame['line'] ?? null;
             }
+        }
+
+        if ($nonInteralLine !== null) {
+            $nonInternalFile = $this->normalizeFile($nonInternalFile);
         }
 
         return [
@@ -152,6 +156,14 @@ final class Location
     private function isVendorFile(string $file): bool
     {
         return str_starts_with($file, $this->vendorPath()) ||
+            $file === $this->artisanPath() ||
+            $file === $this->publicIndexPath();
+    }
+
+    private function isInternalFile(string $file): bool
+    {
+        return str_starts_with($file, $this->vendorPath().DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework') ||
+            str_starts_with($file, $this->vendorPath().DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'nightwatch') ||
             $file === $this->artisanPath() ||
             $file === $this->publicIndexPath();
     }
