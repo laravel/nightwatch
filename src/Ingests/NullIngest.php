@@ -7,6 +7,9 @@ use React\Promise\Promise;
 
 final class NullIngest
 {
+    /**
+     * @return Promise<IngestSucceededResult>
+     */
     public function write(string $payload): Promise
     {
         return new Promise(fn ($resolve) => $resolve(

@@ -2,9 +2,9 @@
 
 namespace Laravel\Nightwatch;
 
+use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
-use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -47,7 +47,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        if ($this->disabled = (bool) $this->app['config']->get('nightwatch.disabled')) {
+        if ($this->disabled()) {
             return;
         }
 
@@ -72,7 +72,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        if ($this->disabled) {
+        if ($this->disabled()) {
             return;
         }
 
@@ -97,7 +97,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(Agent::class, function (Container $app) {
             /** @var Config */
-            $config = $app->make(Config::class);
+            $config = $app->make('config');
             /** @var Clock */
             $clock = $app->make(ClockContract::class);
 
@@ -142,7 +142,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(IngestContract::class, function (Container $app) {
             /** @var Config */
-            $config = $app->make(Config::class);
+            $config = $app->make('config');
 
             $connector = new TimeoutConnector(new TcpConnector, $config->get('nightwatch.collector.connection_timeout'));
 
@@ -186,7 +186,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var SensorManager */
         $sensor = $this->app->make(SensorManager::class);
         /** @var Dispatcher */
-        $events = $this->app->make(Dispatcher::class);
+        $events = $this->app->make('events');
 
         $events->listen(QueryExecuted::class, $sensor->query(...));
         $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvent(...));
@@ -236,5 +236,10 @@ final class NightwatchServiceProvider extends ServiceProvider
                 $ingest->write($sensor->flush());
             });
         });
+    }
+
+    private function disabled(): bool
+    {
+        return $this->disabled ??= (bool) $this->app->make('config')->get('nightwatch.disabled', false);
     }
 }

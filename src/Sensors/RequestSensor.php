@@ -41,8 +41,11 @@ final class RequestSensor
 
         /** @var Route|null */
         $route = $request->route();
-        /** string|null */
+        /** @var string|null */
         $routeUri = $route?->uri();
+
+        /** @var 'http'|'https' */
+        $scheme = $request->getScheme();
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
             timestamp: (int) $this->clock->executionStartMicrotime(),
@@ -52,10 +55,13 @@ final class RequestSensor
             trace_id: $this->traceId,
             user: $this->user->id(),
             method: $request->getMethod(),
-            scheme: $request->getScheme(),
+            scheme: $scheme,
             url_user: $request->getUser() ?? '',
             host: $request->getHost(),
-            port: $request->getPort(),
+            port: (string) ($request->getPort() ?? match ($scheme) {
+                'http' => 80,
+                'https' => 443,
+            }),
             path: $request->getPathInfo(),
             query: '',
             route_name: $route?->getName() ?? '',

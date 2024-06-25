@@ -69,8 +69,12 @@ final class Agent extends Command
                 $this->queueOrPerformIngest(function (PromiseInterface $response) {
                     $response->then(function (IngestSucceededResult $result) {
                         echo "Ingest successful. Took {$result->duration} ms.".PHP_EOL;
-                    }, function (IngestFailedException $e) {
-                        echo "Failed failed. Took {$e->duration} ms. [{$e->getPrevious()->getMessage()}].".PHP_EOL;
+                    }, function (Throwable $e) {
+                        if ($e instanceof IngestFailedException) {
+                            echo "Failed failed. Took {$e->duration} ms. [{$e->getMessage()}].".PHP_EOL;
+                        }
+
+                        echo "Failed failed. [{$e->getMessage()}].".PHP_EOL;
                     });
                 });
             });

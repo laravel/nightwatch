@@ -8,8 +8,8 @@ use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\UserProvider;
+use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
-use Spatie\LaravelIgnition\Exceptions\ViewException as SpatieViewException;
 
 final class ExceptionSensor
 {
@@ -34,6 +34,8 @@ final class ExceptionSensor
 
         [$file, $line] = $this->location->find($e);
 
+        $previous = $e->getPrevious();
+
         $this->recordsBuffer->writeException(new Exception(
             timestamp: (int) $nowMicrotime,
             deploy_id: $this->deployId,
@@ -45,8 +47,8 @@ final class ExceptionSensor
             execution_offset: $this->clock->executionOffset($nowMicrotime),
             user: $this->user->id(),
             class: match (true) {
-                $e instanceof ViewException && $e->getPrevious() => $e->getPrevious()::class,
-                $e instanceof SpatieViewException && $e->getPrevious() => $e->getPrevious()::class,
+                $e instanceof ViewException && $previous => $previous,
+                $e instanceof IgnitionViewException && $previous => $previous::class, // @phpstan-ignore class.notFound
                 default => $e::class,
             },
             file: $file,

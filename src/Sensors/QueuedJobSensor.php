@@ -26,7 +26,7 @@ final class QueuedJobSensor
     /**
      * TODO group, execution_context, execution_id
      */
-    public function __invoke(JobQueued $event)
+    public function __invoke(JobQueued $event): void
     {
         $nowMicrotime = $this->clock->microtime();
 

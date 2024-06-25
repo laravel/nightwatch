@@ -1,7 +1,12 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Sensors\RequestSensor;
 use Symfony\Component\HttpFoundation\File\Stream;
 
 use function Pest\Laravel\call;

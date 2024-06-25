@@ -8,6 +8,9 @@ final class Request
 {
     public int $v = 1;
 
+    /**
+     * @param  list<string>  $route_methods
+     */
     public function __construct(
         public int $timestamp,
         public string $deploy_id,

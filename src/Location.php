@@ -4,8 +4,8 @@ namespace Laravel\Nightwatch;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\View\ViewException;
+use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
-use Spatie\LaravelIgnition\Exceptions\ViewException as SpatieViewException;
 
 /**
  * TODO this should be a singleton
@@ -30,16 +30,29 @@ final class Location
      */
     public function find(Throwable $e): array
     {
-        return match (true) {
+        $location = match (true) {
             $e instanceof ViewException => $this->fromViewException($e),
-            $e instanceof \Spatie\LaravelIgnition\Exceptions\ViewException => $this->fromSpatieViewException($e),
-            default => $this->fromException($e),
+            $e instanceof IgnitionViewException => $this->fromSpatieViewException($e), // @phpstan-ignore class.notFound
+            default => null,
         };
+
+        if ($location !== null) {
+            return $location;
+        }
+
+        return $this->fromException($e);
     }
 
-    private function fromViewException(ViewException $e): array
+    /**
+     * @return null|array{ 0: string, 1: null }
+     */
+    private function fromViewException(ViewException $e): ?array
     {
         preg_match('/\(View: (?P<path>.*?)\)$/', $e->getMessage(), $matches);
+
+        if (! array_key_exists('path', $matches)) {
+            return null;
+        }
 
         return [
             $this->normalizeFile($matches['path']),
@@ -47,11 +60,14 @@ final class Location
         ];
     }
 
-    private function fromSpatieViewException(SpatieViewException $e): array
+    /**
+     * @return array{ 0: string, 1: int }
+     */
+    private function fromSpatieViewException(IgnitionViewException $e): array // @phpstan-ignore class.notFound
     {
         return [
-            $this->normalizeFile($e->getFile()),
-            $e->getLine(),
+            $this->normalizeFile($e->getFile()), // @phpstan-ignore class.notFound
+            $e->getLine(), // @phpstan-ignore class.notFound
         ];
     }
 

@@ -1,9 +1,6 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Location;
-
-use function Pest\Laravel\get;
 
 it('can find the file in the trace', function () {
     $location = app(Location::class);
