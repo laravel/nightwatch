@@ -175,10 +175,10 @@ final class SensorManager
             executionParent: $this->executionParent,
             user: $this->user(),
             clock: $this->clock(),
+            config: $this->app->make('config'),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
-            // defaultQueue: 'default',
         );
 
         $sensor($event);
@@ -196,12 +196,12 @@ final class SensorManager
 
     private function deployId(): string
     {
-        return $this->deployId ??= TinyText::limit((string) $this->app->make(Config::class)->get('nightwatch.deploy_id'));
+        return $this->deployId ??= TinyText::limit((string) $this->app->make('config')->get('nightwatch.deploy_id'));
     }
 
     private function server(): string
     {
-        return $this->server ??= TinyText::limit((string) $this->app->make(Config::class)->get('nightwatch.server'));
+        return $this->server ??= TinyText::limit((string) $this->app->make('config')->get('nightwatch.server'));
     }
 
     public function flush(): string

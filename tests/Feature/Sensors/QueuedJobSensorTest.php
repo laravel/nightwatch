@@ -38,12 +38,6 @@ it('can ingest cache misses', function () {
         travelTo(now()->addMilliseconds(5.2));
     });
     Route::post('/users', function () {
-        Route::post('/users', function () {
-            travelTo(now()->addMilliseconds(2.5));
-            Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
-            MyJob::dispatch();
-            Str::createUuidsNormally();
-        });
         travelTo(now()->addMilliseconds(2.5));
         Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
         MyJob::dispatch();
@@ -122,6 +116,20 @@ it('can ingest cache misses', function () {
             'queue' => 'default',
         ],
     ]);
+});
+
+it('falls back to the connections default queue', function () {
+    $ingest = fakeIngest();
+    Config::set('queue.connections.database.queue', 'connection-default');
+    Route::post('/users', function () {
+        MyJob::dispatch();
+    });
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('queued_jobs.0.queue', 'connection-default');
 });
 
 it('does not ingest jobs dispatched on the sync queue', function () {

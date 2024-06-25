@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Events\CallQueuedListener;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
@@ -13,15 +14,20 @@ use ReflectionClass;
 
 final class QueuedJobSensor
 {
+    /**
+     * @var array<string, string>
+     */
+    private array $defaultQueues = [];
+
     public function __construct(
         private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
         private UserProvider $user,
         private Clock $clock,
+        private Config $config,
         private string $deployId,
         private string $server,
         private string $traceId,
-        private string $defaultQueue,
     ) {
         //
     }
@@ -52,7 +58,7 @@ final class QueuedJobSensor
                 default => $event->job::class,
             },
             connection: $event->connectionName,
-            queue: $this->resolveQueue($event) ?? $this->defaultQueue,
+            queue: $this->resolveQueue($event) ?? $this->defaultQueue($event->connectionName),
         ));
     }
 
@@ -80,5 +86,10 @@ final class QueuedJobSensor
         }
 
         return $reflectionJob->queue ?? null;
+    }
+
+    private function defaultQueue(string $connection): string
+    {
+        return $this->defaultQueues[$connection] ??= $this->config->get('queue.connections.'.$connection.'.queue');
     }
 }
