@@ -18,6 +18,7 @@ use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Env;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Buffers\PayloadBuffer;
@@ -131,8 +132,8 @@ final class NightwatchServiceProvider extends ServiceProvider
                 ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
                 ->withBase('https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.us-east-1.on.aws'));
 
-            // $ingest = new HttpIngest($client, $clock, $config->get('nightwatch.http.concurrent_request_limit'));
-            $ingest = new NullIngest;
+            $ingest = new HttpIngest($client, $clock, $config->get('nightwatch.http.concurrent_request_limit'));
+            // $ingest = new NullIngest;
 
             return new Agent($buffer, $ingest, $loop, $config->get('nightwatch.collector.timeout'));
         });
