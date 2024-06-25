@@ -26,7 +26,7 @@ final class QuerySensor
     }
 
     /**
-     * TODO group, execution_context, execution_id, category, file, line
+     * TODO group, execution_context, execution_id, category
      *
      * @param  list<array{ file?: string, line?: int }>  $trace
      */

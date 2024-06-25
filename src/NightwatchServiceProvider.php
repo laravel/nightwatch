@@ -125,7 +125,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             $client = new Client((new Browser($connector, $loop))
                 ->withTimeout($config->get('nightwatch.agent.timeout'))
-                ->withHeader('User-Agent', 'NightwatchAgent/1.0.0')
+                ->withHeader('User-Agent', 'NightwatchAgent/1')
                 ->withHeader('Content-Type', 'application/octet-stream')
                 ->withHeader('Content-Encoding', 'gzip')
                 ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
