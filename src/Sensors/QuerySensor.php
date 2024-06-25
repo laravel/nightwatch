@@ -35,7 +35,6 @@ final class QuerySensor
         $nowMicrotime = $this->clock->microtime();
         $startMicrotime = $nowMicrotime - ($event->time / 1000);
         $duration = (int) round($event->time * 1000);
-
         [$file, $line] = $this->location->forQueryTrace($trace);
 
         $this->executionParent->queries++;

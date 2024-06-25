@@ -31,10 +31,8 @@ final class ExceptionSensor
     public function __invoke(Throwable $e): void
     {
         $nowMicrotime = $this->clock->microtime();
-
-        [$file, $line] = $this->location->forException($e);
-
         $previous = $e->getPrevious();
+        [$file, $line] = $this->location->forException($e);
 
         $this->recordsBuffer->writeException(new Exception(
             timestamp: (int) $nowMicrotime,

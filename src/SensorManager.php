@@ -104,6 +104,9 @@ final class SensorManager
         $sensor($startedAt, $input, $status);
     }
 
+    /**
+     * @param  list<array{ file?: string, line?: int }>  $trace
+     */
     public function query(QueryExecuted $event, array $trace): void
     {
         $sensor = $this->querySensor ??= new QuerySensor(
@@ -167,10 +170,6 @@ final class SensorManager
 
     public function queuedJob(JobQueued $event): void
     {
-        if ($event->connectionName === 'sync') {
-            return;
-        }
-
         $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,

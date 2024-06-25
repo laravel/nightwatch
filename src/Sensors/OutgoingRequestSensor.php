@@ -31,12 +31,11 @@ final class OutgoingRequestSensor
     public function __invoke(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
         $duration = (int) round(($endMicrotime - $startMicrotime) * 1000);
+        /** @var 'http'|'https' */
+        $scheme = $request->getUri()->getScheme();
 
         $this->executionParent->outgoing_requests++;
         $this->executionParent->outgoing_requests_duration += $duration;
-
-        /** @var 'http'|'https' */
-        $scheme = $request->getUri()->getScheme();
 
         $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
             timestamp: (int) $startMicrotime,

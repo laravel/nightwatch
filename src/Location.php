@@ -31,7 +31,10 @@ final class Location
      */
     public function forQueryTrace(array $trace): array
     {
-        $nonInternalFile = $nonInteralLine = null;
+        /** @var string|null $nonInternalFile */
+        $nonInternalFile = null;
+        /** @var int|null $nonInternalLine */
+        $nonInternalLine = null;
 
         foreach ($trace as $frame) {
             if (! array_key_exists('file', $frame)) {
@@ -51,17 +54,17 @@ final class Location
             // capture the first non-internal file and line as the fallback:
             if ($nonInternalFile === null && ! $this->isInternalFile($frame['file'])) {
                 $nonInternalFile = $frame['file'];
-                $nonInteralLine = $frame['line'] ?? null;
+                $nonInternalLine = $frame['line'] ?? null;
             }
         }
 
-        if ($nonInteralLine !== null) {
+        if ($nonInternalFile !== null) {
             $nonInternalFile = $this->normalizeFile($nonInternalFile);
         }
 
         return [
             $nonInternalFile,
-            $nonInteralLine,
+            $nonInternalLine,
         ];
     }
 

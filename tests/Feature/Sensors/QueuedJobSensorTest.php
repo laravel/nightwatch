@@ -1,15 +1,20 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
@@ -31,6 +36,12 @@ it('can ingest cache misses', function () {
         travelTo(now()->addMilliseconds(5.2));
     });
     Route::post('/users', function () {
+    Route::post('/users', function () {
+        travelTo(now()->addMilliseconds(2.5));
+        Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
+        MyJob::dispatch();
+        Str::createUuidsNormally();
+    });
         travelTo(now()->addMilliseconds(2.5));
         Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
         MyJob::dispatch();
@@ -111,7 +122,30 @@ it('can ingest cache misses', function () {
     ]);
 });
 
+it('does not ingest jobs dispatched on the sync queue', function () {
+    $ingest = fakeIngest();
+    withoutExceptionHandling();
+    Route::post('/users', function () {
+        MyJob::dispatchSync();
+        MyJob::dispatch();
+        MyJob::dispatch()->onConnection('sync');
+        Bus::dispatchNow(new MyJob);
+        Bus::dispatchSync(new MyJob);
+        Bus::dispatch((new MyJob)->onConnection('sync'));
+    });
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+});
+
 final class MyJob implements ShouldQueue
 {
-    use Dispatchable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public function handle()
+    {
+        //
+    }
 }
