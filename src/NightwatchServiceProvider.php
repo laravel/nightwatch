@@ -189,7 +189,13 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Dispatcher */
         $events = $this->app->make('events');
 
-        $events->listen(QueryExecuted::class, $sensor->query(...));
+        $events->listen(QueryExecuted::class, function (QueryExecuted $event) use ($sensor) {
+            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+
+            array_shift($trace);
+
+            $sensor->query($event, $trace);
+        });
         $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvent(...));
         $events->listen(JobQueued::class, $sensor->queuedJob(...));
 

@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Database\Events\QueryExecuted;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
+use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\UserProvider;
@@ -16,6 +17,7 @@ final class QuerySensor
         private ExecutionParent $executionParent,
         private UserProvider $user,
         private Clock $clock,
+        private Location $location,
         private string $deployId,
         private string $server,
         private string $traceId,
@@ -25,12 +27,16 @@ final class QuerySensor
 
     /**
      * TODO group, execution_context, execution_id, category, file, line
+     *
+     * @param  list<array{ file?: string, line?: int }>  $trace
      */
-    public function __invoke(QueryExecuted $event): void
+    public function __invoke(QueryExecuted $event, array $trace): void
     {
         $nowMicrotime = $this->clock->microtime();
         $startMicrotime = $nowMicrotime - ($event->time / 1000);
         $duration = (int) round($event->time * 1000);
+
+        [$file, $line] = $this->location->forQueryTrace($trace);
 
         $this->executionParent->queries++;
         $this->executionParent->queries_duration += $duration;
@@ -47,8 +53,8 @@ final class QuerySensor
             user: $this->user->id(),
             sql: $event->sql,
             category: 'select',
-            file: 'app/Models/User.php',
-            line: 5,
+            file: $file ?? '',
+            line: $line ?? 0,
             duration: $duration,
             connection: $event->connectionName,
         ));

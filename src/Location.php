@@ -26,9 +26,45 @@ final class Location
     }
 
     /**
+     * @param  list<array{ file?: string, line?: int }>  $trace
+     * @return array{ 0: string|null, 1: int|null }
+     */
+    public function forQueryTrace(array $trace): array
+    {
+        $nonInternalFile = $nonInteralLine = null;
+
+        foreach ($trace as $frame) {
+            if (! array_key_exists('file', $frame)) {
+                continue;
+            }
+
+            // First, we want to find the location in the end-user application:
+            if (! $this->isVendorFile($frame['file'])) {
+                return [
+                    $this->normalizeFile($frame['file']),
+                    $frame['line'] ?? null,
+                ];
+            }
+
+            // We only want to track the first non-internal file we come across,
+            // so once we have that we can ignore any others. Otherwise, we will
+            // capture the first non-internal file and line as the fallback:
+            if ($nonInternalFile !== null && ! $this->isInternalFile($frame['file'])) {
+                $nonInternalFile = $frame['file'];
+                $nonInteralLine = $frame['line'] ?? null;
+            }
+        }
+
+        return [
+            $nonInternalFile,
+            $nonInteralLine,
+        ];
+    }
+
+    /**
      * @return array{ 0: string, 1: int|null }
      */
-    public function find(Throwable $e): array
+    public function forException(Throwable $e): array
     {
         $location = match (true) {
             $e instanceof ViewException => $this->fromViewException($e),
@@ -40,7 +76,7 @@ final class Location
             return $location;
         }
 
-        return $this->fromException($e);
+        return $this->fromThrowable($e);
     }
 
     /**
@@ -74,7 +110,7 @@ final class Location
     /**
      * @return array{ 0: string, 1: int|null }
      */
-    private function fromException(Throwable $e): array
+    private function fromThrowable(Throwable $e): array
     {
         if (! $this->isVendorFile($e->getFile())) {
             return [
@@ -101,8 +137,6 @@ final class Location
      */
     private function fromTrace(array $trace): ?array
     {
-        $file = $line = null;
-
         foreach ($trace as $frame) {
             if (array_key_exists('file', $frame) && ! $this->isVendorFile($frame['file'])) {
                 return [

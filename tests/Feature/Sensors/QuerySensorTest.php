@@ -15,6 +15,8 @@ beforeEach(function () use (&$ignore) {
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     syncClock(CarbonImmutable::parse('2000-01-01 00:00:00'));
+
+    App::setBasePath(realpath(__DIR__.'/../../../'));
 });
 
 it('can ingest queries', function () {
@@ -28,9 +30,11 @@ it('can ingest queries', function () {
 
         travelTo(now()->addMilliseconds(5.2));
     });
-    Route::post('/users', function () {
+    $line = null;
+    Route::post('/users', function () use (&$line) {
         travelTo(now()->addMilliseconds(2.5));
 
+        $line = __LINE__ + 1;
         DB::table('users')->get();
     });
 
@@ -111,8 +115,8 @@ it('can ingest queries', function () {
                 'user' => '',
                 'sql' => 'select * from "users"',
                 'category' => 'select',
-                'file' => 'app/Models/User.php',
-                'line' => 5,
+                'file' => 'tests/Feature/Sensors/QuerySensorTest.php',
+                'line' => $line,
                 'duration' => 5200,
                 'connection' => 'sqlite',
             ],

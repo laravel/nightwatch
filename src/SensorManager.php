@@ -104,19 +104,20 @@ final class SensorManager
         $sensor($startedAt, $input, $status);
     }
 
-    public function query(QueryExecuted $event): void
+    public function query(QueryExecuted $event, array $trace): void
     {
         $sensor = $this->querySensor ??= new QuerySensor(
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             user: $this->user(),
             clock: $this->clock(),
+            location: $this->location(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
         );
 
-        $sensor($event);
+        $sensor($event, $trace);
     }
 
     public function cacheEvent(CacheMissed|CacheHit $event): void

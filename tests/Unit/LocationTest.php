@@ -15,7 +15,7 @@ it('can find the file in the trace', function () {
         ],
     ]);
 
-    $file = $location->find($e);
+    $file = $location->forException($e);
 
     expect($file)->toBe(['app/Models/User.php', 5]);
 });
@@ -37,7 +37,7 @@ it('skips vendor files in trace when a non-vendor file exists', function () {
         ],
     ]);
 
-    $file = $location->find($e);
+    $file = $location->forException($e);
 
     expect($file)->toBe(['app/Models/User.php', 5]);
 });
@@ -59,7 +59,7 @@ it('skips artisan files when a non-vendor file exists', function () {
         ],
     ]);
 
-    $file = $location->find($e);
+    $file = $location->forException($e);
 
     expect($file)->toBe(['app/Models/User.php', 5]);
 });
@@ -81,7 +81,7 @@ it('skips index.php file when a non-vendor file exists', function () {
         ],
     ]);
 
-    $file = $location->find($e);
+    $file = $location->forException($e);
 
     expect($file)->toBe(['app/Models/User.php', 5]);
 });
@@ -101,7 +101,7 @@ it('handles missing line number', function () {
         ],
     ]);
 
-    $file = $location->find($e);
+    $file = $location->forException($e);
 
     expect($file)->toBe(['app/Models/User.php', null]);
 });
@@ -113,7 +113,7 @@ it('uses the path of the exception when it is non vendor', function () {
     $reflectedException->getProperty('file')->setValue($e, base_path('app/Models/User.php'));
     $reflectedException->getProperty('line')->setValue($e, 5);
 
-    $file = $location->find($e);
+    $file = $location->forException($e);
 
     expect($file)->toBe(['app/Models/User.php', 5]);
 });
@@ -135,7 +135,7 @@ it('falls back to trace when exception is thrown in vendor frame', function () {
         ],
     ]);
 
-    $file = $location->find($e);
+    $file = $location->forException($e);
 
     expect($file)->toBe(['app/Models/User.php', 5]);
 });
@@ -153,7 +153,7 @@ it('uses the thrown location when no non-vendor file is found', function () {
         ],
     ]);
 
-    $file = $location->find($e);
+    $file = $location->forException($e);
 
     expect($file)->toBe(['vendor/foo/bar/Baz1.php', 5]);
 });

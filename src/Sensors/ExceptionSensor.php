@@ -32,7 +32,7 @@ final class ExceptionSensor
     {
         $nowMicrotime = $this->clock->microtime();
 
-        [$file, $line] = $this->location->find($e);
+        [$file, $line] = $this->location->forException($e);
 
         $previous = $e->getPrevious();
 
