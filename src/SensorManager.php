@@ -178,6 +178,7 @@ final class SensorManager
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
+            // defaultQueue: 'default',
         );
 
         $sensor($event);

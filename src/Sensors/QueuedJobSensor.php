@@ -2,12 +2,14 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Illuminate\Events\CallQueuedListener;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\UserProvider;
+use ReflectionClass;
 
 final class QueuedJobSensor
 {
@@ -19,6 +21,7 @@ final class QueuedJobSensor
         private string $deployId,
         private string $server,
         private string $traceId,
+        private string $defaultQueue,
     ) {
         //
     }
@@ -49,7 +52,33 @@ final class QueuedJobSensor
                 default => $event->job::class,
             },
             connection: $event->connectionName,
-            queue: 'default',
+            queue: $this->resolveQueue($event) ?? $this->defaultQueue,
         ));
+    }
+
+    private function resolveQueue(JobQueued $event): ?string
+    {
+        $isObject = is_object($event->job);
+
+        if ($isObject && $event->job instanceof CallQueuedListener) {
+            return $this->resolveQueuedListenerQueue($event->job);
+        }
+
+        if ($isObject && property_exists($event->job, 'queue')) {
+            return $event->job->queue ?? null;
+        }
+
+        return null;
+    }
+
+    private function resolveQueuedListenerQueue(CallQueuedListener $listener): ?string
+    {
+        $reflectionJob = (new ReflectionClass($listener->class))->newInstanceWithoutConstructor();
+
+        if (method_exists($reflectionJob, 'viaQueue')) {
+            return $reflectionJob->viaQueue($listener->data[0] ?? null);
+        }
+
+        return $reflectionJob->queue ?? null;
     }
 }

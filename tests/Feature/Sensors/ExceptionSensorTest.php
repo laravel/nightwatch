@@ -260,7 +260,7 @@ it('handles view exceptions', function () {
 
 it('correctly resolves classes', function () {
     // see Pulse
-});
+})->todo();
 
 it('handles spatie view exceptions', function () {
     // see Pulse

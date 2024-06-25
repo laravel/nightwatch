@@ -57,13 +57,13 @@ final class OutgoingRequestSensor
             path: $request->getUri()->getPath(),
             route: '',
             duration: $duration,
-            request_size_kilobytes: $this->parseMessageSizeKilobytes($request),
-            response_size_kilobytes: $this->parseMessageSizeKilobytes($response),
+            request_size_kilobytes: $this->resolveMessageSizeKilobytes($request),
+            response_size_kilobytes: $this->resolveMessageSizeKilobytes($response),
             status_code: (string) $response->getStatusCode(),
         ));
     }
 
-    private function parseMessageSizeKilobytes(MessageInterface $message): ?int
+    private function resolveMessageSizeKilobytes(MessageInterface $message): ?int
     {
         $size = $message->getBody()->getSize();
 

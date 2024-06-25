@@ -8,9 +8,13 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Laravel\Nightwatch\SensorManager;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
@@ -140,6 +144,31 @@ it('does not ingest jobs dispatched on the sync queue', function () {
     $ingest->assertWrittenTimes(1);
 });
 
+it('captures queued event queue name', function () {
+    $ingest = fakeIngest();
+    prependListener(QueryExecuted::class, function (QueryExecuted $event) {
+        if (! RefreshDatabaseState::$migrated) {
+            return false;
+        }
+    });
+    Config::set('queue.default', 'database');
+
+    Route::post('/users', function () {
+        Event::listen('my-event', MyListenerWithCustomQueue::class);
+        Event::listen(MyEvent::class, MyListenerWithCustomQueue::class);
+        Event::listen(MyEvent::class, MyListenerWithViaQueue::class);
+        Event::dispatch('my-event');
+        Event::dispatch(new MyEvent);
+    });
+
+    $response = post('/users');
+
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('queued_jobs.0.queue', 'custom_queue');
+    $ingest->assertLatestWrite('queued_jobs.1.queue', 'custom_queue');
+    $ingest->assertLatestWrite('queued_jobs.2.queue', 'custom_queue');
+});
+
 final class MyJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -148,4 +177,36 @@ final class MyJob implements ShouldQueue
     {
         //
     }
+}
+
+class MyListenerWithCustomQueue implements ShouldQueue
+{
+    use InteractsWithQueue;
+
+    public $queue = 'custom_queue';
+
+    public function handle(): void
+    {
+        //
+    }
+}
+
+class MyListenerWithViaQueue implements ShouldQueue
+{
+    use InteractsWithQueue;
+
+    public function handle(): void
+    {
+        //
+    }
+
+    public function viaQueue(object $event)
+    {
+        return 'custom_queue';
+    }
+}
+
+class MyEvent
+{
+    use Dispatchable;
 }
