@@ -26,7 +26,6 @@ use Laravel\Nightwatch\Contracts\Clock as ClockContract;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Ingests\HttpIngest;
-use Laravel\Nightwatch\Ingests\NullIngest;
 use Laravel\Nightwatch\Ingests\SocketIngest;
 use Laravel\Nightwatch\Providers\PeakMemory;
 use React\EventLoop\StreamSelectLoop;
