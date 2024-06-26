@@ -21,7 +21,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Buffers\PayloadBuffer;
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\Clock as ClockContract;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
@@ -63,7 +62,6 @@ final class NightwatchServiceProvider extends ServiceProvider
             });
         });
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
-        $this->app->scoped(RecordsBuffer::class);
         $this->configureAgent();
         $this->configureIngest();
         $this->configureTraceId();
