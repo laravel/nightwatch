@@ -6,13 +6,17 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Queue\Connectors\DatabaseConnector;
+use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Laravel\Nightwatch\SensorManager;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
@@ -24,9 +28,11 @@ beforeEach(function () {
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     syncClock(CarbonImmutable::parse('2000-01-01 00:00:00'));
+
+    Config::set('queue.default', 'database');
 });
 
-it('can ingest cache misses', function () {
+it('can ingest queued jobs', function () {
     $ingest = fakeIngest();
     prependListener(QueryExecuted::class, function (QueryExecuted $event) {
         if (! RefreshDatabaseState::$migrated) {
@@ -173,6 +179,51 @@ it('captures queued event queue name', function () {
     $ingest->assertLatestWrite('queued_jobs.0.queue', 'custom_queue');
     $ingest->assertLatestWrite('queued_jobs.1.queue', 'custom_queue');
     $ingest->assertLatestWrite('queued_jobs.2.queue', 'custom_queue');
+});
+
+it('normalizes sqs queue names', function () {
+    $ingest = fakeIngest();
+    $sensor = app(SensorManager::class);
+    Config::set('queue.connections.my-sqs-queue', [
+        'driver' => 'sqs',
+        'prefix' => 'https://sqs.us-east-1.amazonaws.com/your-account-id',
+        'queue' => 'queue-name',
+        'suffix' => '-production'
+    ]);
+
+    $sensor->queuedJob(new JobQueued(
+        connectionName: 'my-sqs-queue',
+        queue: 'https://sqs.us-east-1.amazonaws.com/your-account-id/queue-name-production',
+        id: Str::uuid()->toString(),
+        job: 'MyJobClass',
+        payload: '{"uuid":"00000000-0000-0000-0000-000000000000"}',
+        delay: 0,
+    ));
+    $ingest->write($sensor->flush());
+
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('queued_jobs.0.queue', 'queue-name');
+});
+
+it('handles missing queue value', function () {
+    $ingest = fakeIngest();
+    prependListener(QueryExecuted::class, function (QueryExecuted $event) {
+        if (! RefreshDatabaseState::$migrated) {
+            return false;
+        }
+    });
+    Config::set('queue.default', 'database');
+    Route::post('/users', function () {
+        MyJob::dispatch();
+        MyJob::dispatch()->onQueue('foobar');
+    });
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('queued_jobs.0.queue', 'default');
+    $ingest->assertLatestWrite('queued_jobs.1.queue', 'foobar');
 });
 
 final class MyJob implements ShouldQueue

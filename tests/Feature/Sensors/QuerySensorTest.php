@@ -118,7 +118,7 @@ it('can ingest queries', function () {
                 'file' => 'tests/Feature/Sensors/QuerySensorTest.php',
                 'line' => $line,
                 'duration' => 5200,
-                'connection' => 'sqlite',
+                'connection' => 'testing',
             ],
         ],
         'queued_jobs' => [],

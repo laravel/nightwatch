@@ -19,6 +19,11 @@ final class QueuedJobSensor
      */
     private array $defaultQueues = [];
 
+    /**
+     * @var array<string, string>
+     */
+    private array $normalizedQueues = [];
+
     public function __construct(
         private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
@@ -58,33 +63,64 @@ final class QueuedJobSensor
                 default => $event->job::class,
             },
             connection: $event->connectionName,
-            queue: $this->resolveQueue($event),
+            queue: $this->normalizeSqsQueue($event->connectionName, $this->resolveQueue($event)),
         ));
     }
 
     private function resolveQueue(JobQueued $event): string
     {
+        /** @var string|null */
+        $queue = $event->queue;
+
+        if ($queue !== null) {
+            return $queue;
+        }
+
         if (is_object($event->job)) {
             if (property_exists($event->job, 'queue') && $event->job->queue !== null) {
                 return $event->job->queue;
             }
 
             if ($event->job instanceof CallQueuedListener) {
-                return $this->resolveQueuedListenerQueue($event->job);
+                $queue = $this->resolveQueuedListenerQueue($event->job);
             }
         }
 
-        return $this->defaultQueue($event->connectionName);
+        return $queue ?? $this->defaultQueue($event->connectionName);
     }
 
+    private function normalizeSqsQueue(string $connection, string $queue): string
+    {
+        $key = "{$connection}:{$queue}";
+
+        if (array_key_exists($key, $this->normalizedQueues)) {
+            return $this->normalizedQueues[$key];
         }
 
-        return null;
+        $config = $this->config->get("queue.connections.{$connection}") ?? [];
+
+        if (($config['driver'] ?? null) !== 'sqs') {
+            return $this->normalizedQueues[$key] = $queue;
+        }
+
+        if ($config['prefix'] ?? null) {
+            $prefix = preg_quote($config['prefix'], '#');
+
+            $queue = preg_replace("#^{$prefix}/#", '', $queue) ?? $queue;
+        }
+
+        if ($config['suffix'] ?? null) {
+            $suffix = preg_quote($config['suffix'], '#');
+
+            $queue = preg_replace("#{$suffix}$#", '', $queue) ?? $queue;
+        }
+
+        return $this->normalizedQueues[$key] = $queue;
     }
 
     private function resolveQueuedListenerQueue(CallQueuedListener $listener): ?string
     {
-        $reflectionJob = (new ReflectionClass($listener->class))->newInstanceWithoutConstructor();
+        $reflectionJob = (new ReflectionClass($listener->class))->newInstanceWithoutConstructor(); // @phpstan-ignore argument.type
 
         if (method_exists($reflectionJob, 'viaQueue')) {
             return $reflectionJob->viaQueue($listener->data[0] ?? null);
