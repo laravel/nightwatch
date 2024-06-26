@@ -6,14 +6,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
-use Illuminate\Queue\Connectors\DatabaseConnector;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\SensorManager;
@@ -188,7 +186,7 @@ it('normalizes sqs queue names', function () {
         'driver' => 'sqs',
         'prefix' => 'https://sqs.us-east-1.amazonaws.com/your-account-id',
         'queue' => 'queue-name',
-        'suffix' => '-production'
+        'suffix' => '-production',
     ]);
 
     $sensor->queuedJob(new JobQueued(
