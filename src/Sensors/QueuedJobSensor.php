@@ -58,20 +58,25 @@ final class QueuedJobSensor
                 default => $event->job::class,
             },
             connection: $event->connectionName,
-            queue: $this->resolveQueue($event) ?? $this->defaultQueue($event->connectionName),
+            queue: $this->resolveQueue($event),
         ));
     }
 
-    private function resolveQueue(JobQueued $event): ?string
+    private function resolveQueue(JobQueued $event): string
     {
-        $isObject = is_object($event->job);
+        if (is_object($event->job)) {
+            if (property_exists($event->job, 'queue') && $event->job->queue !== null) {
+                return $event->job->queue;
+            }
 
-        if ($isObject && $event->job instanceof CallQueuedListener) {
-            return $this->resolveQueuedListenerQueue($event->job);
+            if ($event->job instanceof CallQueuedListener) {
+                return $this->resolveQueuedListenerQueue($event->job);
+            }
         }
 
-        if ($isObject && property_exists($event->job, 'queue')) {
-            return $event->job->queue ?? null;
+        return $this->defaultQueue($event->connectionName);
+    }
+
         }
 
         return null;

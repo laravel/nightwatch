@@ -31,8 +31,8 @@ final class ExceptionSensor
     public function __invoke(Throwable $e): void
     {
         $nowMicrotime = $this->clock->microtime();
-        $previous = $e->getPrevious();
         [$file, $line] = $this->location->forException($e);
+        $previous = $e->getPrevious();
 
         $this->recordsBuffer->writeException(new Exception(
             timestamp: (int) $nowMicrotime,
@@ -44,10 +44,13 @@ final class ExceptionSensor
             execution_id: '00000000-0000-0000-0000-000000000000',
             execution_offset: $this->clock->executionOffset($nowMicrotime),
             user: $this->user->id(),
-            class: match (true) {
-                $e instanceof ViewException && $previous => $previous,
-                $e instanceof IgnitionViewException && $previous => $previous::class, // @phpstan-ignore class.notFound
-                default => $e::class,
+            class: match ($previous) {
+                null => $e::class,
+                default => match (true) {
+                    $e instanceof ViewException => $previous,
+                    $e instanceof IgnitionViewException => $previous::class, // @phpstan-ignore class.notFound
+                    default => $e::class,
+                },
             },
             file: $file,
             line: $line ?? 0,
