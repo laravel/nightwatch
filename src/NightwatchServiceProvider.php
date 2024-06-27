@@ -26,6 +26,7 @@ use Laravel\Nightwatch\Contracts\Clock as ClockContract;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Ingests\HttpIngest;
+use Laravel\Nightwatch\Ingests\NullIngest;
 use Laravel\Nightwatch\Ingests\SocketIngest;
 use Laravel\Nightwatch\Providers\PeakMemory;
 use React\EventLoop\StreamSelectLoop;
@@ -138,6 +139,8 @@ final class NightwatchServiceProvider extends ServiceProvider
     protected function configureIngest(): void
     {
         $this->app->singleton(IngestContract::class, function (Container $app) {
+            return NullIngest;
+
             /** @var Config */
             $config = $app->make('config');
 
