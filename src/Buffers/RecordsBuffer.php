@@ -89,8 +89,18 @@ final class RecordsBuffer
         $this->recordsCount++;
     }
 
+    /**
+     * TODO should we only send keys that we have records for? It would reduce
+     * the memory footprint in the agent but introduce a slight overhead in the
+     * lambda.
+     * TODO error handling. We should also do a general sweep
+     */
     public function flush(): string
     {
+        if ($this->recordsCount === 0) {
+            return '';
+        }
+
         $records = json_encode($this->records, flags: JSON_THROW_ON_ERROR);
 
         $this->records = [

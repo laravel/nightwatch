@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Ingests;
 
 use Laravel\Nightwatch\Contracts\Ingest;
 use React\Socket\ConnectorInterface;
+use Throwable;
 
 use function React\Async\await;
 
@@ -28,8 +29,16 @@ final class SocketIngest implements Ingest
      */
     public function write(string $payload): void
     {
-        $connection = await($this->connector->connect($this->uri));
+        if ($payload === '') {
+            return;
+        }
 
-        $connection->end($payload);
+        try {
+            $connection = await($this->connector->connect($this->uri));
+
+            $connection->end($payload);
+        } catch (Throwable $e) {
+            // TODO what to do with this failure?
+        }
     }
 }

@@ -178,6 +178,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      * recorders were registered early but out ingest was registered last. This
      * we used the `booted` callback.
      */
+
     protected function registerSensors(): void
     {
         /** @var SensorManager */
@@ -231,8 +232,11 @@ final class NightwatchServiceProvider extends ServiceProvider
             }
 
             $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
-                $sensor->command($startedAt, $input, $status);
+                if (! $this->app->runningInConsole()) {
+                    return;
+                }
 
+                $sensor->command($startedAt, $input, $status);
                 /** @var IngestContract */
                 $ingest = $app->make(IngestContract::class);
 

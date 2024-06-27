@@ -13,10 +13,6 @@ final class PayloadBuffer
 
     public function write(string $input): void
     {
-        if ($input === '') {
-            return;
-        }
-
         if ($this->records === '') {
             $this->records = $input;
         } else {
