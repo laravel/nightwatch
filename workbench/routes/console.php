@@ -359,7 +359,7 @@ Artisan::command('nightwatch:hammer', function () {
     $response = Http::response('ok');
     Http::fake(fn () => $response);
 
-    for ($i = 0; $i < 50; $i++) {
+    for ($i = 0; $i < 10; $i++) {
         Event::dispatch(new QueryExecuted(
             sql: 'select * from "users"',
             bindings: [],
