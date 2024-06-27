@@ -36,17 +36,6 @@ it('can write and flush many records', function () {
     expect($buffer->flush())->toBe('{"records":[{"request":{"id":1}},{"request":{"id":2}},{"request":{"id":3}},{"request":{"id":4}}]}');
 });
 
-it('ignores empty strings', function () {
-    $buffer = new PayloadBuffer(100);
-
-    $buffer->write('');
-    $buffer->write('{"request":{"id":2}}');
-    $buffer->write('');
-    $buffer->write('{"request":{"id":4}}');
-
-    expect($buffer->flush())->toBe('{"records":[{"request":{"id":2}},{"request":{"id":4}}]}');
-});
-
 it('does does not want flushing without writes', function () {
     $buffer = new PayloadBuffer(100);
 

@@ -139,8 +139,6 @@ final class NightwatchServiceProvider extends ServiceProvider
     protected function configureIngest(): void
     {
         $this->app->singleton(IngestContract::class, function (Container $app) {
-            return NullIngest;
-
             /** @var Config */
             $config = $app->make('config');
 
