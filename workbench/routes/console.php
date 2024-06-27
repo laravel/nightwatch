@@ -359,6 +359,8 @@ Artisan::command('nightwatch:hammer', function () {
     $response = Http::response('ok');
     Http::fake(fn () => $response);
 
+    report('Something happend. Not good!');
+
     for ($i = 0; $i < 10; $i++) {
         Event::dispatch(new QueryExecuted(
             sql: 'select * from "users"',
@@ -370,10 +372,6 @@ Artisan::command('nightwatch:hammer', function () {
         Event::dispatch(new JobQueued(
             'database', 'default', $uuid, 'App\\Jobs\\MyJob', '{"uuid":"'.$uuid.'"}', 0
         ));
-
-        if (($i % 10) === 0) {
-            report('Something happend. Not good!');
-        }
 
         Event::dispatch(new CacheHit('database', 'users:123', '', []));
         Event::dispatch(new CacheMissed('database', 'users:123', []));
