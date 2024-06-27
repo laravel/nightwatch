@@ -40,12 +40,6 @@ final class HttpIngest
 
         $this->concurrentRequests++;
 
-        $payload = gzencode($payload);
-
-        if ($payload === false) {
-            return new RejectedPromise(new RuntimeException('Unable to compress payload'));
-        }
-
         $start = $this->clock->microtime();
 
         return $this->client->send($payload)
