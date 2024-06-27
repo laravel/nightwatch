@@ -178,7 +178,6 @@ final class NightwatchServiceProvider extends ServiceProvider
      * recorders were registered early but out ingest was registered last. This
      * we used the `booted` callback.
      */
-
     protected function registerSensors(): void
     {
         /** @var SensorManager */

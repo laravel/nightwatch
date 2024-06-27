@@ -10,7 +10,6 @@ use Laravel\Nightwatch\IngestSucceededResult;
 use Psr\Http\Message\ResponseInterface;
 use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
-use RuntimeException;
 use Throwable;
 
 final class HttpIngest
