@@ -17,7 +17,9 @@ final class Location
     private ?string $vendorPath;
 
     private ?string $artisanPath;
+
     private ?string $frameworkPath;
+
     private ?string $nightwatchPath;
 
     private ?string $publicIndexPath;
