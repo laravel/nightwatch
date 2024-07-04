@@ -57,8 +57,7 @@ final class NightwatchServiceProvider extends ServiceProvider
              */
             return new Clock(match (true) {
                 defined('LARAVEL_START') => LARAVEL_START,
-                ($start = $app->make('request')->server('REQUEST_TIME_FLOAT')) => $start,
-                default => microtime(true),
+                default => $app->make('request')->server('REQUEST_TIME_FLOAT') ?? microtime(true),
             });
         });
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
@@ -181,8 +180,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      */
     protected function registerSensors(): void
     {
-        /** @var SensorManager */
-        $sensor = $this->app->make(SensorManager::class);
+        $sensor = new SensorManager($this->app);
         /** @var Dispatcher */
         $events = $this->app->make('events');
 

@@ -17,6 +17,8 @@ final class Location
     private ?string $vendorPath;
 
     private ?string $artisanPath;
+    private ?string $frameworkPath;
+    private ?string $nightwatchPath;
 
     private ?string $publicIndexPath;
 
@@ -165,8 +167,8 @@ final class Location
 
     private function isInternalFile(string $file): bool
     {
-        return str_starts_with($file, $this->vendorPath().DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework') ||
-            str_starts_with($file, $this->vendorPath().DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'nightwatch') ||
+        return str_starts_with($file, $this->frameworkPath()) ||
+            str_starts_with($file, $this->nightwatchPath()) ||
             $file === $this->artisanPath() ||
             $file === $this->publicIndexPath();
     }
@@ -194,5 +196,15 @@ final class Location
     private function publicIndexPath(): string
     {
         return $this->publicIndexPath ??= $this->app->publicPath('index.php');
+    }
+
+    private function frameworkPath(): string
+    {
+        return $this->frameworkPath ??= $this->vendorPath().DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework';
+    }
+
+    private function nightwatchPath(): string
+    {
+        return $this->nightwatchPath ??= $this->vendorPath().DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'nightwatch';
     }
 }

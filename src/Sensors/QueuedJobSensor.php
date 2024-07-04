@@ -99,17 +99,17 @@ final class QueuedJobSensor
 
         $config = $this->config->get("queue.connections.{$connection}") ?? [];
 
-        if (($config['driver'] ?? null) !== 'sqs') {
+        if (($config['driver'] ?? '') !== 'sqs') {
             return $this->normalizedQueues[$key] = $queue;
         }
 
-        if ($config['prefix'] ?? null) {
+        if ($config['prefix'] ?? false) {
             $prefix = preg_quote($config['prefix'], '#');
 
             $queue = preg_replace("#^{$prefix}/#", '', $queue) ?? $queue;
         }
 
-        if ($config['suffix'] ?? null) {
+        if ($config['suffix'] ?? false) {
             $suffix = preg_quote($config['suffix'], '#');
 
             $queue = preg_replace("#{$suffix}$#", '', $queue) ?? $queue;
