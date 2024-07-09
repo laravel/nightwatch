@@ -33,8 +33,6 @@ final class SocketIngest implements Ingest
             return;
         }
 
-        return;
-
         try {
             $connection = await($this->connector->connect($this->uri));
 
