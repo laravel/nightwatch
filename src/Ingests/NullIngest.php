@@ -12,7 +12,7 @@ final class NullIngest
      */
     public function write(string $payload): Promise
     {
-        echo "Payload size: ".strlen($payload)." bytes";
+        echo 'Payload size: '.strlen($payload).' bytes';
 
         return new Promise(fn ($resolve) => $resolve(
             new IngestSucceededResult(0)
