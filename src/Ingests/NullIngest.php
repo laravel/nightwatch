@@ -12,7 +12,10 @@ final class NullIngest
      */
     public function write(string $payload): Promise
     {
-        echo 'Payload size: '.strlen($payload).' bytes';
+        $compressed = gzencode($payload);
+
+        echo "Payload size: ".number_format(strlen($payload) / 1000 / 1000, 2)." MB";
+        echo "Compressed size: ".number_format(strlen($compressed) / 1000 / 1000, 2)." MB";
 
         return new Promise(fn ($resolve) => $resolve(
             new IngestSucceededResult(0)
