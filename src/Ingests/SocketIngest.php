@@ -34,9 +34,9 @@ final class SocketIngest implements Ingest
         }
 
         // try {
-            $connection = await($this->connector->connect($this->uri));
+        $connection = await($this->connector->connect($this->uri));
 
-            $connection->end($payload);
+        $connection->end($payload);
         // } catch (Throwable $e) {
         //     // TODO what to do with this failure?
         // }
