@@ -20,7 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
 final class RequestSensor
 {
     /**
-     * @param array<value-of<LifecyclePhase>, float>  $lifecycle
+     * @param  array<value-of<LifecyclePhase>, float>  $lifecycle
      */
     public function __construct(
         private RecordsBuffer $recordsBuffer,

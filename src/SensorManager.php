@@ -9,7 +9,6 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
-use Illuminate\Support\Arr;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
@@ -31,6 +30,7 @@ use Throwable;
 /**
  * TODO refresh application instance.
  * TODO wrap everything in resuce so we never interfere with the running application.
+ *
  * @internal
  */
 final class SensorManager

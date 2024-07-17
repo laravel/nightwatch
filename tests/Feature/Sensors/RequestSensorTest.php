@@ -75,15 +75,15 @@ it('can ingest requests', function () {
             'cache_misses' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage_kilobytes' => 1234,
-          'global_before_middleware' => 0,
-          'route_before_middleware' => 0,
-          'main' => 0,
-          'main_render' => 0,
-          'route_after_middleware' => 0,
-          'route_after_middleware_render' => 0,
-          'global_after_middleware' => 0,
-          'response_transmission' => 0,
-          'terminate' => 0,
+            'global_before_middleware' => 0,
+            'route_before_middleware' => 0,
+            'main' => 0,
+            'main_render' => 0,
+            'route_after_middleware' => 0,
+            'route_after_middleware_render' => 0,
+            'global_after_middleware' => 0,
+            'response_transmission' => 0,
+            'terminate' => 0,
         ],
     ]);
 });
@@ -141,7 +141,8 @@ it('uses the default port for the scheme when not port is available to the reque
     $ingest = fakeIngest();
     $sensor = app(SensorManager::class);
 
-    $request = (new class extends Request {
+    $request = (new class extends Request
+    {
         public function getPort(): int|string|null
         {
             return null;
@@ -153,9 +154,10 @@ it('uses the default port for the scheme when not port is available to the reque
     expect($request->getPort())->toBeNull();
     expect($request->getScheme())->toBe('https');
     $ingest->assertWrittenTimes(1);
-   $ingest->assertLatestWrite('requests.0.port', '443');
+    $ingest->assertLatestWrite('requests.0.port', '443');
 
-    $request = (new class extends Request {
+    $request = (new class extends Request
+    {
         public function getPort(): int|string|null
         {
             return null;
@@ -284,7 +286,7 @@ it('handles streamed response sizes', function () {
     $ingest->assertLatestWrite('requests.0.response_size_kilobytes', null);
 });
 
-class UserController
+final class UserController
 {
     public function index()
     {
