@@ -4,6 +4,9 @@ namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\Types\Text;
 
+/**
+ * @internal
+ */
 final class Request
 {
     public int $v = 1;
@@ -12,7 +15,7 @@ final class Request
      * @param  list<string>  $route_methods
      */
     public function __construct(
-        public int $timestamp,
+        public float $timestamp,
         public string $deploy_id,
         public string $server,
         public string $group,
@@ -25,7 +28,7 @@ final class Request
         public string $host,
         public string $port,
         public string $path,
-        public string $query,
+        public array $query,
         public string $route_name,
         public array $route_methods,
         public string $route_domain,
@@ -58,6 +61,15 @@ final class Request
         public int $cache_misses,
         public int $hydrated_models,
         public int $peak_memory_usage_kilobytes,
+        public float $global_before_middleware,
+        public float $route_before_middleware,
+        public float $main,
+        public float $main_render,
+        public float $route_after_middleware,
+        public float $route_after_middleware_render,
+        public float $global_after_middleware,
+        public float $response_transmission,
+        public float $terminate,
     ) {
         $this->path = Text::limit($this->path);
     }

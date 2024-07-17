@@ -4,6 +4,9 @@ namespace Laravel\Nightwatch;
 
 use Laravel\Nightwatch\Contracts\Clock as ClockContract;
 
+/**
+ * @internal
+ */
 final class Clock implements ClockContract
 {
     public function __construct(private int $executionStartMicrotime)

@@ -11,6 +11,9 @@ use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * @internal
+ */
 final class OutgoingRequestSensor
 {
     public function __construct(

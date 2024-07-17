@@ -5,6 +5,9 @@ namespace Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\Types\Text;
 use Laravel\Nightwatch\Types\TinyText;
 
+/**
+ * @internal
+ */
 final class Command
 {
     public int $v = 1;

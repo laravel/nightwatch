@@ -2,6 +2,9 @@
 
 namespace Laravel\Nightwatch\Buffers;
 
+/**
+ * @internal
+ */
 final class PayloadBuffer
 {
     protected string $records = '';

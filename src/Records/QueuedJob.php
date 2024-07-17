@@ -4,6 +4,9 @@ namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\Types\TinyText;
 
+/**
+ * @internal
+ */
 final class QueuedJob
 {
     public int $v = 1;

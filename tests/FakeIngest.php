@@ -39,7 +39,7 @@ final class FakeIngest implements Ingest
 
     public function latestWrite(?string $key = null): mixed
     {
-        $payload = json_decode($this->writes[0], true, flags: JSON_THROW_ON_ERROR);
+        $payload = json_decode(Arr::last($this->writes), true, flags: JSON_THROW_ON_ERROR);
 
         if ($key) {
             expect(Arr::has($payload, $key))->toBeTrue();

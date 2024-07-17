@@ -12,6 +12,9 @@ use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\UserProvider;
 use ReflectionClass;
 
+/**
+ * @internal
+ */
 final class QueuedJobSensor
 {
     /**

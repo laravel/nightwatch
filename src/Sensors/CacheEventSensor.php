@@ -10,6 +10,9 @@ use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\UserProvider;
 
+/**
+ * @internal
+ */
 final class CacheEventSensor
 {
     public function __construct(

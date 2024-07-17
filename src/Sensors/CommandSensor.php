@@ -11,6 +11,9 @@ use Laravel\Nightwatch\UserProvider;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 
+/**
+ * @internal
+ */
 final class CommandSensor
 {
     public function __construct(

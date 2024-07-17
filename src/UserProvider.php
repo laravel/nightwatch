@@ -5,6 +5,9 @@ namespace Laravel\Nightwatch;
 use Illuminate\Auth\AuthManager;
 use Laravel\Nightwatch\Types\TinyText;
 
+/**
+ * @internal
+ */
 final class UserProvider
 {
     public function __construct(private AuthManager $auth)

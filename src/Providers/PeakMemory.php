@@ -4,6 +4,9 @@ namespace Laravel\Nightwatch\Providers;
 
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 
+/**
+ * @internal
+ */
 final class PeakMemory implements PeakMemoryProvider
 {
     public function kilobytes(): int

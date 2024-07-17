@@ -40,6 +40,9 @@ use React\Socket\TimeoutConnector;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * @internal
+ */
 final class NightwatchServiceProvider extends ServiceProvider
 {
     private ?bool $disabled = false;

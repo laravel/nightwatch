@@ -6,6 +6,9 @@ use Laravel\Nightwatch\Types\MediumText;
 use Laravel\Nightwatch\Types\Text;
 use Laravel\Nightwatch\Types\TinyText;
 
+/**
+ * @internal
+ */
 final class Exception
 {
     public int $v = 1;

@@ -5,6 +5,9 @@ namespace Laravel\Nightwatch\Records;
 use Laravel\Nightwatch\Types\MediumText;
 use Laravel\Nightwatch\Types\TinyText;
 
+/**
+ * @internal
+ */
 final class Query
 {
     public int $v = 1;

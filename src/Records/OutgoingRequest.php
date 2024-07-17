@@ -2,6 +2,9 @@
 
 namespace Laravel\Nightwatch\Records;
 
+/**
+ * @internal
+ */
 final class OutgoingRequest
 {
     public int $v = 1;

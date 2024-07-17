@@ -11,6 +11,9 @@ use Laravel\Nightwatch\UserProvider;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
 
+/**
+ * @internal
+ */
 final class ExceptionSensor
 {
     public function __construct(

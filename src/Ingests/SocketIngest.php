@@ -8,6 +8,9 @@ use Throwable;
 
 use function React\Async\await;
 
+/**
+ * @internal
+ */
 final class SocketIngest implements Ingest
 {
     public function __construct(

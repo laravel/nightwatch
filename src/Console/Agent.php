@@ -17,6 +17,9 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 use WeakMap;
 
+/**
+ * @internal
+ */
 #[AsCommand(name: 'nightwatch:agent')]
 final class Agent extends Command
 {

@@ -10,6 +10,9 @@ use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Records\Request;
 
+/**
+ * @internal
+ */
 final class RecordsBuffer
 {
     /**

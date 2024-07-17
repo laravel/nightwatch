@@ -2,6 +2,9 @@
 
 namespace Laravel\Nightwatch\Records;
 
+/**
+ * @internal
+ */
 final class ExecutionParent
 {
     public int $v = 1;

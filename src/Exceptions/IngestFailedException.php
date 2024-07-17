@@ -7,6 +7,9 @@ use React\Http\Message\ResponseException;
 use RuntimeException;
 use Throwable;
 
+/**
+ * @internal
+ */
 final class IngestFailedException extends RuntimeException
 {
     public ?ResponseInterface $response;

@@ -5,6 +5,9 @@ namespace Laravel\Nightwatch\Ingests;
 use Laravel\Nightwatch\IngestSucceededResult;
 use React\Promise\Promise;
 
+/**
+ * @internal
+ */
 final class NullIngest
 {
     /**

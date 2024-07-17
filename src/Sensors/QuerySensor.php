@@ -10,6 +10,9 @@ use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\UserProvider;
 
+/**
+ * @internal
+ */
 final class QuerySensor
 {
     public function __construct(

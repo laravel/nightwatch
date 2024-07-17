@@ -9,6 +9,7 @@ use Throwable;
 
 /**
  * TODO this should be a singleton
+ * @internal
  */
 final class Location
 {

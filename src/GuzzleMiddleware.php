@@ -6,6 +6,9 @@ use Laravel\Nightwatch\Contracts\Clock;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * @internal
+ */
 final class GuzzleMiddleware
 {
     public function __construct(private SensorManager $sensor, private Clock $clock)

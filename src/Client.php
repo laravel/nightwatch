@@ -8,6 +8,9 @@ use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
 use RuntimeException;
 
+/**
+ * @internal
+ */
 final class Client
 {
     public function __construct(private Browser $browser)

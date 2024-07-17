@@ -2,6 +2,9 @@
 
 namespace Laravel\Nightwatch\Contracts;
 
+/**
+ * @internal
+ */
 interface Clock
 {
     public function microtime(): float;

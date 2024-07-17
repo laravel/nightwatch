@@ -2,6 +2,9 @@
 
 namespace Laravel\Nightwatch\Types;
 
+/**
+ * @internal
+ */
 final class MediumText
 {
     public static function limit(string $value): string

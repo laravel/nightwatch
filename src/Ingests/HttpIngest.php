@@ -12,6 +12,9 @@ use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
 use Throwable;
 
+/**
+ * @internal
+ */
 final class HttpIngest
 {
     private int $concurrentRequests = 0;

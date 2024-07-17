@@ -9,6 +9,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Support\Arr;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
@@ -30,6 +31,7 @@ use Throwable;
 /**
  * TODO refresh application instance.
  * TODO wrap everything in resuce so we never interfere with the running application.
+ * @internal
  */
 final class SensorManager
 {
@@ -61,10 +63,20 @@ final class SensorManager
 
     private ?UserProvider $userProvider;
 
+    /**
+     * @var array{value-of<LifecyclePhase>, float}
+     */
+    private array $lifecycle = [];
+
     public function __construct(private Application $app)
     {
         $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
+    }
+
+    public function startPhase(LifecyclePhase $phase): void
+    {
+        $this->lifecycle[$phase->value] = $this->clock()->microtime();
     }
 
     public function request(Request $request, Response $response): void
@@ -73,11 +85,12 @@ final class SensorManager
             recordsBuffer: $this->recordsBuffer,
             executionParent: $this->executionParent,
             peakMemory: $this->peakMemoryProvider(),
-            clock: $this->clock(),
+            clock: $clock = $this->clock(),
             user: $this->user(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
+            lifecycle: $this->lifecycle,
         );
 
         $sensor($request, $response);
@@ -236,5 +249,6 @@ final class SensorManager
 
         $this->clock = null;
         $this->traceId = null;
+        $this->lifecycle = [];
     }
 }
