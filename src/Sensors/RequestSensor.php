@@ -12,6 +12,8 @@ use Laravel\Nightwatch\LifecyclePhase;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\UserProvider;
+use RuntimeException;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -38,11 +40,6 @@ final class RequestSensor
 
     /**
      * TODO group
-     * TODO when the request is a `resource`, calling `getContent` may re-read
-     * the stream into memory. How can we handle this better?
-     * TODO how can we better flag that a response is streamed and we don't
-     * know the length?
-     * TODO this needs to capture the boot duratino, the application duration, and the terminating duration.
      */
     public function __invoke(Request $request, Response $response): void
     {
@@ -53,12 +50,15 @@ final class RequestSensor
         $routeUri = $route?->uri();
         /** @var 'http'|'https' */
         $scheme = $request->getScheme();
+        /** @var list<string> */
+        $methods = $route?->methods() ?? [];
+        sort($methods);
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
             timestamp: $this->clock->executionStartMicrotime(),
             deploy_id: $this->deployId,
             server: $this->server,
-            group: hash('sha256', ''),
+            group: hash('sha256', implode(',', $methods)),
             trace_id: $this->traceId,
             user: $this->user->id(),
             method: $request->getMethod(),
@@ -70,20 +70,17 @@ final class RequestSensor
                 'https' => 443,
             }),
             path: $request->getPathInfo(),
-            query: array_keys(Arr::dot($request->query->all())),
+            query: $request->server->get('QUERY_STRING'),
             route_name: $route?->getName() ?? '',
-            route_methods: $route?->methods() ?? [],
+            route_methods: $methods,
             route_domain: $route?->getDomain() ?? '',
             route_action: $route?->getActionName() ?? '',
-            // ...
             route_path: $routeUri === null ? '' : "/{$routeUri}",
             ip: $request->ip() ?? '',
-            duration: (int) round(($nowMicrotime - $this->clock->executionStartMicrotime()) * 1000),
+            duration: (int) (($nowMicrotime - $this->clock->executionStartMicrotime()) * 1000 * 1000),
             status_code: (string) $response->getStatusCode(),
-            request_size_kilobytes: (int) round(
-                ((int) ($request->headers->get('content-length') ?? strlen($request->getContent()))) / 1000
-            ),
-            response_size_kilobytes: $this->parseResponseSizeKilobytes($response),
+            request_size: strlen($request->getContent()),
+            response_size: $this->parseResponseSizeKilobytes($response),
             queries: $this->executionParent->queries,
             queries_duration: $this->executionParent->queries_duration,
             lazy_loads: $this->executionParent->lazy_loads,
@@ -119,14 +116,22 @@ final class RequestSensor
 
     private function parseResponseSizeKilobytes(Response $response): ?int
     {
-        if (is_numeric($length = $response->headers->get('content-length'))) {
-            return (int) round(((int) $length) / 1000);
+        if (is_string($content = $response->getContent())) {
+            return strlen($content);
         }
 
-        $content = $response->getContent();
+        if ($response instanceof BinaryFileResponse) {
+            try {
+                if (is_int($size = $response->getFile()->getSize())) {
+                    return $size;
+                }
+            } catch (RuntimeException $e) {
+                //
+            }
+        }
 
-        if (is_string($content)) {
-            return (int) round(strlen($content) / 1000);
+        if (is_numeric($length = $response->headers->get('content-length'))) {
+            return (int) $length;
         }
 
         return null;

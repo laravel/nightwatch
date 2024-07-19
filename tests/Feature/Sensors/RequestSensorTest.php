@@ -3,6 +3,7 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\File\Stream;
@@ -10,7 +11,10 @@ use Symfony\Component\HttpFoundation\File\Stream;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;
 use function Pest\Laravel\get;
+use function Pest\Laravel\head;
+use function Pest\Laravel\travel;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
@@ -43,7 +47,7 @@ it('can ingest requests', function () {
             'host' => 'localhost',
             'port' => '80',
             'path' => '/users',
-            'query' => [],
+            'query' => '',
             'route_name' => '',
             'route_methods' => ['GET', 'HEAD'],
             'route_domain' => '',
@@ -52,8 +56,8 @@ it('can ingest requests', function () {
             'ip' => '127.0.0.1',
             'duration' => 0,
             'status_code' => '200',
-            'request_size_kilobytes' => 0,
-            'response_size_kilobytes' => 0,
+            'request_size' => 0,
+            'response_size' => 2,
             'queries' => 0,
             'queries_duration' => 0,
             'lazy_loads' => 0,
@@ -88,41 +92,97 @@ it('can ingest requests', function () {
     ]);
 });
 
-it('captures request duration', function () {
-    $ingest = fakeIngest();
-    Route::get('/users', function () {
-        travelTo(now()->addMilliseconds(1234));
-
-        return [];
-    });
-
-    $response = get('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.duration', 1234);
-});
-
 it('captures the response size', function () {
     $ingest = fakeIngest();
-    Route::get('/users', fn () => str_repeat('a', 2000));
+    Route::get('/users', fn () => '[{"name":"Tim"}]');
 
     $response = get('/users');
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.response_size_kilobytes', 2);
+    $ingest->assertLatestWrite('requests.0.response_size', 16);
+});
+
+it('captures the response size of a streamed file', function () {
+    $ingest = fakeIngest();
+    Route::get('users', fn () => response()->file(fixturePath('empty-array.json')));
+
+    $response = get('/users');
+
+    $ingest->assertLatestWrite('requests.0.response_size', 17);
+});
+
+it('gracefully handles response size for a streamed file that is deleted after sending the response', function () {
+    // Testing this normally is hard. Laravel does not call `send` for
+    // responses so we need to handle is pretty manually in this test.
+    $ingest = fakeIngest();
+    $sensor = app(SensorManager::class);
+    $request = Request::create('http://localhost/users');
+
+    $file = tmpfile();
+    fwrite($file, '[{"name":"Tim"}]');
+    fseek($file, 0);
+
+    ob_start();
+    $response = response()->file(stream_get_meta_data($file)['uri'])->deleteFileAfterSend()->sendContent();
+    ob_end_clean();
+
+    $sensor->request($request, $response);
+    $ingest->write($sensor->flush());
+
+    $ingest->assertLatestWrite('requests.0.response_size', null);
+});
+
+it('gracefully handles response size for streamed responses', function () {
+    $ingest = fakeIngest();
+    Route::get('users', fn () => response()->stream(function () {
+        echo '[]';
+    }));
+
+    get('/users');
+
+    $ingest->assertLatestWrite('requests.0.response_size', null);
+});
+
+it('captures the content-length when present on a streamed response', function () {
+    $ingest = fakeIngest();
+    Route::get('users', fn () => response()->stream(function () {
+        echo '[]';
+    }, headers: ['Content-length' => 2]));
+
+    get('/users');
+
+    $ingest->assertLatestWrite('requests.0.response_size', 2);
+});
+
+it('uses the content-length header as the response size when present on a streamed file response where the file is deleted after sending', function () {
+    $ingest = fakeIngest();
+    $sensor = app(SensorManager::class);
+    $request = Request::create('http://localhost/users');
+
+    $file = tmpfile();
+    fwrite($file, '[{"name":"Tim"}]');
+    fseek($file, 0);
+
+    ob_start();
+    $response = response()->file(stream_get_meta_data($file)['uri'], headers: ['Content-length' => 17])->deleteFileAfterSend()->sendContent();
+    ob_end_clean();
+
+    $sensor->request($request, $response);
+    $ingest->write($sensor->flush());
+
+    $ingest->assertLatestWrite('requests.0.response_size', 17);
 });
 
 it('captures the request size', function () {
     $ingest = fakeIngest();
     Route::get('/users', fn () => []);
 
-    $response = call('GET', '/users', content: str_repeat('b', 3000));
+    $response = call('GET', '/users', content: 'abc');
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.request_size_kilobytes', 3);
+    $ingest->assertLatestWrite('requests.0.request_size', 3);
 });
 
 it('captures the user when authenticated', function () {
@@ -172,15 +232,15 @@ it('uses the default port for the scheme when not port is available to the reque
     $ingest->assertLatestWrite('requests.0.port', '80');
 });
 
-it('captures dotted query parameter keys', function () {
+it('captures query parameters', function () {
     $ingest = fakeIngest();
     Route::get('/users', fn () => []);
 
-    $response = get('/users?key_1=value&key_2[sub_field]=value&key_3[]=value');
+    $response = get('/users?key_1=value&key_2[sub_field]=value&key_3[]=value&key_4[9]=value&key_5[][][foo][9]=bar&flag_value');
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.query', ['key_1', 'key_2.sub_field', 'key_3.0']);
+    $ingest->assertLatestWrite('requests.0.query', 'key_1=value&key_2[sub_field]=value&key_3[]=value&key_4[9]=value&key_5[][][foo][9]=bar&flag_value');
 });
 
 it('captures the route name', function () {
@@ -251,39 +311,81 @@ it('captures subdomain and route domain', function () {
     $ingest->assertLatestWrite('requests.0.route_domain', '{product}.laravel.com');
 });
 
-it('handles requests with no content-length header, such as chunked requests')->todo();
-
-it('handles unknown routes')->todo(); // 'route' field
-
-it('records authenticated user')->todo(); // 'user' field
-
-it('handles streams')->todo(); // Content-Length
-
-it('handles 304 Not Modified responses')->todo(); // Content-Length
-
-it('handles HEAD requests')->todo(); // Content-Length
-
-it('handles responses using Transfer-Encoding headers')->todo(); // Content-Length
-
-it('captures query count')->todo(); // `queries` field + for the request of the execution context.
-
-it('has a deploy_id fallback')->todo();
-
-it('sorts the route methods')->todo(); // ?
-it('sorts the query parameter keys')->todo(); // ?
-
-it('handles streamed response sizes', function () {
+it('foo', function () {
     $ingest = fakeIngest();
+    Route::get('/users', fn () => []);
 
-    Route::get('test-route', function () {
-        $file = new Stream(__FILE__);
+    $response = get('http://tim:secret@localhost/users');
 
-        return response()->file($file);
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.url_user', 'tim');
+    expect($ingest->latestWriteAsString())->not->toContain('secret');
+});
+
+it('records the requests user whilst ommiting the password', function () {
+    $ingest = fakeIngest();
+    Route::domain('{product}.laravel.com')->get('/users/{user}', fn () => ['name' => 'Tim']);
+
+    $response = get('http://forge.laravel.com/users/123');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.host', 'forge.laravel.com');
+    $ingest->assertLatestWrite('requests.0.route_domain', '{product}.laravel.com');
+});
+
+it('captures the duration in microseconds', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', function () {
+        CarbonImmutable::setTestNow(CarbonImmutable::now()->addMicroseconds(5));
+
+        return [];
     });
 
-    get('test-route');
+    $response = get('/users');
 
-    $ingest->assertLatestWrite('requests.0.response_size_kilobytes', null);
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.duration', 5);
+});
+
+it('consistently sorts the route methods', function () {
+    $ingest = fakeIngest();
+    Route::match(['GET', 'POST', 'PATCH'], '/users', fn () => []);
+    Route::match(['PATCH', 'POST', 'GET'], '/users/{user}', fn () => []);
+
+    $response = get('/users');
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.route_methods', ['GET', 'HEAD', 'PATCH', 'POST']);
+
+    $response = get('/users/123');
+    $response->assertOk();
+    $ingest->assertWrittenTimes(2);
+    $ingest->assertLatestWrite('requests.0.route_methods', ['GET', 'HEAD', 'PATCH', 'POST']);
+});
+
+it('handles HEAD requests', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', fn () => []);
+
+    $response = head('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.response_size', 2);
+});
+
+it('handles 204 no content requests', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', fn () => response('foo', 204));
+
+    $response = head('/users');
+
+    $response->assertNoContent();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.response_size', 2);
 });
 
 final class UserController

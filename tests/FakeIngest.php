@@ -37,6 +37,11 @@ final class FakeIngest implements Ingest
         return $this;
     }
 
+    public function latestWriteAsString(): string
+    {
+        return Arr::last($this->writes);
+    }
+
     public function latestWrite(?string $key = null): mixed
     {
         $payload = json_decode(Arr::last($this->writes), true, flags: JSON_THROW_ON_ERROR);
