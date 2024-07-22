@@ -37,7 +37,7 @@ it('can ingest requests', function () {
             'timestamp' => 946684800,
             'deploy_id' => 'v1.2.3',
             'server' => 'web-01',
-            'group' => '875befe7cefc0715a17dc737f9514dda981f79a3c9f174badcae5bd1cc2425fe',
+            'group' => hash('md5', 'GET|HEAD,,/users'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'user' => '',
             'method' => 'GET',
@@ -412,6 +412,29 @@ it('captures aggregate query data', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('requests.0.queries', 2);
     $ingest->assertLatestWrite('requests.0.queries_duration', 10400);
+});
+
+it('creates route group', function () {
+    $ingest = fakeIngest();
+    Route::domain('{product}.laravel.com')->get('/users/{user}', fn () => []);
+
+    $response = get('http://forge.laravel.com/users/123');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.group', hash('md5', 'GET|HEAD,{product}.laravel.com,/users/{user}'));
+});
+
+it('captures the root route path correctly', function () {
+    $ingest = fakeIngest();
+    Route::get('/', fn () => 'Welcome');
+
+    $response = get('/');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.route_path', '/');
+    $ingest->assertLatestWrite('requests.0.path', '/');
 });
 
 final class UserController

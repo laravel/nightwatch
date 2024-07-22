@@ -183,21 +183,44 @@ final class NightwatchServiceProvider extends ServiceProvider
      */
     protected function registerSensors(): void
     {
-        $sensor = new SensorManager($this->app);
         /** @var Dispatcher */
         $events = $this->app->make('events');
+        $sensor = new SensorManager($this->app);
 
         /*
          * Query sensor...
+         *
+         * The trace will include this listener frame. Instead of trying to
+         * slice out the current frame from the trace and having to re-key the
+         * array, internally the query sensor will skip the first frame while
+         * iterating.
          */
-        $events->listen(QueryExecuted::class, function (QueryExecuted $event) use ($sensor) {
-            // This trace will include this listener. Instead of trying to
-            // slice out the current frame, the query sensor will skip the
-            // first frame while iterating.
-            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $events->listen(QueryExecuted::class, fn (QueryExecuted $event) => $sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)));
 
-            $sensor->query($event, $trace);
+        /*
+         * Request sensor and ingest...
+         *
+         * TODO we need to determine what to do if the
+         * `whenRequestLifecycleIsLongerThan` method is not present. We likely
+         * want to hook into the terminating callback system.
+         */
+        $this->callAfterResolving(HttpKernelContract::class, function (HttpKernelContract $kernel, Container $app) use ($sensor) {
+            if (! $kernel instanceof HttpKernel) {
+                return;
+            }
+
+            $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
+                $sensor->request($request, $response);
+
+                /** @var IngestContract */
+                $ingest = $app->make(IngestContract::class);
+
+                $ingest->write($sensor->flush());
+            });
         });
+
+        return;
+
         $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvent(...));
         $events->listen(JobQueued::class, $sensor->queuedJob(...));
 
@@ -216,24 +239,6 @@ final class NightwatchServiceProvider extends ServiceProvider
             $handler->reportable($sensor->exception(...));
         });
 
-        /*
-         * Request sensor and ingest...
-         */
-        $this->callAfterResolving(HttpKernelContract::class, function (HttpKernelContract $kernel, Container $app) use ($sensor) {
-            if (! $kernel instanceof HttpKernel) {
-                // TODO we may want to just use the terminating hook here instead.
-                return;
-            }
-
-            $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
-                $sensor->request($request, $response);
-
-                /** @var IngestContract */
-                $ingest = $app->make(IngestContract::class);
-
-                $ingest->write($sensor->flush());
-            });
-        });
 
         $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Container $app) use ($sensor) {
             if (! $kernel instanceof ConsoleKernel) {

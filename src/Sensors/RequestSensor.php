@@ -42,19 +42,23 @@ final class RequestSensor
         $nowMicrotime = $this->clock->microtime();
         /** @var Route|null */
         $route = $request->route();
-        /** @var string|null */
-        $routeUri = $route?->uri();
         /** @var 'http'|'https' */
         $scheme = $request->getScheme();
         /** @var list<string> */
-        $methods = $route?->methods() ?? [];
-        sort($methods);
+        $routeMethods = $route?->methods() ?? [];
+        sort($routeMethods);
+        $routeDomain = $route?->getDomain() ?? '';
+        $routePath = match ($routeUri = $route?->uri()) {
+            null => '',
+            '/' => '/',
+            default => "/{$routeUri}",
+        };
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
             timestamp: $this->clock->executionStartMicrotime(),
             deploy_id: $this->deployId,
             server: $this->server,
-            group: hash('sha256', implode(',', $methods)),
+            group: hash('md5', implode(',', [implode('|', $routeMethods), $routeDomain, $routePath])),
             trace_id: $this->traceId,
             user: $this->user->id(),
             method: $request->getMethod(),
@@ -68,10 +72,10 @@ final class RequestSensor
             path: $request->getPathInfo(),
             query: $request->server->get('QUERY_STRING'),
             route_name: $route?->getName() ?? '',
-            route_methods: $methods,
-            route_domain: $route?->getDomain() ?? '',
+            route_methods: $routeMethods,
+            route_domain: $routeDomain,
             route_action: $route?->getActionName() ?? '',
-            route_path: $routeUri === null ? '' : "/{$routeUri}",
+            route_path: $routePath,
             ip: $request->ip() ?? '',
             duration: (int) (($nowMicrotime - $this->clock->executionStartMicrotime()) * 1000 * 1000),
             status_code: (string) $response->getStatusCode(),
