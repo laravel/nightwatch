@@ -42,8 +42,12 @@ final class Location
         /** @var int|null $nonInternalLine */
         $nonInternalLine = null;
 
-        foreach ($trace as $frame) {
-            if (! array_key_exists('file', $frame)) {
+        foreach ($trace as $index => $frame) {
+            // The first frame will always be the frame where we capture the
+            // stack which is currently in our service provider. Instead of
+            // using `array_shift` and creating an entirely new array we will
+            // just skip the first frame as we never want to consider it.
+            if ($index === 0 || ! isset($frame['file'])) {
                 continue;
             }
 
@@ -151,7 +155,7 @@ final class Location
     private function fromTrace(array $trace): ?array
     {
         foreach ($trace as $frame) {
-            if (array_key_exists('file', $frame) && ! $this->isVendorFile($frame['file'])) {
+            if (isset($frame['file']) && ! $this->isVendorFile($frame['file'])) {
                 return [
                     $this->normalizeFile($frame['file']),
                     $frame['line'] ?? null,

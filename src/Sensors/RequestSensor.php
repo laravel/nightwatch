@@ -38,9 +38,6 @@ final class RequestSensor
         //
     }
 
-    /**
-     * TODO group
-     */
     public function __invoke(Request $request, Response $response): void
     {
         $nowMicrotime = $this->clock->microtime();

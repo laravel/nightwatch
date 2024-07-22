@@ -187,10 +187,14 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Dispatcher */
         $events = $this->app->make('events');
 
+        /*
+         * Query sensor...
+         */
         $events->listen(QueryExecuted::class, function (QueryExecuted $event) use ($sensor) {
+            // This trace will include this listener. Instead of trying to
+            // slice out the current frame, the query sensor will skip the
+            // first frame while iterating.
             $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-
-            array_shift($trace);
 
             $sensor->query($event, $trace);
         });
@@ -212,8 +216,12 @@ final class NightwatchServiceProvider extends ServiceProvider
             $handler->reportable($sensor->exception(...));
         });
 
+        /*
+         * Request sensor and ingest...
+         */
         $this->callAfterResolving(HttpKernelContract::class, function (HttpKernelContract $kernel, Container $app) use ($sensor) {
             if (! $kernel instanceof HttpKernel) {
+                // TODO we may want to just use the terminating hook here instead.
                 return;
             }
 

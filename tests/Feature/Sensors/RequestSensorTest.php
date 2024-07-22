@@ -2,8 +2,11 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\GenericUser;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\File\Stream;
@@ -38,7 +41,7 @@ it('can ingest requests', function () {
             'timestamp' => 946684800,
             'deploy_id' => 'v1.2.3',
             'server' => 'web-01',
-            'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            'group' => '875befe7cefc0715a17dc737f9514dda981f79a3c9f174badcae5bd1cc2425fe',
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'user' => '',
             'method' => 'GET',
@@ -374,7 +377,7 @@ it('handles HEAD requests', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.response_size', 2);
+    $ingest->assertLatestWrite('requests.0.response_size', 0);
 });
 
 it('handles 204 no content requests', function () {
@@ -385,7 +388,34 @@ it('handles 204 no content requests', function () {
 
     $response->assertNoContent();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.response_size', 2);
+    $ingest->assertLatestWrite('requests.0.response_size', 0);
+});
+
+it('captures aggregate query data', function () {
+    prependListener(QueryExecuted::class, function (QueryExecuted $event) {
+        // Ensure we don't capture migration queries.
+        if (! RefreshDatabaseState::$migrated) {
+            return false;
+        }
+
+        $event->time = 5.2;
+
+        travel(now()->addMilliseconds(5.2));
+    });
+    $ingest = fakeIngest();
+    Route::get('/users', function () {
+        DB::table('users')->get();
+        DB::table('users')->get();
+
+        return [];
+    });
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.queries', 2);
+    $ingest->assertLatestWrite('requests.0.queries_duration', 10400);
 });
 
 final class UserController

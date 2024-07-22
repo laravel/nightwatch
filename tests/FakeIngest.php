@@ -17,16 +17,16 @@ final class FakeIngest implements Ingest
         $this->writes[] = $payload;
     }
 
-    public function assertWrittenTimes(int $times): self
+    public function assertWrittenTimes(int $expected): self
     {
-        expect($this->writes)->toHaveCount($times);
+        expect($actual = count($this->writes))->toBe($expected, "Expected to have written [{$expected}]. Instead, was written [{$expected}].");
 
         return $this;
     }
 
     public function assertLatestWrite(string|array $key, mixed $payload = null): self
     {
-        expect(count($this->writes))->toBeGreaterThan(0);
+        expect(count($this->writes))->toBeGreaterThan(0, 'Expected to have writes. None found.');
 
         [$key, $payload] = is_array($key)
             ? [null, $key]
@@ -47,7 +47,7 @@ final class FakeIngest implements Ingest
         $payload = json_decode(Arr::last($this->writes), true, flags: JSON_THROW_ON_ERROR);
 
         if ($key) {
-            expect(Arr::has($payload, $key))->toBeTrue();
+            expect(Arr::has($payload, $key))->toBeTrue("The payload does not contain the key [{$key}].");
 
             return Arr::get($payload, $key, null);
         } else {

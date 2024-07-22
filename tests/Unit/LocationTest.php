@@ -212,10 +212,14 @@ it('ignores internal frames when there is no non-vendor frames', function () {
     expect($file)->toBe(['vendor/foo/bar/Baz.php', 9]);
 });
 
-it('uses first non-vendor frames', function () {
+it('uses first non-internal vendor frames', function () {
     $location = app(Location::class);
 
     $file = $location->forQueryTrace([
+        [
+            'file' => base_path('vendor/laravel/nightwatch/src/NightwatchServiceProvider.php'),
+            'line' => 9,
+        ],
         [
             'file' => base_path('vendor/foo/bar/Baz1.php'),
             'line' => 9,
