@@ -4,11 +4,8 @@ use Carbon\CarbonImmutable;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Support\Responsable;
-use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Http\Events\RequestHandled;
-use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\LifecyclePhase;
@@ -20,7 +17,6 @@ use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;
 use function Pest\Laravel\get;
 use function Pest\Laravel\head;
-use function Pest\Laravel\travel;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
@@ -431,7 +427,8 @@ it('captures lifecycle durations', function () {
     Route::get('/users', function () {
         travelTo(now()->addMicroseconds(5)); // main
 
-        return new class implements Responsable {
+        return new class implements Responsable
+        {
             public function toResponse($request)
             {
                 travelTo(now()->addMicroseconds(8)); // main_render
@@ -447,18 +444,18 @@ it('captures lifecycle durations', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.timestamp',                     946688523456789);
+    $ingest->assertLatestWrite('requests.0.timestamp', 946688523456789);
     // $ingest->assertLatestWrite('requests.0.bootstrap',                  946688523456789);
-    $ingest->assertLatestWrite('requests.0.global_before_middleware',      946688523456789 + 1);
-    $ingest->assertLatestWrite('requests.0.route_before_middleware',       946688523456789 + 1 + 2);
-    $ingest->assertLatestWrite('requests.0.main',                          946688523456789 + 1 + 2 + 3);
-    $ingest->assertLatestWrite('requests.0.main_render',                   946688523456789 + 1 + 2 + 3 + 5);
-    $ingest->assertLatestWrite('requests.0.route_after_middleware',        946688523456789 + 1 + 2 + 3 + 5 + 8);
+    $ingest->assertLatestWrite('requests.0.global_before_middleware', 946688523456789 + 1);
+    $ingest->assertLatestWrite('requests.0.route_before_middleware', 946688523456789 + 1 + 2);
+    $ingest->assertLatestWrite('requests.0.main', 946688523456789 + 1 + 2 + 3);
+    $ingest->assertLatestWrite('requests.0.main_render', 946688523456789 + 1 + 2 + 3 + 5);
+    $ingest->assertLatestWrite('requests.0.route_after_middleware', 946688523456789 + 1 + 2 + 3 + 5 + 8);
     $ingest->assertLatestWrite('requests.0.route_after_middleware_render', 946688523456789 + 1 + 2 + 3 + 5 + 8 + 13);
-    $ingest->assertLatestWrite('requests.0.global_after_middleware',       946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21);
-    $ingest->assertLatestWrite('requests.0.response_transmission',         946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34);
-    $ingest->assertLatestWrite('requests.0.terminate',                     946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55);
-    $ingest->assertLatestWrite('requests.0.duration',                                        1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55);
+    $ingest->assertLatestWrite('requests.0.global_after_middleware', 946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21);
+    $ingest->assertLatestWrite('requests.0.response_transmission', 946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34);
+    $ingest->assertLatestWrite('requests.0.terminate', 946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55);
+    $ingest->assertLatestWrite('requests.0.duration', 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55);
 });
 
 final class UserController
@@ -469,7 +466,7 @@ final class UserController
     }
 }
 
-class TravelMicrosecondsMiddleware
+final class TravelMicrosecondsMiddleware
 {
     public function handle(Request $request, Closure $next, int $beforeMicroseconds, int $afterMicroseconds): mixed
     {
@@ -483,13 +480,14 @@ class TravelMicrosecondsMiddleware
     }
 }
 
-class ChangeRouteResponse
+final class ChangeRouteResponse
 {
     public function handle(Request $request, Closure $next, int $middlewareDuration, int $responseDuration): mixed
     {
         $next($request);
 
-        return new class($middlewareDuration, $responseDuration) extends Response {
+        return new class($middlewareDuration, $responseDuration) extends Response
+        {
             public function __construct(private $middlewareDuration, private $responseDuration)
             {
                 parent::__construct();

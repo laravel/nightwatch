@@ -1,16 +1,12 @@
 <?php
 
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\get;
-use function Pest\Laravel\post;
-use function Pest\Laravel\travel;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () use (&$ignore) {
@@ -44,6 +40,7 @@ it('can ingest queries', function () {
     $line = null;
     Route::get('/users', function () use (&$line) {
         $line = __LINE__ + 1;
+
         return DB::table('users')->get();
     });
 

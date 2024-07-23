@@ -98,7 +98,8 @@ function prependListener(string $event, callable $listener): void
     collect([$listener, ...$listeners])->each(fn ($listener) => Event::listen($event, $listener));
 }
 
-function ignoreMigrationQueries() {
+function ignoreMigrationQueries()
+{
     prependListener(QueryExecuted::class, function () {
         if (! RefreshDatabaseState::$migrated) {
             return false;

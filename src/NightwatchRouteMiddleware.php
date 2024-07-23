@@ -4,9 +4,8 @@ namespace Laravel\Nightwatch;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
-class NightwatchRouteMiddleware
+final class NightwatchRouteMiddleware
 {
     public function __construct(private SensorManager $sensor)
     {

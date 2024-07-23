@@ -9,7 +9,7 @@ use Laravel\Nightwatch\Contracts\Clock as ClockContract;
  */
 final class Clock implements ClockContract
 {
-    private int|null $executionStartInMicroseconds = null;
+    private ?int $executionStartInMicroseconds = null;
 
     public function __construct(private int $executionStartMicrotime)
     {

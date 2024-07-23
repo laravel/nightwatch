@@ -277,7 +277,6 @@ final class NightwatchServiceProvider extends ServiceProvider
             $handler->reportable($sensor->exception(...));
         });
 
-
         $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Container $app) use ($sensor) {
             if (! $kernel instanceof ConsoleKernel) {
                 return;
