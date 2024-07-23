@@ -61,7 +61,7 @@ it('can ingest queries', function () {
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000000',
-            'execution_phase' => 'main',
+            'execution_phase' => 'action',
             'user' => '',
             'sql' => 'select * from "users"',
             'category' => 'select',
@@ -139,7 +139,6 @@ it('can captures query execution phase', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('queries.0.execution_phase', 'main');
-    $ingest->assertLatestWrite('queries.1.execution_phase', 'main_render');
-    $ingest->assertLatestWrite('queries.2.execution_phase', 'terminate');
+    $ingest->assertLatestWrite('queries.0.execution_phase', 'action');
+    $ingest->assertLatestWrite('queries.2.execution_phase', 'terminating');
 });

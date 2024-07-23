@@ -76,7 +76,7 @@ final class SensorManager
 
     public function start(ExecutionPhase $phase): void
     {
-        $this->executionPhases[$phase->value] = $this->clock()->nowInMicroseconds();
+        $this->executionPhases[$phase->value] = $this->clock()->nowInMicroseconds() - $this->clock()->executionStartInMicroseconds();
 
         $this->currentPhase = $phase;
     }

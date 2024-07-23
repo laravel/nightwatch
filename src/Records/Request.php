@@ -61,15 +61,12 @@ final class Request
         public int $cache_misses,
         public int $hydrated_models,
         public int $peak_memory_usage_kilobytes,
-        public float $global_before_middleware,
-        public float $route_before_middleware,
-        public float $main,
-        public float $main_render,
-        public float $route_after_middleware,
-        public float $route_after_middleware_render,
-        public float $global_after_middleware,
-        public float $response_transmission,
-        public float $terminate,
+        public int $before_middleware,
+        public int $action,
+        public int $render,
+        public int $after_middleware,
+        public int $sending,
+        public int $terminating,
     ) {
         $this->path = Text::limit($this->path);
     }

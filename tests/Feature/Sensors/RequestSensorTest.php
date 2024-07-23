@@ -31,7 +31,9 @@ beforeEach(function () {
 it('can ingest requests', function () {
     $ingest = fakeIngest();
     Route::get('/users', fn () => []);
-    app(SensorManager::class)->startPhase(ExecutionPhase::GlobalBeforeMiddleware);
+    /** @var SensorManager */
+    $sensor = app(SensorManager::class);
+    $sensor->start(ExecutionPhase::BeforeMiddleware);
 
     $response = get('/users');
 
@@ -84,15 +86,12 @@ it('can ingest requests', function () {
             'cache_misses' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage_kilobytes' => 1234,
-            'global_before_middleware' => 946688523456789,
-            'route_before_middleware' => 946688523456789,
-            'main' => 946688523456789,
-            'main_render' => 946688523456789,
-            'route_after_middleware' => 946688523456789,
-            'route_after_middleware_render' => 946688523456789,
-            'global_after_middleware' => 946688523456789,
-            'response_transmission' => 946688523456789,
-            'terminate' => 946688523456789,
+            'before_middleware' => 0,
+            'action' => 0,
+            'render' => 0,
+            'after_middleware' => 0,
+            'sending' => 0,
+            'terminating' => 0,
         ],
     ]);
 });
@@ -121,6 +120,7 @@ it('gracefully handles response size for a streamed file that is deleted after s
     // Testing this normally is hard. Laravel does not call `send` for
     // responses so we need to handle is pretty manually in this test.
     $ingest = fakeIngest();
+    /** @var SensorManager */
     $sensor = app(SensorManager::class);
     $request = Request::create('http://localhost/users');
 
@@ -162,6 +162,7 @@ it('captures the content-length when present on a streamed response', function (
 
 it('uses the content-length header as the response size when present on a streamed file response where the file is deleted after sending', function () {
     $ingest = fakeIngest();
+    /** @var SensorManager */
     $sensor = app(SensorManager::class);
     $request = Request::create('http://localhost/users');
 
@@ -204,6 +205,7 @@ it('captures the user when authenticated', function () {
 
 it('uses the default port for the scheme when not port is available to the request', function () {
     $ingest = fakeIngest();
+    /** @var SensorManager */
     $sensor = app(SensorManager::class);
 
     $request = (new class extends Request
@@ -416,8 +418,9 @@ it('captures the root route path correctly', function () {
     $ingest->assertLatestWrite('requests.0.path', '/');
 });
 
-it('captures execution phase durations', function () {
+it('captures execution phase offsets', function () {
     $ingest = fakeIngest();
+    $sensor = app(SensorManager::class);
     app(Kernel::class)->setGlobalMiddleware([
         ...app(Kernel::class)->getGlobalMiddleware(),
         TravelMicrosecondsMiddleware::class.':2,34', // global middleware before / after
@@ -445,24 +448,22 @@ it('captures execution phase durations', function () {
     })->middleware([ChangeRouteResponse::class.':21,55', TravelMicrosecondsMiddleware::class.':3,13']); // route middleware before / after
 
     travelTo(now()->addMicroseconds(1)); // bootstrap
-    app(SensorManager::class)->startPhase(ExecutionPhase::GlobalBeforeMiddleware);
+    $sensor->start(ExecutionPhase::BeforeMiddleware); // handled in the service provider "booted" hook, which fired before we could intercept and control time.
     $response = get('/users');
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('requests.0.timestamp', 946688523456789);
-    // $ingest->assertLatestWrite('requests.0.bootstrap',                  946688523456789);
-    $ingest->assertLatestWrite('requests.0.global_before_middleware', 946688523456789 + 1);
-    $ingest->assertLatestWrite('requests.0.route_before_middleware', 946688523456789 + 1 + 2);
-    $ingest->assertLatestWrite('requests.0.main', 946688523456789 + 1 + 2 + 3);
-    $ingest->assertLatestWrite('requests.0.main_render', 946688523456789 + 1 + 2 + 3 + 5);
-    $ingest->assertLatestWrite('requests.0.route_after_middleware', 946688523456789 + 1 + 2 + 3 + 5 + 8);
-    $ingest->assertLatestWrite('requests.0.route_after_middleware_render', 946688523456789 + 1 + 2 + 3 + 5 + 8 + 13);
-    $ingest->assertLatestWrite('requests.0.global_after_middleware', 946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21);
-    $ingest->assertLatestWrite('requests.0.response_transmission', 946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34);
-    $ingest->assertLatestWrite('requests.0.terminate', 946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55);
+    // $ingest->assertLatestWrite('requests.0.bootstrap', 0);
+    $ingest->assertLatestWrite('requests.0.before_middleware',  1);
+    $ingest->assertLatestWrite('requests.0.action', 1 + 2 + 3);
+    $ingest->assertLatestWrite('requests.0.render', 1 + 2 + 3 + 5);
+    $ingest->assertLatestWrite('requests.0.after_middleware', 1 + 2 + 3 + 5 + 8);
+    $ingest->assertLatestWrite('requests.0.sending', 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34);
+    $ingest->assertLatestWrite('requests.0.terminating', 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55);
     $ingest->assertLatestWrite('requests.0.duration', 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55 + 89);
 });
+
 
 final class UserController
 {

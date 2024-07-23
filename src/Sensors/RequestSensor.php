@@ -99,15 +99,12 @@ final class RequestSensor
             cache_misses: $this->executionParent->cache_misses,
             hydrated_models: $this->executionParent->hydrated_models,
             peak_memory_usage_kilobytes: $this->peakMemory->kilobytes(),
-            global_before_middleware: $this->executionPhases[ExecutionPhase::GlobalBeforeMiddleware->value] ?? 0,
-            route_before_middleware: $this->executionPhases[ExecutionPhase::RouteBeforeMiddleware->value] ?? 0,
-            main: $this->executionPhases[ExecutionPhase::Main->value] ?? 0,
-            main_render: $this->executionPhases[ExecutionPhase::MainRender->value] ?? 0,
-            route_after_middleware: $this->executionPhases[ExecutionPhase::RouteAfterMiddleware->value] ?? 0,
-            route_after_middleware_render: $this->executionPhases[ExecutionPhase::RouteAfterMiddlewareRender->value] ?? 0,
-            global_after_middleware: $this->executionPhases[ExecutionPhase::GlobalAfterMiddleware->value] ?? 0,
-            response_transmission: $this->executionPhases[ExecutionPhase::ResponseTransmission->value] ?? 0,
-            terminate: $this->executionPhases[ExecutionPhase::Terminate->value] ?? 0,
+            before_middleware: $this->executionPhases[ExecutionPhase::BeforeMiddleware->value] ?? 0,
+            action: $this->executionPhases[ExecutionPhase::Action->value] ?? 0,
+            render: $this->executionPhases[ExecutionPhase::Render->value] ?? 0,
+            after_middleware: $this->executionPhases[ExecutionPhase::AfterMiddleware->value] ?? 0,
+            sending: $this->executionPhases[ExecutionPhase::Sending->value] ?? 0,
+            terminating: $this->executionPhases[ExecutionPhase::Terminating->value] ?? 0,
         ));
     }
 
