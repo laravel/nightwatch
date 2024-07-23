@@ -6,6 +6,7 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\LifecyclePhase;
@@ -30,6 +31,7 @@ beforeEach(function () {
 it('can ingest requests', function () {
     $ingest = fakeIngest();
     Route::get('/users', fn () => []);
+    app(SensorManager::class)->startPhase(LifecyclePhase::GlobalBeforeMiddleware);
 
     $response = get('/users');
 
@@ -82,15 +84,15 @@ it('can ingest requests', function () {
             'cache_misses' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage_kilobytes' => 1234,
-            'global_before_middleware' => 0,
-            'route_before_middleware' => 0,
-            'main' => 0,
-            'main_render' => 0,
-            'route_after_middleware' => 0,
-            'route_after_middleware_render' => 0,
-            'global_after_middleware' => 0,
-            'response_transmission' => 0,
-            'terminate' => 0,
+            'global_before_middleware' => 946688523456789,
+            'route_before_middleware' => 946688523456789,
+            'main' => 946688523456789,
+            'main_render' => 946688523456789,
+            'route_after_middleware' => 946688523456789,
+            'route_after_middleware_render' => 946688523456789,
+            'global_after_middleware' => 946688523456789,
+            'response_transmission' => 946688523456789,
+            'terminate' => 946688523456789,
         ],
     ]);
 });
@@ -427,6 +429,10 @@ it('captures lifecycle durations', function () {
     Route::get('/users', function () {
         travelTo(now()->addMicroseconds(5)); // main
 
+        App::terminating(function () {
+            travelTo(now()->addMicroseconds(89)); // main
+        });
+
         return new class implements Responsable
         {
             public function toResponse($request)
@@ -455,7 +461,7 @@ it('captures lifecycle durations', function () {
     $ingest->assertLatestWrite('requests.0.global_after_middleware', 946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21);
     $ingest->assertLatestWrite('requests.0.response_transmission', 946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34);
     $ingest->assertLatestWrite('requests.0.terminate', 946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55);
-    $ingest->assertLatestWrite('requests.0.duration', 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55);
+    $ingest->assertLatestWrite('requests.0.duration', 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55 + 89);
 });
 
 final class UserController
@@ -504,9 +510,7 @@ final class ChangeRouteResponse
             {
                 travelTo(now()->addMicroseconds($this->responseDuration)); // route_after_middleware_render
 
-                ob_start();
-                parent::send(false);
-                ob_end_clean();
+                // parent::send(false);
 
                 return $this;
             }
