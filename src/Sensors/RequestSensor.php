@@ -20,6 +20,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class RequestSensor
 {
+    /**
+     * @param  array<value-of<ExecutionPhase>, int>  $executionPhases
+     */
     public function __construct(
         private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,

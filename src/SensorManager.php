@@ -63,6 +63,9 @@ final class SensorManager
 
     private ?UserProvider $userProvider;
 
+    /**
+     * @var array<value-of<ExecutionPhase>, int>
+     */
     private array $executionPhases = [];
 
     private ExecutionPhase $currentPhase;
