@@ -63,25 +63,25 @@ final class SensorManager
 
     private ?UserProvider $userProvider;
 
-    private array $lifecycle = [];
+    private array $executionPhases = [];
 
-    private LifecyclePhase $currentPhase;
+    private ExecutionPhase $currentPhase;
 
     public function __construct(private Application $app)
     {
         $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
-        $this->currentPhase = LifecyclePhase::Bootstrap;
+        $this->currentPhase = ExecutionPhase::Bootstrap;
     }
 
-    public function startPhase(LifecyclePhase $phase): void
+    public function startPhase(ExecutionPhase $phase): void
     {
-        $this->lifecycle[$phase->value] = $this->clock()->nowInMicroseconds();
+        $this->executionPhases[$phase->value] = $this->clock()->nowInMicroseconds();
 
         $this->currentPhase = $phase;
     }
 
-    public function lifecyclePhase(): LifecyclePhase
+    public function executionPhase(): ExecutionPhase
     {
         return $this->currentPhase;
     }
@@ -97,7 +97,7 @@ final class SensorManager
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
-            lifecycle: $this->lifecycle,
+            executionPhases: $this->executionPhases,
         );
 
         $sensor($request, $response);
@@ -263,6 +263,6 @@ final class SensorManager
 
         $this->clock = null;
         $this->traceId = null;
-        $this->lifecycle = [];
+        $this->executionPhases = [];
     }
 }

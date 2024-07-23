@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
-use Laravel\Nightwatch\LifecyclePhase;
+use Laravel\Nightwatch\ExecutionPhase;
 use Laravel\Nightwatch\Types\MediumText;
 use Laravel\Nightwatch\Types\TinyText;
 
@@ -21,7 +21,7 @@ final class Query
         public string $trace_id,
         public string $execution_context,
         public string $execution_id,
-        public LifecyclePhase $execution_phase,
+        public ExecutionPhase $execution_phase,
         public string $user,
         // --- //
         public string $sql,

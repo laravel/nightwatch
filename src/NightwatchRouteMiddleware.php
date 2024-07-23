@@ -14,17 +14,17 @@ final class NightwatchRouteMiddleware
 
     public function __invoke(Request $request, Closure $next): mixed
     {
-        $this->sensor->startPhase(LifecyclePhase::Main);
+        $this->sensor->startPhase(ExecutionPhase::Main);
 
         $response = $next($request);
 
-        $this->sensor->startPhase(LifecyclePhase::RouteAfterMiddleware);
+        $this->sensor->startPhase(ExecutionPhase::RouteAfterMiddleware);
 
         return $response;
     }
 
     public function terminate(): void
     {
-        $this->sensor->startPhase(LifecyclePhase::Terminate);
+        $this->sensor->startPhase(ExecutionPhase::Terminate);
     }
 }

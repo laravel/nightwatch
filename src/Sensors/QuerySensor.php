@@ -5,7 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Database\Events\QueryExecuted;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
-use Laravel\Nightwatch\LifecyclePhase;
+use Laravel\Nightwatch\ExecutionPhase;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Query;
@@ -34,7 +34,7 @@ final class QuerySensor
      *
      * @param  list<array{ file?: string, line?: int }>  $trace
      */
-    public function __invoke(QueryExecuted $event, array $trace, LifecyclePhase $executionPhase): void
+    public function __invoke(QueryExecuted $event, array $trace, ExecutionPhase $executionPhase): void
     {
         $nowInMicroseconds = $this->clock->nowInMicroseconds();
         $durationInMicroseconds = intval($event->time * 1000);

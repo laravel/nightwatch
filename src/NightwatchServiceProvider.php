@@ -193,37 +193,29 @@ final class NightwatchServiceProvider extends ServiceProvider
         $sensor = $this->app->instance(SensorManager::class, new SensorManager($this->app));
 
         /*
-         * Lifecycle: Global before middleware.
+         * Execution phases...
          */
-        $this->app->booted(fn () => $sensor->startPhase(LifecyclePhase::GlobalBeforeMiddleware));
 
-        /*
-         * Lifecycle: Route before middleware.
-         */
+        $this->app->booted(fn () => $sensor->startPhase(ExecutionPhase::GlobalBeforeMiddleware));
+
         $events->listen(RouteMatched::class, function (RouteMatched $event) use ($sensor) {
             $event->route->action['middleware'][] = NightwatchRouteMiddleware::class;
 
-            $sensor->startPhase(LifecyclePhase::RouteBeforeMiddleware);
+            $sensor->startPhase(ExecutionPhase::RouteBeforeMiddleware);
         });
 
-        /**
-         * Lifecycle: transmitting_response
-         */
-        $events->listen(RequestHandled::class, fn () => $sensor->startPhase(LifecyclePhase::ResponseTransmission));
-
-        /*
-         * Lifecycle: Main render.
-         */
-        $events->listen(PreparingResponse::class, fn () => match ($sensor->lifecyclePhase()) {
-            LifecyclePhase::Main => $sensor->startPhase(LifecyclePhase::MainRender),
-            LifecyclePhase::RouteAfterMiddleware => $sensor->startPhase(LifecyclePhase::RouteAfterMiddlewareRender),
+        $events->listen(PreparingResponse::class, fn () => match ($sensor->executionPhase()) {
+            ExecutionPhase::Main => $sensor->startPhase(ExecutionPhase::MainRender),
+            ExecutionPhase::RouteAfterMiddleware => $sensor->startPhase(ExecutionPhase::RouteAfterMiddlewareRender),
             default => null,
         });
 
-        $events->listen(ResponsePrepared::class, fn () => match ($sensor->lifecyclePhase()) {
-            LifecyclePhase::RouteAfterMiddlewareRender => $sensor->startPhase(LifecyclePhase::GlobalAfterMiddleware),
+        $events->listen(ResponsePrepared::class, fn () => match ($sensor->executionPhase()) {
+            ExecutionPhase::RouteAfterMiddlewareRender => $sensor->startPhase(ExecutionPhase::GlobalAfterMiddleware),
             default => null,
         });
+
+        $events->listen(RequestHandled::class, fn () => $sensor->startPhase(ExecutionPhase::ResponseTransmission));
 
         /*
          * Sensor: Query.

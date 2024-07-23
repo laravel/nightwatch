@@ -7,7 +7,7 @@ use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\LifecyclePhase;
+use Laravel\Nightwatch\ExecutionPhase;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\UserProvider;
@@ -20,9 +20,6 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class RequestSensor
 {
-    /**
-     * @param  array<value-of<LifecyclePhase>, float>  $lifecycle
-     */
     public function __construct(
         private RecordsBuffer $recordsBuffer,
         private ExecutionParent $executionParent,
@@ -32,7 +29,7 @@ final class RequestSensor
         private string $traceId,
         private string $deployId,
         private string $server,
-        private array $lifecycle,
+        private array $executionPhases,
     ) {
         //
     }
@@ -102,15 +99,15 @@ final class RequestSensor
             cache_misses: $this->executionParent->cache_misses,
             hydrated_models: $this->executionParent->hydrated_models,
             peak_memory_usage_kilobytes: $this->peakMemory->kilobytes(),
-            global_before_middleware: $this->lifecycle[LifecyclePhase::GlobalBeforeMiddleware->value] ?? 0,
-            route_before_middleware: $this->lifecycle[LifecyclePhase::RouteBeforeMiddleware->value] ?? 0,
-            main: $this->lifecycle[LifecyclePhase::Main->value] ?? 0,
-            main_render: $this->lifecycle[LifecyclePhase::MainRender->value] ?? 0,
-            route_after_middleware: $this->lifecycle[LifecyclePhase::RouteAfterMiddleware->value] ?? 0,
-            route_after_middleware_render: $this->lifecycle[LifecyclePhase::RouteAfterMiddlewareRender->value] ?? 0,
-            global_after_middleware: $this->lifecycle[LifecyclePhase::GlobalAfterMiddleware->value] ?? 0,
-            response_transmission: $this->lifecycle[LifecyclePhase::ResponseTransmission->value] ?? 0,
-            terminate: $this->lifecycle[LifecyclePhase::Terminate->value] ?? 0,
+            global_before_middleware: $this->executionPhases[ExecutionPhase::GlobalBeforeMiddleware->value] ?? 0,
+            route_before_middleware: $this->executionPhases[ExecutionPhase::RouteBeforeMiddleware->value] ?? 0,
+            main: $this->executionPhases[ExecutionPhase::Main->value] ?? 0,
+            main_render: $this->executionPhases[ExecutionPhase::MainRender->value] ?? 0,
+            route_after_middleware: $this->executionPhases[ExecutionPhase::RouteAfterMiddleware->value] ?? 0,
+            route_after_middleware_render: $this->executionPhases[ExecutionPhase::RouteAfterMiddlewareRender->value] ?? 0,
+            global_after_middleware: $this->executionPhases[ExecutionPhase::GlobalAfterMiddleware->value] ?? 0,
+            response_transmission: $this->executionPhases[ExecutionPhase::ResponseTransmission->value] ?? 0,
+            terminate: $this->executionPhases[ExecutionPhase::Terminate->value] ?? 0,
         ));
     }
 

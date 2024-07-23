@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\LifecyclePhase;
+use Laravel\Nightwatch\ExecutionPhase;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -31,7 +31,7 @@ beforeEach(function () {
 it('can ingest requests', function () {
     $ingest = fakeIngest();
     Route::get('/users', fn () => []);
-    app(SensorManager::class)->startPhase(LifecyclePhase::GlobalBeforeMiddleware);
+    app(SensorManager::class)->startPhase(ExecutionPhase::GlobalBeforeMiddleware);
 
     $response = get('/users');
 
@@ -416,7 +416,7 @@ it('captures the root route path correctly', function () {
     $ingest->assertLatestWrite('requests.0.path', '/');
 });
 
-it('captures lifecycle durations', function () {
+it('captures execution phase durations', function () {
     $ingest = fakeIngest();
     app(Kernel::class)->setGlobalMiddleware([
         ...app(Kernel::class)->getGlobalMiddleware(),
@@ -445,7 +445,7 @@ it('captures lifecycle durations', function () {
     })->middleware([ChangeRouteResponse::class.':21,55', TravelMicrosecondsMiddleware::class.':3,13']); // route middleware before / after
 
     travelTo(now()->addMicroseconds(1)); // bootstrap
-    app(SensorManager::class)->startPhase(LifecyclePhase::GlobalBeforeMiddleware);
+    app(SensorManager::class)->startPhase(ExecutionPhase::GlobalBeforeMiddleware);
     $response = get('/users');
 
     $response->assertOk();
