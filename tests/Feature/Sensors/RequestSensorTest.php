@@ -455,7 +455,7 @@ it('captures execution phase offsets', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('requests.0.timestamp', 946688523456789);
     // $ingest->assertLatestWrite('requests.0.bootstrap', 0);
-    $ingest->assertLatestWrite('requests.0.before_middleware',  1);
+    $ingest->assertLatestWrite('requests.0.before_middleware', 1);
     $ingest->assertLatestWrite('requests.0.action', 1 + 2 + 3);
     $ingest->assertLatestWrite('requests.0.render', 1 + 2 + 3 + 5);
     $ingest->assertLatestWrite('requests.0.after_middleware', 1 + 2 + 3 + 5 + 8);
@@ -463,7 +463,6 @@ it('captures execution phase offsets', function () {
     $ingest->assertLatestWrite('requests.0.terminating', 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55);
     $ingest->assertLatestWrite('requests.0.duration', 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55 + 89);
 });
-
 
 final class UserController
 {

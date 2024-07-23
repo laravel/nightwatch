@@ -8,8 +8,6 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
-use Laravel\Nightwatch\ExecutionPhase;
-use Laravel\Nightwatch\SensorManager;
 use function Pest\Laravel\get;
 use function Pest\Laravel\travelTo;
 
