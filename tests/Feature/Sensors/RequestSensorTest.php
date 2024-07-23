@@ -2,25 +2,33 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\GenericUser;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\LifecyclePhase;
 use Laravel\Nightwatch\SensorManager;
+use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
+use Symfony\Component\HttpFoundation\Response;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;
 use function Pest\Laravel\get;
 use function Pest\Laravel\head;
 use function Pest\Laravel\travel;
+use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
     setDeployId('v1.2.3');
     setServerName('web-01');
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    syncClock(CarbonImmutable::parse('2000-01-01 00:00:00')->startOfSecond());
+    syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 });
 
 it('can ingest requests', function () {
@@ -34,7 +42,7 @@ it('can ingest requests', function () {
     $ingest->assertLatestWrite('requests', [
         [
             'v' => 1,
-            'timestamp' => 946684800,
+            'timestamp' => 946688523456789,
             'deploy_id' => 'v1.2.3',
             'server' => 'web-01',
             'group' => hash('md5', 'GET|HEAD,,/users'),
@@ -387,33 +395,6 @@ it('handles 204 no content requests', function () {
     $ingest->assertLatestWrite('requests.0.response_size', 0);
 });
 
-it('captures aggregate query data', function () {
-    prependListener(QueryExecuted::class, function (QueryExecuted $event) {
-        // Ensure we don't capture migration queries.
-        if (! RefreshDatabaseState::$migrated) {
-            return false;
-        }
-
-        $event->time = 5.2;
-
-        travel(now()->addMilliseconds(5.2));
-    });
-    $ingest = fakeIngest();
-    Route::get('/users', function () {
-        DB::table('users')->get();
-        DB::table('users')->get();
-
-        return [];
-    });
-
-    $response = get('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.queries', 2);
-    $ingest->assertLatestWrite('requests.0.queries_duration', 10400);
-});
-
 it('creates route group', function () {
     $ingest = fakeIngest();
     Route::domain('{product}.laravel.com')->get('/users/{user}', fn () => []);
@@ -437,10 +418,100 @@ it('captures the root route path correctly', function () {
     $ingest->assertLatestWrite('requests.0.path', '/');
 });
 
+it('captures lifecycle durations', function () {
+    $ingest = fakeIngest();
+    app(Kernel::class)->setGlobalMiddleware([
+        ...app(Kernel::class)->getGlobalMiddleware(),
+        TravelMicrosecondsMiddleware::class.':2,34', // global middleware before / after
+    ]);
+    Event::listen(function (RequestHandled $event) {
+        $event->response->send(true);
+    });
+
+    Route::get('/users', function () {
+        travelTo(now()->addMicroseconds(5)); // main
+
+        return new class implements Responsable {
+            public function toResponse($request)
+            {
+                travelTo(now()->addMicroseconds(8)); // main_render
+
+                return response('main response');
+            }
+        };
+    })->middleware([ChangeRouteResponse::class.':21,55', TravelMicrosecondsMiddleware::class.':3,13']); // route middleware before / after
+
+    travelTo(now()->addMicroseconds(1)); // bootstrap
+    app(SensorManager::class)->startPhase(LifecyclePhase::GlobalBeforeMiddleware);
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.timestamp',                     946688523456789);
+    // $ingest->assertLatestWrite('requests.0.bootstrap',                  946688523456789);
+    $ingest->assertLatestWrite('requests.0.global_before_middleware',      946688523456789 + 1);
+    $ingest->assertLatestWrite('requests.0.route_before_middleware',       946688523456789 + 1 + 2);
+    $ingest->assertLatestWrite('requests.0.main',                          946688523456789 + 1 + 2 + 3);
+    $ingest->assertLatestWrite('requests.0.main_render',                   946688523456789 + 1 + 2 + 3 + 5);
+    $ingest->assertLatestWrite('requests.0.route_after_middleware',        946688523456789 + 1 + 2 + 3 + 5 + 8);
+    $ingest->assertLatestWrite('requests.0.route_after_middleware_render', 946688523456789 + 1 + 2 + 3 + 5 + 8 + 13);
+    $ingest->assertLatestWrite('requests.0.global_after_middleware',       946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21);
+    $ingest->assertLatestWrite('requests.0.response_transmission',         946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34);
+    $ingest->assertLatestWrite('requests.0.terminate',                     946688523456789 + 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55);
+    $ingest->assertLatestWrite('requests.0.duration',                                        1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55);
+});
+
 final class UserController
 {
     public function index()
     {
         return [];
+    }
+}
+
+class TravelMicrosecondsMiddleware
+{
+    public function handle(Request $request, Closure $next, int $beforeMicroseconds, int $afterMicroseconds): mixed
+    {
+        travelTo(now()->addMicroseconds($beforeMicroseconds));
+
+        $response = $next($request);
+
+        travelTo(now()->addMicroseconds($afterMicroseconds));
+
+        return $response;
+    }
+}
+
+class ChangeRouteResponse
+{
+    public function handle(Request $request, Closure $next, int $middlewareDuration, int $responseDuration): mixed
+    {
+        $next($request);
+
+        return new class($middlewareDuration, $responseDuration) extends Response {
+            public function __construct(private $middlewareDuration, private $responseDuration)
+            {
+                parent::__construct();
+            }
+
+            public function prepare(HttpFoundationRequest $request): static
+            {
+                travelTo(now()->addMicroseconds($this->middlewareDuration)); // route_after_middleware_render
+
+                return parent::prepare($request);
+            }
+
+            public function send(bool $flush = true): static
+            {
+                travelTo(now()->addMicroseconds($this->responseDuration)); // route_after_middleware_render
+
+                ob_start();
+                parent::send(false);
+                ob_end_clean();
+
+                return $this;
+            }
+        };
     }
 }

@@ -39,7 +39,7 @@ final class RequestSensor
 
     public function __invoke(Request $request, Response $response): void
     {
-        $nowMicrotime = $this->clock->microtime();
+        $nowInMicroseconds = $this->clock->nowInMicroseconds();
         /** @var Route|null */
         $route = $request->route();
         /** @var 'http'|'https' */
@@ -55,7 +55,7 @@ final class RequestSensor
         };
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
-            timestamp: $this->clock->executionStartMicrotime(),
+            timestamp: $this->clock->executionStartInMicroseconds(),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('md5', implode(',', [implode('|', $routeMethods), $routeDomain, $routePath])),
@@ -77,7 +77,7 @@ final class RequestSensor
             route_action: $route?->getActionName() ?? '',
             route_path: $routePath,
             ip: $request->ip() ?? '',
-            duration: (int) (($nowMicrotime - $this->clock->executionStartMicrotime()) * 1000 * 1000),
+            duration: $nowInMicroseconds - $this->clock->executionStartInMicroseconds(),
             status_code: (string) $response->getStatusCode(),
             request_size: strlen($request->getContent()),
             response_size: $this->parseResponseSizeKilobytes($response),

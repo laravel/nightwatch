@@ -32,7 +32,7 @@ final class FakeIngest implements Ingest
             ? [null, $key]
             : [$key, $payload];
 
-        expect($this->latestWrite($key))->toBe($payload);
+        expect($this->latestWrite($key))->toBe($payload, $key ? "Failed asserting [{$key}] was expected value." : null);
 
         return $this;
     }

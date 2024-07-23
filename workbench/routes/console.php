@@ -327,7 +327,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
             }));
 
         // Stat collection...
-        $duration = (int) ((microtime(true) - $start) * 1000);
+        $duration = intval((microtime(true) - $start) * 1000);
         $sent++;
         $perSecond[$t = time()] = ($perSecond[$t] ?? 0) + 1;
         $durations[] = $duration;

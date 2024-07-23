@@ -63,20 +63,27 @@ final class SensorManager
 
     private ?UserProvider $userProvider;
 
-    /**
-     * @var array{value-of<LifecyclePhase>, float}
-     */
     private array $lifecycle = [];
+
+    private LifecyclePhase $currentPhase;
 
     public function __construct(private Application $app)
     {
         $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
+        $this->currentPhase = LifecyclePhase::Bootstrap;
     }
 
     public function startPhase(LifecyclePhase $phase): void
     {
-        $this->lifecycle[$phase->value] = $this->clock()->microtime();
+        $this->lifecycle[$phase->value] = $this->clock()->nowInMicroseconds();
+
+        $this->currentPhase = $phase;
+    }
+
+    public function lifecyclePhase(): LifecyclePhase
+    {
+        return $this->currentPhase;
     }
 
     public function request(Request $request, Response $response): void
@@ -234,6 +241,13 @@ final class SensorManager
     private function clock(): Clock
     {
         return $this->clock ??= $this->app->make(Clock::class);
+    }
+
+    public function setClock(Clock $clock): self
+    {
+        $this->clock = $clock;
+
+        return $this;
     }
 
     public function prepareForNextInvocation(): void

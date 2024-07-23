@@ -13,10 +13,14 @@ use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Foundation\Exceptions\Handler;
+use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Routing\Events\PreparingResponse;
+use Illuminate\Routing\Events\ResponsePrepared;
+use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -185,10 +189,44 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         /** @var Dispatcher */
         $events = $this->app->make('events');
-        $sensor = new SensorManager($this->app);
+        /** @var SensorManager */
+        $sensor = $this->app->instance(SensorManager::class, new SensorManager($this->app));
 
         /*
-         * Query sensor...
+         * Lifecycle: Global before middleware.
+         */
+        $this->app->booted(fn () => $sensor->startPhase(LifecyclePhase::GlobalBeforeMiddleware));
+
+        /*
+         * Lifecycle: Route before middleware.
+         */
+        $events->listen(RouteMatched::class, function (RouteMatched $event) use ($sensor) {
+            $event->route->action['middleware'][] = NightwatchRouteMiddleware::class;
+
+            $sensor->startPhase(LifecyclePhase::RouteBeforeMiddleware);
+        });
+
+        /**
+         * Lifecycle: transmitting_response
+         */
+        $events->listen(RequestHandled::class, fn () => $sensor->startPhase(LifecyclePhase::ResponseTransmission));
+
+        /*
+         * Lifecycle: Main render.
+         */
+        $events->listen(PreparingResponse::class, fn () => match ($sensor->lifecyclePhase()) {
+            LifecyclePhase::Main => $sensor->startPhase(LifecyclePhase::MainRender),
+            LifecyclePhase::RouteAfterMiddleware => $sensor->startPhase(LifecyclePhase::RouteAfterMiddlewareRender),
+            default => null,
+        });
+
+        $events->listen(ResponsePrepared::class, fn () => match ($sensor->lifecyclePhase()) {
+            LifecyclePhase::RouteAfterMiddlewareRender => $sensor->startPhase(LifecyclePhase::GlobalAfterMiddleware),
+            default => null,
+        });
+
+        /*
+         * Sensor: Query.
          *
          * The trace will include this listener frame. Instead of trying to
          * slice out the current frame from the trace and having to re-key the
@@ -198,7 +236,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $events->listen(QueryExecuted::class, fn (QueryExecuted $event) => $sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)));
 
         /*
-         * Request sensor and ingest...
+         * Sensor: Request + final ingest.
          *
          * TODO we need to determine what to do if the
          * `whenRequestLifecycleIsLongerThan` method is not present. We likely

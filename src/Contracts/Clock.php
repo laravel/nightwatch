@@ -7,11 +7,9 @@ namespace Laravel\Nightwatch\Contracts;
  */
 interface Clock
 {
-    public function microtime(): float;
+    public function nowInMicroseconds(): int;
 
     public function diffInMicrotime(float $start): float;
 
-    public function executionOffset(float $nowMicrotime): int;
-
-    public function executionStartMicrotime(): float;
+    public function executionStartInMicroseconds(): int;
 }

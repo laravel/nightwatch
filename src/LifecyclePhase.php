@@ -7,6 +7,7 @@ namespace Laravel\Nightwatch;
  */
 enum LifecyclePhase: string
 {
+    case Bootstrap = 'bootstrap';
     case GlobalBeforeMiddleware = 'global_before_middleware';
     case RouteBeforeMiddleware = 'route_before_middleware';
     case Main = 'main';

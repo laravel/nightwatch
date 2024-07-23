@@ -1,6 +1,8 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
@@ -8,6 +10,7 @@ use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
+use Laravel\Nightwatch\SensorManager;
 use Tests\FakeIngest;
 
 use function Illuminate\Filesystem\join_paths;
@@ -19,19 +22,18 @@ function syncClock(CarbonImmutable $timestamp): void
 {
     travelTo($timestamp);
 
-    $executionStartMicrotime = (float) $timestamp->format('U.u');
+    $executionStartInMicroseconds = (int) $timestamp->format('Uu');
 
-    App::forgetInstance(Clock::class);
-    App::instance(Clock::class, new class($executionStartMicrotime) implements Clock
+    app(SensorManager::class)->setClock(new class($executionStartInMicroseconds) implements Clock
     {
-        public function __construct(private int $executionStartMicrotime)
+        public function __construct(private int $executionStartInMicroseconds)
         {
             //
         }
 
-        public function microtime(): float
+        public function nowInMicroseconds(): int
         {
-            return (float) now()->format('U.u');
+            return (int) now()->format('Uu');
         }
 
         public function diffInMicrotime(float $start): float
@@ -39,14 +41,9 @@ function syncClock(CarbonImmutable $timestamp): void
             return $this->microtime() - $start;
         }
 
-        public function executionOffset(float $nowMicrotime): int
+        public function executionStartInMicroseconds(): int
         {
-            return (int) round(($nowMicrotime - $this->executionStartMicrotime) * 1000 * 1000);
-        }
-
-        public function executionStartMicrotime(): float
-        {
-            return $this->executionStartMicrotime;
+            return $this->executionStartInMicroseconds;
         }
     });
 }
@@ -99,6 +96,14 @@ function prependListener(string $event, callable $listener): void
     Event::forget($event);
 
     collect([$listener, ...$listeners])->each(fn ($listener) => Event::listen($event, $listener));
+}
+
+function ignoreMigrationQueries() {
+    prependListener(QueryExecuted::class, function () {
+        if (! RefreshDatabaseState::$migrated) {
+            return false;
+        }
+    });
 }
 
 function fixturePath(string $path): string
