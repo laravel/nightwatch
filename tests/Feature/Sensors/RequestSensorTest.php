@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\LifecyclePhase;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;
@@ -492,11 +492,15 @@ final class ChangeRouteResponse
     {
         $next($request);
 
-        return new class($middlewareDuration, $responseDuration) extends Response
+        return new class($middlewareDuration, $responseDuration) extends StreamedResponse
         {
             public function __construct(private $middlewareDuration, private $responseDuration)
             {
-                parent::__construct();
+                parent::__construct(function () {
+                    travelTo(now()->addMicroseconds($this->responseDuration)); // route_after_middleware_render
+
+                    // echo 'output';
+                });
             }
 
             public function prepare(HttpFoundationRequest $request): static
@@ -504,15 +508,6 @@ final class ChangeRouteResponse
                 travelTo(now()->addMicroseconds($this->middlewareDuration)); // route_after_middleware_render
 
                 return parent::prepare($request);
-            }
-
-            public function send(bool $flush = true): static
-            {
-                travelTo(now()->addMicroseconds($this->responseDuration)); // route_after_middleware_render
-
-                // parent::send(false);
-
-                return $this;
             }
         };
     }

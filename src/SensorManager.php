@@ -139,7 +139,7 @@ final class SensorManager
             server: $this->server(),
         );
 
-        $sensor($event, $trace);
+        $sensor($event, $trace, $this->currentPhase);
     }
 
     public function cacheEvent(CacheMissed|CacheHit $event): void

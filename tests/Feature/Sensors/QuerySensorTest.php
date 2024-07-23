@@ -1,23 +1,26 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
+use Laravel\Nightwatch\LifecyclePhase;
+use Laravel\Nightwatch\SensorManager;
 use function Pest\Laravel\get;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () use (&$ignore) {
-    App::setBasePath(realpath(__DIR__.'/../../../'));
-
     setDeployId('v1.2.3');
     setServerName('web-01');
     setPeakMemoryInKilobytes(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 
+    App::setBasePath(realpath(__DIR__.'/../../../'));
     ignoreMigrationQueries();
 });
 
@@ -39,7 +42,7 @@ it('can ingest queries', function () {
     }));
     $line = null;
     Route::get('/users', function () use (&$line) {
-        $line = __LINE__ + 1;
+        $line = __LINE__ + 2;
 
         return DB::table('users')->get();
     });
@@ -58,6 +61,7 @@ it('can ingest queries', function () {
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_phase' => 'main',
             'user' => '',
             'sql' => 'select * from "users"',
             'category' => 'select',
@@ -87,16 +91,15 @@ it('always uses current time minus execution time for the timestamp', function (
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('queries.0.timestamp', 946688523466665);
-
 });
 
 it('captures aggregate query data on the request', function () {
+    $ingest = fakeIngest();
     prependListener(QueryExecuted::class, function (QueryExecuted $event) {
         $event->time = 4.321;
 
         travelTo(now()->addMicroseconds(4321));
     });
-    $ingest = fakeIngest();
     Route::get('/users', function () {
         DB::table('users')->get();
         DB::table('users')->get();
@@ -110,4 +113,33 @@ it('captures aggregate query data on the request', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('requests.0.queries', 2);
     $ingest->assertLatestWrite('requests.0.queries_duration', 8642);
+});
+
+it('can captures query execution phase', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', function () {
+        DB::table('users')->get();
+
+        App::terminating(function () {
+            DB::table('users')->get();
+        });
+
+        return new class implements Responsable
+        {
+            public function toResponse($request)
+            {
+                DB::table('users')->get();
+
+                return response('');
+            }
+        };
+    });
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('queries.0.execution_phase', 'main');
+    $ingest->assertLatestWrite('queries.1.execution_phase', 'main_render');
+    $ingest->assertLatestWrite('queries.2.execution_phase', 'terminate');
 });
