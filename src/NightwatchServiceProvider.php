@@ -196,26 +196,26 @@ final class NightwatchServiceProvider extends ServiceProvider
          * Execution phases...
          */
 
-        $this->app->booted(fn () => $sensor->startPhase(ExecutionPhase::GlobalBeforeMiddleware));
+        $this->app->booted(fn () => $sensor->start(ExecutionPhase::GlobalBeforeMiddleware));
 
         $events->listen(RouteMatched::class, function (RouteMatched $event) use ($sensor) {
             $event->route->action['middleware'][] = NightwatchRouteMiddleware::class;
 
-            $sensor->startPhase(ExecutionPhase::RouteBeforeMiddleware);
+            $sensor->start(ExecutionPhase::RouteBeforeMiddleware);
         });
 
         $events->listen(PreparingResponse::class, fn () => match ($sensor->executionPhase()) {
-            ExecutionPhase::Main => $sensor->startPhase(ExecutionPhase::MainRender),
-            ExecutionPhase::RouteAfterMiddleware => $sensor->startPhase(ExecutionPhase::RouteAfterMiddlewareRender),
+            ExecutionPhase::Main => $sensor->start(ExecutionPhase::MainRender),
+            ExecutionPhase::RouteAfterMiddleware => $sensor->start(ExecutionPhase::RouteAfterMiddlewareRender),
             default => null,
         });
 
         $events->listen(ResponsePrepared::class, fn () => match ($sensor->executionPhase()) {
-            ExecutionPhase::RouteAfterMiddlewareRender => $sensor->startPhase(ExecutionPhase::GlobalAfterMiddleware),
+            ExecutionPhase::RouteAfterMiddlewareRender => $sensor->start(ExecutionPhase::GlobalAfterMiddleware),
             default => null,
         });
 
-        $events->listen(RequestHandled::class, fn () => $sensor->startPhase(ExecutionPhase::ResponseTransmission));
+        $events->listen(RequestHandled::class, fn () => $sensor->start(ExecutionPhase::ResponseTransmission));
 
         /*
          * Sensor: Query.
