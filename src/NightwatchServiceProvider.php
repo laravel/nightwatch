@@ -199,9 +199,9 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->app->booted(fn () => $sensor->start(ExecutionPhase::GlobalBeforeMiddleware));
 
         $events->listen(RouteMatched::class, function (RouteMatched $event) use ($sensor) {
-            $event->route->action['middleware'][] = NightwatchRouteMiddleware::class;
-
             $sensor->start(ExecutionPhase::RouteBeforeMiddleware);
+
+            $event->route->action['middleware'][] = NightwatchRouteMiddleware::class;
         });
 
         $events->listen(PreparingResponse::class, fn () => match ($sensor->executionPhase()) {
