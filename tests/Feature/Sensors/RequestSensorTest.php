@@ -23,7 +23,7 @@ use function Pest\Laravel\travelTo;
 beforeEach(function () {
     setDeployId('v1.2.3');
     setServerName('web-01');
-    setPeakMemoryInKilobytes(1234);
+    setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 });
@@ -33,7 +33,9 @@ it('can ingest requests', function () {
     Route::get('/users', fn () => []);
     /** @var SensorManager */
     $sensor = app(SensorManager::class);
-    $sensor->start(ExecutionPhase::BeforeMiddleware);
+    $sensor->prepareForNextInvocation();
+    syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    $sensor->start(ExecutionPhase::Bootstrap);
 
     $response = get('/users');
 
@@ -42,7 +44,7 @@ it('can ingest requests', function () {
     $ingest->assertLatestWrite('requests', [
         [
             'v' => 1,
-            'timestamp' => 946688523456789,
+            'timestamp' => 946688523.456789,
             'deploy_id' => 'v1.2.3',
             'server' => 'web-01',
             'group' => hash('md5', 'GET|HEAD,,/users'),
@@ -85,7 +87,8 @@ it('can ingest requests', function () {
             'cache_hits' => 0,
             'cache_misses' => 0,
             'hydrated_models' => 0,
-            'peak_memory_usage_kilobytes' => 1234,
+            'peak_memory_usage' => 1234,
+            'bootstrap' => 0,
             'before_middleware' => 0,
             'action' => 0,
             'render' => 0,
@@ -418,12 +421,12 @@ it('captures the root route path correctly', function () {
     $ingest->assertLatestWrite('requests.0.path', '/');
 });
 
-it('captures execution phase offsets', function () {
+it('captures execution phase durations', function () {
     $ingest = fakeIngest();
     $sensor = app(SensorManager::class);
     app(Kernel::class)->setGlobalMiddleware([
         ...app(Kernel::class)->getGlobalMiddleware(),
-        TravelMicrosecondsMiddleware::class.':2,34', // global middleware before / after
+        TravelMicrosecondsMiddleware::class.':2,10', // global middleware before / after
     ]);
     Event::listen(function (RequestHandled $event) {
         $event->response->send(true);
@@ -445,23 +448,37 @@ it('captures execution phase offsets', function () {
                 return response('main response');
             }
         };
-    })->middleware([ChangeRouteResponse::class.':21,55', TravelMicrosecondsMiddleware::class.':3,13']); // route middleware before / after
+    })->middleware([ChangeRouteResponse::class.':3,55', TravelMicrosecondsMiddleware::class.':1,3']); // route middleware before / after
 
-    travelTo(now()->addMicroseconds(1)); // bootstrap
-    $sensor->start(ExecutionPhase::BeforeMiddleware); // handled in the service provider "booted" hook, which fired before we could intercept and control time.
+    $sensor->prepareForNextInvocation();
+    syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    travelTo(now()->addMicroseconds(1));
+    $sensor->start(ExecutionPhase::BeforeMiddleware);
     $response = get('/users');
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.timestamp', 946688523456789);
-    // $ingest->assertLatestWrite('requests.0.bootstrap', 0);
-    $ingest->assertLatestWrite('requests.0.before_middleware', 1);
-    $ingest->assertLatestWrite('requests.0.action', 1 + 2 + 3);
-    $ingest->assertLatestWrite('requests.0.render', 1 + 2 + 3 + 5);
-    $ingest->assertLatestWrite('requests.0.after_middleware', 1 + 2 + 3 + 5 + 8);
-    $ingest->assertLatestWrite('requests.0.sending', 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34);
-    $ingest->assertLatestWrite('requests.0.terminating', 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55);
-    $ingest->assertLatestWrite('requests.0.duration', 1 + 2 + 3 + 5 + 8 + 13 + 21 + 34 + 55 + 89);
+    $ingest->assertLatestWrite('requests.0.bootstrap', 1);
+    $ingest->assertLatestWrite('requests.0.before_middleware', 3);
+    $ingest->assertLatestWrite('requests.0.action', 5);
+    $ingest->assertLatestWrite('requests.0.render', 8);
+    $ingest->assertLatestWrite('requests.0.after_middleware', 16);
+    $ingest->assertLatestWrite('requests.0.sending', 55);
+    $ingest->assertLatestWrite('requests.0.terminating', 89);
+    $ingest->assertLatestWrite('requests.0.duration', 1 + 3 + 5 + 8 + 16 + 55 + 89);
+});
+
+it('forces query to be a string', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', function (Request $request) {
+        $request->server->set('QUERY_STRING', []);
+    });
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.query', '');
 });
 
 final class UserController
@@ -505,7 +522,7 @@ final class ChangeRouteResponse
 
             public function prepare(HttpFoundationRequest $request): static
             {
-                travelTo(now()->addMicroseconds($this->middlewareDuration)); // route_after_middleware_render
+                travelTo(now()->addMicroseconds($this->middlewareDuration)); // after_middleware
 
                 return parent::prepare($request);
             }

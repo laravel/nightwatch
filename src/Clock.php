@@ -9,16 +9,14 @@ use Laravel\Nightwatch\Contracts\Clock as ClockContract;
  */
 final class Clock implements ClockContract
 {
-    private ?int $executionStartInMicroseconds = null;
-
-    public function __construct(private int $executionStartMicrotime)
+    public function __construct(private int $executionStartInMicrotime)
     {
         //
     }
 
-    public function nowInMicroseconds(): int
+    public function microtime(): float
     {
-        return intval(microtime(true) * 1_000_000);
+        return microtime(true);
     }
 
     public function diffInMicrotime(float $start): float
@@ -26,8 +24,8 @@ final class Clock implements ClockContract
         return microtime(true) - $start;
     }
 
-    public function executionStartInMicroseconds(): int
+    public function executionStartInMicrotime(): float
     {
-        return $this->executionStartInMicroseconds ??= intval($this->executionStartMicrotime * 1_000_000);
+        return $this->executionStartInMicrotime;
     }
 }

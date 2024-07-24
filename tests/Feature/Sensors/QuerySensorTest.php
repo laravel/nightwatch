@@ -14,7 +14,7 @@ use function Pest\Laravel\travelTo;
 beforeEach(function () use (&$ignore) {
     setDeployId('v1.2.3');
     setServerName('web-01');
-    setPeakMemoryInKilobytes(1234);
+    setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 

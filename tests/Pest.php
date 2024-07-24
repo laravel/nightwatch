@@ -22,18 +22,18 @@ function syncClock(CarbonImmutable $timestamp): void
 {
     travelTo($timestamp);
 
-    $executionStartInMicroseconds = (int) $timestamp->format('Uu');
+    $executionStartInMicrotime = (float) $timestamp->format('U.u');
 
-    app(SensorManager::class)->setClock(new class($executionStartInMicroseconds) implements Clock
+    app(SensorManager::class)->setClock(new class($executionStartInMicrotime) implements Clock
     {
-        public function __construct(private int $executionStartInMicroseconds)
+        public function __construct(private float $executionStartInMicrotime)
         {
             //
         }
 
-        public function nowInMicroseconds(): int
+        public function microtime(): float
         {
-            return (int) now()->format('Uu');
+            return now()->getPreciseTimestamp(6) / 1_000_000;
         }
 
         public function diffInMicrotime(float $start): float
@@ -41,9 +41,9 @@ function syncClock(CarbonImmutable $timestamp): void
             return $this->microtime() - $start;
         }
 
-        public function executionStartInMicroseconds(): int
+        public function executionStartInMicrotime(): float
         {
-            return $this->executionStartInMicroseconds;
+            return $this->executionStartInMicrotime;
         }
     });
 }
@@ -68,18 +68,18 @@ function setTraceId(string $traceId): void
     App::instance('laravel.nightwatch.trace_id', $traceId);
 }
 
-function setPeakMemoryInKilobytes(int $value): void
+function setPeakMemory(int $value): void
 {
     App::singleton(PeakMemoryProvider::class, fn () => new class($value) implements PeakMemoryProvider
     {
-        public function __construct(private int $kilobytes)
+        public function __construct(private int $bytes)
         {
             //
         }
 
-        public function kilobytes(): int
+        public function bytes(): int
         {
-            return $this->kilobytes;
+            return $this->bytes;
         }
     });
 }

@@ -117,7 +117,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
                     $server = new TcpServer($uri, $loop);
 
-                    return new LimitingServer($server, $config->get('nightwatch.agent.connection_limit'));
+                    return new LimitingServer($server, (int) $config->get('nightwatch.agent.connection_limit'));
                 });
 
             $buffer = new PayloadBuffer($config->get('nightwatch.agent.buffer_threshold'));
@@ -232,6 +232,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             }
 
             $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
+                $sensor->start(ExecutionPhase::End);
+
                 $sensor->request($request, $response);
 
                 /** @var IngestContract */

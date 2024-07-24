@@ -14,4 +14,19 @@ enum ExecutionPhase: string
     case AfterMiddleware = 'after_middleware';
     case Sending = 'sending';
     case Terminating = 'terminating';
+    case End = 'end';
+
+    public function previous(): ?self
+    {
+        return match ($this) {
+            self::Bootstrap => null,
+            self::BeforeMiddleware => self::Bootstrap,
+            self::Action => self::BeforeMiddleware,
+            self::Render => self::Action,
+            self::AfterMiddleware => self::Render,
+            self::Sending => self::AfterMiddleware,
+            self::Terminating => self::Sending,
+            self::End => self::Terminating,
+        };
+    }
 }

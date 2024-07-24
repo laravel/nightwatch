@@ -16,6 +16,7 @@ final class Request
      */
     public function __construct(
         public float $timestamp,
+        // TODO public $env_id = ...
         public string $deploy_id,
         public string $server,
         public string $group,
@@ -60,7 +61,8 @@ final class Request
         public int $cache_hits,
         public int $cache_misses,
         public int $hydrated_models,
-        public int $peak_memory_usage_kilobytes,
+        public int $peak_memory_usage,
+        public int $bootstrap,
         public int $before_middleware,
         public int $action,
         public int $render,

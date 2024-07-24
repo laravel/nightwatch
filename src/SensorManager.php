@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch;
 use Carbon\Carbon;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
@@ -63,12 +64,15 @@ final class SensorManager
 
     private ?UserProvider $userProvider;
 
+    private ?Config $config;
+
     /**
      * @var array<value-of<ExecutionPhase>, int>
      */
     private array $executionPhases = [];
 
     private ExecutionPhase $currentPhase;
+    private ?float $currentPhaseStartedAtMicrotime;
 
     public function __construct(private Application $app)
     {
@@ -77,11 +81,19 @@ final class SensorManager
         $this->currentPhase = ExecutionPhase::Bootstrap;
     }
 
-    public function start(ExecutionPhase $phase): void
+    public function start(ExecutionPhase $next): void
     {
-        $this->executionPhases[$phase->value] = $this->clock()->nowInMicroseconds() - $this->clock()->executionStartInMicroseconds();
+        $nowMicrotime = $this->clock()->microtime();
+        $previous = $this->currentPhase->previous();
 
-        $this->currentPhase = $phase;
+        $duration = $previous === null
+            ? (int) round(($nowMicrotime - $this->clock()->executionStartInMicrotime()) * 1_000_000)
+            : (int) round(($nowMicrotime - $this->currentPhaseStartedAtMicrotime) * 1_000_000);
+
+        $this->executionPhases[$this->currentPhase->value] = $duration;
+
+        $this->currentPhaseStartedAtMicrotime = $nowMicrotime;
+        $this->currentPhase = $next;
     }
 
     public function executionPhase(): ExecutionPhase
@@ -197,7 +209,7 @@ final class SensorManager
             executionParent: $this->executionParent,
             user: $this->user(),
             clock: $this->clock(),
-            config: $this->app->make('config'),
+            config: $this->config(),
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
@@ -218,12 +230,12 @@ final class SensorManager
 
     private function deployId(): string
     {
-        return $this->deployId ??= TinyText::limit((string) $this->app->make('config')->get('nightwatch.deploy_id'));
+        return $this->deployId ??= TinyText::limit((string) $this->config()->get('nightwatch.deploy_id'));
     }
 
     private function server(): string
     {
-        return $this->server ??= TinyText::limit((string) $this->app->make('config')->get('nightwatch.server'));
+        return $this->server ??= TinyText::limit((string) $this->config()->get('nightwatch.server'));
     }
 
     public function flush(): string
@@ -239,6 +251,11 @@ final class SensorManager
     private function location(): Location
     {
         return $this->location ??= new Location($this->app);
+    }
+
+    private function config(): Config
+    {
+        return $this->config ??= $this->app->make('config');
     }
 
     private function clock(): Clock
@@ -267,5 +284,6 @@ final class SensorManager
         $this->clock = null;
         $this->traceId = null;
         $this->executionPhases = [];
+        $this->currentPhase = ExecutionPhase::Bootstrap;
     }
 }

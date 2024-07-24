@@ -36,8 +36,8 @@ final class QuerySensor
      */
     public function __invoke(QueryExecuted $event, array $trace, ExecutionPhase $executionPhase): void
     {
-        $nowInMicroseconds = $this->clock->nowInMicroseconds();
-        $durationInMicroseconds = intval($event->time * 1000);
+        $nowInMicroseconds = $this->clock->microtime();
+        $durationInMicroseconds = (int) round($event->time * 1000);
         [$file, $line] = $this->location->forQueryTrace($trace);
 
         $this->executionParent->queries++;

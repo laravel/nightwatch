@@ -48,7 +48,7 @@ final class Command
         public int $cache_hits,
         public int $cache_misses,
         public int $hydrated_models,
-        public int $peak_memory_usage_kilobytes,
+        public int $peak_memory_usage,
     ) {
         $this->name = TinyText::limit($this->name);
         $this->command = Text::limit($this->command);

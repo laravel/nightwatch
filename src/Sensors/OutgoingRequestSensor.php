@@ -60,24 +60,24 @@ final class OutgoingRequestSensor
             path: $request->getUri()->getPath(),
             route: '',
             duration: $duration,
-            request_size_kilobytes: $this->resolveMessageSizeKilobytes($request),
-            response_size_kilobytes: $this->resolveMessageSizeKilobytes($response),
+            request_size: $this->resolveMessageSize($request),
+            response_size: $this->resolveMessageSize($response),
             status_code: (string) $response->getStatusCode(),
         ));
     }
 
-    private function resolveMessageSizeKilobytes(MessageInterface $message): ?int
+    private function resolveMessageSize(MessageInterface $message): ?int
     {
         $size = $message->getBody()->getSize();
 
         if ($size !== null) {
-            return (int) round($size / 1000);
+            return $size;
         }
 
         $length = $message->getHeader('content-length')[0] ?? null;
 
         if (is_numeric($length)) {
-            return (int) round($length / 1000);
+            return (int) $length;
         }
 
         return null;

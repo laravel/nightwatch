@@ -71,7 +71,7 @@ final class CommandSensor
             cache_hits: $this->executionParent->cache_hits,
             cache_misses: $this->executionParent->cache_misses,
             hydrated_models: $this->executionParent->hydrated_models,
-            peak_memory_usage_kilobytes: $this->peakMemory->kilobytes(),
+            peak_memory_usage: $this->peakMemory->kilobytes(),
         ));
     }
 }

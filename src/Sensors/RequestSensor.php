@@ -39,7 +39,7 @@ final class RequestSensor
 
     public function __invoke(Request $request, Response $response): void
     {
-        $nowInMicroseconds = $this->clock->nowInMicroseconds();
+        $nowInMicrotime = $this->clock->microtime();
         /** @var Route|null */
         $route = $request->route();
         /** @var 'http'|'https' */
@@ -55,7 +55,7 @@ final class RequestSensor
         };
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
-            timestamp: $this->clock->executionStartInMicroseconds(),
+            timestamp: $this->clock->executionStartInMicrotime(),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('md5', implode(',', [implode('|', $routeMethods), $routeDomain, $routePath])),
@@ -70,17 +70,17 @@ final class RequestSensor
                 'https' => 443,
             }),
             path: $request->getPathInfo(),
-            query: $request->server->get('QUERY_STRING'),
+            query: rescue(fn () => $request->server->getString('QUERY_STRING'), '', report: false),
             route_name: $route?->getName() ?? '',
             route_methods: $routeMethods,
             route_domain: $routeDomain,
             route_action: $route?->getActionName() ?? '',
             route_path: $routePath,
             ip: $request->ip() ?? '',
-            duration: $nowInMicroseconds - $this->clock->executionStartInMicroseconds(),
+            duration: (int) round(($nowInMicrotime - $this->clock->executionStartInMicrotime()) * 1_000_000),
             status_code: (string) $response->getStatusCode(),
             request_size: strlen($request->getContent()),
-            response_size: $this->parseResponseSizeKilobytes($response),
+            response_size: $this->parseResponseSize($response),
             queries: $this->executionParent->queries,
             queries_duration: $this->executionParent->queries_duration,
             lazy_loads: $this->executionParent->lazy_loads,
@@ -101,7 +101,8 @@ final class RequestSensor
             cache_hits: $this->executionParent->cache_hits,
             cache_misses: $this->executionParent->cache_misses,
             hydrated_models: $this->executionParent->hydrated_models,
-            peak_memory_usage_kilobytes: $this->peakMemory->kilobytes(),
+            peak_memory_usage: $this->peakMemory->bytes(),
+            bootstrap: $this->executionPhases[ExecutionPhase::Bootstrap->value] ?? 0,
             before_middleware: $this->executionPhases[ExecutionPhase::BeforeMiddleware->value] ?? 0,
             action: $this->executionPhases[ExecutionPhase::Action->value] ?? 0,
             render: $this->executionPhases[ExecutionPhase::Render->value] ?? 0,
@@ -111,7 +112,7 @@ final class RequestSensor
         ));
     }
 
-    private function parseResponseSizeKilobytes(Response $response): ?int
+    private function parseResponseSize(Response $response): ?int
     {
         if (is_string($content = $response->getContent())) {
             return strlen($content);
