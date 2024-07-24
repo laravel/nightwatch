@@ -72,6 +72,7 @@ final class SensorManager
     private array $executionPhases = [];
 
     private ExecutionPhase $currentPhase;
+
     private ?float $currentPhaseStartedAtMicrotime;
 
     public function __construct(private Application $app)
