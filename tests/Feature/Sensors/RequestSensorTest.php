@@ -555,6 +555,51 @@ it('collapses the render time of a response returned from a route before middlew
     $ingest->assertLatestWrite('requests.0.duration', 3 + 55);
 });
 
+it('captures execution phase durations for unknown routes', function () {
+    $ingest = fakeIngest();
+    $sensor = app(SensorManager::class);
+
+    // Configure global middleware.
+    // 2 microseconds before
+    // 10 microseconds after
+    app(Kernel::class)->setGlobalMiddleware([
+        TravelMicrosecondsMiddleware::class.':2,10',
+        ...app(Kernel::class)->getGlobalMiddleware(),
+    ]);
+
+    // 89 microseconds while terminating.
+    // also see the `TravelMicrosecondsMiddleware::terminate` which travels 3
+    // microseconds and is called twice.
+    App::terminating(function () {
+        travelTo(now()->addMicroseconds(89));
+    });
+
+    // Route::fallback();
+
+    // Doing some manual reset here to ensure the phase durations are as
+    // expected.  This is a bit funky because during the service provider
+    // bootstrap phase, which has already run, we update the current phase
+    // before we have had a time to intercept things in the test.
+    $sensor->prepareForNextInvocation();
+    syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    // Simulating a microsecond of boot time.
+    travelTo(now()->addMicroseconds(1));
+    $sensor->start(ExecutionPhase::BeforeMiddleware);
+
+    $response = get('/wp-admin');
+
+    $response->assertNotFound();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.bootstrap', 1);
+    $ingest->assertLatestWrite('requests.0.before_middleware', 2);
+    $ingest->assertLatestWrite('requests.0.action', 0);
+    $ingest->assertLatestWrite('requests.0.render', 0);
+    $ingest->assertLatestWrite('requests.0.after_middleware', 10);
+    $ingest->assertLatestWrite('requests.0.sending', 55);
+    $ingest->assertLatestWrite('requests.0.terminating', 95);
+    $ingest->assertLatestWrite('requests.0.duration', 1 + 3 + 5 + 8 + 16 + 55 + 95);
+});
+
 final class UserController
 {
     public function index()

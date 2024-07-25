@@ -202,7 +202,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             fn (RouteMatched $event) => $event->route->action['middleware'] = [
                 NightwatchTerminatingMiddleware::class,
                 ...$event->route->action['middleware'] ?? [],
-                NightwatchRouteMiddleware::class, // TODO ensure this isn't a memory leak in Octane
+                NightwatchRouteMiddleware::class, // TODO ensure adding these is not a memory leak in Octane
             ],
         );
 
@@ -234,6 +234,11 @@ final class NightwatchServiceProvider extends ServiceProvider
             if (! $kernel instanceof HttpKernel) {
                 return;
             }
+
+            $kernel->setGlobalMiddleware([
+                ...$kernel->getGlobalMiddleware(),
+                NightwatchTerminatingMiddleware::class,
+            ]);
 
             $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
                 $sensor->start(ExecutionPhase::End);
