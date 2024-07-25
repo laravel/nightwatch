@@ -25,6 +25,8 @@ final class QuerySensor
         private string $deployId,
         private string $server,
         private string $traceId,
+        private string $executionId,
+        private string $executionContext,
     ) {
         //
     }
@@ -36,7 +38,6 @@ final class QuerySensor
      */
     public function __invoke(QueryExecuted $event, array $trace, ExecutionPhase $executionPhase): void
     {
-        $nowInMicroseconds = $this->clock->microtime();
         $durationInMicroseconds = (int) round($event->time * 1000);
         [$file, $line] = $this->location->forQueryTrace($trace);
 
@@ -44,17 +45,16 @@ final class QuerySensor
         $this->executionParent->queries_duration += $durationInMicroseconds;
 
         $this->recordsBuffer->writeQuery(new Query(
-            timestamp: $nowInMicroseconds - $durationInMicroseconds,
+            timestamp: $this->clock->microtime() - ($event->time / 1000),
             deploy_id: $this->deployId,
             server: $this->server,
             group: hash('md5', $event->sql),
             trace_id: $this->traceId,
-            execution_context: 'request',
-            execution_id: '00000000-0000-0000-0000-000000000000',
+            execution_context: $this->executionContext,
+            execution_id: $this->executionId,
             execution_phase: $executionPhase,
             user: $this->user->id(),
             sql: $event->sql,
-            category: 'select',
             file: $file ?? '',
             line: $line ?? 0,
             duration: $durationInMicroseconds,

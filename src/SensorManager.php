@@ -10,6 +10,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Support\Str;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
@@ -37,34 +38,22 @@ use Throwable;
 final class SensorManager
 {
     private RecordsBuffer $recordsBuffer;
-
     private ExecutionParent $executionParent;
 
     private ?CacheEventSensor $cacheEventSensor;
-
     private ?ExceptionSensor $exceptionSensor;
-
     private ?OutgoingRequestSensor $outgoingRequestSensor;
-
     private ?QuerySensor $querySensor;
-
     private ?QueuedJobSensor $queuedJobSensor;
 
     private ?Clock $clock;
-
     private ?string $traceId;
-
     private ?string $server;
-
     private ?string $deployId;
-
     private ?PeakMemoryProvider $peakMemoryProvider;
-
     private ?Location $location;
-
-    private ?UserProvider $userProvider;
-
     private ?Config $config;
+    private ?UserProvider $userProvider;
 
     /**
      * @var array<value-of<ExecutionPhase>, int>
@@ -75,8 +64,7 @@ final class SensorManager
 
     private ?float $currentPhaseStartedAtMicrotime;
 
-    public function __construct(private Application $app)
-    {
+    public function __construct(private Application $app) {
         $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
         $this->currentPhase = ExecutionPhase::Bootstrap;
@@ -87,14 +75,12 @@ final class SensorManager
         $nowMicrotime = $this->clock()->microtime();
         $previous = $this->currentPhase->previous();
 
-        $duration = $previous === null
+        $this->executionPhases[$this->currentPhase->value] = $previous === null
             ? (int) round(($nowMicrotime - $this->clock()->executionStartInMicrotime()) * 1_000_000)
             : (int) round(($nowMicrotime - $this->currentPhaseStartedAtMicrotime) * 1_000_000);
 
-        $this->executionPhases[$this->currentPhase->value] = $duration;
-
-        $this->currentPhaseStartedAtMicrotime = $nowMicrotime;
         $this->currentPhase = $next;
+        $this->currentPhaseStartedAtMicrotime = $nowMicrotime;
     }
 
     public function executionPhase(): ExecutionPhase
@@ -153,6 +139,8 @@ final class SensorManager
             traceId: $this->traceId(),
             deployId: $this->deployId(),
             server: $this->server(),
+            executionId: $this->executionId(),
+            executionContext: $this->executionContext(),
         );
 
         $sensor($event, $trace, $this->currentPhase);
@@ -224,6 +212,17 @@ final class SensorManager
         return $this->traceId ??= $this->app->make('laravel.nightwatch.trace_id');
     }
 
+    public function executionId(): string
+    {
+        // For now we are just returning the trace id. We will need to get this sorted when we move to tracing jobs.
+        return $this->traceId();
+    }
+
+    private function executionContext(): string
+    {
+        return 'request';
+    }
+
     private function peakMemoryProvider(): PeakMemoryProvider
     {
         return $this->peakMemoryProvider ??= $this->app->make(PeakMemoryProvider::class);
@@ -273,6 +272,7 @@ final class SensorManager
 
     public function prepareForNextInvocation(): void
     {
+        // TODO this method should accept all the parameters that construct does and set the new values.
         $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
 
@@ -284,6 +284,7 @@ final class SensorManager
 
         $this->clock = null;
         $this->traceId = null;
+        $this->executionId = null;
         $this->executionPhases = [];
         $this->currentPhase = ExecutionPhase::Bootstrap;
     }

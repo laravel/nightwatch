@@ -84,7 +84,6 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
                 'execution_id' => $trace,
                 'user' => rand(0, 1) ? '123' : '', // not shared.
                 'sql' => 'select count(*) from `users`',
-                'category' => 'select',
                 'location' => 'app/Http/Controllers/UserController.php:41',
                 'duration' => 0,
                 'connection' => 'mysql',

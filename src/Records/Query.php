@@ -14,7 +14,7 @@ final class Query
     public int $v = 1;
 
     public function __construct(
-        public int $timestamp,
+        public float $timestamp,
         public string $deploy_id,
         public string $server,
         public string $group,
@@ -25,7 +25,6 @@ final class Query
         public string $user,
         // --- //
         public string $sql,
-        public string $category,
         public string $file,
         public int $line,
         public int $duration,

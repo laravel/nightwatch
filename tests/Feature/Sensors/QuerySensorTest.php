@@ -52,7 +52,7 @@ it('can ingest queries', function () {
     $ingest->assertLatestWrite('queries', [
         [
             'v' => 1,
-            'timestamp' => 946688523456789,
+            'timestamp' => 946688523.456789,
             'deploy_id' => 'v1.2.3',
             'server' => 'web-01',
             'group' => hash('md5', 'select * from "users"'),
@@ -62,7 +62,6 @@ it('can ingest queries', function () {
             'execution_phase' => 'action',
             'user' => '',
             'sql' => 'select * from "users"',
-            'category' => 'select',
             'file' => 'tests/Feature/Sensors/QuerySensorTest.php',
             'line' => $line,
             'duration' => 4321,
@@ -88,7 +87,7 @@ it('always uses current time minus execution time for the timestamp', function (
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('queries.0.timestamp', 946688523466665);
+    $ingest->assertLatestWrite('queries.0.timestamp', 946688523.466665);
 });
 
 it('captures aggregate query data on the request', function () {
