@@ -33,6 +33,10 @@ it('can ingest requests', function () {
     Route::get('/users', fn () => []);
     /** @var SensorManager */
     $sensor = app(SensorManager::class);
+    // Doing some manual reset here to ensure the phase durations are as
+    // expected.  This is a bit funky because during the service provider
+    // bootstrap phase, which has already run, we update the current phase
+    // before we have had a time to intercept things in the test.
     $sensor->prepareForNextInvocation();
     syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     $sensor->start(ExecutionPhase::Bootstrap);
@@ -152,7 +156,7 @@ it('gracefully handles response size for streamed responses', function () {
     $ingest->assertLatestWrite('requests.0.response_size', null);
 });
 
-it('captures the content-length when present on a streamed response', function () {
+it('captures the content-length when present on a streamed response of unknown size', function () {
     $ingest = fakeIngest();
     Route::get('users', fn () => response()->stream(function () {
         echo '[]';
@@ -194,7 +198,7 @@ it('captures the request size', function () {
     $ingest->assertLatestWrite('requests.0.request_size', 3);
 });
 
-it('captures the user when authenticated', function () {
+it('captures the authenticated user', function () {
     $ingest = fakeIngest();
     Route::get('/users', fn () => []);
 
@@ -321,7 +325,7 @@ it('captures subdomain and route domain', function () {
     $ingest->assertLatestWrite('requests.0.route_domain', '{product}.laravel.com');
 });
 
-it('foo', function () {
+it('captures the request URL user', function () {
     $ingest = fakeIngest();
     Route::get('/users', fn () => []);
 
@@ -347,11 +351,20 @@ it('records the requests user whilst ommiting the password', function () {
 
 it('captures the duration in microseconds', function () {
     $ingest = fakeIngest();
+    $sensor = app(SensorManager::class);
     Route::get('/users', function () {
-        CarbonImmutable::setTestNow(CarbonImmutable::now()->addMicroseconds(5));
+        travelTo(now()->addMicroseconds(5));
 
         return [];
     });
+
+    // Doing some manual reset here to ensure the phase durations are as
+    // expected.  This is a bit funky because during the service provider
+    // bootstrap phase, which has already run, we update the current phase
+    // before we have had a time to intercept things in the test.
+    $sensor->prepareForNextInvocation();
+    syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    $sensor->start(ExecutionPhase::BeforeMiddleware);
 
     $response = get('/users');
 
@@ -398,7 +411,7 @@ it('handles 204 no content requests', function () {
     $ingest->assertLatestWrite('requests.0.response_size', 0);
 });
 
-it('creates route group', function () {
+it('captures the route group', function () {
     $ingest = fakeIngest();
     Route::domain('{product}.laravel.com')->get('/users/{user}', fn () => []);
 
@@ -409,7 +422,7 @@ it('creates route group', function () {
     $ingest->assertLatestWrite('requests.0.group', hash('md5', 'GET|HEAD,{product}.laravel.com,/users/{user}'));
 });
 
-it('captures the root route path correctly', function () {
+it('handles the root path', function () {
     $ingest = fakeIngest();
     Route::get('/', fn () => 'Welcome');
 
@@ -421,54 +434,7 @@ it('captures the root route path correctly', function () {
     $ingest->assertLatestWrite('requests.0.path', '/');
 });
 
-it('captures execution phase durations', function () {
-    $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
-    app(Kernel::class)->setGlobalMiddleware([
-        ...app(Kernel::class)->getGlobalMiddleware(),
-        TravelMicrosecondsMiddleware::class.':2,10', // global middleware before / after
-    ]);
-    Event::listen(function (RequestHandled $event) {
-        $event->response->send(true);
-    });
-
-    Route::get('/users', function () {
-        travelTo(now()->addMicroseconds(5)); // main
-
-        App::terminating(function () {
-            travelTo(now()->addMicroseconds(89)); // main
-        });
-
-        return new class implements Responsable
-        {
-            public function toResponse($request)
-            {
-                travelTo(now()->addMicroseconds(8)); // main_render
-
-                return response('main response');
-            }
-        };
-    })->middleware([ChangeRouteResponse::class.':3,55', TravelMicrosecondsMiddleware::class.':1,3']); // route middleware before / after
-
-    $sensor->prepareForNextInvocation();
-    syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
-    travelTo(now()->addMicroseconds(1));
-    $sensor->start(ExecutionPhase::BeforeMiddleware);
-    $response = get('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.bootstrap', 1);
-    $ingest->assertLatestWrite('requests.0.before_middleware', 3);
-    $ingest->assertLatestWrite('requests.0.action', 5);
-    $ingest->assertLatestWrite('requests.0.render', 8);
-    $ingest->assertLatestWrite('requests.0.after_middleware', 16);
-    $ingest->assertLatestWrite('requests.0.sending', 55);
-    $ingest->assertLatestWrite('requests.0.terminating', 89);
-    $ingest->assertLatestWrite('requests.0.duration', 1 + 3 + 5 + 8 + 16 + 55 + 89);
-});
-
-it('forces query to be a string', function () {
+it('gracefully handles non-string query string', function () {
     $ingest = fakeIngest();
     Route::get('/users', function (Request $request) {
         $request->server->set('QUERY_STRING', []);
@@ -479,6 +445,114 @@ it('forces query to be a string', function () {
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('requests.0.query', '');
+});
+
+it('captures execution phase durations', function () {
+    $ingest = fakeIngest();
+    $sensor = app(SensorManager::class);
+
+    // When running tests, Laravel does not call the `send` method.  We will
+    // call it here to simulate a real request as we want to make sure we
+    // measure how long the request takes to send.
+    Event::listen(fn (RequestHandled $event) => $event->response->send(true));
+
+    // Configure global middleware.
+    // 2 microseconds before
+    // 10 microseconds after
+    app(Kernel::class)->setGlobalMiddleware([
+        ...app(Kernel::class)->getGlobalMiddleware(),
+        TravelMicrosecondsMiddleware::class.':2,10',
+    ]);
+
+    // 89 microseconds while terminating.
+    // also see the `TravelMicrosecondsMiddleware::terminate` which travels 3
+    // microseconds and is called twice.
+    App::terminating(function () {
+        travelTo(now()->addMicroseconds(89));
+    });
+
+    Route::get('/users', function () {
+        // 5 microseconds within the action.
+        travelTo(now()->addMicroseconds(5));
+
+        return new class implements Responsable
+        {
+            public function toResponse($request)
+            {
+                // 8 microsecods while rendering.
+                travelTo(now()->addMicroseconds(8));
+
+                return response('main response');
+            }
+        };
+    })->middleware([
+        // This middleware will change the response during the "after" phase.
+        // The response returned from the middleware takes time to render.
+        // This is in place to ensure that the render time for responses returned
+        // from a middleware are collased into the "middleware" phase and not the
+        // "render" phase.
+        ChangeRouteResponseAfter::class.':3,55',
+        // Route middleware.
+        // 1 microsecond before
+        // 3 microseconds after
+        TravelMicrosecondsMiddleware::class.':1,3',
+    ]);
+
+    // Doing some manual reset here to ensure the phase durations are as
+    // expected.  This is a bit funky because during the service provider
+    // bootstrap phase, which has already run, we update the current phase
+    // before we have had a time to intercept things in the test.
+    $sensor->prepareForNextInvocation();
+    syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    // Simulating a microsecond of boot time.
+    travelTo(now()->addMicroseconds(1));
+    $sensor->start(ExecutionPhase::BeforeMiddleware);
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.bootstrap', 1);
+    $ingest->assertLatestWrite('requests.0.before_middleware', 3);
+    $ingest->assertLatestWrite('requests.0.action', 5);
+    $ingest->assertLatestWrite('requests.0.render', 8);
+    $ingest->assertLatestWrite('requests.0.after_middleware', 16);
+    $ingest->assertLatestWrite('requests.0.sending', 55);
+    $ingest->assertLatestWrite('requests.0.terminating', 95);
+    $ingest->assertLatestWrite('requests.0.duration', 1 + 3 + 5 + 8 + 16 + 55 + 95);
+});
+
+it('collapses the render time of a response returned from a route before middleware into the middleware phase', function () {
+    $ingest = fakeIngest();
+    $sensor = app(SensorManager::class);
+
+    // When running tests, Laravel does not call the `send` method.  We will
+    // call it here to simulate a real request as we want to make sure we
+    // measure how long the request takes to send.
+    Event::listen(fn (RequestHandled $event) => $event->response->send(true));
+
+    Route::get('/users', fn () => [])->middleware(ChangeRouteResponseBefore::class.':3,55');
+
+    // Doing some manual reset here to ensure the phase durations are as
+    // expected.  This is a bit funky because during the service provider
+    // bootstrap phase, which has already run, we update the current phase
+    // before we have had a time to intercept things in the test.
+    $sensor->prepareForNextInvocation();
+    syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    $sensor->start(ExecutionPhase::BeforeMiddleware);
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.bootstrap', 0);
+    $ingest->assertLatestWrite('requests.0.before_middleware', 3);
+    $ingest->assertLatestWrite('requests.0.action', 0);
+    $ingest->assertLatestWrite('requests.0.render', 0);
+    $ingest->assertLatestWrite('requests.0.after_middleware', 0);
+    $ingest->assertLatestWrite('requests.0.sending', 55);
+    $ingest->assertLatestWrite('requests.0.terminating', 0);
+    $ingest->assertLatestWrite('requests.0.duration', 3 + 55);
 });
 
 final class UserController
@@ -501,28 +575,60 @@ final class TravelMicrosecondsMiddleware
 
         return $response;
     }
+
+    public function terminate()
+    {
+        travelTo(now()->addMicroseconds(3));
+    }
 }
 
-final class ChangeRouteResponse
+final class ChangeRouteResponseAfter
 {
-    public function handle(Request $request, Closure $next, int $middlewareDuration, int $responseDuration): mixed
+    public function handle(Request $request, Closure $next, int $prepareDuration, int $sendingDuration): mixed
     {
         $next($request);
 
-        return new class($middlewareDuration, $responseDuration) extends StreamedResponse
+        return new class($prepareDuration, $sendingDuration) extends StreamedResponse
         {
-            public function __construct(private $middlewareDuration, private $responseDuration)
+            public function __construct(private $prepareDuration, private $responseDuration)
             {
                 parent::__construct(function () {
-                    travelTo(now()->addMicroseconds($this->responseDuration)); // route_after_middleware_render
-
-                    // echo 'output';
+                    // Simulating a streamed response that takes some time.
+                    travelTo(now()->addMicroseconds($this->responseDuration)); // route after middleware
                 });
             }
 
             public function prepare(HttpFoundationRequest $request): static
             {
-                travelTo(now()->addMicroseconds($this->middlewareDuration)); // after_middleware
+                // This happens in a second render phase that occurs after all the "route after middleware" has run.
+                // We collapse this down into the `after_middleware` phase.
+                travelTo(now()->addMicroseconds($this->prepareDuration));
+
+                return parent::prepare($request);
+            }
+        };
+    }
+}
+
+final class ChangeRouteResponseBefore
+{
+    public function handle(Request $request, Closure $next, int $prepareDuration, int $sendingDuration): mixed
+    {
+        return new class($prepareDuration, $sendingDuration) extends StreamedResponse
+        {
+            public function __construct(private $prepareDuration, private $responseDuration)
+            {
+                parent::__construct(function () {
+                    // Simulating a streamed response that takes some time.
+                    travelTo(now()->addMicroseconds($this->responseDuration)); // route after middleware
+                });
+            }
+
+            public function prepare(HttpFoundationRequest $request): static
+            {
+                // This happens in a second render phase that occurs after all the "route after middleware" has run.
+                // We collapse this down into the `after_middleware` phase.
+                travelTo(now()->addMicroseconds($this->prepareDuration));
 
                 return parent::prepare($request);
             }

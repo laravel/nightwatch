@@ -199,7 +199,11 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $events->listen(
             RouteMatched::class,
-            fn (RouteMatched $event) => $event->route->action['middleware'][] = NightwatchRouteMiddleware::class,
+            fn (RouteMatched $event) => $event->route->action['middleware'] = [
+                NightwatchTerminatingMiddleware::class,
+                ...$event->route->action['middleware'] ?? [],
+                NightwatchRouteMiddleware::class, // TODO ensure this isn't a memory leak in Octane
+            ],
         );
 
         $events->listen(PreparingResponse::class, fn () => match ($sensor->executionPhase()) {

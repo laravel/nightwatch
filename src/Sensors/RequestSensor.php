@@ -39,7 +39,6 @@ final class RequestSensor
 
     public function __invoke(Request $request, Response $response): void
     {
-        $nowInMicrotime = $this->clock->microtime();
         /** @var Route|null */
         $route = $request->route();
         /** @var 'http'|'https' */
@@ -77,7 +76,7 @@ final class RequestSensor
             route_action: $route?->getActionName() ?? '',
             route_path: $routePath,
             ip: $request->ip() ?? '',
-            duration: (int) round(($nowInMicrotime - $this->clock->executionStartInMicrotime()) * 1_000_000),
+            duration: array_sum($this->executionPhases),
             status_code: (string) $response->getStatusCode(),
             request_size: strlen($request->getContent()),
             response_size: $this->parseResponseSize($response),
