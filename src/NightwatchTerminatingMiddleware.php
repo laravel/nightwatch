@@ -12,11 +12,11 @@ final class NightwatchTerminatingMiddleware
         //
     }
 
-    public function __invoke(Request $request, Closure $next): mixed
+    public function handle(Request $request, Closure $next): mixed
     {
         $response = $next($request);
 
-        if ($this->sensor->executionPhase() !== ExecutionPhase::AfterMiddleware) {
+        if ($this->sensor->executionPhase() === ExecutionPhase::BeforeMiddleware) {
             $this->sensor->start(ExecutionPhase::AfterMiddleware);
         }
 
@@ -25,7 +25,7 @@ final class NightwatchTerminatingMiddleware
 
     public function terminate(): void
     {
-        if ($this->sensor->executionPhase() === ExecutionPhase::Terminating->previous()) {
+        if ($this->sensor->executionPhase() !== ExecutionPhase::Terminating) {
             $this->sensor->start(ExecutionPhase::Terminating);
         }
     }

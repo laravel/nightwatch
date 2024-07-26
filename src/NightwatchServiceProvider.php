@@ -19,6 +19,7 @@ use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Routing\Events\PreparingResponse;
+use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
@@ -208,6 +209,11 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $events->listen(PreparingResponse::class, fn () => match ($sensor->executionPhase()) {
             ExecutionPhase::Action => $sensor->start(ExecutionPhase::Render),
+            default => null,
+        });
+
+        $events->listen(ResponsePrepared::class, fn () => match ($sensor->executionPhase()) {
+            ExecutionPhase::Render => $sensor->start(ExecutionPhase::AfterMiddleware),
             default => null,
         });
 

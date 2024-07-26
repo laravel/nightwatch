@@ -539,13 +539,16 @@ it('collapses the render time of a response returned from a route before middlew
     // before we have had a time to intercept things in the test.
     $sensor->prepareForNextInvocation();
     syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    // Simulating a microsecond of boot time.
+    travelTo(now()->addMicroseconds(1));
     $sensor->start(ExecutionPhase::BeforeMiddleware);
 
     $response = get('/users');
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.bootstrap', 0);
+    $ingest->assertLatestWrite('requests.0', 1);
+    $ingest->assertLatestWrite('requests.0.bootstrap', 1);
     $ingest->assertLatestWrite('requests.0.before_middleware', 3);
     $ingest->assertLatestWrite('requests.0.action', 0);
     $ingest->assertLatestWrite('requests.0.render', 0);
@@ -590,13 +593,14 @@ it('captures execution phase durations for unknown routes', function () {
 
     $response->assertNotFound();
     $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0', 1);
     $ingest->assertLatestWrite('requests.0.bootstrap', 1);
     $ingest->assertLatestWrite('requests.0.before_middleware', 2);
     $ingest->assertLatestWrite('requests.0.action', 0);
     $ingest->assertLatestWrite('requests.0.render', 0);
     $ingest->assertLatestWrite('requests.0.after_middleware', 10);
     $ingest->assertLatestWrite('requests.0.sending', 55);
-    $ingest->assertLatestWrite('requests.0.terminating', 95);
+    $ingest->assertLatestWrite('requests.0.terminating', 3);
     $ingest->assertLatestWrite('requests.0.duration', 1 + 3 + 5 + 8 + 16 + 55 + 95);
 });
 
