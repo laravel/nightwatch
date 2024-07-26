@@ -14,13 +14,7 @@ final class NightwatchTerminatingMiddleware
 
     public function handle(Request $request, Closure $next): mixed
     {
-        $response = $next($request);
-
-        if ($this->sensor->executionPhase() === ExecutionPhase::BeforeMiddleware) {
-            $this->sensor->start(ExecutionPhase::AfterMiddleware);
-        }
-
-        return $response;
+        return $next($request);
     }
 
     public function terminate(): void

@@ -242,8 +242,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             }
 
             $kernel->setGlobalMiddleware([
-                ...$kernel->getGlobalMiddleware(),
                 NightwatchTerminatingMiddleware::class,
+                ...$kernel->getGlobalMiddleware(),
             ]);
 
             $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
