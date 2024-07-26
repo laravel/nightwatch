@@ -206,7 +206,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $events->listen(RouteMatched::class, function (RouteMatched $event) {
             $middleware = $event->route->action['middleware'] ?? [];
 
-            $middleware[] = NightwatchRouteMiddleware::class; // TODO ensure adding these is not a memory leak in Octane
+            $middleware[] = NightwatchRouteMiddleware::class; // TODO ensure adding these is not a memory leak in Octane (event though Laravel will make sure they are unique)
 
             if (! class_exists(Terminating::class)) {
                 array_unshift($middleware, NightwatchTerminatingMiddleware::class);
