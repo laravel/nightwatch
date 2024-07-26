@@ -4,7 +4,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -12,8 +11,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionPhase;
 use Laravel\Nightwatch\SensorManager;
-use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;
@@ -343,7 +340,6 @@ it('records the requests user whilst ommiting the password', function () {
 
 it('captures the duration in microseconds', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
     Route::get('/users', function () {
         travelTo(now()->addMicroseconds(5));
 
@@ -472,7 +468,6 @@ it('captures global before middleware duration', function () {
 
 it('captures route before middleware duration', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
     App::instance('travel-before', function ($request, $next) {
         travelTo(now()->addMicroseconds(5));
 
@@ -490,7 +485,6 @@ it('captures route before middleware duration', function () {
 
 it('captures action duration', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
     Route::get('/users', function () {
         travelTo(now()->addMicroseconds(5));
 
@@ -507,8 +501,8 @@ it('captures action duration', function () {
 
 it('captures render duration', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
-    Route::get('/users', fn () => new class implements Arrayable {
+    Route::get('/users', fn () => new class implements Arrayable
+    {
         public function toArray()
         {
             travelTo(now()->addMicroseconds(5));
@@ -527,7 +521,6 @@ it('captures render duration', function () {
 
 it('captures route after middleware duration', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
     App::instance('travel-after', function ($request, $next) {
         return tap($next($request), function () {
             travelTo(now()->addMicroseconds(5));
@@ -545,7 +538,6 @@ it('captures route after middleware duration', function () {
 
 it('captures global after middleware duration', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
     Route::get('/users', fn () => []);
     App::instance('travel-after', function ($request, $next) {
         return tap($next($request), function () {
@@ -567,7 +559,6 @@ it('captures global after middleware duration', function () {
 
 it('captures sending duration', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
     // When running tests, Laravel does not call the `send` method.  We will
     // call it here to simulate a real request as we want to make sure we
     // measure how long the request takes to send.
@@ -588,9 +579,9 @@ it('captures sending duration', function () {
 
 it('captures global middleware terminating duration', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
     Route::get('/users', fn () => []);
-    App::instance('terminable', new class {
+    App::instance('terminable', new class
+    {
         public function handle($request, $next)
         {
             return $next($request);
@@ -616,8 +607,8 @@ it('captures global middleware terminating duration', function () {
 
 it('captures route middleware terminating duration', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
-    App::instance('terminable', new class {
+    App::instance('terminable', new class
+    {
         public function handle($request, $next)
         {
             return $next($request);
@@ -640,7 +631,6 @@ it('captures route middleware terminating duration', function () {
 
 it('captures terminating callback duration', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
     Route::get('/users', fn () => []);
     App::terminating(function () {
         travelTo(now()->addMicroseconds(5));
@@ -654,9 +644,23 @@ it('captures terminating callback duration', function () {
     $ingest->assertLatestWrite('requests.0.duration', 5);
 });
 
+it('captures terminating duration for unknown routes', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', fn () => []);
+    App::terminating(function () {
+        travelTo(now()->addMicroseconds(5));
+    });
+
+    $response = get('/unknown');
+
+    $response->assertNotFound();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.terminating', 5);
+    $ingest->assertLatestWrite('requests.0.duration', 5);
+});
+
 it('captures middleware duration for unknown routes and collapses "after" middleware into "before"', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
     App::instance('global-middleware', function ($request, $next) {
         travelTo(now()->addMicroseconds(1));
 
@@ -680,7 +684,6 @@ it('captures middleware duration for unknown routes and collapses "after" middle
 
 it('captures middleware durations for global middleware that return a response and it collapses "after" middleware into "before"', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
     App::instance('global-middleware-change-response', function ($request, $next) {
         travelTo(now()->addMicroseconds(1));
 
@@ -711,8 +714,8 @@ it('captures middleware durations for global middleware that return a response a
 
 it('captures the render duration for responses returned from a middleware as part of the middleware phase', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
-    App::instance('renderable-response-middleware', fn ($request, $next) => new class implements Arrayable {
+    App::instance('renderable-response-middleware', fn ($request, $next) => new class implements Arrayable
+    {
         public function toArray()
         {
             travelTo(now()->addMicroseconds(5));

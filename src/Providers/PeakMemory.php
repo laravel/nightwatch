@@ -11,6 +11,6 @@ final class PeakMemory implements PeakMemoryProvider
 {
     public function bytes(): int
     {
-        return (memory_get_peak_usage(true);
+        return memory_get_peak_usage(true);
     }
 }

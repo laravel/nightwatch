@@ -12,6 +12,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernelContract;
+use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -67,6 +68,10 @@ final class NightwatchServiceProvider extends ServiceProvider
                 default => $app->make('request')->server('REQUEST_TIME_FLOAT') ?? microtime(true),
             });
         });
+        $this->app->singleton(NightwatchRouteMiddleware::class);
+        if (! class_exists(Terminating::class)) {
+            $this->app->singleton(NightwatchTerminatingMiddleware::class);
+        }
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
         $this->configureAgent();
         $this->configureIngest();
@@ -198,14 +203,17 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $this->app->booted(fn () => $sensor->start(ExecutionPhase::BeforeMiddleware));
 
-        $events->listen(
-            RouteMatched::class,
-            fn (RouteMatched $event) => $event->route->action['middleware'] = [
-                NightwatchTerminatingMiddleware::class,
-                ...$event->route->action['middleware'] ?? [],
-                NightwatchRouteMiddleware::class, // TODO ensure adding these is not a memory leak in Octane
-            ],
-        );
+        $events->listen(RouteMatched::class, function (RouteMatched $event) {
+            $middleware = $event->route->action['middleware'] ?? [];
+
+            $middleware[] = NightwatchRouteMiddleware::class; // TODO ensure adding these is not a memory leak in Octane
+
+            if (! class_exists(Terminating::class)) {
+                array_unshift($middleware, NightwatchTerminatingMiddleware::class);
+            }
+
+            $event->route->action['middleware'] = $middleware;
+        });
 
         $events->listen(PreparingResponse::class, fn () => match ($sensor->executionPhase()) {
             ExecutionPhase::Action => $sensor->start(ExecutionPhase::Render),
@@ -218,6 +226,8 @@ final class NightwatchServiceProvider extends ServiceProvider
         });
 
         $events->listen(RequestHandled::class, fn () => $sensor->start(ExecutionPhase::Sending));
+
+        $events->listen(Terminating::class, fn () => $sensor->start(ExecutionPhase::Terminating));
 
         /*
          * Sensor: Query.
@@ -241,10 +251,12 @@ final class NightwatchServiceProvider extends ServiceProvider
                 return;
             }
 
-            $kernel->setGlobalMiddleware([
-                NightwatchTerminatingMiddleware::class,
-                ...$kernel->getGlobalMiddleware(),
-            ]);
+            if (! class_exists(Terminating::class)) {
+                $kernel->setGlobalMiddleware([
+                    NightwatchTerminatingMiddleware::class, // Check this isn't a memory leak in Octane
+                    ...$kernel->getGlobalMiddleware(),
+                ]);
+            }
 
             $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
                 $sensor->start(ExecutionPhase::End);

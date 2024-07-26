@@ -10,7 +10,6 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
-use Illuminate\Support\Str;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
@@ -38,21 +37,33 @@ use Throwable;
 final class SensorManager
 {
     private RecordsBuffer $recordsBuffer;
+
     private ExecutionParent $executionParent;
 
     private ?CacheEventSensor $cacheEventSensor;
+
     private ?ExceptionSensor $exceptionSensor;
+
     private ?OutgoingRequestSensor $outgoingRequestSensor;
+
     private ?QuerySensor $querySensor;
+
     private ?QueuedJobSensor $queuedJobSensor;
 
     private ?Clock $clock;
+
     private ?string $traceId;
+
     private ?string $server;
+
     private ?string $deployId;
+
     private ?PeakMemoryProvider $peakMemoryProvider;
+
     private ?Location $location;
+
     private ?Config $config;
+
     private ?UserProvider $userProvider;
 
     /**
@@ -64,7 +75,8 @@ final class SensorManager
 
     private ?float $currentPhaseStartedAtMicrotime;
 
-    public function __construct(private Application $app) {
+    public function __construct(private Application $app)
+    {
         $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
         $this->currentPhase = ExecutionPhase::Bootstrap;
