@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\UserController;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Http\Kernel;
@@ -11,9 +12,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionPhase;
 use Laravel\Nightwatch\SensorManager;
-
-use App\Http\UserController;
-use App\Models\User;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;

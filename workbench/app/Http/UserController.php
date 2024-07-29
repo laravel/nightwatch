@@ -4,7 +4,7 @@ namespace App\Http;
 
 use App\Models\User;
 
-class UserController
+final class UserController
 {
     public function index()
     {
