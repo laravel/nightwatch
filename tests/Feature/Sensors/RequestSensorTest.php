@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionPhase;
 use Laravel\Nightwatch\SensorManager;
 
+use App\Http\UserController;
+use App\Models\User;
+
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;
 use function Pest\Laravel\get;
@@ -287,7 +290,7 @@ it('captures route actions for controller classes', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.route_action', 'UserController@index');
+    $ingest->assertLatestWrite('requests.0.route_action', 'App\Http\UserController@index');
 });
 
 it('captures real path and route path', function () {
@@ -732,11 +735,3 @@ it('captures the render duration for responses returned from a middleware as par
     $ingest->assertLatestWrite('requests.0.before_middleware', 5);
     $ingest->assertLatestWrite('requests.0.duration', 5);
 });
-
-final class UserController
-{
-    public function index()
-    {
-        return [];
-    }
-}

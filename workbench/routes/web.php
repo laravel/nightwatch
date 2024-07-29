@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
-use Workbench\App\Jobs\MyJob;
+use App\Jobs\MyJob;
 
 Route::get('/', function () {
     // Cache events. miss:
