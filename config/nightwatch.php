@@ -5,7 +5,7 @@ return [
     'app_id' => '123',
     'app_secret' => 'abc',
 
-    'deploy_id' => env('NIGHTWATCH_DEPLOY_ID'),
+    'deploy' => env('NIGHTWATCH_DEPLOY'),
     'server' => gethostname(),
 
     'collector' => [

@@ -32,7 +32,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
                 // TODO make sure we `trim` the value to 500
                 // TODO "alert" when exceeding
                 // TODO should we trim whitespace across all of these?
-                'deploy_id' => $deployId = rand(0, 1) ? 'v1.0.5' : '',
+                'deploy' => $deploy = rand(0, 1) ? 'v1.0.5' : '',
                 // TODO: trim to 500 chars.
                 // TODO: "alert" when exceeded by sending something to nightwatch
                 'server' => $server = 'web-01',
@@ -76,7 +76,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
         'queries' => [
             [
                 'timestamp' => date('Y-m-d H:i:s', time()),
-                'deploy_id' => $deployId,
+                'deploy' => $deploy,
                 'server' => $server,
                 'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
@@ -93,7 +93,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
         'exceptions' => [
             [
                 'timestamp' => date('Y-m-d H:i:s', time()),
-                'deploy_id' => $deployId,
+                'deploy' => $deploy,
                 'server' => $server,
                 'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
@@ -112,7 +112,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
         'outgoing_requests' => [
             [
                 'timestamp' => date('Y-m-d H:i:s', time()),
-                'deploy_id' => $deployId,
+                'deploy' => $deploy,
                 'server' => $server,
                 'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
@@ -131,7 +131,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
         'queued_jobs' => [
             [
                 'timestamp' => date('Y-m-d H:i:s', time()),
-                'deploy_id' => $deployId,
+                'deploy' => $deploy,
                 'server' => $server,
                 'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
@@ -148,7 +148,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
         'cache_events' => [
             [
                 'timestamp' => date('Y-m-d H:i:s', time()),
-                'deploy_id' => $deployId,
+                'deploy' => $deploy,
                 'server' => $server,
                 'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
@@ -166,7 +166,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
         'lazy_loads' => [
             [
                 'timestamp' => date('Y-m-d H:i:s', time()),
-                'deploy_id' => $deployId,
+                'deploy' => $deploy,
                 'server' => $server,
                 'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
@@ -183,7 +183,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
         'logs' => [
             [
                 'timestamp' => date('Y-m-d H:i:s', time()),
-                'deploy_id' => $deployId,
+                'deploy' => $deploy,
                 'server' => $server,
                 'execution_context' => $executionContext,
                 'execution_id' => $trace,
@@ -199,7 +199,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
         'mail' => [
             [
                 'timestamp' => date('Y-m-d H:i:s', time()),
-                'deploy_id' => $deployId,
+                'deploy' => $deploy,
                 'server' => $server,
                 'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
@@ -217,7 +217,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
         'notifications' => [
             [
                 'timestamp' => date('Y-m-d H:i:s', time()),
-                'deploy_id' => $deployId,
+                'deploy' => $deploy,
                 'server' => $server,
                 'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
@@ -235,7 +235,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
         'commands' => [
             [
                 'timestamp' => date('Y-m-d H:i:s', time()),
-                'deploy_id' => $deployId,
+                'deploy' => $deploy,
                 'server' => $server,
                 'group' => str_repeat('a', 64),
                 'trace_id' => $trace,
@@ -270,7 +270,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
 
         'job_attempts' => [
             [
-                'deploy_id' => $deployId,
+                'deploy' => $deploy,
                 'server' => $server,
                 'group' => str_repeat('a', 64),
                 'trace_id' => $trace,

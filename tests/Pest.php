@@ -58,9 +58,9 @@ function records(): RecordsBuffer
     return App::make(RecordsBuffer::class);
 }
 
-function setDeployId(string $deployId): void
+function setDeploy(string $deploy): void
 {
-    Config::set('nightwatch.deploy_id', $deployId);
+    Config::set('nightwatch.deploy', $deploy);
 }
 
 function setServerName(string $name): void

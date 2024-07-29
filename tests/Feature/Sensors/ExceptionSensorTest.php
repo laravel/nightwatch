@@ -9,7 +9,7 @@ use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
-    setDeployId('v1.2.3');
+    setDeploy('v1.2.3');
     setServerName('web-01');
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
@@ -43,7 +43,7 @@ it('ingests exceptions', function () {
             [
                 'v' => 1,
                 'timestamp' => 946684800,
-                'deploy_id' => 'v1.2.3',
+                'deploy' => 'v1.2.3',
                 'server' => 'web-01',
                 'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
@@ -94,7 +94,7 @@ it('ingests exceptions', function () {
             [
                 'v' => 1,
                 'timestamp' => 946684800,
-                'deploy_id' => 'v1.2.3',
+                'deploy' => 'v1.2.3',
                 'server' => 'web-01',
                 'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
@@ -145,7 +145,7 @@ it('ingests reported exceptions', function () {
             [
                 'v' => 1,
                 'timestamp' => 946684800,
-                'deploy_id' => 'v1.2.3',
+                'deploy' => 'v1.2.3',
                 'server' => 'web-01',
                 'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
@@ -196,7 +196,7 @@ it('ingests reported exceptions', function () {
             [
                 'v' => 1,
                 'timestamp' => 946684800,
-                'deploy_id' => 'v1.2.3',
+                'deploy' => 'v1.2.3',
                 'server' => 'web-01',
                 'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
                 'trace_id' => '00000000-0000-0000-0000-000000000000',

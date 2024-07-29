@@ -33,7 +33,7 @@ final class QueuedJobSensor
         private UserProvider $user,
         private Clock $clock,
         private Config $config,
-        private string $deployId,
+        private string $deploy,
         private string $server,
         private string $traceId,
     ) {
@@ -51,7 +51,7 @@ final class QueuedJobSensor
 
         $this->recordsBuffer->writeQueuedJob(new QueuedJob(
             timestamp: (int) $nowMicrotime,
-            deploy_id: $this->deployId,
+            deploy: $this->deploy,
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,

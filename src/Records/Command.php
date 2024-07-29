@@ -17,7 +17,7 @@ final class Command
      */
     public function __construct(
         public int $timestamp,
-        public string $deploy_id,
+        public string $deploy,
         public string $server,
         public string $group,
         public string $trace_id,

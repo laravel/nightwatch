@@ -56,7 +56,7 @@ final class SensorManager
 
     private ?string $server;
 
-    private ?string $deployId;
+    private ?string $deploy;
 
     private ?PeakMemoryProvider $peakMemoryProvider;
 
@@ -109,7 +109,7 @@ final class SensorManager
             clock: $clock = $this->clock(),
             user: $this->user(),
             traceId: $this->traceId(),
-            deployId: $this->deployId(),
+            deploy: $this->deploy(),
             server: $this->server(),
             executionPhases: $this->executionPhases,
         );
@@ -130,7 +130,7 @@ final class SensorManager
             peakMemory: $this->peakMemoryProvider(),
             user: $this->user(),
             traceId: $this->traceId(),
-            deployId: $this->deployId(),
+            deploy: $this->deploy(),
             server: $this->server(),
         );
 
@@ -149,7 +149,7 @@ final class SensorManager
             clock: $this->clock(),
             location: $this->location(),
             traceId: $this->traceId(),
-            deployId: $this->deployId(),
+            deploy: $this->deploy(),
             server: $this->server(),
             executionId: $this->executionId(),
             executionContext: $this->executionContext(),
@@ -166,7 +166,7 @@ final class SensorManager
             clock: $this->clock(),
             user: $this->user(),
             traceId: $this->traceId(),
-            deployId: $this->deployId(),
+            deploy: $this->deploy(),
             server: $this->server(),
         );
 
@@ -181,7 +181,7 @@ final class SensorManager
             user: $this->user(),
             clock: $this->clock(),
             traceId: $this->traceId(),
-            deployId: $this->deployId(),
+            deploy: $this->deploy(),
             server: $this->server(),
         );
 
@@ -196,7 +196,7 @@ final class SensorManager
             clock: $this->clock(),
             location: $this->location(),
             traceId: $this->traceId(),
-            deployId: $this->deployId(),
+            deploy: $this->deploy(),
             server: $this->server(),
         );
 
@@ -212,7 +212,7 @@ final class SensorManager
             clock: $this->clock(),
             config: $this->config(),
             traceId: $this->traceId(),
-            deployId: $this->deployId(),
+            deploy: $this->deploy(),
             server: $this->server(),
         );
 
@@ -240,9 +240,9 @@ final class SensorManager
         return $this->peakMemoryProvider ??= $this->app->make(PeakMemoryProvider::class);
     }
 
-    private function deployId(): string
+    private function deploy(): string
     {
-        return $this->deployId ??= TinyText::limit((string) $this->config()->get('nightwatch.deploy_id'));
+        return $this->deploy ??= TinyText::limit((string) $this->config()->get('nightwatch.deploy'));
     }
 
     private function server(): string

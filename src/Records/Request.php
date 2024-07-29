@@ -16,8 +16,7 @@ final class Request
      */
     public function __construct(
         public float $timestamp,
-        // TODO public $env_id = ...
-        public string $deploy_id,
+        public string $deploy,
         public string $server,
         public string $group,
         public string $trace_id,

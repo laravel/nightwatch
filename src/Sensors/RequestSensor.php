@@ -30,7 +30,7 @@ final class RequestSensor
         private UserProvider $user,
         private Clock $clock,
         private string $traceId,
-        private string $deployId,
+        private string $deploy,
         private string $server,
         private array $executionPhases,
     ) {
@@ -55,7 +55,7 @@ final class RequestSensor
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
             timestamp: $this->clock->executionStartInMicrotime(),
-            deploy_id: $this->deployId,
+            deploy: $this->deploy,
             server: $this->server,
             group: hash('md5', implode(',', [implode('|', $routeMethods), $routeDomain, $routePath])),
             trace_id: $this->traceId,

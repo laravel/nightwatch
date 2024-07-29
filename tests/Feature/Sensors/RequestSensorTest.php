@@ -20,7 +20,7 @@ use function Pest\Laravel\head;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
-    setDeployId('v1.2.3');
+    setDeploy('v1.2.3');
     setServerName('web-01');
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
@@ -39,7 +39,7 @@ it('can ingest requests', function () {
         [
             'v' => 1,
             'timestamp' => 946688523.456789,
-            'deploy_id' => 'v1.2.3',
+            'deploy' => 'v1.2.3',
             'server' => 'web-01',
             'group' => hash('md5', 'GET|HEAD,,/users'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',

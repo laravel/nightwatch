@@ -20,7 +20,7 @@ final class CacheEventSensor
         private ExecutionParent $executionParent,
         private UserProvider $user,
         private Clock $clock,
-        private string $deployId,
+        private string $deploy,
         private string $server,
         private string $traceId,
     ) {
@@ -44,7 +44,7 @@ final class CacheEventSensor
 
         $this->recordsBuffer->writeCacheEvent(new CacheEvent(
             timestamp: (int) $nowMicrotime,
-            deploy_id: $this->deployId,
+            deploy: $this->deploy,
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,

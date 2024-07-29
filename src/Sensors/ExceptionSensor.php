@@ -21,7 +21,7 @@ final class ExceptionSensor
         private UserProvider $user,
         private Clock $clock,
         private Location $location,
-        private string $deployId,
+        private string $deploy,
         private string $server,
         private string $traceId,
     ) {
@@ -39,7 +39,7 @@ final class ExceptionSensor
 
         $this->recordsBuffer->writeException(new Exception(
             timestamp: (int) $nowMicrotime,
-            deploy_id: $this->deployId,
+            deploy: $this->deploy,
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,

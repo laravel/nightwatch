@@ -21,7 +21,7 @@ final class OutgoingRequestSensor
         private ExecutionParent $executionParent,
         private UserProvider $user,
         private Clock $clock,
-        private string $deployId,
+        private string $deploy,
         private string $server,
         private string $traceId,
     ) {
@@ -42,7 +42,7 @@ final class OutgoingRequestSensor
 
         $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
             timestamp: (int) $startMicrotime,
-            deploy_id: $this->deployId,
+            deploy: $this->deploy,
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,
