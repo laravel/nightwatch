@@ -733,3 +733,16 @@ it('captures the render duration for responses returned from a middleware as par
     $ingest->assertLatestWrite('requests.0.before_middleware', 5);
     $ingest->assertLatestWrite('requests.0.duration', 5);
 });
+
+it('supports custom request methods', function () {
+    $ingest = fakeIngest();
+    Route::match('blah', '/', fn () => 'Welcome!');
+
+    $response = call('blah', '/');
+
+    $response->assertOk();
+    $response->assertContent('Welcome!');
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('requests.0.method', 'BLAH');
+    $ingest->assertLatestWrite('requests.0.route_methods', ['BLAH']);
+});
