@@ -42,7 +42,6 @@ final class QuerySensor
         [$file, $line] = $this->location->forQueryTrace($trace);
 
         $this->executionParent->queries++;
-        $this->executionParent->queries_duration += $durationInMicroseconds;
 
         $this->recordsBuffer->writeQuery(new Query(
             timestamp: $this->clock->microtime() - ($event->time / 1000),

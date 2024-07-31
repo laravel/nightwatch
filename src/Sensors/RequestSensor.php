@@ -80,27 +80,6 @@ final class RequestSensor
             status_code: (string) $response->getStatusCode(),
             request_size: strlen($request->getContent()),
             response_size: $this->parseResponseSize($response),
-            queries: $this->executionParent->queries,
-            queries_duration: $this->executionParent->queries_duration,
-            lazy_loads: $this->executionParent->lazy_loads,
-            lazy_loads_duration: $this->executionParent->lazy_loads_duration,
-            jobs_queued: $this->executionParent->jobs_queued,
-            mail_queued: $this->executionParent->mail_queued,
-            mail_sent: $this->executionParent->mail_sent,
-            mail_duration: $this->executionParent->mail_duration,
-            notifications_queued: $this->executionParent->notifications_queued,
-            notifications_sent: $this->executionParent->notifications_sent,
-            notifications_duration: $this->executionParent->notifications_duration,
-            outgoing_requests: $this->executionParent->outgoing_requests,
-            outgoing_requests_duration: $this->executionParent->outgoing_requests_duration,
-            files_read: $this->executionParent->files_read,
-            files_read_duration: $this->executionParent->files_read_duration,
-            files_written: $this->executionParent->files_written,
-            files_written_duration: $this->executionParent->files_written_duration,
-            cache_hits: $this->executionParent->cache_hits,
-            cache_misses: $this->executionParent->cache_misses,
-            hydrated_models: $this->executionParent->hydrated_models,
-            peak_memory_usage: $this->peakMemory->bytes(),
             bootstrap: $this->executionPhases[ExecutionPhase::Bootstrap->value] ?? 0,
             before_middleware: $this->executionPhases[ExecutionPhase::BeforeMiddleware->value] ?? 0,
             action: $this->executionPhases[ExecutionPhase::Action->value] ?? 0,
@@ -108,10 +87,25 @@ final class RequestSensor
             after_middleware: $this->executionPhases[ExecutionPhase::AfterMiddleware->value] ?? 0,
             sending: $this->executionPhases[ExecutionPhase::Sending->value] ?? 0,
             terminating: $this->executionPhases[ExecutionPhase::Terminating->value] ?? 0,
+            exceptions: $this->executionParent->exceptions,
+            queries: $this->executionParent->queries,
+            lazy_loads: $this->executionParent->lazy_loads,
+            jobs_queued: $this->executionParent->jobs_queued,
+            mail_queued: $this->executionParent->mail_queued,
+            mail_sent: $this->executionParent->mail_sent,
+            notifications_queued: $this->executionParent->notifications_queued,
+            notifications_sent: $this->executionParent->notifications_sent,
+            outgoing_requests: $this->executionParent->outgoing_requests,
+            files_read: $this->executionParent->files_read,
+            files_written: $this->executionParent->files_written,
+            cache_hits: $this->executionParent->cache_hits,
+            cache_misses: $this->executionParent->cache_misses,
+            hydrated_models: $this->executionParent->hydrated_models,
+            peak_memory_usage: $this->peakMemory->bytes(),
         ));
     }
 
-    private function parseResponseSize(Response $response): ?int
+    private function parseResponseSize(Response $response): int
     {
         if (is_string($content = $response->getContent())) {
             return strlen($content);
@@ -131,6 +125,9 @@ final class RequestSensor
             return (int) $length;
         }
 
-        return null;
+        // TODO We are unable to determine the size of the response. We will
+        // set this to `0`. We should offer a way to tell us the size of the
+        // streamed response, e.g., echo Nightwatch::streaming($content);
+        return 0;
     }
 }

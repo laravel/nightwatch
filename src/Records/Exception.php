@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\Types\MediumText;
+use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\Types\Text;
 use Laravel\Nightwatch\Types\TinyText;
 
@@ -31,9 +32,9 @@ final class Exception
         public int $code,
         public string $trace,
     ) {
-        $this->class = TinyText::limit($this->class);
-        $this->file = TinyText::limit($this->file);
-        $this->message = Text::limit($this->message);
-        $this->trace = MediumText::limit($this->trace);
+        $this->class = Str::tinyText($this->class);
+        $this->file = Str::tinyText($this->file);
+        $this->message = Str::text($this->message);
+        $this->trace = Str::mediumText($this->trace);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\Types\Text;
 use Laravel\Nightwatch\Types\TinyText;
 
@@ -50,7 +51,7 @@ final class Command
         public int $hydrated_models,
         public int $peak_memory_usage,
     ) {
-        $this->name = TinyText::limit($this->name);
-        $this->command = Text::limit($this->command);
+        $this->name = Str::tinyText($this->name);
+        $this->command = Str::text($this->command);
     }
 }

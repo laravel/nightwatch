@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\ExecutionPhase;
 use Laravel\Nightwatch\Types\MediumText;
+use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\Types\TinyText;
 
 /**
@@ -30,8 +31,8 @@ final class Query
         public int $duration,
         public string $connection,
     ) {
-        $this->sql = MediumText::limit($this->sql);
-        $this->file = TinyText::limit($this->file);
-        $this->connection = TinyText::limit($this->connection);
+        $this->sql = Str::mediumText($this->sql);
+        $this->file = Str::tinyText($this->file);
+        $this->connection = Str::tinyText($this->connection);
     }
 }

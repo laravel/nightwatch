@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch;
 
 use Illuminate\Auth\AuthManager;
+use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\Types\TinyText;
 
 /**
@@ -17,6 +18,6 @@ final class UserProvider
 
     public function id(): string
     {
-        return TinyText::limit((string) $this->auth->id());
+        return Str::tinyText((string) $this->auth->id());
     }
 }

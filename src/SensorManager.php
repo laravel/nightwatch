@@ -21,6 +21,7 @@ use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
 use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\QueuedJobSensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
+use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\Types\TinyText;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -242,12 +243,12 @@ final class SensorManager
 
     private function deploy(): string
     {
-        return $this->deploy ??= TinyText::limit((string) $this->config()->get('nightwatch.deploy'));
+        return $this->deploy ??= Str::tinyText((string) $this->config()->get('nightwatch.deploy'));
     }
 
     private function server(): string
     {
-        return $this->server ??= TinyText::limit((string) $this->config()->get('nightwatch.server'));
+        return $this->server ??= Str::tinyText((string) $this->config()->get('nightwatch.server'));
     }
 
     public function flush(): string

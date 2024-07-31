@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\Types\TinyText;
 
 /**
@@ -26,7 +27,7 @@ final class CacheEvent
         public string $key,
         public string $type,
     ) {
-        $this->store = TinyText::limit($this->store);
-        $this->key = TinyText::limit($this->key);
+        $this->store = Str::tinyText($this->store);
+        $this->key = Str::tinyText($this->key);
     }
 }

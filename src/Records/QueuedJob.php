@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\Types\TinyText;
 
 /**
@@ -27,8 +28,8 @@ final class QueuedJob
         public string $connection,
         public string $queue,
     ) {
-        $this->name = TinyText::limit($this->name);
-        $this->connection = TinyText::limit($this->connection);
-        $this->queue = TinyText::limit($this->queue);
+        $this->name = Str::tinyText($this->name);
+        $this->connection = Str::tinyText($this->connection);
+        $this->queue = Str::tinyText($this->queue);
     }
 }
