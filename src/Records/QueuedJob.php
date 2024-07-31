@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\Types\Str;
-use Laravel\Nightwatch\Types\TinyText;
 
 /**
  * @internal

@@ -204,7 +204,7 @@ it('can ingest cache hits', function () {
 it('handles cache drivers with no store configured', function () {
     $ingest = fakeIngest();
     Route::post('/users', function () {
-        Cache::repository(new ArrayStore())->get('users:345');
+        Cache::repository(new ArrayStore)->get('users:345');
     });
 
     $response = post('/users');

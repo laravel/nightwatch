@@ -2,10 +2,8 @@
 
 namespace Laravel\Nightwatch\Records;
 
-use Laravel\Nightwatch\Types\Limit;
 use Laravel\Nightwatch\Types\Number;
 use Laravel\Nightwatch\Types\Str;
-use Laravel\Nightwatch\Types\Text;
 use Laravel\Nightwatch\Types\TinyText;
 
 /**

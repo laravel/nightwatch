@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch;
 
 use Illuminate\Auth\AuthManager;
 use Laravel\Nightwatch\Types\Str;
-use Laravel\Nightwatch\Types\TinyText;
 
 /**
  * @internal

@@ -2,10 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
-use Laravel\Nightwatch\Types\MediumText;
 use Laravel\Nightwatch\Types\Str;
-use Laravel\Nightwatch\Types\Text;
-use Laravel\Nightwatch\Types\TinyText;
 
 /**
  * @internal

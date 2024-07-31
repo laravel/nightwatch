@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Types;
 
-class Number
+final class Number
 {
     public function uInt32(int $value): int
     {
