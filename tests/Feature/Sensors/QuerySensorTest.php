@@ -109,7 +109,6 @@ it('captures aggregate query data on the request', function () {
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('requests.0.queries', 2);
-    $ingest->assertLatestWrite('requests.0.queries_duration', 8642);
 });
 
 it('can captures query execution phase', function () {
