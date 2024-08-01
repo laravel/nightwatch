@@ -58,30 +58,9 @@ it('can ingest requests', function () {
             'route_action' => 'Closure',
             'ip' => '127.0.0.1',
             'duration' => 0,
-            'status_code' => '200',
+            'status_code' => 200,
             'request_size' => 0,
             'response_size' => 2,
-            'queries' => 0,
-            'queries_duration' => 0,
-            'lazy_loads' => 0,
-            'lazy_loads_duration' => 0,
-            'jobs_queued' => 0,
-            'mail_queued' => 0,
-            'mail_sent' => 0,
-            'mail_duration' => 0,
-            'notifications_queued' => 0,
-            'notifications_sent' => 0,
-            'notifications_duration' => 0,
-            'outgoing_requests' => 0,
-            'outgoing_requests_duration' => 0,
-            'files_read' => 0,
-            'files_read_duration' => 0,
-            'files_written' => 0,
-            'files_written_duration' => 0,
-            'cache_hits' => 0,
-            'cache_misses' => 0,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 1234,
             'bootstrap' => 0,
             'before_middleware' => 0,
             'action' => 0,
@@ -89,6 +68,21 @@ it('can ingest requests', function () {
             'after_middleware' => 0,
             'sending' => 0,
             'terminating' => 0,
+            'exceptions' => 0,
+            'queries' => 0,
+            'lazy_loads' => 0,
+            'jobs_queued' => 0,
+            'mail_queued' => 0,
+            'mail_sent' => 0,
+            'notifications_queued' => 0,
+            'notifications_sent' => 0,
+            'outgoing_requests' => 0,
+            'files_read' => 0,
+            'files_written' => 0,
+            'cache_hits' => 0,
+            'cache_misses' => 0,
+            'hydrated_models' => 0,
+            'peak_memory_usage' => 1234,
         ],
     ]);
 });
@@ -132,7 +126,7 @@ it('gracefully handles response size for a streamed file that is deleted after s
     $sensor->request($request, $response);
     $ingest->write($sensor->flush());
 
-    $ingest->assertLatestWrite('requests.0.response_size', null);
+    $ingest->assertLatestWrite('requests.0.response_size', 0);
 });
 
 it('gracefully handles response size for streamed responses', function () {
@@ -143,7 +137,7 @@ it('gracefully handles response size for streamed responses', function () {
 
     get('/users');
 
-    $ingest->assertLatestWrite('requests.0.response_size', null);
+    $ingest->assertLatestWrite('requests.0.response_size', 0);
 });
 
 it('captures the content-length when present on a streamed response of unknown size', function () {
