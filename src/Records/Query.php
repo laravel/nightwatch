@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
-use Laravel\Nightwatch\ExecutionPhase;
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Types\Str;
 
 /**
@@ -20,7 +20,7 @@ final class Query
         public string $trace_id,
         public string $execution_context,
         public string $execution_id,
-        public ExecutionPhase $execution_phase,
+        public ExecutionStage $execution_stage,
         public string $user,
         // --- //
         public string $sql,

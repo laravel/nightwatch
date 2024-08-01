@@ -198,10 +198,10 @@ final class NightwatchServiceProvider extends ServiceProvider
         $sensor = $this->app->instance(SensorManager::class, new SensorManager($this->app));
 
         /*
-         * Execution phases...
+         * Execution stages...
          */
 
-        $this->app->booted(fn () => $sensor->start(ExecutionPhase::BeforeMiddleware));
+        $this->app->booted(fn () => $sensor->start(ExecutionStage::BeforeMiddleware));
 
         $events->listen(RouteMatched::class, function (RouteMatched $event) {
             $middleware = $event->route->action['middleware'] ?? [];
@@ -215,19 +215,19 @@ final class NightwatchServiceProvider extends ServiceProvider
             $event->route->action['middleware'] = $middleware;
         });
 
-        $events->listen(PreparingResponse::class, fn () => match ($sensor->executionPhase()) {
-            ExecutionPhase::Action => $sensor->start(ExecutionPhase::Render),
+        $events->listen(PreparingResponse::class, fn () => match ($sensor->executionStage()) {
+            ExecutionStage::Action => $sensor->start(ExecutionStage::Render),
             default => null,
         });
 
-        $events->listen(ResponsePrepared::class, fn () => match ($sensor->executionPhase()) {
-            ExecutionPhase::Render => $sensor->start(ExecutionPhase::AfterMiddleware),
+        $events->listen(ResponsePrepared::class, fn () => match ($sensor->executionStage()) {
+            ExecutionStage::Render => $sensor->start(ExecutionStage::AfterMiddleware),
             default => null,
         });
 
-        $events->listen(RequestHandled::class, fn () => $sensor->start(ExecutionPhase::Sending));
+        $events->listen(RequestHandled::class, fn () => $sensor->start(ExecutionStage::Sending));
 
-        $events->listen(Terminating::class, fn () => $sensor->start(ExecutionPhase::Terminating));
+        $events->listen(Terminating::class, fn () => $sensor->start(ExecutionStage::Terminating));
 
         /*
          * Sensor: Query.
@@ -259,7 +259,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             }
 
             $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
-                $sensor->start(ExecutionPhase::End);
+                $sensor->start(ExecutionStage::End);
 
                 $sensor->request($request, $response);
 

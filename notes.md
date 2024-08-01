@@ -18,8 +18,8 @@ This is the expected flow for majority requests.
     8. Route  -> `C::before`
     9. Route  -> `NightwatchRouteMiddleware::before`
 3. Action                                                          [`NightwatchRouteMiddleware::before`]
-4. Render                                                          [`Event::listen(PreparingResponse)` when `ExecutionPhase::Action`]
-5. After middleware                                                [`Event::listen(ResponsePrepared)` when `ExecutionPhase::Render`]
+4. Render                                                          [`Event::listen(PreparingResponse)` when `ExecutionStage::Action`]
+5. After middleware                                                [`Event::listen(ResponsePrepared)` when `ExecutionStage::Render`]
     1. Route  -> `NightwatchRouteMiddleware::after`
     2. Route  -> `C::after`
     3. Route  -> `B::after`
@@ -49,7 +49,7 @@ This flow illustrates what happens when a request and no route is matched, e.g.,
 ### UI considerations
 
 - Hide action and render
-- Collapse before and after middleware into a single phase
+- Collapse before and after middleware into a single stage
 
 ### Flow
 
@@ -59,7 +59,7 @@ This flow illustrates what happens when a request and no route is matched, e.g.,
     2. Global -> `A::before`
     3. Global -> `B::before`
     4. Global -> `C::before`
-3. After middleware                                                [`Event::listen(ResponsePrepared)` when `ExecutionPhase::BeforeMiddleware`]
+3. After middleware                                                [`Event::listen(ResponsePrepared)` when `ExecutionStage::BeforeMiddleware`]
     1. Global -> `C::after`
     2. Global -> `B::after`
     3. Global -> `A::after`
@@ -117,7 +117,7 @@ This may happen if a global middleware wants to decorate a response or augment a
     4. Global -> `C::before`
 3. Action
 4. Render
-5. After middleware                                                [`Event::listen(ResponsePrepared)` when `ExecutionPhase::BeforeMiddleware`]
+5. After middleware                                                [`Event::listen(ResponsePrepared)` when `ExecutionStage::BeforeMiddleware`]
     1. Global -> `C::after`
     2. Global -> `B::after` <
     3. Global -> `C::after`
@@ -154,8 +154,8 @@ This flow illustrates what happens when a route middleware returns a response an
   ~~x. Route  -> `C::before`~~
   ~~x. Route  -> `NightwatchRouteMiddleware::before`~~
 ~~x. Action                                                          [`NightwatchRouteMiddleware::before`]~~
-~~x. Render                                                          [`Event::listen(PreparingResponse)` when `ExecutionPhase::Action`]~~
-~~x. After middleware                                                [`Event::listen(ResponsePrepared)` when `ExecutionPhase::Render`]~~
+~~x. Render                                                          [`Event::listen(PreparingResponse)` when `ExecutionStage::Action`]~~
+~~x. After middleware                                                [`Event::listen(ResponsePrepared)` when `ExecutionStage::Render`]~~
   ~~x. Route  -> `NightwatchRouteMiddleware::after`~~
   ~~x. Route  -> `C::after`~~
   ~~x. Route  -> `B::after`~~
@@ -198,8 +198,8 @@ This flow illustrates what happens when a route middleware returns a different r
     8. Route  -> `C::before`
     9. Route  -> `NightwatchRouteMiddleware::before`
 3. Action                                                          [`NightwatchRouteMiddleware::before`]
-4. Render                                                          [`Event::listen(PreparingResponse)` when `ExecutionPhase::Action`]
-5. After middleware                                                [`Event::listen(ResponsePrepared)` when `ExecutionPhase::Render`]
+4. Render                                                          [`Event::listen(PreparingResponse)` when `ExecutionStage::Action`]
+5. After middleware                                                [`Event::listen(ResponsePrepared)` when `ExecutionStage::Render`]
     1. Route  -> `NightwatchRouteMiddleware::after`
     2. Route  -> `C::after`
     3. Route  -> `B::after` <

@@ -5,7 +5,7 @@ namespace Laravel\Nightwatch;
 /**
  * @internal
  */
-enum ExecutionPhase: string
+enum ExecutionStage: string
 {
     case Bootstrap = 'bootstrap';
     case BeforeMiddleware = 'before_middleware';

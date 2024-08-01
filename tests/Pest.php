@@ -10,7 +10,7 @@ use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\ExecutionPhase;
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Tests\FakeIngest;
 
@@ -50,7 +50,7 @@ function syncClock(CarbonImmutable $timestamp): void
         }
     });
     App::instance(Clock::class, $clock);
-    $sensor->start(ExecutionPhase::BeforeMiddleware);
+    $sensor->start(ExecutionStage::BeforeMiddleware);
 }
 
 function records(): RecordsBuffer

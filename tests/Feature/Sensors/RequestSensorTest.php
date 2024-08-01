@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\ExecutionPhase;
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 
 use function Pest\Laravel\actingAs;
@@ -422,7 +422,7 @@ it('gracefully handles non-string query string', function () {
     $ingest->assertLatestWrite('requests.0.query', '');
 });
 
-it('captures bootstrap execution phase', function () {
+it('captures bootstrap execution stage', function () {
     $ingest = fakeIngest();
     $sensor = app(SensorManager::class);
     Route::get('/users', fn () => []);
@@ -430,7 +430,7 @@ it('captures bootstrap execution phase', function () {
     // Simulating boot time.
     $sensor->prepareForNextInvocation();
     travelTo(now()->addMicroseconds(5));
-    $sensor->start(ExecutionPhase::BeforeMiddleware);
+    $sensor->start(ExecutionStage::BeforeMiddleware);
     $response = get('/users');
 
     $response->assertOk();
@@ -707,7 +707,7 @@ it('captures middleware durations for global middleware that return a response a
     $ingest->assertLatestWrite('requests.0.duration', 6);
 });
 
-it('captures the render duration for responses returned from a middleware as part of the middleware phase', function () {
+it('captures the render duration for responses returned from a middleware as part of the middleware stage', function () {
     $ingest = fakeIngest();
     App::instance('renderable-response-middleware', fn ($request, $next) => new class implements Arrayable
     {

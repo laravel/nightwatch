@@ -59,7 +59,7 @@ it('can ingest queries', function () {
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000000',
-            'execution_phase' => 'action',
+            'execution_stage' => 'action',
             'user' => '',
             'sql' => 'select * from "users"',
             'file' => 'tests/Feature/Sensors/QuerySensorTest.php',
@@ -111,7 +111,7 @@ it('captures aggregate query data on the request', function () {
     $ingest->assertLatestWrite('requests.0.queries', 2);
 });
 
-it('can captures query execution phase', function () {
+it('can captures query execution stage', function () {
     $ingest = fakeIngest();
     Route::get('/users', function () {
         DB::table('users')->get();
@@ -135,6 +135,6 @@ it('can captures query execution phase', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('queries.0.execution_phase', 'action');
-    $ingest->assertLatestWrite('queries.2.execution_phase', 'terminating');
+    $ingest->assertLatestWrite('queries.0.execution_stage', 'action');
+    $ingest->assertLatestWrite('queries.2.execution_stage', 'terminating');
 });

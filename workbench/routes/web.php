@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\MyJob;
+use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -8,30 +9,26 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    // Cache events. miss:
-    Cache::get('users:345');
+    $number = rand(0, 10);
 
-    // Cache events. hit:
-    Cache::put('users:123', 'xxxx');
-    Cache::get('users:123');
+    $url = request()->getScheme().'://tim:abc123@'.request()->getHost().':'.request()->getPort()."/kitchen-sink/{$number}?number={$number}";
 
-    // Exceptions:
-    report('Whoops!');
-
-    // Outgoing requests:
-    Http::get('https://laravel.com');
-
-    // Queries:
-    DB::table('users')->get();
-
-    MyJob::dispatch();
-
-    // Requests:
-    return view('welcome');
+    return <<<HTML
+        <a target="_blank" href="{$url}">
+            Kitchen Sink
+        </a>
+    HTML;
 });
 
-Route::get('hammer', function () {
-    Artisan::call('nightwatch:hammer');
+Route::get('/kitchen-sink/{number}', function () {
+    DB::table('users')->get();
 
-    return 'ok';
+    return new class implements Responsable {
+        public function toResponse($request)
+        {
+            DB::table('users')->get();
+
+            return response(str_repeat('abc.', rand(0, 10_000)));
+        }
+    };
 });

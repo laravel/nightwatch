@@ -67,37 +67,37 @@ final class SensorManager
     private ?UserProvider $userProvider;
 
     /**
-     * @var array<value-of<ExecutionPhase>, int>
+     * @var array<value-of<ExecutionStage>, int>
      */
-    private array $executionPhases = [];
+    private array $executionStages = [];
 
-    private ExecutionPhase $currentPhase;
+    private ExecutionStage $currentExecutionStage;
 
-    private ?float $currentPhaseStartedAtMicrotime;
+    private ?float $currentExecutionStageStartedAtMicrotime;
 
     public function __construct(private Application $app)
     {
         $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
-        $this->currentPhase = ExecutionPhase::Bootstrap;
+        $this->currentExecutionStage = ExecutionStage::Bootstrap;
     }
 
-    public function start(ExecutionPhase $next): void
+    public function start(ExecutionStage $next): void
     {
         $nowMicrotime = $this->clock()->microtime();
-        $previous = $this->currentPhase->previous();
+        $previous = $this->currentExecutionStage->previous();
 
-        $this->executionPhases[$this->currentPhase->value] = $previous === null
+        $this->executionStages[$this->currentExecutionStage->value] = $previous === null
             ? (int) round(($nowMicrotime - $this->clock()->executionStartInMicrotime()) * 1_000_000)
-            : (int) round(($nowMicrotime - $this->currentPhaseStartedAtMicrotime) * 1_000_000);
+            : (int) round(($nowMicrotime - $this->currentExecutionStageStartedAtMicrotime) * 1_000_000);
 
-        $this->currentPhase = $next;
-        $this->currentPhaseStartedAtMicrotime = $nowMicrotime;
+        $this->currentExecutionStage = $next;
+        $this->currentExecutionStageStartedAtMicrotime = $nowMicrotime;
     }
 
-    public function executionPhase(): ExecutionPhase
+    public function executionStage(): ExecutionStage
     {
-        return $this->currentPhase;
+        return $this->currentExecutionStage;
     }
 
     public function request(Request $request, Response $response): void
@@ -111,7 +111,7 @@ final class SensorManager
             traceId: $this->traceId(),
             deploy: $this->deploy(),
             server: $this->server(),
-            executionPhases: $this->executionPhases,
+            executionStages: $this->executionStages,
         );
 
         $sensor($request, $response);
@@ -155,7 +155,7 @@ final class SensorManager
             executionContext: $this->executionContext(),
         );
 
-        $sensor($event, $trace, $this->currentPhase);
+        $sensor($event, $trace, $this->currentExecutionStage);
     }
 
     public function cacheEvent(CacheMissed|CacheHit $event): void
@@ -297,7 +297,7 @@ final class SensorManager
         $this->clock = null;
         $this->traceId = null;
         $this->executionId = null;
-        $this->executionPhases = [];
-        $this->currentPhase = ExecutionPhase::Bootstrap;
+        $this->executionStages = [];
+        $this->currentExecutionStage = ExecutionStage::Bootstrap;
     }
 }

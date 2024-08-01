@@ -7,7 +7,7 @@ use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\ExecutionPhase;
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\UserProvider;
@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
 final class RequestSensor
 {
     /**
-     * @param  array<value-of<ExecutionPhase>, int>  $executionPhases
+     * @param  array<value-of<ExecutionStage>, int>  $executionStages
      */
     public function __construct(
         private RecordsBuffer $recordsBuffer,
@@ -32,7 +32,7 @@ final class RequestSensor
         private string $traceId,
         private string $deploy,
         private string $server,
-        private array $executionPhases,
+        private array $executionStages,
     ) {
         //
     }
@@ -76,17 +76,17 @@ final class RequestSensor
             route_action: $route?->getActionName() ?? '',
             route_path: $routePath,
             ip: $request->ip() ?? '',
-            duration: array_sum($this->executionPhases),
-            status_code: (string) $response->getStatusCode(),
+            duration: array_sum($this->executionStages),
+            status_code: $response->getStatusCode(),
             request_size: strlen($request->getContent()),
             response_size: $this->parseResponseSize($response),
-            bootstrap: $this->executionPhases[ExecutionPhase::Bootstrap->value] ?? 0,
-            before_middleware: $this->executionPhases[ExecutionPhase::BeforeMiddleware->value] ?? 0,
-            action: $this->executionPhases[ExecutionPhase::Action->value] ?? 0,
-            render: $this->executionPhases[ExecutionPhase::Render->value] ?? 0,
-            after_middleware: $this->executionPhases[ExecutionPhase::AfterMiddleware->value] ?? 0,
-            sending: $this->executionPhases[ExecutionPhase::Sending->value] ?? 0,
-            terminating: $this->executionPhases[ExecutionPhase::Terminating->value] ?? 0,
+            bootstrap: $this->executionStages[ExecutionStage::Bootstrap->value] ?? 0,
+            before_middleware: $this->executionStages[ExecutionStage::BeforeMiddleware->value] ?? 0,
+            action: $this->executionStages[ExecutionStage::Action->value] ?? 0,
+            render: $this->executionStages[ExecutionStage::Render->value] ?? 0,
+            after_middleware: $this->executionStages[ExecutionStage::AfterMiddleware->value] ?? 0,
+            sending: $this->executionStages[ExecutionStage::Sending->value] ?? 0,
+            terminating: $this->executionStages[ExecutionStage::Terminating->value] ?? 0,
             exceptions: $this->executionParent->exceptions,
             queries: $this->executionParent->queries,
             lazy_loads: $this->executionParent->lazy_loads,
