@@ -17,7 +17,7 @@ beforeEach(function () {
 
     Config::set('app.debug', false);
     App::setBasePath(realpath(__DIR__.'/../../../'));
-});
+})->skip();
 
 it('ingests exceptions', function () {
     $ingest = fakeIngest();

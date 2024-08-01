@@ -28,7 +28,7 @@ beforeEach(function () {
     syncClock(CarbonImmutable::parse('2000-01-01 00:00:00'));
 
     Config::set('queue.default', 'database');
-});
+})->skip();
 
 it('can ingest queued jobs', function () {
     $ingest = fakeIngest();

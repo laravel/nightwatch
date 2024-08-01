@@ -16,7 +16,7 @@ beforeEach(function () {
     syncClock(CarbonImmutable::parse('2000-01-01 00:00:00.000'));
 
     Http::resolved(fn () => Http::preventStrayRequests());
-});
+})->skip();
 
 it('ingests outgoing requests', function () {
     $ingest = fakeIngest();

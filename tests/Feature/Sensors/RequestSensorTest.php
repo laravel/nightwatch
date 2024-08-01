@@ -48,7 +48,7 @@ it('can ingest requests', function () {
             'scheme' => 'http',
             'url_user' => '',
             'host' => 'localhost',
-            'port' => '80',
+            'port' => 80,
             'path' => '/users',
             'query' => '',
             'route_name' => '',
@@ -212,7 +212,7 @@ it('uses the default port for the scheme when not port is available to the reque
     expect($request->getPort())->toBeNull();
     expect($request->getScheme())->toBe('https');
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.port', '443');
+    $ingest->assertLatestWrite('requests.0.port', 443);
 
     $request = (new class extends Request
     {
@@ -227,7 +227,7 @@ it('uses the default port for the scheme when not port is available to the reque
     expect($request->getPort())->toBeNull();
     expect($request->getScheme())->toBe('http');
     $ingest->assertWrittenTimes(2);
-    $ingest->assertLatestWrite('requests.0.port', '80');
+    $ingest->assertLatestWrite('requests.0.port', 80);
 });
 
 it('captures query parameters', function () {
