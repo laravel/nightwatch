@@ -26,7 +26,7 @@ final class Request
         public string $scheme,
         public string $url_user,
         public string $host,
-        public string $port,
+        public int $port,
         public string $path,
         public string $query,
         public string $route_name,

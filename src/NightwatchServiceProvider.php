@@ -138,10 +138,10 @@ final class NightwatchServiceProvider extends ServiceProvider
                 ->withHeader('Content-Type', 'application/octet-stream')
                 ->withHeader('Content-Encoding', 'gzip')
                 ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
-                ->withBase('https://5qdb6aj5xtgmwvytfyjb2kfmhi0gpiya.lambda-url.us-east-1.on.aws'));
+                ->withBase('https://khq5ni773stuucqrxebn3a5zbi0ypexu.lambda-url.us-east-1.on.aws/'));
 
             $ingest = new HttpIngest($client, $clock, $config->get('nightwatch.http.concurrent_request_limit'));
-            $ingest = new NullIngest;
+            // $ingest = new NullIngest;
 
             return new Agent($buffer, $ingest, $loop, $config->get('nightwatch.collector.timeout'));
         });

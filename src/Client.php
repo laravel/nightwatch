@@ -23,6 +23,7 @@ final class Client
      */
     public function send(string $payload): PromiseInterface
     {
+        // TODO determine what level to allow here.
         $payload = gzencode($payload);
 
         if ($payload === false) {

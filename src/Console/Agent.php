@@ -74,10 +74,10 @@ final class Agent extends Command
                         echo date('Y-m-d H:i:s')." Ingest successful. Took {$result->duration} ms.".PHP_EOL;
                     }, function (Throwable $e) {
                         if ($e instanceof IngestFailedException) {
-                            echo date('Y-m-d H:i:s')." Failed failed. Took {$e->duration} ms. [{$e->getMessage()}].".PHP_EOL;
+                            echo date('Y-m-d H:i:s')." Ingestion failed. Took {$e->duration} ms. Recieved: [{$e->getMessage()}].".PHP_EOL;
+                        } else {
+                            echo date('Y-m-d H:i:s')." Unknown error. Recieved: [{$e->getMessage()}].".PHP_EOL;
                         }
-
-                        echo date('Y-m-d H:i:s')." Failed failed. [{$e->getMessage()}].".PHP_EOL;
                     });
                 });
             });

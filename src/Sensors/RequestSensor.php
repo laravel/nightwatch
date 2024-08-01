@@ -64,7 +64,7 @@ final class RequestSensor
             scheme: $scheme,
             url_user: $request->getUser() ?? '',
             host: $request->getHost(),
-            port: (string) ($request->getPort() ?? match ($scheme) {
+            port: (int) ($request->getPort() ?? match ($scheme) {
                 'http' => 80,
                 'https' => 443,
             }),
