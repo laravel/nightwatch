@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 use function Pest\Laravel\get;
 use function Pest\Laravel\travelTo;
 
-beforeEach(function () use (&$ignore) {
+beforeEach(function () {
     setDeploy('v1.2.3');
     setServerName('web-01');
     setPeakMemory(1234);
