@@ -3,29 +3,26 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Spatie\LaravelIgnition\IgnitionServiceProvider;
 
 use function Pest\Laravel\get;
-use function Pest\Laravel\post;
-use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
     setDeploy('v1.2.3');
     setServerName('web-01');
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    syncClock(CarbonImmutable::parse('2000-01-01 00:00:00'));
+    syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 
     Config::set('app.debug', false);
     App::setBasePath(realpath(__DIR__.'/../../../'));
-})->skip();
+});
 
-it('ingests exceptions', function () {
+it('can ingest thrown exceptions', function () {
     $ingest = fakeIngest();
     $trace = null;
     $line = null;
-    Route::post('/users', function () use (&$trace, &$line) {
-        travelTo(now()->addMilliseconds(2.5));
-
+    Route::get('/users', function () use (&$trace, &$line) {
         $line = __LINE__ + 1;
         $e = new MyException('Whoops!');
 
@@ -34,100 +31,53 @@ it('ingests exceptions', function () {
         throw $e;
     });
 
-    $response = post('/users');
+    $response = get('/users');
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite([
-        'requests' => [
-            [
-                'v' => 1,
-                'timestamp' => 946684800,
-                'deploy' => 'v1.2.3',
-                'server' => 'web-01',
-                'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-                'trace_id' => '00000000-0000-0000-0000-000000000000',
-                'user' => '',
-                'method' => 'POST',
-                'scheme' => 'http',
-                'url_user' => '',
-                'host' => 'localhost',
-                'port' => '80',
-                'path' => '/users',
-                'query' => '',
-                'route_name' => '',
-                'route_methods' => ['POST'],
-                'route_domain' => '',
-                'route_path' => '/users',
-                'route_action' => 'Closure',
-                'ip' => '127.0.0.1',
-                'duration' => 3,
-                'status_code' => '500',
-                'request_size_kilobytes' => 0,
-                'response_size_kilobytes' => 0,
-                'queries' => 0,
-                'queries_duration' => 0,
-                'lazy_loads' => 0,
-                'lazy_loads_duration' => 0,
-                'jobs_queued' => 0,
-                'mail_queued' => 0,
-                'mail_sent' => 0,
-                'mail_duration' => 0,
-                'notifications_queued' => 0,
-                'notifications_sent' => 0,
-                'notifications_duration' => 0,
-                'outgoing_requests' => 0,
-                'outgoing_requests_duration' => 0,
-                'files_read' => 0,
-                'files_read_duration' => 0,
-                'files_written' => 0,
-                'files_written_duration' => 0,
-                'cache_hits' => 0,
-                'cache_misses' => 0,
-                'hydrated_models' => 0,
-                'peak_memory_usage_kilobytes' => 1234,
-            ],
+    $ingest->assertLatestWrite('exceptions', [
+        [
+            'v' => 1,
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            'group' => hash('md5', "MyException,0,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"),
+            'trace_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_context' => 'request',
+            'execution_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_stage' => 'action',
+            'user' => '',
+            'class' => 'MyException',
+            'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
+            'line' => $line,
+            'message' => 'Whoops!',
+            'code' => 0,
+            'trace' => $trace,
         ],
-        'cache_events' => [],
-        'commands' => [],
-        'exceptions' => [
-            [
-                'v' => 1,
-                'timestamp' => 946684800,
-                'deploy' => 'v1.2.3',
-                'server' => 'web-01',
-                'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-                'trace_id' => '00000000-0000-0000-0000-000000000000',
-                'execution_context' => 'request',
-                'execution_id' => '00000000-0000-0000-0000-000000000000',
-                'execution_offset' => 2500,
-                'user' => '',
-                'class' => 'MyException',
-                'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
-                'line' => $line,
-                'message' => 'Whoops!',
-                'code' => 0,
-                'trace' => $trace,
-            ],
-        ],
-        'job_attempts' => [],
-        'lazy_loads' => [],
-        'logs' => [],
-        'mail' => [],
-        'notifications' => [],
-        'outgoing_requests' => [],
-        'queries' => [],
-        'queued_jobs' => [],
     ]);
 });
 
-it('ingests reported exceptions', function () {
+it('captures the code', function () {
+    $ingest = fakeIngest();
+    $line = null;
+    Route::get('/users', function () use (&$line) {
+        $line = __LINE__ + 1;
+        throw new MyException('Whoops!', 999);
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.group', hash('md5', "MyException,999,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"));
+    $ingest->assertLatestWrite('exceptions.0.code', 999);
+});
+
+it('can ingest reported exceptions', function () {
     $ingest = fakeIngest();
     $trace = null;
     $line = null;
-    Route::post('/users', function () use (&$trace, &$line) {
-        travelTo(now()->addMilliseconds(2.5));
-
+    Route::get('/users', function () use (&$trace, &$line) {
         $line = __LINE__ + 1;
         $e = new MyException('Whoops!');
 
@@ -136,116 +86,50 @@ it('ingests reported exceptions', function () {
         report($e);
     });
 
-    $response = post('/users');
+    $response = get('/users');
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite([
-        'requests' => [
-            [
-                'v' => 1,
-                'timestamp' => 946684800,
-                'deploy' => 'v1.2.3',
-                'server' => 'web-01',
-                'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-                'trace_id' => '00000000-0000-0000-0000-000000000000',
-                'user' => '',
-                'method' => 'POST',
-                'scheme' => 'http',
-                'url_user' => '',
-                'host' => 'localhost',
-                'port' => '80',
-                'path' => '/users',
-                'query' => '',
-                'route_name' => '',
-                'route_methods' => ['POST'],
-                'route_domain' => '',
-                'route_path' => '/users',
-                'route_action' => 'Closure',
-                'ip' => '127.0.0.1',
-                'duration' => 3,
-                'status_code' => '200',
-                'request_size_kilobytes' => 0,
-                'response_size_kilobytes' => 0,
-                'queries' => 0,
-                'queries_duration' => 0,
-                'lazy_loads' => 0,
-                'lazy_loads_duration' => 0,
-                'jobs_queued' => 0,
-                'mail_queued' => 0,
-                'mail_sent' => 0,
-                'mail_duration' => 0,
-                'notifications_queued' => 0,
-                'notifications_sent' => 0,
-                'notifications_duration' => 0,
-                'outgoing_requests' => 0,
-                'outgoing_requests_duration' => 0,
-                'files_read' => 0,
-                'files_read_duration' => 0,
-                'files_written' => 0,
-                'files_written_duration' => 0,
-                'cache_hits' => 0,
-                'cache_misses' => 0,
-                'hydrated_models' => 0,
-                'peak_memory_usage_kilobytes' => 1234,
-            ],
+    $ingest->assertLatestWrite('exceptions', [
+        [
+            'v' => 1,
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            'group' => hash('md5', "MyException,0,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"),
+            'trace_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_context' => 'request',
+            'execution_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_stage' => 'action',
+            'user' => '',
+            'class' => 'MyException',
+            'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
+            'line' => $line,
+            'message' => 'Whoops!',
+            'code' => 0,
+            'trace' => $trace,
         ],
-        'cache_events' => [],
-        'commands' => [],
-        'exceptions' => [
-            [
-                'v' => 1,
-                'timestamp' => 946684800,
-                'deploy' => 'v1.2.3',
-                'server' => 'web-01',
-                'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-                'trace_id' => '00000000-0000-0000-0000-000000000000',
-                'execution_context' => 'request',
-                'execution_id' => '00000000-0000-0000-0000-000000000000',
-                'execution_offset' => 2500,
-                'user' => '',
-                'class' => 'MyException',
-                'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
-                'line' => $line,
-                'message' => 'Whoops!',
-                'code' => 0,
-                'trace' => $trace,
-            ],
-        ],
-        'job_attempts' => [],
-        'lazy_loads' => [],
-        'logs' => [],
-        'mail' => [],
-        'notifications' => [],
-        'outgoing_requests' => [],
-        'queries' => [],
-        'queued_jobs' => [],
     ]);
 });
 
-it('handles null lines for internal locations', function () {
+it('captures aggregate query data on the request', function () {
     $ingest = fakeIngest();
-    $e = new Exception('Whoops!');
-    $reflectedException = new ReflectionClass($e);
-    $reflectedException->getProperty('file')->setValue($e, base_path('vendor/foo/bar/Baz.php'));
-    $reflectedException->getProperty('trace')->setValue($e, [
-        [
-            'file' => base_path('app/Models/User.php'),
-        ],
-    ]);
-    Route::post('/users', function () use ($e) {
-        throw $e;
+    Route::get('/users', function () {
+        report(new RuntimeException('Whoops!'));
+        report(new RuntimeException('Whoops!'));
+        throw new RuntimeException('Whoops!');
     });
 
-    $response = post('/users');
+    $response = get('/users');
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.file', 'app/Models/User.php');
-    $ingest->assertLatestWrite('exceptions.0.line', 0);
+    $ingest->assertLatestWrite('requests.0.exceptions', 3);
 });
 
 it('handles view exceptions', function () {
+    expect(App::providerIsLoaded(IgnitionServiceProvider::class))->toBe(false);
+
     App::setBasePath(realpath(__DIR__.'/../../../../nightwatch/workbench'));
     $ingest = fakeIngest();
     Route::view('exception', 'exception');
@@ -256,19 +140,31 @@ it('handles view exceptions', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exceptions.0.line', 0);
     $ingest->assertLatestWrite('exceptions.0.file', 'resources/views/exception.blade.php');
+    $ingest->assertLatestWrite('exceptions.0.class', 'Exception');
+    $ingest->assertLatestWrite('exceptions.0.message', 'Whoops!');
+    $ingest->assertLatestWrite('exceptions.0.code', 999);
+    $ingest->assertLatestWrite('exceptions.0.group', hash('md5', 'Exception,999,resources/views/exception.blade.php,'));
 });
 
-it('correctly resolves classes', function () {
-    // see Pulse
-})->todo();
-
 it('handles spatie view exceptions', function () {
-    // see Pulse
-})->todo();
+    App::register(IgnitionServiceProvider::class);
+    expect(App::providerIsLoaded(IgnitionServiceProvider::class))->toBe(true);
 
-it('can ingest arbitrary exceptions via an event', function () {
-    // e.g., Nightwatch::report($e);
-})->todo();
+    App::setBasePath(realpath(__DIR__.'/../../../../nightwatch/workbench'));
+    $ingest = fakeIngest();
+    Route::view('exception', 'exception');
+
+    $response = get('exception');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.line', 6);
+    $ingest->assertLatestWrite('exceptions.0.file', 'resources/views/exception.blade.php');
+    $ingest->assertLatestWrite('exceptions.0.class', 'Exception');
+    $ingest->assertLatestWrite('exceptions.0.message', 'Whoops!');
+    $ingest->assertLatestWrite('exceptions.0.code', 999);
+    $ingest->assertLatestWrite('exceptions.0.group', hash('md5', 'Exception,999,resources/views/exception.blade.php,6'));
+});
 
 final class MyException extends RuntimeException
 {

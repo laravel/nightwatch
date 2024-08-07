@@ -16,10 +16,6 @@ final class NightwatchRouteMiddleware
     {
         $this->sensor->start(ExecutionStage::Action);
 
-        $response = $next($request);
-
-        $this->sensor->start(ExecutionStage::AfterMiddleware);
-
-        return $response;
+        return $next($request);
     }
 }

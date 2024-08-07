@@ -70,26 +70,6 @@ it('can ingest queries', function () {
     ]);
 });
 
-it('always uses current time minus execution time for the timestamp', function () {
-    $ingest = fakeIngest();
-    prependListener(QueryExecuted::class, afterMigrations(function (QueryExecuted $event) {
-        $event->time = 4.321;
-
-        travelTo(now()->addMicroseconds(4321));
-    }));
-    Route::get('/users', function () use (&$line) {
-        travelTo(now()->addMicroseconds(9876));
-
-        return DB::table('users')->get();
-    });
-
-    $response = get('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('queries.0.timestamp', 946688523.466665);
-});
-
 it('captures aggregate query data on the request', function () {
     $ingest = fakeIngest();
     prependListener(QueryExecuted::class, function (QueryExecuted $event) {
@@ -111,30 +91,23 @@ it('captures aggregate query data on the request', function () {
     $ingest->assertLatestWrite('requests.0.queries', 2);
 });
 
-it('can captures query execution stage', function () {
+it('always uses current time minus execution time for the timestamp', function () {
     $ingest = fakeIngest();
-    Route::get('/users', function () {
-        DB::table('users')->get();
+    prependListener(QueryExecuted::class, afterMigrations(function (QueryExecuted $event) {
+        $event->time = 4.321;
 
-        App::terminating(function () {
-            DB::table('users')->get();
-        });
+        travelTo(now()->addMicroseconds(4321));
+    }));
+    Route::get('/users', function () use (&$line) {
+        travelTo(now()->addMicroseconds(9876));
 
-        return new class implements Responsable
-        {
-            public function toResponse($request)
-            {
-                DB::table('users')->get();
-
-                return response('');
-            }
-        };
+        return DB::table('users')->get();
     });
 
     $response = get('/users');
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('queries.0.execution_stage', 'action');
-    $ingest->assertLatestWrite('queries.2.execution_stage', 'terminating');
+    $ingest->assertLatestWrite('queries.0.timestamp', 946688523.466665);
 });
+

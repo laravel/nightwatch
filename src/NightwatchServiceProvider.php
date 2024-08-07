@@ -198,11 +198,13 @@ final class NightwatchServiceProvider extends ServiceProvider
         $sensor = $this->app->instance(SensorManager::class, new SensorManager($this->app));
 
         /*
-         * Execution stages...
+         * Stage: Before middleware.
          */
-
         $this->app->booted(fn () => $sensor->start(ExecutionStage::BeforeMiddleware));
 
+        /*
+         * Stage: Action, After middleware, and Terminating.
+         */
         $events->listen(RouteMatched::class, function (RouteMatched $event) {
             $middleware = $event->route->action['middleware'] ?? [];
 
@@ -215,11 +217,17 @@ final class NightwatchServiceProvider extends ServiceProvider
             $event->route->action['middleware'] = $middleware;
         });
 
+        /*
+         * Stage: Render.
+         */
         $events->listen(PreparingResponse::class, fn () => match ($sensor->executionStage()) {
             ExecutionStage::Action => $sensor->start(ExecutionStage::Render),
             default => null,
         });
 
+        /*
+         * Stage: After middleware.
+         */
         $events->listen(ResponsePrepared::class, fn () => match ($sensor->executionStage()) {
             ExecutionStage::Render => $sensor->start(ExecutionStage::AfterMiddleware),
             default => null,
@@ -238,6 +246,17 @@ final class NightwatchServiceProvider extends ServiceProvider
          * iterating.
          */
         $events->listen(QueryExecuted::class, fn (QueryExecuted $event) => $sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)));
+
+        /*
+         * Sensor: Exceptions.
+         */
+        $this->callAfterResolving(ExceptionHandler::class, function (ExceptionHandler $handler) use ($sensor) {
+            if (! $handler instanceof Handler) {
+                return;
+            }
+
+            $handler->reportable($sensor->exception(...));
+        });
 
         /*
          * Sensor: Request + final ingest.
@@ -282,13 +301,6 @@ final class NightwatchServiceProvider extends ServiceProvider
             $http->globalMiddleware($middleware);
         });
 
-        $this->callAfterResolving(ExceptionHandler::class, function (ExceptionHandler $handler) use ($sensor) {
-            if (! $handler instanceof Handler) {
-                return;
-            }
-
-            $handler->reportable($sensor->exception(...));
-        });
 
         $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Container $app) use ($sensor) {
             if (! $kernel instanceof ConsoleKernel) {

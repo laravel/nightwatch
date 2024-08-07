@@ -198,9 +198,12 @@ final class SensorManager
             traceId: $this->traceId(),
             deploy: $this->deploy(),
             server: $this->server(),
+            executionContext: $this->executionContext(),
+            executionId: $this->executionId(),
+            executionParent: $this->executionParent,
         );
 
-        $sensor($e);
+        $sensor($e, $this->currentExecutionStage);
     }
 
     public function queuedJob(JobQueued $event): void

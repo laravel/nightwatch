@@ -5,8 +5,10 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Exception;
+use Laravel\Nightwatch\Records\ExecutionParent;
 use Laravel\Nightwatch\UserProvider;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
@@ -24,6 +26,9 @@ final class ExceptionSensor
         private string $deploy,
         private string $server,
         private string $traceId,
+        private string $executionId,
+        private string $executionContext,
+        private ExecutionParent $executionParent,
     ) {
         //
     }
@@ -31,35 +36,37 @@ final class ExceptionSensor
     /**
      * TODO group, execution_context, execution_id
      */
-    public function __invoke(Throwable $e): void
+    public function __invoke(Throwable $e, ExecutionStage $executionStage): void
     {
         $nowMicrotime = $this->clock->microtime();
         [$file, $line] = $this->location->forException($e);
-        $previous = $e->getPrevious();
+        $normalizedException = match ($e->getPrevious()) {
+            null => $e,
+            default => match (true) {
+                $e instanceof ViewException,
+                $e instanceof IgnitionViewException => $e->getPrevious() ?? $e,
+                default => $e,
+            },
+        };
+
+        $this->executionParent->exceptions++;
 
         $this->recordsBuffer->writeException(new Exception(
-            timestamp: (int) $nowMicrotime,
+            timestamp: $nowMicrotime,
             deploy: $this->deploy,
             server: $this->server,
-            group: hash('sha256', ''),
+            group: hash('md5', implode(',', [$normalizedException::class, $normalizedException->getCode(), $file, $line])),
             trace_id: $this->traceId,
-            execution_context: 'request',
-            execution_id: '00000000-0000-0000-0000-000000000000',
-            execution_offset: $this->clock->executionOffset($nowMicrotime),
+            execution_context: $this->executionContext,
+            execution_id: $this->executionId,
+            execution_stage: $executionStage,
             user: $this->user->id(),
-            class: match ($previous) {
-                null => $e::class,
-                default => match (true) {
-                    $e instanceof ViewException => $previous,
-                    $e instanceof IgnitionViewException => $previous::class, // @phpstan-ignore class.notFound
-                    default => $e::class,
-                },
-            },
+            class: $normalizedException::class,
             file: $file,
             line: $line ?? 0,
-            message: $e->getMessage(),
-            code: $e->getCode(),
-            trace: $e->getTraceAsString(),
+            message: $normalizedException->getMessage(),
+            code: $normalizedException->getCode(),
+            trace: $normalizedException->getTraceAsString(),
         ));
     }
 }

@@ -3,4 +3,4 @@
 3
 4
 5
-<?php throw new Exception('Foo'); ?>
+<?php throw new Exception('Whoops!', 999); ?>

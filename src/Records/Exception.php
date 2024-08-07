@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Types\Str;
 
 /**
@@ -12,14 +13,14 @@ final class Exception
     public int $v = 1;
 
     public function __construct(
-        public int $timestamp,
+        public float $timestamp,
         public string $deploy,
         public string $server,
         public string $group,
         public string $trace_id,
         public string $execution_context,
         public string $execution_id,
-        public int $execution_offset,
+        public ExecutionStage $execution_stage,
         public string $user,
         // --- //
         public string $class,
@@ -35,3 +36,4 @@ final class Exception
         $this->trace = Str::mediumText($this->trace);
     }
 }
+

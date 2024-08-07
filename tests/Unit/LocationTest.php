@@ -232,3 +232,26 @@ it('uses first non-internal vendor frames', function () {
 
     expect($file)->toBe(['vendor/foo/bar/Baz1.php', 9]);
 });
+
+it('handles null lines for internal locations', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('file')->setValue($e, base_path('vendor/foo/bar/Baz.php'));
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            'file' => base_path('app/Models/User.php'),
+        ],
+    ]);
+    Route::post('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = post('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.file', 'app/Models/User.php');
+    $ingest->assertLatestWrite('exceptions.0.line', 0);
+});
+
