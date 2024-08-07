@@ -166,6 +166,28 @@ it('handles spatie view exceptions', function () {
     $ingest->assertLatestWrite('exceptions.0.group', hash('md5', 'Exception,999,resources/views/exception.blade.php,6'));
 });
 
+it('handles unknown lines for internal locations', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('file')->setValue($e, base_path('vendor/foo/bar/Baz.php'));
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            'file' => base_path('app/Models/User.php'),
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.file', 'app/Models/User.php');
+    $ingest->assertLatestWrite('exceptions.0.line', 0);
+});
+
 final class MyException extends RuntimeException
 {
     public function render()
