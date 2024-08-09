@@ -21,7 +21,6 @@ final class QuerySensor
         private UserProvider $user,
         private Clock $clock,
         private Location $location,
-        private string $deploy,
         private string $server,
         private string $executionContext,
     ) {
@@ -42,7 +41,7 @@ final class QuerySensor
 
         $this->recordsBuffer->writeQuery(new Query(
             timestamp: $this->clock->microtime() - ($event->time / 1000),
-            deploy: $this->deploy,
+            deploy: $this->executionParent->deploy,
             server: $this->server,
             _group: hash('md5', $event->sql),
             trace_id: $this->executionParent->traceId,

@@ -60,7 +60,7 @@ function records(): RecordsBuffer
 
 function setDeploy(string $deploy): void
 {
-    Config::set('nightwatch.deploy', $deploy);
+    app(SensorManager::class)->executionParent->deploy = $deploy;
 }
 
 function setServerName(string $name): void

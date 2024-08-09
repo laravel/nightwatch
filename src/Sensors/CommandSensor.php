@@ -22,7 +22,6 @@ final class CommandSensor
         private PeakMemoryProvider $peakMemory,
         private UserProvider $user,
         private string $traceId,
-        private string $deploy,
         private string $server,
     ) {
         //
@@ -40,7 +39,7 @@ final class CommandSensor
 
         $this->recordsBuffer->writeCommand(new Command(
             timestamp: $startedAt->getTimestamp(),
-            deploy: $this->deploy,
+            deploy: $this->executionParent->deploy,
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,

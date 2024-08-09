@@ -29,7 +29,6 @@ final class RequestSensor
         private PeakMemoryProvider $peakMemory,
         private UserProvider $user,
         private Clock $clock,
-        private string $deploy,
         private string $server,
         private array $executionStages,
     ) {
@@ -54,7 +53,7 @@ final class RequestSensor
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
             timestamp: $this->clock->executionStartInMicrotime(),
-            deploy: $this->deploy,
+            deploy: $this->executionParent->deploy,
             server: $this->server,
             _group: hash('md5', implode(',', [implode('|', $routeMethods), $routeDomain, $routePath])),
             trace_id: $this->executionParent->traceId,

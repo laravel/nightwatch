@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\Types\Str;
 
 /**
  * @internal
@@ -14,6 +15,7 @@ final class ExecutionParent
     public function __construct(
         public string $traceId,
         public string $executionId,
+        public string $deploy,
         public ExecutionStage $executionStage = ExecutionStage::Bootstrap,
         public int $exceptions = 0,
         public int $queries = 0,
@@ -31,6 +33,6 @@ final class ExecutionParent
         public int $hydrated_models = 0,
         public int $peak_memory_usage = 0,
     ) {
-        //
+        $this->deploy = Str::tinyText($this->deploy);
     }
 }

@@ -54,8 +54,6 @@ final class SensorManager
 
     private ?string $server;
 
-    private ?string $deploy;
-
     private ?PeakMemoryProvider $peakMemoryProvider;
 
     private ?Location $location;
@@ -80,6 +78,7 @@ final class SensorManager
         $this->executionParent = new ExecutionParent(
             traceId: $traceId = (string) Str::uuid(),
             executionId: $traceId,
+            deploy: $app['config']->get('nightwatch.deploy') ?? '',
         );
     }
 
@@ -109,7 +108,6 @@ final class SensorManager
             peakMemory: $this->peakMemoryProvider(),
             clock: $clock = $this->clock(),
             user: $this->user(),
-            deploy: $this->deploy(),
             server: $this->server(),
             executionStages: $this->executionStages,
         );
@@ -129,7 +127,6 @@ final class SensorManager
             executionParent: $this->executionParent,
             peakMemory: $this->peakMemoryProvider(),
             user: $this->user(),
-            deploy: $this->deploy(),
             server: $this->server(),
         );
 
@@ -147,7 +144,6 @@ final class SensorManager
             user: $this->user(),
             clock: $this->clock(),
             location: $this->location(),
-            deploy: $this->deploy(),
             server: $this->server(),
             executionContext: $this->executionContext(),
         );
@@ -162,7 +158,6 @@ final class SensorManager
             executionParent: $this->executionParent,
             clock: $this->clock(),
             user: $this->user(),
-            deploy: $this->deploy(),
             server: $this->server(),
         );
 
@@ -176,7 +171,6 @@ final class SensorManager
             executionParent: $this->executionParent,
             user: $this->user(),
             clock: $this->clock(),
-            deploy: $this->deploy(),
             server: $this->server(),
         );
 
@@ -190,7 +184,6 @@ final class SensorManager
             user: $this->user(),
             clock: $this->clock(),
             location: $this->location(),
-            deploy: $this->deploy(),
             server: $this->server(),
             executionContext: $this->executionContext(),
             executionParent: $this->executionParent,
@@ -207,7 +200,6 @@ final class SensorManager
             user: $this->user(),
             clock: $this->clock(),
             config: $this->config(),
-            deploy: $this->deploy(),
             server: $this->server(),
         );
 
@@ -222,11 +214,6 @@ final class SensorManager
     private function peakMemoryProvider(): PeakMemoryProvider
     {
         return $this->peakMemoryProvider ??= $this->app->make(PeakMemoryProvider::class);
-    }
-
-    private function deploy(): string
-    {
-        return $this->deploy ??= Str::tinyText((string) $this->config()->get('nightwatch.deploy'));
     }
 
     private function server(): string
