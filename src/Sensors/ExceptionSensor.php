@@ -18,12 +18,11 @@ use Throwable;
 final class ExceptionSensor
 {
     public function __construct(
+        private Clock $clock,
+        private ExecutionParent $executionParent,
+        private Location $location,
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
-        private Clock $clock,
-        private Location $location,
-        private string $executionContext,
-        private ExecutionParent $executionParent,
     ) {
         //
     }
@@ -52,7 +51,7 @@ final class ExceptionSensor
             server: $this->executionParent->server,
             group: hash('md5', implode(',', [$normalizedException::class, $normalizedException->getCode(), $file, $line])),
             trace_id: $this->executionParent->traceId,
-            execution_context: $this->executionContext,
+            execution_context: $this->executionParent->executionContext,
             execution_id: $this->executionParent->executionId,
             execution_stage: $this->executionParent->executionStage,
             user: $this->user->id(),

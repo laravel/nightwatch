@@ -16,12 +16,11 @@ use Laravel\Nightwatch\UserProvider;
 final class QuerySensor
 {
     public function __construct(
-        private RecordsBuffer $recordsBuffer,
-        private ExecutionParent $executionParent,
-        private UserProvider $user,
         private Clock $clock,
+        private ExecutionParent $executionParent,
         private Location $location,
-        private string $executionContext,
+        private RecordsBuffer $recordsBuffer,
+        private UserProvider $user,
     ) {
         //
     }
@@ -44,7 +43,7 @@ final class QuerySensor
             server: $this->executionParent->server,
             _group: hash('md5', $event->sql),
             trace_id: $this->executionParent->traceId,
-            execution_context: $this->executionContext,
+            execution_context: $this->executionParent->executionContext,
             execution_id: $this->executionParent->executionId,
             execution_stage: $this->executionParent->executionStage,
             user: $this->user->id(),

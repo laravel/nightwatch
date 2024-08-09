@@ -74,10 +74,11 @@ final class SensorManager
         $this->recordsBuffer = new RecordsBuffer;
 
         $this->executionParent = new ExecutionParent(
-            traceId: $traceId = (string) Str::uuid(),
-            executionId: $traceId,
             deploy: $app['config']->get('nightwatch.deploy') ?? '',
             server: $app['config']->get('nightwatch.server') ?? '',
+            traceId: $traceId = (string) Str::uuid(),
+            executionId: $traceId,
+            executionContext: 'request', // TODO
         );
     }
 
@@ -102,12 +103,12 @@ final class SensorManager
     public function request(Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
-            recordsBuffer: $this->recordsBuffer,
-            executionParent: $this->executionParent,
-            peakMemory: $this->peakMemoryProvider(),
             clock: $clock = $this->clock(),
-            user: $this->user(),
+            executionParent: $this->executionParent,
             executionStages: $this->executionStages,
+            peakMemory: $this->peakMemoryProvider(),
+            recordsBuffer: $this->recordsBuffer,
+            user: $this->user(),
         );
 
         $sensor($request, $response);
@@ -136,12 +137,11 @@ final class SensorManager
     public function query(QueryExecuted $event, array $trace): void
     {
         $sensor = $this->querySensor ??= new QuerySensor(
-            recordsBuffer: $this->recordsBuffer,
-            executionParent: $this->executionParent,
-            user: $this->user(),
             clock: $this->clock(),
+            executionParent: $this->executionParent,
             location: $this->location(),
-            executionContext: $this->executionContext(),
+            recordsBuffer: $this->recordsBuffer,
+            user: $this->user(),
         );
 
         $sensor($event, $trace);
@@ -174,12 +174,11 @@ final class SensorManager
     public function exception(Throwable $e): void
     {
         $sensor = $this->exceptionSensor ??= new ExceptionSensor(
+            clock: $this->clock(),
+            executionParent: $this->executionParent,
+            location: $this->location(),
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
-            clock: $this->clock(),
-            location: $this->location(),
-            executionContext: $this->executionContext(),
-            executionParent: $this->executionParent,
         );
 
         $sensor($e);
@@ -196,11 +195,6 @@ final class SensorManager
         );
 
         $sensor($event);
-    }
-
-    private function executionContext(): string
-    {
-        return 'request';
     }
 
     private function peakMemoryProvider(): PeakMemoryProvider

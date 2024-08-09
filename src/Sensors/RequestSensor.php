@@ -24,11 +24,11 @@ final class RequestSensor
      * @param  array<value-of<ExecutionStage>, int>  $executionStages
      */
     public function __construct(
-        private RecordsBuffer $recordsBuffer,
+        private Clock $clock,
         private ExecutionParent $executionParent,
         private PeakMemoryProvider $peakMemory,
+        private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
-        private Clock $clock,
         private array $executionStages,
     ) {
         //

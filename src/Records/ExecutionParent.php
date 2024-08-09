@@ -13,10 +13,11 @@ final class ExecutionParent
     public int $v = 1;
 
     public function __construct(
-        public string $traceId,
-        public string $executionId,
         public string $deploy,
         public string $server,
+        public string $traceId,
+        public string $executionId,
+        public string $executionContext,
         public ExecutionStage $executionStage = ExecutionStage::Bootstrap,
         public int $exceptions = 0,
         public int $queries = 0,
