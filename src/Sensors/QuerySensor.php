@@ -47,7 +47,7 @@ final class QuerySensor
             timestamp: $this->clock->microtime() - ($event->time / 1000),
             deploy: $this->deploy,
             server: $this->server,
-            group: hash('md5', $event->sql),
+            _group: hash('md5', $event->sql),
             trace_id: $this->traceId,
             execution_context: $this->executionContext,
             execution_id: $this->executionId,

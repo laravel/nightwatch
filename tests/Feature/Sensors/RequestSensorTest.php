@@ -41,7 +41,7 @@ it('can ingest requests', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            'group' => hash('md5', 'GET|HEAD,,/users'),
+            '_group' => hash('md5', 'GET|HEAD,,/users'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'user' => '',
             'method' => 'GET',
@@ -394,7 +394,7 @@ it('captures the route group', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.group', hash('md5', 'GET|HEAD,{product}.laravel.com,/users/{user}'));
+    $ingest->assertLatestWrite('requests.0._group', hash('md5', 'GET|HEAD,{product}.laravel.com,/users/{user}'));
 });
 
 it('handles the root path', function () {
