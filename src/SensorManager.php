@@ -79,25 +79,24 @@ final class SensorManager
     {
         $this->recordsBuffer = new RecordsBuffer;
         $this->executionParent = new ExecutionParent;
-        $this->currentExecutionStage = ExecutionStage::Bootstrap;
     }
 
     public function start(ExecutionStage $next): void
     {
         $nowMicrotime = $this->clock()->microtime();
-        $previous = $this->currentExecutionStage->previous();
+        $previous = $this->executionParent->stage->previous();
 
-        $this->executionStages[$this->currentExecutionStage->value] = $previous === null
+        $this->executionStages[$this->executionParent->stage->value] = $previous === null
             ? (int) round(($nowMicrotime - $this->clock()->executionStartInMicrotime()) * 1_000_000)
             : (int) round(($nowMicrotime - $this->currentExecutionStageStartedAtMicrotime) * 1_000_000);
 
-        $this->currentExecutionStage = $next;
+        $this->executionParent->stage = $next;
         $this->currentExecutionStageStartedAtMicrotime = $nowMicrotime;
     }
 
     public function executionStage(): ExecutionStage
     {
-        return $this->currentExecutionStage;
+        return $this->executionParent->stage;
     }
 
     public function request(Request $request, Response $response): void
@@ -155,7 +154,7 @@ final class SensorManager
             executionContext: $this->executionContext(),
         );
 
-        $sensor($event, $trace, $this->currentExecutionStage);
+        $sensor($event, $trace);
     }
 
     public function cacheEvent(CacheMissed|CacheHit $event): void
@@ -203,7 +202,7 @@ final class SensorManager
             executionParent: $this->executionParent,
         );
 
-        $sensor($e, $this->currentExecutionStage);
+        $sensor($e);
     }
 
     public function queuedJob(JobQueued $event): void
@@ -301,6 +300,5 @@ final class SensorManager
         $this->traceId = null;
         $this->executionId = null;
         $this->executionStages = [];
-        $this->currentExecutionStage = ExecutionStage::Bootstrap;
     }
 }

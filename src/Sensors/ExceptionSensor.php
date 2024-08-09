@@ -36,7 +36,7 @@ final class ExceptionSensor
     /**
      * TODO group, execution_context, execution_id
      */
-    public function __invoke(Throwable $e, ExecutionStage $executionStage): void
+    public function __invoke(Throwable $e): void
     {
         $nowMicrotime = $this->clock->microtime();
         [$file, $line] = $this->location->forException($e);
@@ -59,7 +59,7 @@ final class ExceptionSensor
             trace_id: $this->traceId,
             execution_context: $this->executionContext,
             execution_id: $this->executionId,
-            execution_stage: $executionStage,
+            execution_stage: $this->executionParent->stage,
             user: $this->user->id(),
             class: $normalizedException::class,
             file: $file,
