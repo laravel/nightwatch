@@ -2,6 +2,11 @@
 
 namespace Laravel\Nightwatch\Types;
 
+use Illuminate\Support\Str as SupportStr;
+
+/**
+ * @mixin \Illuminate\Support\Str
+ */
 final class Str
 {
     public static function tinyText(string $value): string
@@ -26,5 +31,10 @@ final class Str
         }
 
         return $string;
+    }
+
+    public static function __callStatic($name, $arguments)
+    {
+        return SupportStr::{$name}(...$arguments);
     }
 }

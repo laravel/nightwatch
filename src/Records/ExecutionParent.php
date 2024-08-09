@@ -12,7 +12,9 @@ final class ExecutionParent
     public int $v = 1;
 
     public function __construct(
-        public ExecutionStage $stage = ExecutionStage::Bootstrap,
+        public string $traceId,
+        public string $executionId,
+        public ExecutionStage $executionStage = ExecutionStage::Bootstrap,
         public int $exceptions = 0,
         public int $queries = 0,
         public int $lazy_loads = 0,

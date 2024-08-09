@@ -70,7 +70,12 @@ function setServerName(string $name): void
 
 function setTraceId(string $traceId): void
 {
-    App::instance('laravel.nightwatch.trace_id', $traceId);
+    app(SensorManager::class)->executionParent->traceId = $traceId;
+}
+
+function setExecutionId(string $executionId): void
+{
+    app(SensorManager::class)->executionParent->executionId = $executionId;
 }
 
 function setPeakMemory(int $value): void

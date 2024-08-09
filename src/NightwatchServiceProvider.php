@@ -75,7 +75,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
         $this->configureAgent();
         $this->configureIngest();
-        $this->configureTraceId();
         $this->mergeConfig();
     }
 
@@ -159,14 +158,6 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             return new SocketIngest($connector, $uri);
         });
-    }
-
-    /**
-     * TODO on the queue we need to restore the trace ID from the request / command.
-     */
-    protected function configureTraceId(): void
-    {
-        $this->app->scoped('laravel.nightwatch.trace_id', fn () => (string) Str::uuid());
     }
 
     protected function registerPublications(): void

@@ -36,9 +36,9 @@ use Throwable;
  */
 final class SensorManager
 {
-    private RecordsBuffer $recordsBuffer;
+    public ExecutionParent $executionParent;
 
-    private ExecutionParent $executionParent;
+    private RecordsBuffer $recordsBuffer;
 
     private ?CacheEventSensor $cacheEventSensor;
 
@@ -51,8 +51,6 @@ final class SensorManager
     private ?QueuedJobSensor $queuedJobSensor;
 
     private ?Clock $clock;
-
-    private ?string $traceId;
 
     private ?string $server;
 
@@ -78,25 +76,29 @@ final class SensorManager
     public function __construct(private Application $app)
     {
         $this->recordsBuffer = new RecordsBuffer;
-        $this->executionParent = new ExecutionParent;
+
+        $this->executionParent = new ExecutionParent(
+            traceId: $traceId = (string) Str::uuid(),
+            executionId: $traceId,
+        );
     }
 
     public function start(ExecutionStage $next): void
     {
         $nowMicrotime = $this->clock()->microtime();
-        $previous = $this->executionParent->stage->previous();
+        $previous = $this->executionParent->executionStage->previous();
 
-        $this->executionStages[$this->executionParent->stage->value] = $previous === null
+        $this->executionStages[$this->executionParent->executionStage->value] = $previous === null
             ? (int) round(($nowMicrotime - $this->clock()->executionStartInMicrotime()) * 1_000_000)
             : (int) round(($nowMicrotime - $this->currentExecutionStageStartedAtMicrotime) * 1_000_000);
 
-        $this->executionParent->stage = $next;
+        $this->executionParent->executionStage = $next;
         $this->currentExecutionStageStartedAtMicrotime = $nowMicrotime;
     }
 
     public function executionStage(): ExecutionStage
     {
-        return $this->executionParent->stage;
+        return $this->executionParent->executionStage;
     }
 
     public function request(Request $request, Response $response): void
@@ -107,7 +109,6 @@ final class SensorManager
             peakMemory: $this->peakMemoryProvider(),
             clock: $clock = $this->clock(),
             user: $this->user(),
-            traceId: $this->traceId(),
             deploy: $this->deploy(),
             server: $this->server(),
             executionStages: $this->executionStages,
@@ -128,7 +129,6 @@ final class SensorManager
             executionParent: $this->executionParent,
             peakMemory: $this->peakMemoryProvider(),
             user: $this->user(),
-            traceId: $this->traceId(),
             deploy: $this->deploy(),
             server: $this->server(),
         );
@@ -147,10 +147,8 @@ final class SensorManager
             user: $this->user(),
             clock: $this->clock(),
             location: $this->location(),
-            traceId: $this->traceId(),
             deploy: $this->deploy(),
             server: $this->server(),
-            executionId: $this->executionId(),
             executionContext: $this->executionContext(),
         );
 
@@ -164,7 +162,6 @@ final class SensorManager
             executionParent: $this->executionParent,
             clock: $this->clock(),
             user: $this->user(),
-            traceId: $this->traceId(),
             deploy: $this->deploy(),
             server: $this->server(),
         );
@@ -179,7 +176,6 @@ final class SensorManager
             executionParent: $this->executionParent,
             user: $this->user(),
             clock: $this->clock(),
-            traceId: $this->traceId(),
             deploy: $this->deploy(),
             server: $this->server(),
         );
@@ -194,11 +190,9 @@ final class SensorManager
             user: $this->user(),
             clock: $this->clock(),
             location: $this->location(),
-            traceId: $this->traceId(),
             deploy: $this->deploy(),
             server: $this->server(),
             executionContext: $this->executionContext(),
-            executionId: $this->executionId(),
             executionParent: $this->executionParent,
         );
 
@@ -213,23 +207,11 @@ final class SensorManager
             user: $this->user(),
             clock: $this->clock(),
             config: $this->config(),
-            traceId: $this->traceId(),
             deploy: $this->deploy(),
             server: $this->server(),
         );
 
         $sensor($event);
-    }
-
-    private function traceId(): string
-    {
-        return $this->traceId ??= $this->app->make('laravel.nightwatch.trace_id');
-    }
-
-    public function executionId(): string
-    {
-        // For now we are just returning the trace id. We will need to get this sorted when we move to tracing jobs.
-        return $this->traceId();
     }
 
     private function executionContext(): string
@@ -288,7 +270,10 @@ final class SensorManager
     {
         // TODO this method should accept all the parameters that construct does and set the new values.
         $this->recordsBuffer = new RecordsBuffer;
-        $this->executionParent = new ExecutionParent;
+        // $this->executionParent = new ExecutionParent(
+        //     traceId: $traceId = (string) Str::uuid(),
+        //     executionId: $traceId,
+        // );
 
         $this->cacheEventSensor = null;
         $this->exceptionSensor = null;
@@ -298,7 +283,6 @@ final class SensorManager
 
         $this->clock = null;
         $this->traceId = null;
-        $this->executionId = null;
         $this->executionStages = [];
     }
 }

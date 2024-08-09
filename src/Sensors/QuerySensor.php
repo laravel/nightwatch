@@ -24,8 +24,6 @@ final class QuerySensor
         private Location $location,
         private string $deploy,
         private string $server,
-        private string $traceId,
-        private string $executionId,
         private string $executionContext,
     ) {
         //
@@ -48,10 +46,10 @@ final class QuerySensor
             deploy: $this->deploy,
             server: $this->server,
             _group: hash('md5', $event->sql),
-            trace_id: $this->traceId,
+            trace_id: $this->executionParent->traceId,
             execution_context: $this->executionContext,
-            execution_id: $this->executionId,
-            execution_stage: $this->executionParent->stage,
+            execution_id: $this->executionParent->executionId,
+            execution_stage: $this->executionParent->executionStage,
             user: $this->user->id(),
             sql: $event->sql,
             file: $file ?? '',

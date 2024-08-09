@@ -15,6 +15,7 @@ beforeEach(function () {
     setServerName('web-01');
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
+    setExecutionId('00000000-0000-0000-0000-000000000001');
     syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 
     App::setBasePath(realpath(__DIR__.'/../../../'));
@@ -57,7 +58,7 @@ it('can ingest queries', function () {
             '_group' => hash('md5', 'select * from "users"'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
-            'execution_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
             'sql' => 'select * from "users"',
