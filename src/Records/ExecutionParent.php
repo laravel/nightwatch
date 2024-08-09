@@ -16,6 +16,7 @@ final class ExecutionParent
         public string $traceId,
         public string $executionId,
         public string $deploy,
+        public string $server,
         public ExecutionStage $executionStage = ExecutionStage::Bootstrap,
         public int $exceptions = 0,
         public int $queries = 0,
@@ -34,5 +35,6 @@ final class ExecutionParent
         public int $peak_memory_usage = 0,
     ) {
         $this->deploy = Str::tinyText($this->deploy);
+        $this->server = Str::tinyText($this->server);
     }
 }

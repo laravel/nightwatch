@@ -63,9 +63,9 @@ function setDeploy(string $deploy): void
     app(SensorManager::class)->executionParent->deploy = $deploy;
 }
 
-function setServerName(string $name): void
+function setServerName(string $server): void
 {
-    Config::set('nightwatch.server', $name);
+    app(SensorManager::class)->executionParent->server = $server;
 }
 
 function setTraceId(string $traceId): void

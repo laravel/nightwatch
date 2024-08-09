@@ -22,7 +22,6 @@ final class ExceptionSensor
         private UserProvider $user,
         private Clock $clock,
         private Location $location,
-        private string $server,
         private string $executionContext,
         private ExecutionParent $executionParent,
     ) {
@@ -50,7 +49,7 @@ final class ExceptionSensor
         $this->recordsBuffer->writeException(new Exception(
             timestamp: $nowMicrotime,
             deploy: $this->executionParent->deploy,
-            server: $this->server,
+            server: $this->executionParent->server,
             group: hash('md5', implode(',', [$normalizedException::class, $normalizedException->getCode(), $file, $line])),
             trace_id: $this->executionParent->traceId,
             execution_context: $this->executionContext,
