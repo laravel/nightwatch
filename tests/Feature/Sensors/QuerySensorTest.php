@@ -1,7 +1,6 @@
 <?php
 
 use Carbon\CarbonImmutable;
-use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\App;
@@ -110,4 +109,3 @@ it('always uses current time minus execution time for the timestamp', function (
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('queries.0.timestamp', 946688523.466665);
 });
-

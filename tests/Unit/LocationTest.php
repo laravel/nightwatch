@@ -232,4 +232,3 @@ it('uses first non-internal vendor frames', function () {
 
     expect($file)->toBe(['vendor/foo/bar/Baz1.php', 9]);
 });
-

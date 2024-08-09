@@ -36,4 +36,3 @@ final class Exception
         $this->trace = Str::mediumText($this->trace);
     }
 }
-
