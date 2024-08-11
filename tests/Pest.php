@@ -16,7 +16,7 @@ use Tests\FakeIngest;
 use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\travelTo;
 
-uses(Tests\TestCase::class)->in('Feature', 'Unit');
+pest()->extends(Tests\TestCase::class);
 
 function syncClock(CarbonImmutable $timestamp): void
 {
