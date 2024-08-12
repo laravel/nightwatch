@@ -10,6 +10,7 @@ use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
 use Tests\FakeIngest;
 
@@ -25,7 +26,6 @@ function syncClock(CarbonImmutable $timestamp): void
     $executionStartInMicrotime = (float) $timestamp->format('U.u');
 
     $sensor = app(SensorManager::class);
-    $sensor->prepareForNextInvocation();
     $sensor->setClock($clock = new class($executionStartInMicrotime) implements Clock
     {
         public function __construct(private float $executionStartInMicrotime)
@@ -49,7 +49,10 @@ function syncClock(CarbonImmutable $timestamp): void
         }
     });
     App::instance(Clock::class, $clock);
+    app(ExecutionState::class)->stageDurations[ExecutionStage::Bootstrap->value] = 0;
+    app(ExecutionState::class)->currentExecutionStageStartedAtMicrotime = $executionStartInMicrotime;
     $sensor->stage(ExecutionStage::BeforeMiddleware);
+    // dd(app(ExecutionState::class));
 }
 
 function records(): RecordsBuffer

@@ -33,6 +33,7 @@ use Laravel\Nightwatch\Ingests\HttpIngest;
 use Laravel\Nightwatch\Ingests\NullIngest;
 use Laravel\Nightwatch\Ingests\SocketIngest;
 use Laravel\Nightwatch\Providers\PeakMemory;
+use Laravel\Nightwatch\Records\ExecutionState;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
 use React\Socket\Connector;
@@ -186,6 +187,9 @@ final class NightwatchServiceProvider extends ServiceProvider
         $events = $this->app->make('events');
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager($this->app));
+        // This should likely be created at this level and passed into the sensor.
+        /** @var ExecutionState */
+        $state = $this->app->make(ExecutionState::class);
 
         /*
          * Stage: Before middleware.
@@ -210,7 +214,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /*
          * Stage: Render.
          */
-        $events->listen(PreparingResponse::class, fn () => match ($sensor->executionStage()) {
+        $events->listen(PreparingResponse::class, fn () => match ($state->stage) {
             ExecutionStage::Action => $sensor->stage(ExecutionStage::Render),
             default => null,
         });
@@ -218,7 +222,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /*
          * Stage: After middleware.
          */
-        $events->listen(ResponsePrepared::class, fn () => match ($sensor->executionStage()) {
+        $events->listen(ResponsePrepared::class, fn () => match ($state->stage) {
             ExecutionStage::Render => $sensor->stage(ExecutionStage::AfterMiddleware),
             default => null,
         });

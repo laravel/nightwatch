@@ -20,16 +20,12 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class RequestSensor
 {
-    /**
-     * @param  array<value-of<ExecutionStage>, int>  $executionStages
-     */
     public function __construct(
         private Clock $clock,
         private ExecutionState $executionState,
         private PeakMemoryProvider $peakMemory,
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
-        private array $executionStages,
     ) {
         //
     }
@@ -73,17 +69,17 @@ final class RequestSensor
             route_action: $route?->getActionName() ?? '',
             route_path: $routePath,
             ip: $request->ip() ?? '',
-            duration: array_sum($this->executionStages),
+            duration: array_sum($this->executionState->stageDurations),
             status_code: $response->getStatusCode(),
             request_size: strlen($request->getContent()),
             response_size: $this->parseResponseSize($response),
-            bootstrap: $this->executionStages[ExecutionStage::Bootstrap->value] ?? 0,
-            before_middleware: $this->executionStages[ExecutionStage::BeforeMiddleware->value] ?? 0,
-            action: $this->executionStages[ExecutionStage::Action->value] ?? 0,
-            render: $this->executionStages[ExecutionStage::Render->value] ?? 0,
-            after_middleware: $this->executionStages[ExecutionStage::AfterMiddleware->value] ?? 0,
-            sending: $this->executionStages[ExecutionStage::Sending->value] ?? 0,
-            terminating: $this->executionStages[ExecutionStage::Terminating->value] ?? 0,
+            bootstrap: $this->executionState->stageDurations[ExecutionStage::Bootstrap->value],
+            before_middleware: $this->executionState->stageDurations[ExecutionStage::BeforeMiddleware->value],
+            action: $this->executionState->stageDurations[ExecutionStage::Action->value],
+            render: $this->executionState->stageDurations[ExecutionStage::Render->value],
+            after_middleware: $this->executionState->stageDurations[ExecutionStage::AfterMiddleware->value],
+            sending: $this->executionState->stageDurations[ExecutionStage::Sending->value],
+            terminating: $this->executionState->stageDurations[ExecutionStage::Terminating->value],
             exceptions: $this->executionState->exceptions,
             queries: $this->executionState->queries,
             lazy_loads: $this->executionState->lazy_loads,

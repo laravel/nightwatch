@@ -21,6 +21,7 @@ use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
 use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\QueuedJobSensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
+use Laravel\Nightwatch\Sensors\StageSensor;
 use Laravel\Nightwatch\Types\Str;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -50,6 +51,8 @@ final class SensorManager
 
     private ?QueuedJobSensor $queuedJobSensor;
 
+    private ?StageSensor $stageSensor;
+
     private ?Clock $clock;
 
     private ?PeakMemoryProvider $peakMemoryProvider;
@@ -60,39 +63,32 @@ final class SensorManager
 
     private ?UserProvider $userProvider;
 
-    /**
-     * @var array<value-of<ExecutionStage>, int>
-     */
-    private array $executionStages = [];
-
-    private ExecutionStage $currentExecutionStage;
-
-    private ?float $currentExecutionStageStartedAtMicrotime;
-
     public function __construct(private Application $app)
     {
         $this->recordsBuffer = new RecordsBuffer;
 
-        $this->executionState = new ExecutionState(
+        // This likely needs to be extracted one level higher.
+        $this->executionState = $app->instance(ExecutionState::class, new ExecutionState(
             trace: $traceId = (string) Str::uuid(),
             id: $traceId,
             context: 'request', // TODO
             deploy: $app['config']->get('nightwatch.deploy') ?? '',
             server: $app['config']->get('nightwatch.server') ?? '',
-        );
+            currentExecutionStageStartedAtMicrotime: $this->clock()->executionStartInMicrotime(),
+        ));
     }
 
-    public function stage(ExecutionStage $next): void
+    public function stage(ExecutionStage $executionStage): void
     {
-        $nowMicrotime = $this->clock()->microtime();
-        $previous = $this->executionState->stage->previous();
+        // This cannot be cached because the clock is resolved very early on.
+        // We likely need to make the clock mutable rather than replacing the
+        // instance.
+        $sensor = new StageSensor(
+            clock: $this->clock(),
+            executionState: $this->executionState,
+        );
 
-        $this->executionStages[$this->executionState->stage->value] = $previous === null
-            ? (int) round(($nowMicrotime - $this->clock()->executionStartInMicrotime()) * 1_000_000)
-            : (int) round(($nowMicrotime - $this->currentExecutionStageStartedAtMicrotime) * 1_000_000);
-
-        $this->executionState->stage = $next;
-        $this->currentExecutionStageStartedAtMicrotime = $nowMicrotime;
+        $sensor($executionStage);
     }
 
     public function executionStage(): ExecutionStage
@@ -105,7 +101,6 @@ final class SensorManager
         $sensor = new RequestSensor(
             clock: $clock = $this->clock(),
             executionState: $this->executionState,
-            executionStages: $this->executionStages,
             peakMemory: $this->peakMemoryProvider(),
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
@@ -250,7 +245,5 @@ final class SensorManager
         $this->queuedJobSensor = null;
 
         $this->clock = null;
-        $this->traceId = null;
-        $this->executionStages = [];
     }
 }

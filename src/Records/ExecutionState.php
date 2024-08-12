@@ -12,13 +12,27 @@ final class ExecutionState
 {
     public int $v = 1;
 
+    /**
+     * @param  array<value-of<ExecutionStage>, float>  $stageDurations
+     */
     public function __construct(
         public string $trace,
         public string $id,
         public string $context,
         public string $deploy,
         public string $server,
+        public float $currentExecutionStageStartedAtMicrotime,
         public ExecutionStage $stage = ExecutionStage::Bootstrap,
+        public array $stageDurations = [
+            ExecutionStage::Bootstrap->value => 0,
+            ExecutionStage::BeforeMiddleware->value => 0,
+            ExecutionStage::Action->value => 0,
+            ExecutionStage::Render->value => 0,
+            ExecutionStage::AfterMiddleware->value => 0,
+            ExecutionStage::Sending->value => 0,
+            ExecutionStage::Terminating->value => 0,
+            ExecutionStage::End->value => 0,
+        ],
         public int $exceptions = 0,
         public int $queries = 0,
         public int $lazy_loads = 0,

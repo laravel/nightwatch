@@ -4,11 +4,14 @@ namespace Laravel\Nightwatch;
 
 use Closure;
 use Illuminate\Http\Request;
+use Laravel\Nightwatch\Records\ExecutionState;
 
 final class NightwatchTerminatingMiddleware
 {
-    public function __construct(private SensorManager $sensor)
-    {
+    public function __construct(
+        private SensorManager $sensor,
+        private ExecutionState $executionState,
+    ) {
         //
     }
 
@@ -19,7 +22,7 @@ final class NightwatchTerminatingMiddleware
 
     public function terminate(): void
     {
-        if ($this->sensor->executionStage() !== ExecutionStage::Terminating) {
+        if ($this->executionState->stage !== ExecutionStage::Terminating) {
             $this->sensor->stage(ExecutionStage::Terminating);
         }
     }
