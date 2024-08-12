@@ -15,7 +15,7 @@ final class StageSensor
         //
     }
 
-    public function __invoke(ExecutionStage $executionStage)
+    public function __invoke(ExecutionStage $executionStage): void
     {
         $nowMicrotime = $this->clock->microtime();
 

@@ -59,15 +59,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         }
 
         $this->app->singleton(SensorManager::class);
-        $this->app->singleton(ClockContract::class, function (Container $app) {
-            /**
-             * TODO this needs to better handle Laravel Octane and the queue worker.
-             */
-            return new Clock(match (true) {
-                defined('LARAVEL_START') => LARAVEL_START,
-                default => $app->make('request')->server('REQUEST_TIME_FLOAT') ?? microtime(true),
-            });
-        });
         $this->app->singleton(NightwatchRouteMiddleware::class);
         if (! class_exists(Terminating::class)) {
             $this->app->singleton(NightwatchTerminatingMiddleware::class);
@@ -107,7 +98,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             /** @var Config */
             $config = $app->make('config');
             /** @var Clock */
-            $clock = $app->make(ClockContract::class);
+            $clock = $app->make(Clock::class);
 
             $loop = new StreamSelectLoop;
 

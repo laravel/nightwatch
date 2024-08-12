@@ -33,7 +33,10 @@ final class Str
         return $string;
     }
 
-    public static function __callStatic($name, $arguments)
+    /**
+     * @param  list<mixed>  $arguments
+     */
+    public static function __callStatic(string $name, array $arguments): mixed
     {
         return SupportStr::{$name}(...$arguments);
     }

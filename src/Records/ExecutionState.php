@@ -13,7 +13,7 @@ final class ExecutionState
     public int $v = 1;
 
     /**
-     * @param  array<value-of<ExecutionStage>, float>  $stageDurations
+     * @param  array<value-of<ExecutionStage>, int>  $stageDurations
      */
     public function __construct(
         public string $trace,
