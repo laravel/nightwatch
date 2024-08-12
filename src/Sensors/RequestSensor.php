@@ -50,7 +50,7 @@ final class RequestSensor
             timestamp: $this->clock->executionStartInMicrotime(),
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', implode(',', [implode('|', $routeMethods), $routeDomain, $routePath])),
+            _group: hash('md5', implode('|', $routeMethods).",{$routeDomain},{$routePath}"),
             trace_id: $this->executionState->trace,
             user: $this->user->id(),
             method: $request->getMethod(),

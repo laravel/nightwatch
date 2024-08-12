@@ -27,9 +27,6 @@ final class ExceptionSensor
         //
     }
 
-    /**
-     * TODO group, execution_context, execution_id
-     */
     public function __invoke(Throwable $e): void
     {
         $nowMicrotime = $this->clock->microtime();
@@ -49,7 +46,7 @@ final class ExceptionSensor
             timestamp: $nowMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            group: hash('md5', implode(',', [$normalizedException::class, $normalizedException->getCode(), $file, $line])),
+            _group: hash('md5', implode(',', [$normalizedException::class, $normalizedException->getCode(), $file, $line])),
             trace_id: $this->executionState->trace,
             execution_context: $this->executionState->context,
             execution_id: $this->executionState->id,

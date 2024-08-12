@@ -47,6 +47,11 @@ it('can ingest queries', function () {
 
     $response = get('/users');
 
+    // Workbench replaces `testing` with `sqlite`. Will capture it dynamically
+    // so that the tests pass whether workbench has configured its own database
+    // or not.
+    expect($connection = config('database.default'))->toBeIn(['testing', 'sqlite']);
+
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('queries', [
@@ -55,7 +60,7 @@ it('can ingest queries', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('md5', 'select * from "users"'),
+            '_group' => hash('md5', $connection.',select * from "users"'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
@@ -65,7 +70,7 @@ it('can ingest queries', function () {
             'file' => 'tests/Feature/Sensors/QuerySensorTest.php',
             'line' => $line,
             'duration' => 4321,
-            'connection' => 'testing',
+            'connection' => $connection,
         ],
     ]);
 });

@@ -26,8 +26,6 @@ final class QuerySensor
     }
 
     /**
-     * TODO group, execution_context, execution_id, category
-     *
      * @param  list<array{ file?: string, line?: int }>  $trace
      */
     public function __invoke(QueryExecuted $event, array $trace): void
@@ -41,7 +39,7 @@ final class QuerySensor
             timestamp: $this->clock->microtime() - ($event->time / 1000),
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', $event->sql),
+            _group: hash('md5', "{$event->connectionName},{$event->sql}"),
             trace_id: $this->executionState->trace,
             execution_context: $this->executionState->context,
             execution_id: $this->executionState->id,

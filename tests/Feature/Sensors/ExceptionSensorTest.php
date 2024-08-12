@@ -42,7 +42,7 @@ it('can ingest thrown exceptions', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            'group' => hash('md5', "MyException,0,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"),
+            '_group' => hash('md5', "MyException,0,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
@@ -70,7 +70,7 @@ it('captures the code', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.group', hash('md5', "MyException,999,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"));
+    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', "MyException,999,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"));
     $ingest->assertLatestWrite('exceptions.0.code', 999);
 });
 
@@ -97,7 +97,7 @@ it('can ingest reported exceptions', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            'group' => hash('md5', "MyException,0,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"),
+            '_group' => hash('md5', "MyException,0,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
@@ -144,7 +144,7 @@ it('handles view exceptions', function () {
     $ingest->assertLatestWrite('exceptions.0.class', 'Exception');
     $ingest->assertLatestWrite('exceptions.0.message', 'Whoops!');
     $ingest->assertLatestWrite('exceptions.0.code', 999);
-    $ingest->assertLatestWrite('exceptions.0.group', hash('md5', 'Exception,999,resources/views/exception.blade.php,'));
+    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', 'Exception,999,resources/views/exception.blade.php,'));
 });
 
 it('handles spatie view exceptions', function () {
@@ -164,7 +164,7 @@ it('handles spatie view exceptions', function () {
     $ingest->assertLatestWrite('exceptions.0.class', 'Exception');
     $ingest->assertLatestWrite('exceptions.0.message', 'Whoops!');
     $ingest->assertLatestWrite('exceptions.0.code', 999);
-    $ingest->assertLatestWrite('exceptions.0.group', hash('md5', 'Exception,999,resources/views/exception.blade.php,6'));
+    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', 'Exception,999,resources/views/exception.blade.php,6'));
 });
 
 it('handles unknown lines for internal locations', function () {
