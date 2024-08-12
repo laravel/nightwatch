@@ -6,7 +6,7 @@ use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Events\CallQueuedListener;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Contracts\Clock;
+use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\UserProvider;

@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch;
 
-use Laravel\Nightwatch\Contracts\Clock;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 

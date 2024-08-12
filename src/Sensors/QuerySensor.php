@@ -4,7 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Database\Events\QueryExecuted;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Contracts\Clock;
+use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Query;

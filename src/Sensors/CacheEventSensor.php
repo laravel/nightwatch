@@ -5,7 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Contracts\Clock;
+use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\UserProvider;

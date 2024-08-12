@@ -24,9 +24,9 @@ use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Console\Agent;
-use Laravel\Nightwatch\Contracts\Clock as ClockContract;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Ingests\HttpIngest;
@@ -185,11 +185,24 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         /** @var Dispatcher */
         $events = $this->app->make('events');
-        /** @var SensorManager */
-        $sensor = $this->app->instance(SensorManager::class, new SensorManager($this->app));
-        // This should likely be created at this level and passed into the sensor.
+
+        $clock = $this->app->instance(Clock::class, new Clock(match (true) {
+            defined('LARAVEL_START') => LARAVEL_START,
+            default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
+        }));
+
         /** @var ExecutionState */
-        $state = $this->app->make(ExecutionState::class);
+        $state = $this->app->instance(ExecutionState::class, new ExecutionState(
+            trace: $traceId = (string) Str::uuid(),
+            id: $traceId,
+            context: 'request', // TODO
+            deploy: $this->app['config']->get('nightwatch.deploy') ?? '',
+            server: $this->app['config']->get('nightwatch.server') ?? '',
+            currentExecutionStageStartedAtMicrotime: $clock->executionStartInMicrotime(),
+        ));
+
+        /** @var SensorManager */
+        $sensor = $this->app->instance(SensorManager::class, new SensorManager($state, $clock, $this->app));
 
         /*
          * Stage: Before middleware.

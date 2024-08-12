@@ -11,7 +11,7 @@ beforeEach(function () {
     setServerName('web-01');
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    syncClock(CarbonImmutable::parse('2000-01-01 00:00:00'));
+    setExecutionStart(CarbonImmutable::parse('2000-01-01 00:00:00'));
 })->skip();
 
 it('can ingest requests', function () {

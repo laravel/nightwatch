@@ -2,11 +2,11 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Laravel\Nightwatch\Contracts\Clock;
+use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionState;
 
-class StageSensor
+final class StageSensor
 {
     public function __construct(
         private Clock $clock,

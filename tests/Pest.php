@@ -6,78 +6,58 @@ use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Contracts\Clock;
+use Laravel\Nightwatch\Clock as NightwatchClock;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionState;
-use Laravel\Nightwatch\SensorManager;
 use Tests\FakeIngest;
 
 use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\travelTo;
 
-pest()->extends(Tests\TestCase::class);
+pest()->extends(Tests\TestCase::class)->beforeEach(function () {
+    app(NightwatchClock::class)->microtimeResolver = fn () => (float) now()->format('U.u');
+});
 
-function syncClock(CarbonImmutable $timestamp): void
+function setExecutionStart(CarbonImmutable $timestamp): void
 {
-    travelTo($timestamp);
-
-    $executionStartInMicrotime = (float) $timestamp->format('U.u');
-
-    $sensor = app(SensorManager::class);
-    $sensor->setClock($clock = new class($executionStartInMicrotime) implements Clock
-    {
-        public function __construct(private float $executionStartInMicrotime)
-        {
-            //
-        }
-
-        public function microtime(): float
-        {
-            return now()->getPreciseTimestamp(6) / 1_000_000;
-        }
-
-        public function diffInMicrotime(float $start): float
-        {
-            return $this->microtime() - $start;
-        }
-
-        public function executionStartInMicrotime(): float
-        {
-            return $this->executionStartInMicrotime;
-        }
-    });
-    App::instance(Clock::class, $clock);
+    syncClock($timestamp);
+    app(ExecutionState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
+    app(ExecutionState::class)->stage = ExecutionStage::BeforeMiddleware;
+    app(ExecutionState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
     app(ExecutionState::class)->stageDurations[ExecutionStage::Bootstrap->value] = 0;
-    app(ExecutionState::class)->currentExecutionStageStartedAtMicrotime = $executionStartInMicrotime;
-    $sensor->stage(ExecutionStage::BeforeMiddleware);
-    // dd(app(ExecutionState::class));
+}
+
+function syncClock(DateTimeInterface $timestamp): void
+{
+    app(NightwatchClock::class)->executionStartInMicrotime = (float) $timestamp->format('U.u');
+    travelTo($timestamp);
 }
 
 function records(): RecordsBuffer
 {
-    return App::make(RecordsBuffer::class);
+    return app(RecordsBuffer::class);
 }
 
 function setDeploy(string $deploy): void
 {
-    app(SensorManager::class)->executionState->deploy = $deploy;
+    app(ExecutionState::class)->deploy = $deploy;
 }
 
 function setServerName(string $server): void
 {
-    app(SensorManager::class)->executionState->server = $server;
+    app(ExecutionState::class)->server = $server;
 }
 
 function setTraceId(string $traceId): void
 {
-    app(SensorManager::class)->executionState->trace = $traceId;
+    app(ExecutionState::class)->trace = $traceId;
 }
 
 function setExecutionId(string $executionId): void
 {
-    app(SensorManager::class)->executionState->id = $executionId;
+    app(ExecutionState::class)->id = $executionId;
 }
 
 function setPeakMemory(int $value): void

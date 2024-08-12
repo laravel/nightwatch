@@ -24,7 +24,7 @@ beforeEach(function () {
     setServerName('web-01');
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    syncClock(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 });
 
 it('can ingest requests', function () {
@@ -428,9 +428,8 @@ it('captures bootstrap execution stage', function () {
     Route::get('/users', fn () => []);
 
     // Simulating boot time.
-    $sensor->executionState->stage = ExecutionStage::Bootstrap;
-    travelTo(now()->addMicroseconds(5));
-    $sensor->stage(ExecutionStage::BeforeMiddleware);
+    $sensor->stage(ExecutionStage::Bootstrap);
+    syncClock(now()->addMicroseconds(5));
     $response = get('/users');
 
     $response->assertOk();

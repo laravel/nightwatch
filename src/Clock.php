@@ -2,26 +2,31 @@
 
 namespace Laravel\Nightwatch;
 
-use Laravel\Nightwatch\Contracts\Clock as ClockContract;
+use Closure;
 
 /**
  * @internal
  */
-final class Clock implements ClockContract
+final class Clock
 {
-    public function __construct(private int $executionStartInMicrotime)
+    /**
+     * @var (\Closure(): float)
+     */
+    public Closure $microtimeResolver;
+
+    public function __construct(public float $executionStartInMicrotime)
     {
-        //
+        $this->microtimeResolver = fn () => microtime(true);
     }
 
     public function microtime(): float
     {
-        return microtime(true);
+        return call_user_func($this->microtimeResolver);
     }
 
     public function diffInMicrotime(float $start): float
     {
-        return microtime(true) - $start;
+        return call_user_func($this->microtimeResolver) - $start;
     }
 
     public function executionStartInMicrotime(): float

@@ -11,7 +11,6 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
@@ -37,10 +36,6 @@ use Throwable;
  */
 final class SensorManager
 {
-    public ExecutionState $executionState;
-
-    private RecordsBuffer $recordsBuffer;
-
     private ?CacheEventSensor $cacheEventSensor;
 
     private ?ExceptionSensor $exceptionSensor;
@@ -53,8 +48,6 @@ final class SensorManager
 
     private ?StageSensor $stageSensor;
 
-    private ?Clock $clock;
-
     private ?PeakMemoryProvider $peakMemoryProvider;
 
     private ?Location $location;
@@ -63,19 +56,13 @@ final class SensorManager
 
     private ?UserProvider $userProvider;
 
-    public function __construct(private Application $app)
-    {
-        $this->recordsBuffer = new RecordsBuffer;
-
-        // This likely needs to be extracted one level higher.
-        $this->executionState = $app->instance(ExecutionState::class, new ExecutionState(
-            trace: $traceId = (string) Str::uuid(),
-            id: $traceId,
-            context: 'request', // TODO
-            deploy: $app['config']->get('nightwatch.deploy') ?? '',
-            server: $app['config']->get('nightwatch.server') ?? '',
-            currentExecutionStageStartedAtMicrotime: $this->clock()->executionStartInMicrotime(),
-        ));
+    public function __construct(
+        private ExecutionState $executionState,
+        private Clock $clock,
+        private Application $app,
+        private RecordsBuffer $recordsBuffer = new RecordsBuffer,
+    ) {
+        //
     }
 
     public function stage(ExecutionStage $executionStage): void
@@ -84,7 +71,7 @@ final class SensorManager
         // We likely need to make the clock mutable rather than replacing the
         // instance.
         $sensor = new StageSensor(
-            clock: $this->clock(),
+            clock: $this->clock,
             executionState: $this->executionState,
         );
 
@@ -99,7 +86,7 @@ final class SensorManager
     public function request(Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
-            clock: $clock = $this->clock(),
+            clock: $this->clock,
             executionState: $this->executionState,
             peakMemory: $this->peakMemoryProvider(),
             recordsBuffer: $this->recordsBuffer,
@@ -132,7 +119,7 @@ final class SensorManager
     public function query(QueryExecuted $event, array $trace): void
     {
         $sensor = $this->querySensor ??= new QuerySensor(
-            clock: $this->clock(),
+            clock: $this->clock,
             executionState: $this->executionState,
             location: $this->location(),
             recordsBuffer: $this->recordsBuffer,
@@ -147,7 +134,7 @@ final class SensorManager
         $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
             recordsBuffer: $this->recordsBuffer,
             executionState: $this->executionState,
-            clock: $this->clock(),
+            clock: $this->clock,
             user: $this->user(),
         );
 
@@ -160,7 +147,7 @@ final class SensorManager
             recordsBuffer: $this->recordsBuffer,
             executionState: $this->executionState,
             user: $this->user(),
-            clock: $this->clock(),
+            clock: $this->clock,
         );
 
         $sensor($startMicrotime, $endMicrotime, $request, $response);
@@ -169,7 +156,7 @@ final class SensorManager
     public function exception(Throwable $e): void
     {
         $sensor = $this->exceptionSensor ??= new ExceptionSensor(
-            clock: $this->clock(),
+            clock: $this->clock,
             executionState: $this->executionState,
             location: $this->location(),
             recordsBuffer: $this->recordsBuffer,
@@ -185,7 +172,7 @@ final class SensorManager
             recordsBuffer: $this->recordsBuffer,
             executionState: $this->executionState,
             user: $this->user(),
-            clock: $this->clock(),
+            clock: $this->clock,
             config: $this->config(),
         );
 
@@ -217,22 +204,10 @@ final class SensorManager
         return $this->config ??= $this->app->make('config');
     }
 
-    private function clock(): Clock
-    {
-        return $this->clock ??= $this->app->make(Clock::class);
-    }
-
-    public function setClock(Clock $clock): self
-    {
-        $this->clock = $clock;
-
-        return $this;
-    }
-
     public function prepareForNextInvocation(): void
     {
-        // TODO this method should accept all the parameters that construct does and set the new values.
         $this->recordsBuffer = new RecordsBuffer;
+        $this->clock->executionStartInMicrotime = $this->clock->microtime();
         // $this->executionState = new ExecutionState(
         //     traceId: $traceId = (string) Str::uuid(),
         //     executionId: $traceId,
@@ -243,7 +218,6 @@ final class SensorManager
         $this->outgoingRequestSensor = null;
         $this->querySensor = null;
         $this->queuedJobSensor = null;
-
-        $this->clock = null;
+        // ...
     }
 }

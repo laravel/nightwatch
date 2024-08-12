@@ -3,7 +3,7 @@
 namespace Laravel\Nightwatch\Ingests;
 
 use Laravel\Nightwatch\Client;
-use Laravel\Nightwatch\Contracts\Clock;
+use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Exceptions\ExceededConcurrentRequestLimitException;
 use Laravel\Nightwatch\Exceptions\IngestFailedException;
 use Laravel\Nightwatch\IngestSucceededResult;
