@@ -190,7 +190,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /*
          * Stage: Before middleware.
          */
-        $this->app->booted(fn () => $sensor->start(ExecutionStage::BeforeMiddleware));
+        $this->app->booted(fn () => $sensor->stage(ExecutionStage::BeforeMiddleware));
 
         /*
          * Stage: Action, After middleware, and Terminating.
@@ -211,7 +211,7 @@ final class NightwatchServiceProvider extends ServiceProvider
          * Stage: Render.
          */
         $events->listen(PreparingResponse::class, fn () => match ($sensor->executionStage()) {
-            ExecutionStage::Action => $sensor->start(ExecutionStage::Render),
+            ExecutionStage::Action => $sensor->stage(ExecutionStage::Render),
             default => null,
         });
 
@@ -219,13 +219,13 @@ final class NightwatchServiceProvider extends ServiceProvider
          * Stage: After middleware.
          */
         $events->listen(ResponsePrepared::class, fn () => match ($sensor->executionStage()) {
-            ExecutionStage::Render => $sensor->start(ExecutionStage::AfterMiddleware),
+            ExecutionStage::Render => $sensor->stage(ExecutionStage::AfterMiddleware),
             default => null,
         });
 
-        $events->listen(RequestHandled::class, fn () => $sensor->start(ExecutionStage::Sending));
+        $events->listen(RequestHandled::class, fn () => $sensor->stage(ExecutionStage::Sending));
 
-        $events->listen(Terminating::class, fn () => $sensor->start(ExecutionStage::Terminating));
+        $events->listen(Terminating::class, fn () => $sensor->stage(ExecutionStage::Terminating));
 
         /*
          * Sensor: Query.
@@ -268,7 +268,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             }
 
             $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
-                $sensor->start(ExecutionStage::End);
+                $sensor->stage(ExecutionStage::End);
 
                 $sensor->request($request, $response);
 

@@ -20,7 +20,7 @@ final class NightwatchTerminatingMiddleware
     public function terminate(): void
     {
         if ($this->sensor->executionStage() !== ExecutionStage::Terminating) {
-            $this->sensor->start(ExecutionStage::Terminating);
+            $this->sensor->stage(ExecutionStage::Terminating);
         }
     }
 }

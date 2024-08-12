@@ -49,7 +49,7 @@ function syncClock(CarbonImmutable $timestamp): void
         }
     });
     App::instance(Clock::class, $clock);
-    $sensor->start(ExecutionStage::BeforeMiddleware);
+    $sensor->stage(ExecutionStage::BeforeMiddleware);
 }
 
 function records(): RecordsBuffer
@@ -69,12 +69,12 @@ function setServerName(string $server): void
 
 function setTraceId(string $traceId): void
 {
-    app(SensorManager::class)->executionState->traceId = $traceId;
+    app(SensorManager::class)->executionState->trace = $traceId;
 }
 
 function setExecutionId(string $executionId): void
 {
-    app(SensorManager::class)->executionState->executionId = $executionId;
+    app(SensorManager::class)->executionState->id = $executionId;
 }
 
 function setPeakMemory(int $value): void

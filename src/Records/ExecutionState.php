@@ -13,12 +13,12 @@ final class ExecutionState
     public int $v = 1;
 
     public function __construct(
+        public string $trace,
+        public string $id,
+        public string $context,
         public string $deploy,
         public string $server,
-        public string $traceId,
-        public string $executionId,
-        public string $executionContext,
-        public ExecutionStage $executionStage = ExecutionStage::Bootstrap,
+        public ExecutionStage $stage = ExecutionStage::Bootstrap,
         public int $exceptions = 0,
         public int $queries = 0,
         public int $lazy_loads = 0,

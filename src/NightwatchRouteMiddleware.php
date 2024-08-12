@@ -14,7 +14,7 @@ final class NightwatchRouteMiddleware
 
     public function __invoke(Request $request, Closure $next): mixed
     {
-        $this->sensor->start(ExecutionStage::Action);
+        $this->sensor->stage(ExecutionStage::Action);
 
         return $next($request);
     }

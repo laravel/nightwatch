@@ -74,30 +74,30 @@ final class SensorManager
         $this->recordsBuffer = new RecordsBuffer;
 
         $this->executionState = new ExecutionState(
+            trace: $traceId = (string) Str::uuid(),
+            id: $traceId,
+            context: 'request', // TODO
             deploy: $app['config']->get('nightwatch.deploy') ?? '',
             server: $app['config']->get('nightwatch.server') ?? '',
-            traceId: $traceId = (string) Str::uuid(),
-            executionId: $traceId,
-            executionContext: 'request', // TODO
         );
     }
 
-    public function start(ExecutionStage $next): void
+    public function stage(ExecutionStage $next): void
     {
         $nowMicrotime = $this->clock()->microtime();
-        $previous = $this->executionState->executionStage->previous();
+        $previous = $this->executionState->stage->previous();
 
-        $this->executionStages[$this->executionState->executionStage->value] = $previous === null
+        $this->executionStages[$this->executionState->stage->value] = $previous === null
             ? (int) round(($nowMicrotime - $this->clock()->executionStartInMicrotime()) * 1_000_000)
             : (int) round(($nowMicrotime - $this->currentExecutionStageStartedAtMicrotime) * 1_000_000);
 
-        $this->executionState->executionStage = $next;
+        $this->executionState->stage = $next;
         $this->currentExecutionStageStartedAtMicrotime = $nowMicrotime;
     }
 
     public function executionStage(): ExecutionStage
     {
-        return $this->executionState->executionStage;
+        return $this->executionState->stage;
     }
 
     public function request(Request $request, Response $response): void

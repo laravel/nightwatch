@@ -55,7 +55,7 @@ final class RequestSensor
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', implode(',', [implode('|', $routeMethods), $routeDomain, $routePath])),
-            trace_id: $this->executionState->traceId,
+            trace_id: $this->executionState->trace,
             user: $this->user->id(),
             method: $request->getMethod(),
             scheme: $scheme,

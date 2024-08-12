@@ -428,9 +428,9 @@ it('captures bootstrap execution stage', function () {
     Route::get('/users', fn () => []);
 
     // Simulating boot time.
-    $sensor->executionState->executionStage = ExecutionStage::Bootstrap;
+    $sensor->executionState->stage = ExecutionStage::Bootstrap;
     travelTo(now()->addMicroseconds(5));
-    $sensor->start(ExecutionStage::BeforeMiddleware);
+    $sensor->stage(ExecutionStage::BeforeMiddleware);
     $response = get('/users');
 
     $response->assertOk();
