@@ -8,7 +8,7 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class ExecutionParent
+final class ExecutionState
 {
     public int $v = 1;
 

@@ -8,7 +8,7 @@ use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Records\ExecutionParent;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\UserProvider;
 use RuntimeException;
@@ -25,7 +25,7 @@ final class RequestSensor
      */
     public function __construct(
         private Clock $clock,
-        private ExecutionParent $executionParent,
+        private ExecutionState $executionState,
         private PeakMemoryProvider $peakMemory,
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
@@ -52,10 +52,10 @@ final class RequestSensor
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
             timestamp: $this->clock->executionStartInMicrotime(),
-            deploy: $this->executionParent->deploy,
-            server: $this->executionParent->server,
+            deploy: $this->executionState->deploy,
+            server: $this->executionState->server,
             _group: hash('md5', implode(',', [implode('|', $routeMethods), $routeDomain, $routePath])),
-            trace_id: $this->executionParent->traceId,
+            trace_id: $this->executionState->traceId,
             user: $this->user->id(),
             method: $request->getMethod(),
             scheme: $scheme,
@@ -84,20 +84,20 @@ final class RequestSensor
             after_middleware: $this->executionStages[ExecutionStage::AfterMiddleware->value] ?? 0,
             sending: $this->executionStages[ExecutionStage::Sending->value] ?? 0,
             terminating: $this->executionStages[ExecutionStage::Terminating->value] ?? 0,
-            exceptions: $this->executionParent->exceptions,
-            queries: $this->executionParent->queries,
-            lazy_loads: $this->executionParent->lazy_loads,
-            jobs_queued: $this->executionParent->jobs_queued,
-            mail_queued: $this->executionParent->mail_queued,
-            mail_sent: $this->executionParent->mail_sent,
-            notifications_queued: $this->executionParent->notifications_queued,
-            notifications_sent: $this->executionParent->notifications_sent,
-            outgoing_requests: $this->executionParent->outgoing_requests,
-            files_read: $this->executionParent->files_read,
-            files_written: $this->executionParent->files_written,
-            cache_hits: $this->executionParent->cache_hits,
-            cache_misses: $this->executionParent->cache_misses,
-            hydrated_models: $this->executionParent->hydrated_models,
+            exceptions: $this->executionState->exceptions,
+            queries: $this->executionState->queries,
+            lazy_loads: $this->executionState->lazy_loads,
+            jobs_queued: $this->executionState->jobs_queued,
+            mail_queued: $this->executionState->mail_queued,
+            mail_sent: $this->executionState->mail_sent,
+            notifications_queued: $this->executionState->notifications_queued,
+            notifications_sent: $this->executionState->notifications_sent,
+            outgoing_requests: $this->executionState->outgoing_requests,
+            files_read: $this->executionState->files_read,
+            files_written: $this->executionState->files_written,
+            cache_hits: $this->executionState->cache_hits,
+            cache_misses: $this->executionState->cache_misses,
+            hydrated_models: $this->executionState->hydrated_models,
             peak_memory_usage: $this->peakMemory->bytes(),
         ));
     }

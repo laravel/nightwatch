@@ -7,7 +7,7 @@ use Illuminate\Cache\Events\CacheMissed;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Records\CacheEvent;
-use Laravel\Nightwatch\Records\ExecutionParent;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\UserProvider;
 
 /**
@@ -17,7 +17,7 @@ final class CacheEventSensor
 {
     public function __construct(
         private RecordsBuffer $recordsBuffer,
-        private ExecutionParent $executionParent,
+        private ExecutionState $executionState,
         private UserProvider $user,
         private Clock $clock,
         private string $server,
@@ -35,15 +35,15 @@ final class CacheEventSensor
 
         if ($event::class === CacheHit::class) {
             $type = 'hit';
-            $this->executionParent->cache_hits++;
+            $this->executionState->cache_hits++;
         } else {
             $type = 'miss';
-            $this->executionParent->cache_misses++;
+            $this->executionState->cache_misses++;
         }
 
         $this->recordsBuffer->writeCacheEvent(new CacheEvent(
             timestamp: (int) $nowMicrotime,
-            deploy: $this->executionParent->deploy,
+            deploy: $this->executionState->deploy,
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,

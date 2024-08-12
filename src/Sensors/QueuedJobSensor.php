@@ -7,7 +7,7 @@ use Illuminate\Events\CallQueuedListener;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
-use Laravel\Nightwatch\Records\ExecutionParent;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\UserProvider;
 use ReflectionClass;
@@ -29,7 +29,7 @@ final class QueuedJobSensor
 
     public function __construct(
         private RecordsBuffer $recordsBuffer,
-        private ExecutionParent $executionParent,
+        private ExecutionState $executionState,
         private UserProvider $user,
         private Clock $clock,
         private Config $config,
@@ -46,11 +46,11 @@ final class QueuedJobSensor
     {
         $nowMicrotime = $this->clock->microtime();
 
-        $this->executionParent->jobs_queued++;
+        $this->executionState->jobs_queued++;
 
         $this->recordsBuffer->writeQueuedJob(new QueuedJob(
             timestamp: (int) $nowMicrotime,
-            deploy: $this->executionParent->deploy,
+            deploy: $this->executionState->deploy,
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,

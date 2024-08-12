@@ -6,7 +6,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Location;
-use Laravel\Nightwatch\Records\ExecutionParent;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\UserProvider;
 
@@ -17,7 +17,7 @@ final class QuerySensor
 {
     public function __construct(
         private Clock $clock,
-        private ExecutionParent $executionParent,
+        private ExecutionState $executionState,
         private Location $location,
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
@@ -35,17 +35,17 @@ final class QuerySensor
         $durationInMicroseconds = (int) round($event->time * 1000);
         [$file, $line] = $this->location->forQueryTrace($trace);
 
-        $this->executionParent->queries++;
+        $this->executionState->queries++;
 
         $this->recordsBuffer->writeQuery(new Query(
             timestamp: $this->clock->microtime() - ($event->time / 1000),
-            deploy: $this->executionParent->deploy,
-            server: $this->executionParent->server,
+            deploy: $this->executionState->deploy,
+            server: $this->executionState->server,
             _group: hash('md5', $event->sql),
-            trace_id: $this->executionParent->traceId,
-            execution_context: $this->executionParent->executionContext,
-            execution_id: $this->executionParent->executionId,
-            execution_stage: $this->executionParent->executionStage,
+            trace_id: $this->executionState->traceId,
+            execution_context: $this->executionState->executionContext,
+            execution_id: $this->executionState->executionId,
+            execution_stage: $this->executionState->executionStage,
             user: $this->user->id(),
             sql: $event->sql,
             file: $file ?? '',

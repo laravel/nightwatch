@@ -59,22 +59,22 @@ function records(): RecordsBuffer
 
 function setDeploy(string $deploy): void
 {
-    app(SensorManager::class)->executionParent->deploy = $deploy;
+    app(SensorManager::class)->executionState->deploy = $deploy;
 }
 
 function setServerName(string $server): void
 {
-    app(SensorManager::class)->executionParent->server = $server;
+    app(SensorManager::class)->executionState->server = $server;
 }
 
 function setTraceId(string $traceId): void
 {
-    app(SensorManager::class)->executionParent->traceId = $traceId;
+    app(SensorManager::class)->executionState->traceId = $traceId;
 }
 
 function setExecutionId(string $executionId): void
 {
-    app(SensorManager::class)->executionParent->executionId = $executionId;
+    app(SensorManager::class)->executionState->executionId = $executionId;
 }
 
 function setPeakMemory(int $value): void

@@ -13,7 +13,7 @@ use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\Records\ExecutionParent;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
@@ -36,7 +36,7 @@ use Throwable;
  */
 final class SensorManager
 {
-    public ExecutionParent $executionParent;
+    public ExecutionState $executionState;
 
     private RecordsBuffer $recordsBuffer;
 
@@ -73,7 +73,7 @@ final class SensorManager
     {
         $this->recordsBuffer = new RecordsBuffer;
 
-        $this->executionParent = new ExecutionParent(
+        $this->executionState = new ExecutionState(
             deploy: $app['config']->get('nightwatch.deploy') ?? '',
             server: $app['config']->get('nightwatch.server') ?? '',
             traceId: $traceId = (string) Str::uuid(),
@@ -85,26 +85,26 @@ final class SensorManager
     public function start(ExecutionStage $next): void
     {
         $nowMicrotime = $this->clock()->microtime();
-        $previous = $this->executionParent->executionStage->previous();
+        $previous = $this->executionState->executionStage->previous();
 
-        $this->executionStages[$this->executionParent->executionStage->value] = $previous === null
+        $this->executionStages[$this->executionState->executionStage->value] = $previous === null
             ? (int) round(($nowMicrotime - $this->clock()->executionStartInMicrotime()) * 1_000_000)
             : (int) round(($nowMicrotime - $this->currentExecutionStageStartedAtMicrotime) * 1_000_000);
 
-        $this->executionParent->executionStage = $next;
+        $this->executionState->executionStage = $next;
         $this->currentExecutionStageStartedAtMicrotime = $nowMicrotime;
     }
 
     public function executionStage(): ExecutionStage
     {
-        return $this->executionParent->executionStage;
+        return $this->executionState->executionStage;
     }
 
     public function request(Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
             clock: $clock = $this->clock(),
-            executionParent: $this->executionParent,
+            executionState: $this->executionState,
             executionStages: $this->executionStages,
             peakMemory: $this->peakMemoryProvider(),
             recordsBuffer: $this->recordsBuffer,
@@ -123,7 +123,7 @@ final class SensorManager
     {
         $sensor = new CommandSensor(
             recordsBuffer: $this->recordsBuffer,
-            executionParent: $this->executionParent,
+            executionState: $this->executionState,
             peakMemory: $this->peakMemoryProvider(),
             user: $this->user(),
         );
@@ -138,7 +138,7 @@ final class SensorManager
     {
         $sensor = $this->querySensor ??= new QuerySensor(
             clock: $this->clock(),
-            executionParent: $this->executionParent,
+            executionState: $this->executionState,
             location: $this->location(),
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
@@ -151,7 +151,7 @@ final class SensorManager
     {
         $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
             recordsBuffer: $this->recordsBuffer,
-            executionParent: $this->executionParent,
+            executionState: $this->executionState,
             clock: $this->clock(),
             user: $this->user(),
         );
@@ -163,7 +163,7 @@ final class SensorManager
     {
         $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
             recordsBuffer: $this->recordsBuffer,
-            executionParent: $this->executionParent,
+            executionState: $this->executionState,
             user: $this->user(),
             clock: $this->clock(),
         );
@@ -175,7 +175,7 @@ final class SensorManager
     {
         $sensor = $this->exceptionSensor ??= new ExceptionSensor(
             clock: $this->clock(),
-            executionParent: $this->executionParent,
+            executionState: $this->executionState,
             location: $this->location(),
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
@@ -188,7 +188,7 @@ final class SensorManager
     {
         $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
             recordsBuffer: $this->recordsBuffer,
-            executionParent: $this->executionParent,
+            executionState: $this->executionState,
             user: $this->user(),
             clock: $this->clock(),
             config: $this->config(),
@@ -238,7 +238,7 @@ final class SensorManager
     {
         // TODO this method should accept all the parameters that construct does and set the new values.
         $this->recordsBuffer = new RecordsBuffer;
-        // $this->executionParent = new ExecutionParent(
+        // $this->executionState = new ExecutionState(
         //     traceId: $traceId = (string) Str::uuid(),
         //     executionId: $traceId,
         // );

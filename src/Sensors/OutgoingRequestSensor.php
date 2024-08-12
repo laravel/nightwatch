@@ -4,7 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\Clock;
-use Laravel\Nightwatch\Records\ExecutionParent;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\UserProvider;
 use Psr\Http\Message\MessageInterface;
@@ -18,7 +18,7 @@ final class OutgoingRequestSensor
 {
     public function __construct(
         private RecordsBuffer $recordsBuffer,
-        private ExecutionParent $executionParent,
+        private ExecutionState $executionState,
         private UserProvider $user,
         private Clock $clock,
         private string $server,
@@ -36,12 +36,12 @@ final class OutgoingRequestSensor
         /** @var 'http'|'https' */
         $scheme = $request->getUri()->getScheme();
 
-        $this->executionParent->outgoing_requests++;
-        $this->executionParent->outgoing_requests_duration += $duration;
+        $this->executionState->outgoing_requests++;
+        $this->executionState->outgoing_requests_duration += $duration;
 
         $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
             timestamp: (int) $startMicrotime,
-            deploy: $this->executionParent->deploy,
+            deploy: $this->executionState->deploy,
             server: $this->server,
             group: hash('sha256', ''),
             trace_id: $this->traceId,
