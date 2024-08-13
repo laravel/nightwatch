@@ -30,7 +30,7 @@ final class Exception
         public int $code,
         public string $trace,
         public bool $handled,
-   ) {
+    ) {
         $this->class = Str::tinyText($this->class);
         $this->file = Str::tinyText($this->file);
         $this->message = Str::text($this->message);
