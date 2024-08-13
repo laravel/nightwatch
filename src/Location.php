@@ -85,7 +85,7 @@ final class Location
     {
         $location = match (true) {
             $e instanceof ViewException => $this->fromViewException($e),
-            $e instanceof IgnitionViewException => $this->fromSpatieViewException($e), // @phpstan-ignore class.notFound
+            $e instanceof IgnitionViewException => $this->fromSpatieViewException($e),
             default => null,
         };
 
@@ -116,11 +116,11 @@ final class Location
     /**
      * @return array{ 0: string, 1: int }
      */
-    private function fromSpatieViewException(IgnitionViewException $e): array // @phpstan-ignore class.notFound
+    private function fromSpatieViewException(IgnitionViewException $e): array
     {
         return [
-            $this->normalizeFile($e->getFile()), // @phpstan-ignore class.notFound
-            $e->getLine(), // @phpstan-ignore class.notFound
+            $this->normalizeFile($e->getFile()),
+            $e->getLine(),
         ];
     }
 

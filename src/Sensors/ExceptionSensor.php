@@ -35,7 +35,7 @@ final class ExceptionSensor
             null => $e,
             default => match (true) {
                 $e instanceof ViewException,
-                $e instanceof IgnitionViewException => $e->getPrevious() ?? $e,
+                $e instanceof IgnitionViewException => $e->getPrevious(),
                 default => $e,
             },
         };
@@ -46,7 +46,7 @@ final class ExceptionSensor
             timestamp: $nowMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', implode(',', [$normalizedException::class, $normalizedException->getCode(), $file, $line])),
+            _group: hash('md5', $normalizedException::class.','.$normalizedException->getCode().','.$file.','.$line),
             trace_id: $this->executionState->trace,
             execution_context: $this->executionState->context,
             execution_id: $this->executionState->id,
@@ -65,7 +65,7 @@ final class ExceptionSensor
     protected function wasManuallyReported(Throwable $e): bool
     {
         foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
-            if (($frame['function'] ?? null) === 'report' && ! isset($frame['type'])) {
+            if ($frame['function'] === 'report' && ! isset($frame['type'])) {
                 return true;
             }
         }
