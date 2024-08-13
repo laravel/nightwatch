@@ -58,6 +58,18 @@ final class ExceptionSensor
             message: $normalizedException->getMessage(),
             code: $normalizedException->getCode(),
             trace: $normalizedException->getTraceAsString(),
+            handled: $this->wasManuallyReported($normalizedException),
         ));
+    }
+
+    protected function wasManuallyReported(Throwable $e): bool
+    {
+        foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
+            if (($frame['function'] ?? null) === 'report' && ! isset($frame['type'])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

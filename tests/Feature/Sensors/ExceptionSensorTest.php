@@ -54,6 +54,7 @@ it('can ingest thrown exceptions', function () {
             'message' => 'Whoops!',
             'code' => 0,
             'trace' => $trace,
+            'handled' => false,
         ],
     ]);
 });
@@ -109,6 +110,7 @@ it('can ingest reported exceptions', function () {
             'message' => 'Whoops!',
             'code' => 0,
             'trace' => $trace,
+            'handled' => true,
         ],
     ]);
 });
@@ -187,6 +189,23 @@ it('handles unknown lines for internal locations', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exceptions.0.file', 'app/Models/User.php');
     $ingest->assertLatestWrite('exceptions.0.line', 0);
+});
+
+it('captures handled and unhandled exceptions', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    Route::get('/users', function () use ($e) {
+        report($e);
+
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.handled', true);
+    $ingest->assertLatestWrite('exceptions.1.handled', false);
 });
 
 final class MyException extends RuntimeException
