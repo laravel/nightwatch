@@ -5,6 +5,11 @@ namespace Tests;
 use Illuminate\Support\Arr;
 use Laravel\Nightwatch\Contracts\Ingest;
 
+use function count;
+use function expect;
+use function is_array;
+use function json_decode;
+
 final class FakeIngest implements Ingest
 {
     /**

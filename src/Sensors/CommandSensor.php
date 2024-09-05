@@ -11,6 +11,10 @@ use Laravel\Nightwatch\UserProvider;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 
+use function hash;
+use function implode;
+use function round;
+
 /**
  * @internal
  */

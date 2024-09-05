@@ -8,6 +8,8 @@ use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
 use RuntimeException;
 
+use function gzencode;
+
 /**
  * @internal
  */

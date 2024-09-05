@@ -4,6 +4,9 @@ namespace Laravel\Nightwatch\Types;
 
 use Illuminate\Support\Str as SupportStr;
 
+use function strlen;
+use function substr;
+
 /**
  * @mixin \Illuminate\Support\Str
  */

@@ -10,6 +10,8 @@ use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\UserProvider;
 
+use function hash;
+
 /**
  * @internal
  */

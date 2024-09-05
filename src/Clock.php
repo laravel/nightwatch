@@ -4,13 +4,16 @@ namespace Laravel\Nightwatch;
 
 use Closure;
 
+use function call_user_func;
+use function microtime;
+
 /**
  * @internal
  */
 final class Clock
 {
     /**
-     * @var (\Closure(): float)
+     * @var (Closure(): float)
      */
     public Closure $microtimeResolver;
 

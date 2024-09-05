@@ -17,6 +17,8 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 use WeakMap;
 
+use function date;
+
 /**
  * @internal
  */

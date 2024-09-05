@@ -45,6 +45,12 @@ use React\Socket\TimeoutConnector;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 
+use function array_unshift;
+use function class_exists;
+use function debug_backtrace;
+use function defined;
+use function microtime;
+
 /**
  * @internal
  */

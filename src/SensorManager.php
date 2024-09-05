@@ -197,7 +197,13 @@ final class SensorManager
 
     private function location(): Location
     {
-        return $this->location ??= new Location($this->app);
+        return $this->location ??= new Location(
+            artisanPath: $this->app->basePath('artisan'),
+            publicIndexPath: $this->app->publicPath('index.php'),
+            vendorPath: $vendorPath = $this->app->basePath('vendor'),
+            nightwatchPath: $vendorPath.DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'nightwatch',
+            frameworkPath: $vendorPath.DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework',
+        );
     }
 
     private function config(): Config

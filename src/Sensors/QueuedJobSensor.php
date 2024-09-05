@@ -12,6 +12,15 @@ use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\UserProvider;
 use ReflectionClass;
 
+use function array_key_exists;
+use function hash;
+use function is_object;
+use function is_string;
+use function method_exists;
+use function preg_quote;
+use function preg_replace;
+use function property_exists;
+
 /**
  * @internal
  */

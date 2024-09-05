@@ -13,6 +13,15 @@ use Laravel\Nightwatch\UserProvider;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
 
+use function array_map;
+use function debug_backtrace;
+use function gettype;
+use function hash;
+use function is_array;
+use function is_int;
+use function is_string;
+use function json_encode;
+
 /**
  * @internal
  */
