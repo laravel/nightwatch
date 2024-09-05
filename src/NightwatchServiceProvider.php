@@ -92,12 +92,12 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->registerSensors();
     }
 
-    protected function mergeConfig(): void
+    private function mergeConfig(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
     }
 
-    protected function configureLocation(): void
+    private function configureLocation(): void
     {
         $this->app->singleton(Location::class, fn (Container $app) => new Location(
             artisanPath: join_paths($basePath = $app->basePath(), 'artisan'),
@@ -113,7 +113,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      * TODO test if the timeout connector timeout only applies to connection
      * time and not transfer time.
      */
-    protected function configureAgent(): void
+    private function configureAgent(): void
     {
         $this->app->singleton(Agent::class, function (Container $app) {
             /** @var Config */
@@ -158,7 +158,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         });
     }
 
-    protected function configureIngest(): void
+    private function configureIngest(): void
     {
         $this->app->singleton(IngestContract::class, function (Container $app) {
             /** @var Config */
@@ -172,14 +172,14 @@ final class NightwatchServiceProvider extends ServiceProvider
         });
     }
 
-    protected function registerPublications(): void
+    private function registerPublications(): void
     {
         $this->publishes([
             __DIR__.'/../config/nightwatch.php' => $this->app->configPath('nightwatch.php'),
         ], ['nightwatch', 'nightwatch-config']);
     }
 
-    protected function registerCommands(): void
+    private function registerCommands(): void
     {
         $this->commands([
             Console\Agent::class,
@@ -193,7 +193,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      * recorders were registered early but out ingest was registered last. This
      * we used the `booted` callback.
      */
-    protected function registerSensors(): void
+    private function registerSensors(): void
     {
         /** @var Dispatcher */
         $events = $this->app->make('events');

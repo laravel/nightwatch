@@ -73,7 +73,7 @@ final class ExceptionSensor
         ));
     }
 
-    protected function wasManuallyReported(Throwable $e): bool
+    private function wasManuallyReported(Throwable $e): bool
     {
         foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
             if ($frame['function'] === 'report' && ! isset($frame['type'])) {
@@ -84,7 +84,7 @@ final class ExceptionSensor
         return false;
     }
 
-    protected function parseTrace(Throwable $e): string
+    private function parseTrace(Throwable $e): string
     {
         $trace = [];
 
