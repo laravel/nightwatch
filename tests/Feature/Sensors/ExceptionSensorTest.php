@@ -27,7 +27,7 @@ it('can ingest thrown exceptions', function () {
         $line = __LINE__ + 1;
         $e = new MyException('Whoops!');
 
-        $trace = $e->getTraceAsString();
+        $trace = $e->getTrace();
 
         throw $e;
     });
@@ -53,7 +53,18 @@ it('can ingest thrown exceptions', function () {
             'line' => $line,
             'message' => 'Whoops!',
             'code' => 0,
-            'trace' => $trace,
+            'trace' => json_encode(array_map(fn ($frame) => [
+                'file' => $frame['file'] ?? '[internal function]',
+                'line' => $frame['line'] ?? 0,
+                'class' => $frame['class'] ?? '',
+                'type' => $frame['type'] ?? '',
+                'function' => $frame['function'],
+                'args' => array_map(fn ($arg) => match (gettype($arg)) {
+                    'object' => $arg::class,
+                    'string' => Str::limit($arg, 15),
+                    'array' => 'array',
+                }, $frame['args'] ?? []),
+            ], $trace)),
             'handled' => false,
         ],
     ]);
@@ -83,7 +94,7 @@ it('can ingest reported exceptions', function () {
         $line = __LINE__ + 1;
         $e = new MyException('Whoops!');
 
-        $trace = $e->getTraceAsString();
+        $trace = $e->getTrace();
 
         report($e);
     });
@@ -109,7 +120,18 @@ it('can ingest reported exceptions', function () {
             'line' => $line,
             'message' => 'Whoops!',
             'code' => 0,
-            'trace' => $trace,
+            'trace' => json_encode(array_map(fn ($frame) => [
+                'file' => $frame['file'] ?? '[internal function]',
+                'line' => $frame['line'] ?? 0,
+                'class' => $frame['class'] ?? '',
+                'type' => $frame['type'] ?? '',
+                'function' => $frame['function'],
+                'args' => array_map(fn ($arg) => match (gettype($arg)) {
+                    'object' => $arg::class,
+                    'string' => Str::limit($arg, 15),
+                    'array' => 'array',
+                }, $frame['args'] ?? []),
+            ], $trace)),
             'handled' => true,
         ],
     ]);

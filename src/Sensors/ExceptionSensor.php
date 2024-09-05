@@ -59,7 +59,7 @@ final class ExceptionSensor
             line: $line ?? 0,
             message: $normalizedException->getMessage(),
             code: $normalizedException->getCode(),
-            trace: $normalizedException->getTraceAsString(),
+            trace: $this->parseTrace($normalizedException),
             handled: $this->wasManuallyReported($normalizedException),
         ));
     }
@@ -91,7 +91,7 @@ final class ExceptionSensor
                     : 0,
                 'class' => isset($frame['class']) && is_string($frame['class'])
                     ? $frame['class']
-                    : '[unknown]',
+                    : '',
                 'type' => isset($frame['type']) && is_string($frame['type'])
                     ? $frame['type']
                     : '',
@@ -106,7 +106,7 @@ final class ExceptionSensor
                         'array' => 'array',
                         'object' => $argument::class,
                         'resource', 'resource (closed)' => 'resource',
-                        'string' => Str::limit('', 15),
+                        'string' => Str::limit($argument, 15),
                         'unknown type' => '[unknown]',
                     }, $frame['args'])
                     : [],
