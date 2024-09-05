@@ -10,7 +10,6 @@ use Throwable;
 use function array_key_exists;
 use function preg_match;
 use function str_starts_with;
-use function strlen;
 use function substr;
 
 /**
@@ -20,16 +19,15 @@ use function substr;
  */
 final class Location
 {
-    private int $basePathLength;
-
     public function __construct(
         private string $artisanPath,
         private string $publicIndexPath,
         private string $vendorPath,
         private string $nightwatchPath,
         private string $frameworkPath,
+        private int $basePathLength,
     ) {
-        $this->basePathLength = strlen($this->basePath);
+        //
     }
 
     /**
@@ -185,10 +183,5 @@ final class Location
     private function normalizeFile(string $file): string
     {
         return substr($file, $this->basePathLength);
-    }
-
-    private function basePathLength(): int
-    {
-        return $this->basePathLength ??= strlen($this->app->basePath()) + 1;
     }
 }

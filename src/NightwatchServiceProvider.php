@@ -49,7 +49,9 @@ use function array_unshift;
 use function class_exists;
 use function debug_backtrace;
 use function defined;
+use function Illuminate\Filesystem\join_paths;
 use function microtime;
+use function strlen;
 
 /**
  * @internal
@@ -70,6 +72,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->app->singleton(NightwatchTerminatingMiddleware::class);
         }
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
+        $this->configureLocation();
         $this->configureAgent();
         $this->configureIngest();
         $this->mergeConfig();
@@ -92,6 +95,18 @@ final class NightwatchServiceProvider extends ServiceProvider
     protected function mergeConfig(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
+    }
+
+    protected function configureLocation(): void
+    {
+        $this->app->singleton(Location::class, fn (Container $app) => new Location(
+            artisanPath: join_paths($basePath = $app->basePath(), 'artisan'),
+            publicIndexPath: $app->publicPath('index.php'),
+            vendorPath: $vendorPath = join_paths($basePath, 'vendor'),
+            nightwatchPath: join_paths($vendorPath, 'laravel', 'nightwatch'),
+            frameworkPath: join_paths($vendorPath, 'laravel', 'framework'),
+            basePathLength: strlen($basePath) + 1,
+        ));
     }
 
     /**

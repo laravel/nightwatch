@@ -197,13 +197,7 @@ final class SensorManager
 
     private function location(): Location
     {
-        return $this->location ??= new Location(
-            artisanPath: $this->app->basePath('artisan'),
-            publicIndexPath: $this->app->publicPath('index.php'),
-            vendorPath: $vendorPath = $this->app->basePath('vendor'),
-            nightwatchPath: $vendorPath.DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'nightwatch',
-            frameworkPath: $vendorPath.DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework',
-        );
+        return $this->location ??= $this->app->make(Location::class);
     }
 
     private function config(): Config
@@ -225,6 +219,7 @@ final class SensorManager
         $this->outgoingRequestSensor = null;
         $this->querySensor = null;
         $this->queuedJobSensor = null;
+        $this->location = null;
         // ...
     }
 }
