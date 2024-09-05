@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Illuminate\Support\Str;
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
@@ -23,6 +24,7 @@ final class ExceptionSensor
         private Location $location,
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
+        private string $basePath,
     ) {
         //
     }
@@ -71,5 +73,46 @@ final class ExceptionSensor
         }
 
         return false;
+    }
+
+    protected function parseTrace(Throwable $e): string
+    {
+        $trace = [];
+
+        foreach ($e->getTrace() as $frame) {
+            $trace[] = [
+                'file' => match (true) {
+                    ! isset($frame['file']) => '[internal function]',
+                    ! is_string($frame['file']) => '[unknown file]',
+                    default => $frame['file'],
+                },
+                'line' => isset($frame['line']) && is_int($frame['line'])
+                    ? $frame['line']
+                    : 0,
+                'class' => isset($frame['class']) && is_string($frame['class'])
+                    ? $frame['class']
+                    : '[unknown]',
+                'type' => isset($frame['type']) && is_string($frame['type'])
+                    ? $frame['type']
+                    : '',
+                'function' => isset($frame['function']) && is_string($frame['function'])
+                    ? $frame['function']
+                    : '[unknown]',
+                'args' => isset($frame['args']) && is_array($frame['args'])
+                    ? array_map(fn ($argument) => match (gettype($argument)) {
+                        'NULL' => 'null',
+                        'boolean' => $argument ? 'true' : 'false',
+                        'integer', 'double' => (string) $argument,
+                        'array' => 'array',
+                        'object' => $argument::class,
+                        'resource', 'resource (closed)' => 'resource',
+                        'string' => Str::limit('', 15),
+                        'unknown type' => '[unknown]',
+                    }, $frame['args'])
+                    : [],
+            ];
+        }
+
+        return json_encode($trace, flags: JSON_THROW_ON_ERROR);
     }
 }
