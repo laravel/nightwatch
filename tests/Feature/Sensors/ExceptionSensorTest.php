@@ -53,18 +53,20 @@ it('can ingest thrown exceptions', function () {
             'line' => $line,
             'message' => 'Whoops!',
             'code' => 0,
-            'trace' => json_encode(array_map(fn ($frame) => [
+            'trace' => json_encode(array_map(fn ($frame) => array_filter([
                 'file' => $frame['file'] ?? '[internal function]',
-                'line' => $frame['line'] ?? 0,
-                'class' => $frame['class'] ?? '',
-                'type' => $frame['type'] ?? '',
+                'line' => $frame['line'] ?? null,
+                'class' => $frame['class'] ?? null,
+                'type' => $frame['type'] ?? null,
                 'function' => $frame['function'],
-                'args' => array_map(fn ($arg) => match (gettype($arg)) {
-                    'object' => $arg::class,
-                    'string' => Str::limit($arg, 15),
-                    'array' => 'array',
-                }, $frame['args'] ?? []),
-            ], $trace)),
+                'args' => ($frame['args'] ?? false)
+                    ? array_map(fn ($arg) => match (gettype($arg)) {
+                        'object' => $arg::class,
+                        'string' => Str::limit($arg, 15),
+                        'array' => 'array',
+                    }, $frame['args'])
+                    : null,
+            ]), $trace)),
             'handled' => false,
         ],
     ]);
@@ -120,18 +122,20 @@ it('can ingest reported exceptions', function () {
             'line' => $line,
             'message' => 'Whoops!',
             'code' => 0,
-            'trace' => json_encode(array_map(fn ($frame) => [
+            'trace' => json_encode(array_map(fn ($frame) => array_filter([
                 'file' => $frame['file'] ?? '[internal function]',
-                'line' => $frame['line'] ?? 0,
-                'class' => $frame['class'] ?? '',
-                'type' => $frame['type'] ?? '',
+                'line' => $frame['line'] ?? null,
+                'class' => $frame['class'] ?? null,
+                'type' => $frame['type'] ?? null,
                 'function' => $frame['function'],
-                'args' => array_map(fn ($arg) => match (gettype($arg)) {
-                    'object' => $arg::class,
-                    'string' => Str::limit($arg, 15),
-                    'array' => 'array',
-                }, $frame['args'] ?? []),
-            ], $trace)),
+                'args' => ($frame['args'] ?? false)
+                    ? array_map(fn ($arg) => match (gettype($arg)) {
+                        'object' => $arg::class,
+                        'string' => Str::limit($arg, 15),
+                        'array' => 'array',
+                    }, $frame['args'])
+                    : null,
+            ]), $trace)),
             'handled' => true,
         ],
     ]);
@@ -228,6 +232,30 @@ it('captures handled and unhandled exceptions', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exceptions.0.handled', true);
     $ingest->assertLatestWrite('exceptions.1.handled', false);
+});
+
+it('handles missing entries in the trace', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            //
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+        ],
+    ]));
 });
 
 final class MyException extends RuntimeException

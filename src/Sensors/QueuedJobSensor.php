@@ -41,7 +41,7 @@ final class QueuedJobSensor
         private ExecutionState $executionState,
         private UserProvider $user,
         private Clock $clock,
-        private Config $config,
+        private Config $config, // TODO inject config we need rather than just the class.
         private string $server,
         private string $traceId,
     ) {

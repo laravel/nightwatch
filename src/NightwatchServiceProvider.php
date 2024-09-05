@@ -6,9 +6,9 @@ use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
-use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernelContract;
@@ -99,7 +99,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function configureLocation(): void
     {
-        $this->app->singleton(Location::class, fn (Container $app) => new Location(
+        $this->app->singleton(Location::class, fn (Application $app) => new Location(
             artisanPath: join_paths($basePath = $app->basePath(), 'artisan'),
             publicIndexPath: $app->publicPath('index.php'),
             vendorPath: $vendorPath = join_paths($basePath, 'vendor'),
@@ -115,7 +115,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      */
     private function configureAgent(): void
     {
-        $this->app->singleton(Agent::class, function (Container $app) {
+        $this->app->singleton(Agent::class, function (Application $app) {
             /** @var Config */
             $config = $app->make('config');
             /** @var Clock */
@@ -160,7 +160,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function configureIngest(): void
     {
-        $this->app->singleton(IngestContract::class, function (Container $app) {
+        $this->app->singleton(IngestContract::class, function (Application $app) {
             /** @var Config */
             $config = $app->make('config');
 
@@ -284,7 +284,7 @@ final class NightwatchServiceProvider extends ServiceProvider
          * `whenRequestLifecycleIsLongerThan` method is not present. We likely
          * want to hook into the terminating callback system.
          */
-        $this->callAfterResolving(HttpKernelContract::class, function (HttpKernelContract $kernel, Container $app) use ($sensor) {
+        $this->callAfterResolving(HttpKernelContract::class, function (HttpKernelContract $kernel, Application $app) use ($sensor) {
             if (! $kernel instanceof HttpKernel) {
                 return;
             }
@@ -313,14 +313,14 @@ final class NightwatchServiceProvider extends ServiceProvider
         $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvent(...));
         $events->listen(JobQueued::class, $sensor->queuedJob(...));
 
-        $this->callAfterResolving(Http::class, function (Http $http, Container $app) use ($sensor) {
+        $this->callAfterResolving(Http::class, function (Http $http, Application $app) use ($sensor) {
             /** @var GuzzleMiddleware */
             $middleware = $app->make(GuzzleMiddleware::class, ['sensor' => $sensor]);
 
             $http->globalMiddleware($middleware);
         });
 
-        $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Container $app) use ($sensor) {
+        $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor) {
             if (! $kernel instanceof ConsoleKernel) {
                 return;
             }
