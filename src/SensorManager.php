@@ -219,7 +219,6 @@ final class SensorManager
         $this->outgoingRequestSensor = null;
         $this->querySensor = null;
         $this->queuedJobSensor = null;
-        $this->location = null;
         // ...
     }
 }
