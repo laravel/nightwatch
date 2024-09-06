@@ -12,6 +12,16 @@ use Laravel\Nightwatch\UserProvider;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
 
+use function array_map;
+use function count;
+use function debug_backtrace;
+use function gettype;
+use function hash;
+use function is_array;
+use function is_int;
+use function is_string;
+use function json_encode;
+
 /**
  * @internal
  */
@@ -23,6 +33,7 @@ final class ExceptionSensor
         private Location $location,
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
+        private string $basePath,
     ) {
         //
     }
@@ -57,12 +68,12 @@ final class ExceptionSensor
             line: $line ?? 0,
             message: $normalizedException->getMessage(),
             code: $normalizedException->getCode(),
-            trace: $normalizedException->getTraceAsString(),
+            trace: $this->serializeTrace($normalizedException),
             handled: $this->wasManuallyReported($normalizedException),
         ));
     }
 
-    protected function wasManuallyReported(Throwable $e): bool
+    private function wasManuallyReported(Throwable $e): bool
     {
         foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
             if ($frame['function'] === 'report' && ! isset($frame['type'])) {
@@ -71,5 +82,58 @@ final class ExceptionSensor
         }
 
         return false;
+    }
+
+    /**
+     * @see https://github.com/php/php-src/blob/f17c2203883ddf53adfcb33d85523d11429729ab/Zend/zend_exceptions.c
+     */
+    private function serializeTrace(Throwable $e): string
+    {
+        $trace = [];
+
+        foreach ($e->getTrace() as $frame) {
+            $f = [];
+
+            $f['file'] = match (true) {
+                ! isset($frame['file']) => '[internal function]',
+                ! is_string($frame['file']) => '[unknown file]', // @phpstan-ignore booleanNot.alwaysFalse
+                default => $frame['file'],
+            };
+
+            if (isset($frame['line']) && is_int($frame['line'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
+                $f['line'] = $frame['line'];
+            }
+
+            if (isset($frame['class']) && is_string($frame['class'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
+                $f['class'] = $frame['class'];
+            }
+
+            if (isset($frame['type']) && is_string($frame['type'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
+                $f['type'] = $frame['type'];
+            }
+
+            if (isset($frame['function']) && is_string($frame['function'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue, isset.offset
+                $f['function'] = $frame['function'];
+            }
+
+            if (isset($frame['args']) && is_array($frame['args']) && count($frame['args']) > 0) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
+                $f['args'] = array_map(fn ($argument) => match (gettype($argument)) {
+                    'NULL' => 'null',
+                    'boolean' => 'bool',
+                    'integer' => 'int',
+                    'double' => 'float',
+                    'array' => 'array',
+                    'object' => $argument::class,
+                    'resource' => 'resource',
+                    'resource (closed)' => 'resource (closed)',
+                    'string' => 'string',
+                    'unknown type' => '[unknown]',
+                }, $frame['args']);
+            }
+
+            $trace[] = $f;
+        }
+
+        return json_encode($trace, flags: JSON_THROW_ON_ERROR);
     }
 }

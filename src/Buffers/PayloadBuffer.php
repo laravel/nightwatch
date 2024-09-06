@@ -2,6 +2,8 @@
 
 namespace Laravel\Nightwatch\Buffers;
 
+use function strlen;
+
 /**
  * @internal
  */

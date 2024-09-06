@@ -1,6 +1,7 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
@@ -17,6 +18,7 @@ beforeEach(function () {
 
     Config::set('app.debug', false);
     App::setBasePath(realpath(__DIR__.'/../../../'));
+    ini_set('zend.exception_ignore_args', '0');
 });
 
 it('can ingest thrown exceptions', function () {
@@ -27,7 +29,7 @@ it('can ingest thrown exceptions', function () {
         $line = __LINE__ + 1;
         $e = new MyException('Whoops!');
 
-        $trace = $e->getTraceAsString();
+        $trace = $e->getTrace();
 
         throw $e;
     });
@@ -53,7 +55,20 @@ it('can ingest thrown exceptions', function () {
             'line' => $line,
             'message' => 'Whoops!',
             'code' => 0,
-            'trace' => $trace,
+            'trace' => json_encode(array_map(fn ($frame) => array_filter([
+                'file' => $frame['file'] ?? '[internal function]',
+                'line' => $frame['line'] ?? null,
+                'class' => $frame['class'] ?? null,
+                'type' => $frame['type'] ?? null,
+                'function' => $frame['function'],
+                'args' => ($frame['args'] ?? false)
+                    ? array_map(fn ($arg) => match (gettype($arg)) {
+                        'object' => $arg::class,
+                        'string' => 'string',
+                        'array' => 'array',
+                    }, $frame['args'])
+                    : null,
+            ]), $trace)),
             'handled' => false,
         ],
     ]);
@@ -83,7 +98,7 @@ it('can ingest reported exceptions', function () {
         $line = __LINE__ + 1;
         $e = new MyException('Whoops!');
 
-        $trace = $e->getTraceAsString();
+        $trace = $e->getTrace();
 
         report($e);
     });
@@ -109,7 +124,20 @@ it('can ingest reported exceptions', function () {
             'line' => $line,
             'message' => 'Whoops!',
             'code' => 0,
-            'trace' => $trace,
+            'trace' => json_encode(array_map(fn ($frame) => array_filter([
+                'file' => $frame['file'] ?? '[internal function]',
+                'line' => $frame['line'] ?? null,
+                'class' => $frame['class'] ?? null,
+                'type' => $frame['type'] ?? null,
+                'function' => $frame['function'],
+                'args' => ($frame['args'] ?? false)
+                    ? array_map(fn ($arg) => match (gettype($arg)) {
+                        'object' => $arg::class,
+                        'string' => 'string',
+                        'array' => 'array',
+                    }, $frame['args'])
+                    : null,
+            ]), $trace)),
             'handled' => true,
         ],
     ]);
@@ -208,10 +236,337 @@ it('captures handled and unhandled exceptions', function () {
     $ingest->assertLatestWrite('exceptions.1.handled', false);
 });
 
+it('drops unknown and missing entries in the trace to save space', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            //
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+        ],
+    ]));
+});
+
+it('handles the file in the trace', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            //
+        ],
+        [
+            'file' => 5,
+        ],
+        [
+            'file' => 'the/file.php',
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[unknown file]',
+        ],
+        [
+            'file' => 'the/file.php',
+        ],
+    ]));
+});
+
+it('handles the line in the trace', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            //
+        ],
+        [
+            'line' => 'x',
+        ],
+        [
+            'line' => 5,
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+            'line' => 5,
+        ],
+    ]));
+});
+
+it('handles the class in the trace', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            //
+        ],
+        [
+            'class' => 5,
+        ],
+        [
+            'class' => 'TheClass',
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+            'class' => 'TheClass',
+        ],
+    ]));
+});
+
+it('handles the function in the trace', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            //
+        ],
+        [
+            'function' => 5,
+        ],
+        [
+            'function' => 'the_function',
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+            'function' => 'the_function',
+        ],
+    ]));
+});
+
+it('handles the args in the trace', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            //
+        ],
+        [
+            'args' => 5,
+        ],
+        [
+            'args' => [],
+        ],
+        [
+            'args' => [
+                null,
+                true,
+                99,
+                9.9,
+                'hello world',
+                [],
+                new stdClass,
+                MyEnum::MyCase,
+                fn () => null,
+                $resourceToClose = fopen(__FILE__, 'r'),
+                tap(fopen(__FILE__, 'r'), fn ($r) => fclose($r)),
+            ],
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+            'args' => [
+                'null',
+                'bool',
+                'int',
+                'float',
+                'string',
+                'array',
+                'stdClass',
+                'MyEnum',
+                'Closure',
+                'resource',
+                'resource (closed)',
+            ],
+        ],
+    ]));
+
+    fclose($resourceToClose);
+});
+
+it('handles named arguments for variadic functions', function () {
+    $args = [];
+    try {
+        (fn (...$args) => throw new Exception('Whoops!'))(foo: 1, bar: 2);
+    } catch (Exception $e) {
+        $args = $e->getTrace()[0]['args'];
+    }
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            'args' => $args,
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+            'args' => [
+                'foo' => 'int',
+                'bar' => 'int',
+            ],
+        ],
+    ]));
+});
+
+it('handles ini setting to remove arguments from trace', function () {
+    $args = [];
+    try {
+        (fn (...$args) => throw new Exception('Whoops!'))(foo: 1, bar: 2);
+    } catch (Exception $e) {
+        $args = $e->getTrace()[0]['args'];
+    }
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            'args' => $args,
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+            'args' => [
+                'foo' => 'int',
+                'bar' => 'int',
+            ],
+        ],
+    ]));
+});
+
+it('handles ini setting disabling args in exceptions', function () {
+    ini_set('zend.exception_ignore_args', '1');
+    $ingest = fakeIngest();
+    Route::get('/users', function (Request $request) {
+        throw new RuntimeException;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => ! str_contains($trace, '"args":["Illuminate\\\\Http\\\\Request"]'));
+});
+
 final class MyException extends RuntimeException
 {
     public function render()
     {
         return response('', 500);
     }
+}
+
+enum MyEnum
+{
+    case MyCase;
 }

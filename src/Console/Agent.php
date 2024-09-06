@@ -17,6 +17,8 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 use WeakMap;
 
+use function date;
+
 /**
  * @internal
  */
@@ -118,12 +120,12 @@ final class Agent extends Command
 
     private function bufferConnectionChunk(ConnectionInterface $connection, string $chunk): void
     {
-        $this->connections[$connection][0] .= $chunk; // @phpstan-ignore offsetAccess.notFound
+        $this->connections[$connection][0] .= $chunk;
     }
 
     private function flushConnectionBuffer(ConnectionInterface $connection): string
     {
-        $payload = $this->connections[$connection][0]; // @phpstan-ignore offsetAccess.notFound
+        $payload = $this->connections[$connection][0];
 
         $this->connections[$connection][0] = '';
 
@@ -134,7 +136,7 @@ final class Agent extends Command
     {
         $connection->close();
 
-        $this->loop->cancelTimer($this->connections[$connection][1]); // @phpstan-ignore offsetAccess.notFound
+        $this->loop->cancelTimer($this->connections[$connection][1]);
 
         unset($this->connections[$connection]);
     }

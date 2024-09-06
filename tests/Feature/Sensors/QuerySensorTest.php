@@ -2,10 +2,10 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\QueryExecuted;
-use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\SensorManager;
 
 use function Pest\Laravel\get;
 use function Pest\Laravel\travelTo;
@@ -22,22 +22,15 @@ beforeEach(function () {
     ignoreMigrationQueries();
 });
 
-function afterMigrations(Closure $callback)
-{
-    return function (...$args) use ($callback) {
-        if (RefreshDatabaseState::$migrated) {
-            return $callback(...$args);
-        }
-    };
-}
-
 it('can ingest queries', function () {
     $ingest = fakeIngest();
-    prependListener(QueryExecuted::class, afterMigrations(function (QueryExecuted $event) {
+    afterMigrations(fn () => prependListener(QueryExecuted::class, function ($event) {
         $event->time = 4.321;
 
         travelTo(now()->addMicroseconds(4321));
     }));
+    afterMigrations(fn () => app(SensorManager::class)->prepareForNextInvocation());
+
     $line = null;
     Route::get('/users', function () use (&$line) {
         $line = __LINE__ + 2;
@@ -98,7 +91,7 @@ it('captures aggregate query data on the request', function () {
 
 it('always uses current time minus execution time for the timestamp', function () {
     $ingest = fakeIngest();
-    prependListener(QueryExecuted::class, afterMigrations(function (QueryExecuted $event) {
+    afterMigrations(fn () => prependListener(QueryExecuted::class, function (QueryExecuted $event) {
         $event->time = 4.321;
 
         travelTo(now()->addMicroseconds(4321));

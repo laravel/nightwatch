@@ -15,6 +15,16 @@ use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 
+use function array_sum;
+use function hash;
+use function implode;
+use function is_int;
+use function is_numeric;
+use function is_string;
+use function rescue;
+use function sort;
+use function strlen;
+
 /**
  * @internal
  */

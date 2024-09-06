@@ -10,6 +10,9 @@ use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\UserProvider;
 
+use function hash;
+use function round;
+
 /**
  * @internal
  */

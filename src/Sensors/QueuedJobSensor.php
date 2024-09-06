@@ -12,6 +12,15 @@ use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\UserProvider;
 use ReflectionClass;
 
+use function array_key_exists;
+use function hash;
+use function is_object;
+use function is_string;
+use function method_exists;
+use function preg_quote;
+use function preg_replace;
+use function property_exists;
+
 /**
  * @internal
  */
@@ -32,7 +41,7 @@ final class QueuedJobSensor
         private ExecutionState $executionState,
         private UserProvider $user,
         private Clock $clock,
-        private Config $config,
+        private Config $config, // TODO inject config we need rather than just the class.
         private string $server,
         private string $traceId,
     ) {

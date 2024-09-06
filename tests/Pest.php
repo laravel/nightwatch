@@ -1,6 +1,7 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\App;
@@ -79,6 +80,15 @@ function setPeakMemory(int $value): void
 function fakeIngest(): FakeIngest
 {
     return App::instance(Ingest::class, new FakeIngest);
+}
+
+function afterMigrations(Closure $callback)
+{
+    if (RefreshDatabaseState::$migrated) {
+        $callback();
+    } else {
+        Event::listen(MigrationsEnded::class, $callback);
+    }
 }
 
 function prependListener(string $event, callable $listener): void

@@ -6,6 +6,8 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionState;
 
+use function round;
+
 final class StageSensor
 {
     public function __construct(

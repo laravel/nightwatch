@@ -161,6 +161,7 @@ final class SensorManager
             location: $this->location(),
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
+            basePath: $this->app->basePath(),
         );
 
         $sensor($e);
@@ -196,7 +197,7 @@ final class SensorManager
 
     private function location(): Location
     {
-        return $this->location ??= new Location($this->app);
+        return $this->location ??= $this->app->make(Location::class);
     }
 
     private function config(): Config

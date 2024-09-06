@@ -7,6 +7,11 @@ use Illuminate\View\ViewException;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
 
+use function array_key_exists;
+use function preg_match;
+use function str_starts_with;
+use function substr;
+
 /**
  * TODO this should be a singleton
  *
@@ -14,20 +19,14 @@ use Throwable;
  */
 final class Location
 {
-    private ?int $basePathLength;
-
-    private ?string $vendorPath;
-
-    private ?string $artisanPath;
-
-    private ?string $frameworkPath;
-
-    private ?string $nightwatchPath;
-
-    private ?string $publicIndexPath;
-
-    public function __construct(private Application $app)
-    {
+    public function __construct(
+        private string $artisanPath,
+        private string $publicIndexPath,
+        private string $vendorPath,
+        private string $nightwatchPath,
+        private string $frameworkPath,
+        private int $basePathLength,
+    ) {
         //
     }
 
@@ -168,51 +167,21 @@ final class Location
 
     private function isVendorFile(string $file): bool
     {
-        return str_starts_with($file, $this->vendorPath()) ||
-            $file === $this->artisanPath() ||
-            $file === $this->publicIndexPath();
+        return str_starts_with($file, $this->vendorPath) ||
+            $file === $this->artisanPath ||
+            $file === $this->publicIndexPath;
     }
 
     private function isInternalFile(string $file): bool
     {
-        return str_starts_with($file, $this->frameworkPath()) ||
-            str_starts_with($file, $this->nightwatchPath()) ||
-            $file === $this->artisanPath() ||
-            $file === $this->publicIndexPath();
+        return str_starts_with($file, $this->frameworkPath) ||
+            str_starts_with($file, $this->nightwatchPath) ||
+            $file === $this->artisanPath ||
+            $file === $this->publicIndexPath;
     }
 
     private function normalizeFile(string $file): string
     {
-        return substr($file, $this->basePathLength());
-    }
-
-    private function basePathLength(): int
-    {
-        return $this->basePathLength ??= strlen($this->app->basePath()) + 1;
-    }
-
-    private function vendorPath(): string
-    {
-        return $this->vendorPath ??= $this->app->basePath('vendor');
-    }
-
-    private function artisanPath(): string
-    {
-        return $this->artisanPath ??= $this->app->basePath('artisan');
-    }
-
-    private function publicIndexPath(): string
-    {
-        return $this->publicIndexPath ??= $this->app->publicPath('index.php');
-    }
-
-    private function frameworkPath(): string
-    {
-        return $this->frameworkPath ??= $this->vendorPath().DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework';
-    }
-
-    private function nightwatchPath(): string
-    {
-        return $this->nightwatchPath ??= $this->vendorPath().DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'nightwatch';
+        return substr($file, $this->basePathLength);
     }
 }

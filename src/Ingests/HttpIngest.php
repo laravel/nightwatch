@@ -12,6 +12,8 @@ use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
 use Throwable;
 
+use function round;
+
 /**
  * @internal
  */
