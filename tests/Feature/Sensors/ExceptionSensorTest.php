@@ -4,6 +4,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Laravel\Nightwatch\Types\Str;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
 
 use function Pest\Laravel\get;
@@ -56,7 +57,7 @@ it('can ingest thrown exceptions', function () {
             'message' => 'Whoops!',
             'code' => 0,
             'trace' => json_encode(array_map(fn ($frame) => array_filter([
-                'file' => $frame['file'] ?? '[internal function]',
+                'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR),
                 'line' => $frame['line'] ?? null,
                 'class' => $frame['class'] ?? null,
                 'type' => $frame['type'] ?? null,
@@ -125,7 +126,7 @@ it('can ingest reported exceptions', function () {
             'message' => 'Whoops!',
             'code' => 0,
             'trace' => json_encode(array_map(fn ($frame) => array_filter([
-                'file' => $frame['file'] ?? '[internal function]',
+                'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR),
                 'line' => $frame['line'] ?? null,
                 'class' => $frame['class'] ?? null,
                 'type' => $frame['type'] ?? null,
@@ -545,9 +546,27 @@ it('handles ini setting to remove arguments from trace', function () {
 });
 
 it('handles ini setting disabling args in exceptions', function () {
-    ini_set('zend.exception_ignore_args', '1');
     $ingest = fakeIngest();
     Route::get('/users', function (Request $request) {
+        throw new RuntimeException;
+    });
+
+    ini_set('zend.exception_ignore_args', '1');
+    $response = get('/users');
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => ! str_contains($trace, '"args":["Illuminate\\\\Http\\\\Request"]'));
+
+    ini_set('zend.exception_ignore_args', '0');
+    $response = get('/users');
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(2);
+    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => str_contains($trace, '"args":["Illuminate\\\\Http\\\\Request"]'));
+});
+
+it('strips base_path from trace files', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', function () {
         throw new RuntimeException;
     });
 
@@ -555,7 +574,7 @@ it('handles ini setting disabling args in exceptions', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => ! str_contains($trace, '"args":["Illuminate\\\\Http\\\\Request"]'));
+    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => str_contains($trace, '{"file":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Route.php"'));
 });
 
 final class MyException extends RuntimeException
