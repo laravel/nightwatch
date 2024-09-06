@@ -17,6 +17,7 @@ beforeEach(function () {
 
     Config::set('app.debug', false);
     App::setBasePath(realpath(__DIR__.'/../../../'));
+    ini_set('zend.exception_ignore_args', '0');
 });
 
 it('can ingest thrown exceptions', function () {
@@ -480,6 +481,40 @@ it('handles named arguments for variadic functions', function () {
         (fn (...$args) => throw new Exception('Whoops!'))(foo: 1, bar: 2);
     } catch (Exception $e) {
         $args = dd($e->getTrace())[0]['args'];
+    }
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            'args' => $args,
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+            'args' => [
+                'foo' => 'int',
+                'bar' => 'int',
+            ],
+        ],
+    ]));
+});
+
+it('handles ini setting to remove arguments from trace', function () {
+    $args = [];
+    try {
+        (fn (...$args) => throw new Exception('Whoops!'))(foo: 1, bar: 2);
+    } catch (Exception $e) {
+        $args = $e->getTrace()[0]['args'];
     }
     $ingest = fakeIngest();
     $e = new Exception('Whoops!');
