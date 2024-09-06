@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Illuminate\Support\Str;
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
@@ -85,6 +84,9 @@ final class ExceptionSensor
         return false;
     }
 
+    /**
+     * @see https://github.com/php/php-src/blob/f17c2203883ddf53adfcb33d85523d11429729ab/Zend/zend_exceptions.c
+     */
     private function parseTrace(Throwable $e): string
     {
         $trace = [];
@@ -117,12 +119,14 @@ final class ExceptionSensor
             if (isset($frame['args']) && is_array($frame['args']) && count($frame['args']) > 0) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
                 $f['args'] = array_map(fn ($argument) => match (gettype($argument)) {
                     'NULL' => 'null',
-                    'boolean' => $argument ? 'true' : 'false',
-                    'integer', 'double' => (string) $argument,
+                    'boolean' => 'bool',
+                    'integer' => 'int',
+                    'double' => 'float',
                     'array' => 'array',
                     'object' => $argument::class,
-                    'resource', 'resource (closed)' => 'resource',
-                    'string' => Str::limit($argument, 15),
+                    'resource' => 'resource',
+                    'resource (closed)' => 'resource (closed)',
+                    'string' => 'string',
                     'unknown type' => '[unknown]',
                 }, $frame['args']);
             }

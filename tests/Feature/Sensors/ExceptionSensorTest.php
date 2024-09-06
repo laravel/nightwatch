@@ -62,7 +62,7 @@ it('can ingest thrown exceptions', function () {
                 'args' => ($frame['args'] ?? false)
                     ? array_map(fn ($arg) => match (gettype($arg)) {
                         'object' => $arg::class,
-                        'string' => Str::limit($arg, 15),
+                        'string' => 'string',
                         'array' => 'array',
                     }, $frame['args'])
                     : null,
@@ -131,7 +131,7 @@ it('can ingest reported exceptions', function () {
                 'args' => ($frame['args'] ?? false)
                     ? array_map(fn ($arg) => match (gettype($arg)) {
                         'object' => $arg::class,
-                        'string' => Str::limit($arg, 15),
+                        'string' => 'string',
                         'array' => 'array',
                     }, $frame['args'])
                     : null,
@@ -234,7 +234,7 @@ it('captures handled and unhandled exceptions', function () {
     $ingest->assertLatestWrite('exceptions.1.handled', false);
 });
 
-it('handles missing entries in the trace', function () {
+it('drops unknown and missing entries in the trace to save space', function () {
     $ingest = fakeIngest();
     $e = new Exception('Whoops!');
     $reflectedException = new ReflectionClass($e);
@@ -258,10 +258,231 @@ it('handles missing entries in the trace', function () {
     ]));
 });
 
+it('handles the file in the trace', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            //
+        ],
+        [
+            'file' => 5,
+        ],
+        [
+            'file' => 'the/file.php',
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[unknown file]',
+        ],
+        [
+            'file' => 'the/file.php',
+        ],
+    ]));
+});
+
+it('handles the line in the trace', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            //
+        ],
+        [
+            'line' => 'x',
+        ],
+        [
+            'line' => 5,
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+            'line' => 5,
+        ],
+    ]));
+});
+
+it('handles the class in the trace', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            //
+        ],
+        [
+            'class' => 5,
+        ],
+        [
+            'class' => 'TheClass',
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+            'class' => 'TheClass',
+        ],
+    ]));
+});
+
+it('handles the function in the trace', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            //
+        ],
+        [
+            'function' => 5,
+        ],
+        [
+            'function' => 'the_function',
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+            'function' => 'the_function',
+        ],
+    ]));
+});
+
+it('handles the args in the trace', function () {
+    $ingest = fakeIngest();
+    $e = new Exception('Whoops!');
+    $reflectedException = new ReflectionClass($e);
+    $reflectedException->getProperty('trace')->setValue($e, [
+        [
+            //
+        ],
+        [
+            'args' => 5,
+        ],
+        [
+            'args' => [],
+        ],
+        [
+            'args' => [
+                null,
+                true,
+                99,
+                9.9,
+                'hello world',
+                [],
+                new stdClass,
+                MyEnum::MyCase,
+                fn () => null,
+                $resourceToClose = fopen(__FILE__, 'r'),
+                tap(fopen(__FILE__, 'r'), fn ($r) => fclose($r)),
+            ],
+        ],
+    ]);
+    Route::get('/users', function () use ($e) {
+        throw $e;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+        ],
+        [
+            'file' => '[internal function]',
+            'args' => [
+                'null',
+                'bool',
+                'int',
+                'float',
+                'string',
+                'array',
+                'stdClass',
+                'MyEnum',
+                'Closure',
+                'resource',
+                'resource (closed)',
+            ],
+        ],
+    ]));
+
+    fclose($resourceToClose);
+});
+
 final class MyException extends RuntimeException
 {
     public function render()
     {
         return response('', 500);
     }
+}
+
+enum MyEnum
+{
+    case MyCase;
 }
