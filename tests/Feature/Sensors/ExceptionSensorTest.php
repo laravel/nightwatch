@@ -1,6 +1,7 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
@@ -480,7 +481,7 @@ it('handles named arguments for variadic functions', function () {
     try {
         (fn (...$args) => throw new Exception('Whoops!'))(foo: 1, bar: 2);
     } catch (Exception $e) {
-        $args = dd($e->getTrace())[0]['args'];
+        $args = $e->getTrace()[0]['args'];
     }
     $ingest = fakeIngest();
     $e = new Exception('Whoops!');
@@ -541,6 +542,20 @@ it('handles ini setting to remove arguments from trace', function () {
             ],
         ],
     ]));
+});
+
+it('handles ini setting disabling args in exceptions', function () {
+    ini_set('zend.exception_ignore_args', '1');
+    $ingest = fakeIngest();
+    Route::get('/users', function (Request $request) {
+        throw new RuntimeException;
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => ! str_contains($trace, '"args":["Illuminate\\\\Http\\\\Request"]'));
 });
 
 final class MyException extends RuntimeException

@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Closure;
 use Illuminate\Support\Arr;
 use Laravel\Nightwatch\Contracts\Ingest;
 
@@ -37,7 +38,11 @@ final class FakeIngest implements Ingest
             ? [null, $key]
             : [$key, $payload];
 
-        expect($this->latestWrite($key))->toBe($payload, $key ? "Failed asserting [{$key}] was expected value." : null);
+        if ($payload instanceof Closure) {
+            expect($payload($this->latestWrite($key)))->toBeTrue($key ? "Failed asserting [{$key}] was expected value." : null);
+        } else {
+            expect($this->latestWrite($key))->toBe($payload, $key ? "Failed asserting [{$key}] was expected value." : null);
+        }
 
         return $this;
     }
