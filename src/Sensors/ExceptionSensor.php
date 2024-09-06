@@ -68,7 +68,7 @@ final class ExceptionSensor
             line: $line ?? 0,
             message: $normalizedException->getMessage(),
             code: $normalizedException->getCode(),
-            trace: $this->parseTrace($normalizedException),
+            trace: $this->serializeTrace($normalizedException),
             handled: $this->wasManuallyReported($normalizedException),
         ));
     }
@@ -87,7 +87,7 @@ final class ExceptionSensor
     /**
      * @see https://github.com/php/php-src/blob/f17c2203883ddf53adfcb33d85523d11429729ab/Zend/zend_exceptions.c
      */
-    private function parseTrace(Throwable $e): string
+    private function serializeTrace(Throwable $e): string
     {
         $trace = [];
 
