@@ -33,7 +33,6 @@ final class ExceptionSensor
         private Location $location,
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
-        private string $basePath,
     ) {
         //
     }
@@ -97,7 +96,7 @@ final class ExceptionSensor
             $f['file'] = match (true) {
                 ! isset($frame['file']) => '[internal function]',
                 ! is_string($frame['file']) => '[unknown file]', // @phpstan-ignore booleanNot.alwaysFalse
-                default => $frame['file'],
+                default => $this->location->normalizeFile($frame['file']),
             };
 
             if (isset($frame['line']) && is_int($frame['line'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue

@@ -8,8 +8,10 @@ use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
 
 use function array_key_exists;
+use function Illuminate\Filesystem\join_paths;
 use function preg_match;
 use function str_starts_with;
+use function strlen;
 use function substr;
 
 /**
@@ -19,15 +21,28 @@ use function substr;
  */
 final class Location
 {
+    private string $basePath;
+
+    private string $artisanPath;
+
+    private string $publicIndexPath;
+
+    private string $vendorPath;
+
+    private string $nightwatchPath;
+
+    private string $frameworkPath;
+
     public function __construct(
-        private string $artisanPath,
-        private string $publicIndexPath,
-        private string $vendorPath,
-        private string $nightwatchPath,
-        private string $frameworkPath,
-        private int $basePathLength,
+        string $basePath,
+        string $publicPath,
     ) {
-        //
+        $this->basePath = $basePath.DIRECTORY_SEPARATOR;
+        $this->artisanPath = join_paths($basePath, 'artisan');
+        $this->publicIndexPath = join_paths($publicPath, 'index.php');
+        $this->vendorPath = join_paths($basePath, 'vendor');
+        $this->nightwatchPath = join_paths($this->vendorPath, 'laravel', 'nightwatch');
+        $this->frameworkPath = join_paths($this->vendorPath, 'laravel', 'framework');
     }
 
     /**
@@ -180,8 +195,12 @@ final class Location
             $file === $this->publicIndexPath;
     }
 
-    private function normalizeFile(string $file): string
+    public function normalizeFile(string $file): string
     {
-        return substr($file, $this->basePathLength);
+        if (! str_starts_with($file, $this->basePath)) {
+            return $file;
+        }
+
+        return substr($file, strlen($this->basePath));
     }
 }

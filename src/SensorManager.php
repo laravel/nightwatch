@@ -161,7 +161,6 @@ final class SensorManager
             location: $this->location(),
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
-            basePath: $this->app->basePath(),
         );
 
         $sensor($e);
