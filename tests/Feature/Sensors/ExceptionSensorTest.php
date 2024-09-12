@@ -56,20 +56,14 @@ it('can ingest thrown exceptions', function () {
             'line' => $line,
             'message' => 'Whoops!',
             'code' => 0,
-            'trace' => json_encode(array_map(fn ($frame) => array_filter([
-                'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR),
-                'line' => $frame['line'] ?? null,
-                'class' => $frame['class'] ?? null,
-                'type' => $frame['type'] ?? null,
-                'function' => $frame['function'],
-                'args' => ($frame['args'] ?? false)
-                    ? array_map(fn ($arg) => match (gettype($arg)) {
-                        'object' => $arg::class,
-                        'string' => 'string',
-                        'array' => 'array',
-                    }, $frame['args'])
-                    : null,
-            ]), $trace)),
+            'trace' => json_encode(array_map(fn ($frame) => [
+                'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
+                'source' => ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'].'('.implode(', ', array_map(fn ($arg) => match (gettype($arg)) {
+                    'object' => $arg::class,
+                    'string' => 'string',
+                    'array' => 'array',
+                }, $frame['args'])).')',
+            ], $trace)),
             'handled' => false,
         ],
     ]);
@@ -125,20 +119,14 @@ it('can ingest reported exceptions', function () {
             'line' => $line,
             'message' => 'Whoops!',
             'code' => 0,
-            'trace' => json_encode(array_map(fn ($frame) => array_filter([
-                'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR),
-                'line' => $frame['line'] ?? null,
-                'class' => $frame['class'] ?? null,
-                'type' => $frame['type'] ?? null,
-                'function' => $frame['function'],
-                'args' => ($frame['args'] ?? false)
-                    ? array_map(fn ($arg) => match (gettype($arg)) {
-                        'object' => $arg::class,
-                        'string' => 'string',
-                        'array' => 'array',
-                    }, $frame['args'])
-                    : null,
-            ]), $trace)),
+            'trace' => json_encode(array_map(fn ($frame) => [
+                'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
+                'source' => ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'].'('.implode(', ', array_map(fn ($arg) => match (gettype($arg)) {
+                    'object' => $arg::class,
+                    'string' => 'string',
+                    'array' => 'array',
+                }, $frame['args'])).')',
+            ], $trace)),
             'handled' => true,
         ],
     ]);
@@ -237,30 +225,6 @@ it('captures handled and unhandled exceptions', function () {
     $ingest->assertLatestWrite('exceptions.1.handled', false);
 });
 
-it('drops unknown and missing entries in the trace to save space', function () {
-    $ingest = fakeIngest();
-    $e = new Exception('Whoops!');
-    $reflectedException = new ReflectionClass($e);
-    $reflectedException->getProperty('trace')->setValue($e, [
-        [
-            //
-        ],
-    ]);
-    Route::get('/users', function () use ($e) {
-        throw $e;
-    });
-
-    $response = get('/users');
-
-    $response->assertServerError();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
-        [
-            'file' => '[internal function]',
-        ],
-    ]));
-});
-
 it('handles the file in the trace', function () {
     $ingest = fakeIngest();
     $e = new Exception('Whoops!');
@@ -287,12 +251,15 @@ it('handles the file in the trace', function () {
     $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
         [
             'file' => '[internal function]',
+            'source' => '()',
         ],
         [
             'file' => '[unknown file]',
+            'source' => '()',
         ],
         [
             'file' => 'the/file.php',
+            'source' => '()',
         ],
     ]));
 });
@@ -323,13 +290,15 @@ it('handles the line in the trace', function () {
     $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
         [
             'file' => '[internal function]',
+            'source' => '()',
         ],
         [
             'file' => '[internal function]',
+            'source' => '()',
         ],
         [
-            'file' => '[internal function]',
-            'line' => 5,
+            'file' => '[internal function]:5',
+            'source' => '()',
         ],
     ]));
 });
@@ -360,13 +329,15 @@ it('handles the class in the trace', function () {
     $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
         [
             'file' => '[internal function]',
+            'source' => '()',
         ],
         [
             'file' => '[internal function]',
+            'source' => '()',
         ],
         [
             'file' => '[internal function]',
-            'class' => 'TheClass',
+            'source' => 'TheClass()',
         ],
     ]));
 });
@@ -397,13 +368,15 @@ it('handles the function in the trace', function () {
     $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
         [
             'file' => '[internal function]',
+            'source' => '()',
         ],
         [
             'file' => '[internal function]',
+            'source' => '()',
         ],
         [
             'file' => '[internal function]',
-            'function' => 'the_function',
+            'source' => 'the_function()',
         ],
     ]));
 });
@@ -449,28 +422,19 @@ it('handles the args in the trace', function () {
     $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
         [
             'file' => '[internal function]',
+            'source' => '()',
         ],
         [
             'file' => '[internal function]',
+            'source' => '()',
         ],
         [
             'file' => '[internal function]',
+            'source' => '()',
         ],
         [
             'file' => '[internal function]',
-            'args' => [
-                'null',
-                'bool',
-                'int',
-                'float',
-                'string',
-                'array',
-                'stdClass',
-                'MyEnum',
-                'Closure',
-                'resource',
-                'resource (closed)',
-            ],
+            'source' => '(null, bool, int, float, string, array, stdClass, MyEnum, Closure, resource, resource (closed))',
         ],
     ]));
 
@@ -503,44 +467,7 @@ it('handles named arguments for variadic functions', function () {
     $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
         [
             'file' => '[internal function]',
-            'args' => [
-                'foo' => 'int',
-                'bar' => 'int',
-            ],
-        ],
-    ]));
-});
-
-it('handles ini setting to remove arguments from trace', function () {
-    $args = [];
-    try {
-        (fn (...$args) => throw new Exception('Whoops!'))(foo: 1, bar: 2);
-    } catch (Exception $e) {
-        $args = $e->getTrace()[0]['args'];
-    }
-    $ingest = fakeIngest();
-    $e = new Exception('Whoops!');
-    $reflectedException = new ReflectionClass($e);
-    $reflectedException->getProperty('trace')->setValue($e, [
-        [
-            'args' => $args,
-        ],
-    ]);
-    Route::get('/users', function () use ($e) {
-        throw $e;
-    });
-
-    $response = get('/users');
-
-    $response->assertServerError();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
-        [
-            'file' => '[internal function]',
-            'args' => [
-                'foo' => 'int',
-                'bar' => 'int',
-            ],
+            'source' => '(foo: int, bar: int)',
         ],
     ]));
 });
@@ -555,13 +482,13 @@ it('handles ini setting disabling args in exceptions', function () {
     $response = get('/users');
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => ! str_contains($trace, '"args":["Illuminate\\\\Http\\\\Request"]'));
+    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => ! str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
 
     ini_set('zend.exception_ignore_args', '0');
     $response = get('/users');
     $response->assertServerError();
     $ingest->assertWrittenTimes(2);
-    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => str_contains($trace, '"args":["Illuminate\\\\Http\\\\Request"]'));
+    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
 });
 
 it('strips base_path from trace files', function () {
@@ -574,7 +501,7 @@ it('strips base_path from trace files', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => str_contains($trace, '{"file":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Route.php"'));
+    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => str_contains($trace, '"file":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Route.php:'));
 });
 
 final class MyException extends RuntimeException

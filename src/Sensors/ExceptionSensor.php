@@ -12,11 +12,14 @@ use Laravel\Nightwatch\UserProvider;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
 
+use function array_is_list;
+use function array_keys;
 use function array_map;
 use function count;
 use function debug_backtrace;
 use function gettype;
 use function hash;
+use function implode;
 use function is_array;
 use function is_int;
 use function is_string;
@@ -91,32 +94,34 @@ final class ExceptionSensor
         $trace = [];
 
         foreach ($e->getTrace() as $frame) {
-            $f = [];
-
-            $f['file'] = match (true) {
+            $file = match (true) {
                 ! isset($frame['file']) => '[internal function]',
                 ! is_string($frame['file']) => '[unknown file]', // @phpstan-ignore booleanNot.alwaysFalse
                 default => $this->location->normalizeFile($frame['file']),
             };
 
             if (isset($frame['line']) && is_int($frame['line'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
-                $f['line'] = $frame['line'];
+                $file .= ':'.$frame['line'];
             }
 
+            $source = '';
+
             if (isset($frame['class']) && is_string($frame['class'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
-                $f['class'] = $frame['class'];
+                $source .= $frame['class'];
             }
 
             if (isset($frame['type']) && is_string($frame['type'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
-                $f['type'] = $frame['type'];
+                $source .= $frame['type'];
             }
 
             if (isset($frame['function']) && is_string($frame['function'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue, isset.offset
-                $f['function'] = $frame['function'];
+                $source .= $frame['function'];
             }
 
+            $source .= '(';
+
             if (isset($frame['args']) && is_array($frame['args']) && count($frame['args']) > 0) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
-                $f['args'] = array_map(fn ($argument) => match (gettype($argument)) {
+                $args = array_map(fn ($argument) => match (gettype($argument)) {
                     'NULL' => 'null',
                     'boolean' => 'bool',
                     'integer' => 'int',
@@ -128,9 +133,17 @@ final class ExceptionSensor
                     'string' => 'string',
                     'unknown type' => '[unknown]',
                 }, $frame['args']);
+
+                if (! array_is_list($args)) {
+                    $args = array_map(fn ($value, $key) => "{$key}: {$value}", $args, array_keys($args));
+                }
+
+                $source .= implode(', ', $args);
             }
 
-            $trace[] = $f;
+            $source .= ')';
+
+            $trace[] = ['file' => $file, 'source' => $source];
         }
 
         return json_encode($trace, flags: JSON_THROW_ON_ERROR);
