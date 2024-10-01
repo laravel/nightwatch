@@ -52,6 +52,10 @@ final class CommandSensor
             command: $input instanceof ArgvInput
                 ? implode(' ', $input->getRawTokens())
                 : (string) $input,
+            // If this value is over 255 or under zero we should run modules 256 on it, e.g.,
+            // $exitCode % 256;
+            // 3809 % 256 = 225
+            // see https://tldp.org/LDP/abs/html/exitcodes.html
             exit_code: $status,
             duration: $durationInMilliseconds,
             queries: $this->executionState->queries,
