@@ -308,12 +308,12 @@ final class NightwatchServiceProvider extends ServiceProvider
         return;
 
         $events->listen([
-                RetrievingKey::class,
-                CacheMissed::class,
-                CacheHit::class,
-                WritingKey::class,
-                KeyWritten::class
-            ],
+            RetrievingKey::class,
+            CacheMissed::class,
+            CacheHit::class,
+            WritingKey::class,
+            KeyWritten::class,
+        ],
             $sensor->cacheEvent(...)
         );
         $events->listen(JobQueued::class, $sensor->queuedJob(...));

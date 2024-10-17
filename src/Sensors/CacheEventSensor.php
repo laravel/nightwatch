@@ -51,6 +51,7 @@ final class CacheEventSensor
                 WritingKey::class => 'writing',
             };
             $this->startTimes["{$eventType}:{$event->key}"] = $nowMicrotime;
+
             return;
         }
 
