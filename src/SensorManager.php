@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\KeyWritten;
+use Illuminate\Cache\Events\RetrievingKey;
+use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
@@ -130,7 +132,7 @@ final class SensorManager
         $sensor($event, $trace);
     }
 
-    public function cacheEvent(CacheHit|CacheMissed|KeyWritten $event): void
+    public function cacheEvent(RetrievingKey|CacheHit|CacheMissed|WritingKey|KeyWritten $event): void
     {
         $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
             recordsBuffer: $this->recordsBuffer,
