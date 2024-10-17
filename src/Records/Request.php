@@ -59,6 +59,7 @@ final class Request
         public int $files_written,
         public int $cache_hits,
         public int $cache_misses,
+        public int $cache_writes,
         public int $hydrated_models,
         public int $peak_memory_usage,
     ) {

@@ -46,6 +46,7 @@ final class Command
         public int $files_written_duration,
         public int $cache_hits,
         public int $cache_misses,
+        public int $cache_writes,
         public int $hydrated_models,
         public int $peak_memory_usage,
     ) {

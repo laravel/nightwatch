@@ -103,6 +103,7 @@ final class RequestSensor
             files_written: $this->executionState->files_written,
             cache_hits: $this->executionState->cache_hits,
             cache_misses: $this->executionState->cache_misses,
+            cache_writes: $this->executionState->cache_writes,
             hydrated_models: $this->executionState->hydrated_models,
             peak_memory_usage: $this->peakMemory->bytes(),
         ));
