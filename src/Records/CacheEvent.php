@@ -11,6 +11,9 @@ final class CacheEvent
 {
     public int $v = 1;
 
+    /**
+     * @param  'hit'|'miss'|'write'  $type
+     */
     public function __construct(
         public int $timestamp,
         public string $deploy,
@@ -25,6 +28,8 @@ final class CacheEvent
         public string $store,
         public string $key,
         public string $type,
+        public int $duration,
+        public int $ttl = 0,
     ) {
         $this->store = Str::tinyText($this->store);
         $this->key = Str::tinyText($this->key);

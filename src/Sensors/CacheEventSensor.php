@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Cache\Events\KeyWritten;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\CacheEvent;
@@ -31,17 +32,17 @@ final class CacheEventSensor
     /**
      * TODO grouping, execution_context, execution_id
      */
-    public function __invoke(CacheMissed|CacheHit $event): void
+    public function __invoke(CacheMissed|CacheHit|KeyWritten $event): void
     {
         $nowMicrotime = $this->clock->microtime();
 
-        if ($event::class === CacheHit::class) {
-            $type = 'hit';
-            $this->executionState->cache_hits++;
-        } else {
-            $type = 'miss';
-            $this->executionState->cache_misses++;
-        }
+        [$type, $counter] = match ($event::class) {
+            CacheHit::class => ['hit', 'cache_hits'],
+            CacheMissed::class => ['miss', 'cache_misses'],
+            KeyWritten::class => ['write', 'cache_writes'],
+        };
+
+        $this->executionState->{$counter}++;
 
         $this->recordsBuffer->writeCacheEvent(new CacheEvent(
             timestamp: (int) $nowMicrotime,
@@ -56,6 +57,7 @@ final class CacheEventSensor
             store: $event->storeName ?? '',
             key: $event->key,
             type: $type,
+            ttl: $event instanceof KeyWritten ? $event->seconds : 0,
         ));
     }
 }

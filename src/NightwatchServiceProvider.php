@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch;
 
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -304,7 +305,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         return;
 
-        $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvent(...));
+        $events->listen([CacheMissed::class, CacheHit::class, KeyWritten::class], $sensor->cacheEvent(...));
         $events->listen(JobQueued::class, $sensor->queuedJob(...));
 
         $this->callAfterResolving(Http::class, function (Http $http, Application $app) use ($sensor) {

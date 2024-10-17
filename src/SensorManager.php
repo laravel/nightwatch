@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch;
 use Carbon\Carbon;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
@@ -129,7 +130,7 @@ final class SensorManager
         $sensor($event, $trace);
     }
 
-    public function cacheEvent(CacheMissed|CacheHit $event): void
+    public function cacheEvent(CacheMissed|CacheHit|KeyWritten $event): void
     {
         $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
             recordsBuffer: $this->recordsBuffer,
