@@ -130,7 +130,7 @@ final class SensorManager
         $sensor($event, $trace);
     }
 
-    public function cacheEvent(CacheMissed|CacheHit|KeyWritten $event): void
+    public function cacheEvent(CacheHit|CacheMissed|KeyWritten $event): void
     {
         $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
             recordsBuffer: $this->recordsBuffer,

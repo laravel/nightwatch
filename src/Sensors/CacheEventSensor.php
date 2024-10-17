@@ -32,7 +32,7 @@ final class CacheEventSensor
     /**
      * TODO grouping, execution_context, execution_id
      */
-    public function __invoke(CacheMissed|CacheHit|KeyWritten $event): void
+    public function __invoke(CacheHit|CacheMissed|KeyWritten $event): void
     {
         $nowMicrotime = $this->clock->microtime();
 
@@ -57,6 +57,7 @@ final class CacheEventSensor
             store: $event->storeName ?? '',
             key: $event->key,
             type: $type,
+            duration: 0, // TODO: Calculate the diff between the `RetrievingKey` and `CacheHit|CacheMissed` events.
             ttl: $event instanceof KeyWritten ? $event->seconds : 0,
         ));
     }
