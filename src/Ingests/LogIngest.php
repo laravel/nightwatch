@@ -22,4 +22,3 @@ final class LogIngest implements Ingest
         $this->log->info('Nightwatch ingest.', json_decode($payload));
     }
 }
-
