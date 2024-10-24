@@ -19,6 +19,6 @@ final class LogIngest implements Ingest
 
     public function write(string $payload): void
     {
-        $this->log->info('Nightwatch ingest.', json_decode($payload));
+        $this->log->info('Nightwatch ingest.', json_decode($payload, associative: true));
     }
 }
