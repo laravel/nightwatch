@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
+use Exception;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -21,19 +22,27 @@ final class GuzzleMiddleware
     public function __invoke(callable $handler): callable
     {
         return function (RequestInterface $request, array $options) use ($handler) {
-            $startMicrotime = $this->clock->microtime();
+            try {
+                $startMicrotime = $this->clock->microtime();
 
-            return $handler($request, $options)
-                ->then(function (ResponseInterface $response) use ($request, $startMicrotime) {
-                    $endMicrotime = $this->clock->microtime();
+                return $handler($request, $options)
+                    ->then(function (ResponseInterface $response) use ($request, $startMicrotime) {
+                        try {
+                            $endMicrotime = $this->clock->microtime();
 
-                    $this->sensor->outgoingRequest(
-                        $startMicrotime, $endMicrotime,
-                        $request, $response,
-                    );
+                            $this->sensor->outgoingRequest(
+                                $startMicrotime, $endMicrotime,
+                                $request, $response,
+                            );
 
-                    return $response;
-                });
+                            return $response;
+                        } catch (Exception $e) {
+                            //
+                        }
+                    });
+            } catch (Exception $e) {
+                //
+            }
         };
     }
 }

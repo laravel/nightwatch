@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
+use Exception;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Config\Repository as Config;
@@ -229,42 +230,80 @@ final class NightwatchServiceProvider extends ServiceProvider
         /*
          * Stage: Before middleware.
          */
-        $this->app->booted(fn () => $sensor->stage(ExecutionStage::BeforeMiddleware));
+        $this->app->booted(function () use ($sensor) {
+            try {
+                $sensor->stage(ExecutionStage::BeforeMiddleware);
+            } catch (Exception $e) {
+                //
+            }
+        });
 
         /*
          * Stage: Action, After middleware, and Terminating.
          */
         $events->listen(RouteMatched::class, function (RouteMatched $event) {
-            $middleware = $event->route->action['middleware'] ?? [];
+            try {
+                $middleware = $event->route->action['middleware'] ?? [];
 
-            $middleware[] = NightwatchRouteMiddleware::class; // TODO ensure adding these is not a memory leak in Octane (event though Laravel will make sure they are unique)
+                $middleware[] = NightwatchRouteMiddleware::class; // TODO ensure adding these is not a memory leak in Octane (event though Laravel will make sure they are unique)
 
-            if (! class_exists(Terminating::class)) {
-                array_unshift($middleware, NightwatchTerminatingMiddleware::class);
+                if (! class_exists(Terminating::class)) {
+                    array_unshift($middleware, NightwatchTerminatingMiddleware::class);
+                }
+
+                $event->route->action['middleware'] = $middleware;
+            } catch (Exception $e) {
+                //
             }
-
-            $event->route->action['middleware'] = $middleware;
         });
 
         /*
          * Stage: Render.
          */
-        $events->listen(PreparingResponse::class, fn () => match ($state->stage) {
-            ExecutionStage::Action => $sensor->stage(ExecutionStage::Render),
-            default => null,
+        $events->listen(PreparingResponse::class, function () use ($state, $sensor) {
+            try {
+                if ($state->stage === ExecutionStage::Action) {
+                    $sensor->stage(ExecutionStage::Render);
+                }
+            } catch (Exception $e) {
+                //
+            }
         });
 
         /*
          * Stage: After middleware.
          */
-        $events->listen(ResponsePrepared::class, fn () => match ($state->stage) {
-            ExecutionStage::Render => $sensor->stage(ExecutionStage::AfterMiddleware),
-            default => null,
+        $events->listen(ResponsePrepared::class, function () use ($state, $sensor) {
+            try {
+                if ($state->stage === ExecutionStage::Render) {
+                    $sensor->stage(ExecutionStage::AfterMiddleware);
+                }
+            } catch (Exception $e) {
+                //
+            }
         });
 
-        $events->listen(RequestHandled::class, fn () => $sensor->stage(ExecutionStage::Sending));
+        /*
+         * Stage: Sending.
+         */
+        $events->listen(RequestHandled::class, function () use ($sensor) {
+            try {
+                $sensor->stage(ExecutionStage::Sending);
+            } catch (Exception $e) {
+                //
+            }
+        });
 
-        $events->listen(Terminating::class, fn () => $sensor->stage(ExecutionStage::Terminating));
+        /*
+         * Stage: Terminating.
+         */
+        $events->listen(Terminating::class, function () use ($sensor) {
+            try {
+                $sensor->stage(ExecutionStage::Terminating);
+            } catch (Exception $e) {
+                //
+            }
+        });
 
         /*
          * Sensor: Query.
@@ -274,17 +313,27 @@ final class NightwatchServiceProvider extends ServiceProvider
          * array, internally the query sensor will skip the first frame while
          * iterating.
          */
-        $events->listen(QueryExecuted::class, fn (QueryExecuted $event) => $sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)));
+        $events->listen(QueryExecuted::class, function (QueryExecuted $event) use ($sensor) {
+            try {
+                $sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
+            } catch (Exception $e) {
+                //
+            }
+        });
 
         /*
          * Sensor: Exceptions.
          */
         $this->callAfterResolving(ExceptionHandler::class, function (ExceptionHandler $handler) use ($sensor) {
-            if (! $handler instanceof Handler) {
-                return;
-            }
+            try {
+                if (! $handler instanceof Handler) {
+                    return;
+                }
 
-            $handler->reportable($sensor->exception(...));
+                $handler->reportable($sensor->exception(...));
+            } catch (Exception $e) {
+                //
+            }
         });
 
         /*
@@ -295,57 +344,87 @@ final class NightwatchServiceProvider extends ServiceProvider
          * want to hook into the terminating callback system.
          */
         $this->callAfterResolving(HttpKernelContract::class, function (HttpKernelContract $kernel, Application $app) use ($sensor) {
-            if (! $kernel instanceof HttpKernel) {
-                return;
+            try {
+                if (! $kernel instanceof HttpKernel) {
+                    return;
+                }
+
+                if (! class_exists(Terminating::class)) {
+                    $kernel->setGlobalMiddleware([
+                        NightwatchTerminatingMiddleware::class, // Check this isn't a memory leak in Octane
+                        ...$kernel->getGlobalMiddleware(),
+                    ]);
+                }
+
+                $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
+                    try {
+                        $sensor->stage(ExecutionStage::End);
+
+                        $sensor->request($request, $response);
+
+                        /** @var IngestContract */
+                        $ingest = $app->make(IngestContract::class);
+
+                        $ingest->write($sensor->flush());
+                    } catch (Exception $e) {
+                        //
+                    }
+                });
+            } catch (Exception $e) {
+                //
             }
-
-            if (! class_exists(Terminating::class)) {
-                $kernel->setGlobalMiddleware([
-                    NightwatchTerminatingMiddleware::class, // Check this isn't a memory leak in Octane
-                    ...$kernel->getGlobalMiddleware(),
-                ]);
-            }
-
-            $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
-                $sensor->stage(ExecutionStage::End);
-
-                $sensor->request($request, $response);
-
-                /** @var IngestContract */
-                $ingest = $app->make(IngestContract::class);
-
-                $ingest->write($sensor->flush());
-            });
         });
 
         return;
 
-        $events->listen([CacheMissed::class, CacheHit::class], $sensor->cacheEvent(...));
-        $events->listen(JobQueued::class, $sensor->queuedJob(...));
+        $events->listen([CacheMissed::class, CacheHit::class], function (CacheMissed|CacheHit $event) use ($sensor) {
+            try {
+                $sensor->cacheEvent($event);
+            } catch (Exception $e) {
+                //
+            }
+        });
 
-        $this->callAfterResolving(Http::class, function (Http $http, Application $app) use ($sensor) {
-            /** @var GuzzleMiddleware */
-            $middleware = $app->make(GuzzleMiddleware::class, ['sensor' => $sensor]);
+        $events->listen(JobQueued::class, function (JobQueued $event) use ($sensor) {
+            try {
+                $sensor->queuedJob($sensor);
+            } catch (Exception $e) {
+                //
+            }
+        });
 
-            $http->globalMiddleware($middleware);
+        $this->callAfterResolving(Http::class, function (Http $http) use ($sensor, $clock) {
+            try {
+                $http->globalMiddleware(new GuzzleMiddleware($sensor, $clock));
+            } catch (Exception $e) {
+                //
+            }
         });
 
         $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor) {
-            if (! $kernel instanceof ConsoleKernel) {
-                return;
-            }
-
-            $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
-                if (! $this->app->runningInConsole()) {
+            try {
+                if (! $kernel instanceof ConsoleKernel) {
                     return;
                 }
 
-                $sensor->command($startedAt, $input, $status);
-                /** @var IngestContract */
-                $ingest = $app->make(IngestContract::class);
+                $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
+                    try {
+                        if (! $this->app->runningInConsole()) {
+                            return;
+                        }
 
-                $ingest->write($sensor->flush());
-            });
+                        $sensor->command($startedAt, $input, $status);
+                        /** @var IngestContract */
+                        $ingest = $app->make(IngestContract::class);
+
+                        $ingest->write($sensor->flush());
+                    } catch (Exception $e) {
+                        //
+                    }
+                });
+            } catch (Exception $e) {
+                //
+            }
         });
     }
 
