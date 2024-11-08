@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch;
 
 use Closure;
+use Exception;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Records\ExecutionState;
 
@@ -22,8 +23,12 @@ final class NightwatchTerminatingMiddleware
 
     public function terminate(): void
     {
-        if ($this->executionState->stage !== ExecutionStage::Terminating) {
-            $this->sensor->stage(ExecutionStage::Terminating);
+        try {
+            if ($this->executionState->stage !== ExecutionStage::Terminating) {
+                $this->sensor->stage(ExecutionStage::Terminating);
+            }
+        } catch (Exception $e) {
+            //
         }
     }
 }

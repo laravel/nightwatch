@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch;
 
 use Closure;
+use Exception;
 use Illuminate\Http\Request;
 
 final class NightwatchRouteMiddleware
@@ -14,7 +15,11 @@ final class NightwatchRouteMiddleware
 
     public function __invoke(Request $request, Closure $next): mixed
     {
-        $this->sensor->stage(ExecutionStage::Action);
+        try {
+            $this->sensor->stage(ExecutionStage::Action);
+        } catch (Exception $e) {
+            //
+        }
 
         return $next($request);
     }
