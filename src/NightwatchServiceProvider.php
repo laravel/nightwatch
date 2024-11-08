@@ -64,16 +64,13 @@ final class NightwatchServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app->singleton(SensorManager::class);
-        $this->app->singleton(NightwatchRouteMiddleware::class);
-        if (! class_exists(Terminating::class)) {
-            $this->app->singleton(NightwatchTerminatingMiddleware::class);
-        }
-        $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
-        $this->configureLocation();
+        $this->mergeConfig();
         $this->configureAgent();
         $this->configureIngest();
-        $this->mergeConfig();
+        $this->configureLocation();
+        $this->configureMiddleware();
+        $this->configureSensorManager();
+        $this->configurePeakMemoryProvider();
     }
 
     public function boot(): void
@@ -93,6 +90,25 @@ final class NightwatchServiceProvider extends ServiceProvider
     private function mergeConfig(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
+    }
+
+    private function configureSensorManager(): void
+    {
+        $this->app->singleton(SensorManager::class);
+    }
+
+    private function configureMiddleware(): void
+    {
+        $this->app->singleton(NightwatchRouteMiddleware::class);
+
+        if (! class_exists(Terminating::class)) {
+            $this->app->singleton(NightwatchTerminatingMiddleware::class);
+        }
+    }
+
+    private function configurePeakMemoryProvider(): void
+    {
+        $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
     }
 
     private function configureLocation(): void
