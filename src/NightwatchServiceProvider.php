@@ -30,6 +30,12 @@ use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
+use Laravel\Nightwatch\Hooks\BootedHook;
+use Laravel\Nightwatch\Hooks\PreparingResponseHook;
+use Laravel\Nightwatch\Hooks\RequestHandledHook;
+use Laravel\Nightwatch\Hooks\ResponsePreparedHook;
+use Laravel\Nightwatch\Hooks\RouteMatchedHook;
+use Laravel\Nightwatch\Hooks\TerminatingHook;
 use Laravel\Nightwatch\Ingests\HttpIngest;
 use Laravel\Nightwatch\Ingests\NullIngest;
 use Laravel\Nightwatch\Ingests\SocketIngest;
@@ -46,7 +52,6 @@ use React\Socket\TimeoutConnector;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 
-use function array_unshift;
 use function class_exists;
 use function debug_backtrace;
 use function defined;
@@ -232,83 +237,49 @@ final class NightwatchServiceProvider extends ServiceProvider
             $state, $clock, $location, $this->app,
         ));
 
-        /*
-         * Stage: Before middleware.
+        //
+        // -------------------------------------------------------------------------
+        // Stage hooks
+        // --------------------------------------------------------------------------
+        //
+
+        /**
+         * @see ExecutionStage::BeforeMiddleware
          */
-        $this->app->booted(function () use ($sensor) {
-            try {
-                $sensor->stage(ExecutionStage::BeforeMiddleware);
-            } catch (Exception $e) {
-                //
-            }
-        });
+        $this->app->booted(new BootedHook($sensor));
 
-        /*
-         * Stage: Action, After Middleware, and Terminating.
+        /**
+         * @see ExecutionStage::Action
+         * @see ExecutionStage::AfterMiddleware
+         * @see ExecutionStage::Terminating
          */
-        $events->listen(RouteMatched::class, function (RouteMatched $event) {
-            try {
-                $middleware = $event->route->action['middleware'] ?? [];
+        $events->listen(RouteMatched::class, new RouteMatchedHook);
 
-                $middleware[] = NightwatchRouteMiddleware::class; // TODO ensure adding these is not a memory leak in Octane (event though Laravel will make sure they are unique)
-
-                if (! class_exists(Terminating::class)) {
-                    array_unshift($middleware, NightwatchTerminatingMiddleware::class);
-                }
-
-                $event->route->action['middleware'] = $middleware;
-            } catch (Exception $e) {
-                //
-            }
-        });
-
-        /*
-         * Stage: Render.
+        /**
+         * @see ExecutionStage::Render
          */
-        $events->listen(PreparingResponse::class, function () use ($state, $sensor) {
-            try {
-                if ($state->stage === ExecutionStage::Action) {
-                    $sensor->stage(ExecutionStage::Render);
-                }
-            } catch (Exception $e) {
-                //
-            }
-        });
+        $events->listen(PreparingResponse::class, new PreparingResponseHook($sensor, $state));
 
-        /*
-         * Stage: After middleware.
+        /**
+         * @see ExecutionStage::AfterMiddleware
          */
-        $events->listen(ResponsePrepared::class, function () use ($state, $sensor) {
-            try {
-                if ($state->stage === ExecutionStage::Render) {
-                    $sensor->stage(ExecutionStage::AfterMiddleware);
-                }
-            } catch (Exception $e) {
-                //
-            }
-        });
+        $events->listen(ResponsePrepared::class, new ResponsePreparedHook($sensor, $state));
 
-        /*
-         * Stage: Sending.
+        /**
+         * @see ExecutionStage::Sending
          */
-        $events->listen(RequestHandled::class, function () use ($sensor) {
-            try {
-                $sensor->stage(ExecutionStage::Sending);
-            } catch (Exception $e) {
-                //
-            }
-        });
+        $events->listen(RequestHandled::class, new RequestHandledHook($sensor));
 
-        /*
-         * Stage: Terminating.
+        /**
+         * @see ExecutionStage::Terminating
          */
-        $events->listen(Terminating::class, function () use ($sensor) {
-            try {
-                $sensor->stage(ExecutionStage::Terminating);
-            } catch (Exception $e) {
-                //
-            }
-        });
+        $events->listen(Terminating::class, new TerminatingHook($sensor));
+
+        //
+        // -------------------------------------------------------------------------
+        // Sensor hooks
+        // --------------------------------------------------------------------------
+        //
 
         /*
          * Sensor: Query.
