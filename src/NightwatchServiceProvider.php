@@ -73,7 +73,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->mergeConfig();
         $this->configureAgent();
         $this->configureIngest();
-        $this->configureLocation();
         $this->configureMiddleware();
         $this->configurePeakMemoryProvider();
     }
@@ -109,14 +108,6 @@ final class NightwatchServiceProvider extends ServiceProvider
     private function configurePeakMemoryProvider(): void
     {
         $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
-    }
-
-    private function configureLocation(): void
-    {
-        $this->app->singleton(Location::class, fn (Application $app) => new Location(
-            basePath: $app->basePath(),
-            publicPath: $app->publicPath(),
-        ));
     }
 
     /**
