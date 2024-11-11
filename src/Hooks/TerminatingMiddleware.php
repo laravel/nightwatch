@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
+use Symfony\Component\HttpFoundation\Response;
 
 final class TerminatingMiddleware
 {
@@ -23,7 +24,7 @@ final class TerminatingMiddleware
         return $next($request);
     }
 
-    public function terminate(): void
+    public function terminate(Request $request, Response $response): void
     {
         try {
             if ($this->executionState->stage !== ExecutionStage::Terminating) {

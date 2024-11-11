@@ -9,7 +9,7 @@ use Illuminate\Routing\Events\RouteMatched;
 use function array_unshift;
 use function class_exists;
 
-class RouteMatchedHook
+class RouteMatchedListener
 {
     public function __invoke(RouteMatched $event): void
     {

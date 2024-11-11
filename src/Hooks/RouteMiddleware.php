@@ -15,7 +15,7 @@ final class RouteMiddleware
         //
     }
 
-    public function __invoke(Request $request, Closure $next): mixed
+    public function handle(Request $request, Closure $next): mixed
     {
         try {
             $this->sensor->stage(ExecutionStage::Action);

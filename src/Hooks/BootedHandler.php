@@ -3,17 +3,18 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Exception;
+use Illuminate\Contracts\Container\Container;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 
-class BootedHook
+class BootedHandler
 {
     public function __construct(private SensorManager $sensor)
     {
         //
     }
 
-    public function __invoke(): void
+    public function __invoke(Container $app): void
     {
         try {
             $this->sensor->stage(ExecutionStage::BeforeMiddleware);

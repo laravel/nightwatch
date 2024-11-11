@@ -30,14 +30,14 @@ use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\Hooks\BootedHook;
+use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
-use Laravel\Nightwatch\Hooks\PreparingResponseHook;
-use Laravel\Nightwatch\Hooks\RequestHandledHook;
-use Laravel\Nightwatch\Hooks\ResponsePreparedHook;
-use Laravel\Nightwatch\Hooks\RouteMatchedHook;
+use Laravel\Nightwatch\Hooks\PreparingResponseListener;
+use Laravel\Nightwatch\Hooks\RequestHandledListener;
+use Laravel\Nightwatch\Hooks\ResponsePreparedListener;
+use Laravel\Nightwatch\Hooks\RouteMatchedListener;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
-use Laravel\Nightwatch\Hooks\TerminatingHook;
+use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\Ingests\HttpIngest;
 use Laravel\Nightwatch\Ingests\NullIngest;
@@ -240,34 +240,34 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see ExecutionStage::BeforeMiddleware
          */
-        $this->app->booted(new BootedHook($sensor));
+        $this->app->booted(new BootedHandler($sensor));
 
         /**
          * @see ExecutionStage::Action
          * @see ExecutionStage::AfterMiddleware
          * @see ExecutionStage::Terminating
          */
-        $events->listen(RouteMatched::class, new RouteMatchedHook);
+        $events->listen(RouteMatched::class, new RouteMatchedListener);
 
         /**
          * @see ExecutionStage::Render
          */
-        $events->listen(PreparingResponse::class, new PreparingResponseHook($sensor, $state));
+        $events->listen(PreparingResponse::class, new PreparingResponseListener($sensor, $state));
 
         /**
          * @see ExecutionStage::AfterMiddleware
          */
-        $events->listen(ResponsePrepared::class, new ResponsePreparedHook($sensor, $state));
+        $events->listen(ResponsePrepared::class, new ResponsePreparedListener($sensor, $state));
 
         /**
          * @see ExecutionStage::Sending
          */
-        $events->listen(RequestHandled::class, new RequestHandledHook($sensor));
+        $events->listen(RequestHandled::class, new RequestHandledListener($sensor));
 
         /**
          * @see ExecutionStage::Terminating
          */
-        $events->listen(Terminating::class, new TerminatingHook($sensor));
+        $events->listen(Terminating::class, new TerminatingListener($sensor));
 
         //
         // -------------------------------------------------------------------------
