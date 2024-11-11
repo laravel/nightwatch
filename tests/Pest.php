@@ -20,14 +20,9 @@ use function Pest\Laravel\travelTo;
 
 pest()->extends(Tests\TestCase::class)->beforeEach(function () {
     app(Clock::class)->microtimeResolver = fn () => (float) now()->format('U.u');
-    setBasePath(realpath(__DIR__.'/../workbench'));
-});
-
-function setBasePath(string $path): void
-{
-    app()->setBasePath($path);
+    app()->setBasePath($path = realpath(__DIR__.'/../'));
     app(Location::class)->setBasePath($path)->setPublicPath("{$path}/public");
-}
+});
 
 function setExecutionStart(CarbonImmutable $timestamp): void
 {

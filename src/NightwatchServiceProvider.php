@@ -224,14 +224,12 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         /** @var Location */
         $location = $this->app->instance(Location::class, new Location(
-            basePath: $this->app->basePath(),
-            publicPath: $this->app->publicPath(),
+            $this->app->basePath(), $this->app->publicPath(),
         ));
 
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
-            $state, $clock,
-            $location, $this->app,
+            $state, $clock, $location, $this->app,
         ));
 
         /*

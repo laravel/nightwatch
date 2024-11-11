@@ -22,7 +22,6 @@ beforeEach(function () {
 });
 
 it('can ingest thrown exceptions', function () {
-    setBasePath(realpath(__DIR__.'/../../../'));
     $ingest = fakeIngest();
     $trace = null;
     $line = null;
@@ -70,7 +69,6 @@ it('can ingest thrown exceptions', function () {
 });
 
 it('captures the code', function () {
-    setBasePath(realpath(__DIR__.'/../../../'));
     $ingest = fakeIngest();
     $line = null;
     Route::get('/users', function () use (&$line) {
@@ -87,7 +85,6 @@ it('captures the code', function () {
 });
 
 it('can ingest reported exceptions', function () {
-    setBasePath(realpath(__DIR__.'/../../../'));
     $ingest = fakeIngest();
     $trace = null;
     $line = null;
@@ -160,11 +157,11 @@ it('handles view exceptions', function () {
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exceptions.0.line', 0);
-    $ingest->assertLatestWrite('exceptions.0.file', 'resources/views/exception.blade.php');
+    $ingest->assertLatestWrite('exceptions.0.file', 'workbench/resources/views/exception.blade.php');
     $ingest->assertLatestWrite('exceptions.0.class', 'Exception');
     $ingest->assertLatestWrite('exceptions.0.message', 'Whoops!');
     $ingest->assertLatestWrite('exceptions.0.code', 999);
-    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', 'Exception,999,resources/views/exception.blade.php,'));
+    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', 'Exception,999,workbench/resources/views/exception.blade.php,'));
 });
 
 it('handles spatie view exceptions', function () {
@@ -179,11 +176,11 @@ it('handles spatie view exceptions', function () {
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exceptions.0.line', 6);
-    $ingest->assertLatestWrite('exceptions.0.file', 'resources/views/exception.blade.php');
+    $ingest->assertLatestWrite('exceptions.0.file', 'workbench/resources/views/exception.blade.php');
     $ingest->assertLatestWrite('exceptions.0.class', 'Exception');
     $ingest->assertLatestWrite('exceptions.0.message', 'Whoops!');
     $ingest->assertLatestWrite('exceptions.0.code', 999);
-    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', 'Exception,999,resources/views/exception.blade.php,6'));
+    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', 'Exception,999,workbench/resources/views/exception.blade.php,6'));
 });
 
 it('handles unknown lines for internal locations', function () {
@@ -492,7 +489,6 @@ it('handles ini setting disabling args in exceptions', function () {
 });
 
 it('strips base_path from trace files', function () {
-    setBasePath(realpath(__DIR__.'/../../../'));
     $ingest = fakeIngest();
     Route::get('/users', function () {
         throw new RuntimeException;
