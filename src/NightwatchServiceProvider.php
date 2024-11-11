@@ -31,6 +31,9 @@ use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Hooks\BootedHook;
+use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
+use Laravel\Nightwatch\Hooks\RouteMiddleware;
+use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\Hooks\PreparingResponseHook;
 use Laravel\Nightwatch\Hooks\RequestHandledHook;
 use Laravel\Nightwatch\Hooks\ResponsePreparedHook;
@@ -98,10 +101,10 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function configureMiddleware(): void
     {
-        $this->app->singleton(NightwatchRouteMiddleware::class);
+        $this->app->singleton(RouteMiddleware::class);
 
         if (! class_exists(Terminating::class)) {
-            $this->app->singleton(NightwatchTerminatingMiddleware::class);
+            $this->app->singleton(TerminatingMiddleware::class);
         }
     }
 
@@ -318,7 +321,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
                 if (! class_exists(Terminating::class)) {
                     $kernel->setGlobalMiddleware([
-                        NightwatchTerminatingMiddleware::class, // Check this isn't a memory leak in Octane
+                        TerminatingMiddleware::class, // Check this isn't a memory leak in Octane
                         ...$kernel->getGlobalMiddleware(),
                     ]);
                 }

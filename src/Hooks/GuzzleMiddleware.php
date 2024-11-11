@@ -1,8 +1,10 @@
 <?php
 
-namespace Laravel\Nightwatch;
+namespace Laravel\Nightwatch\Hooks;
 
 use Exception;
+use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\SensorManager;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 

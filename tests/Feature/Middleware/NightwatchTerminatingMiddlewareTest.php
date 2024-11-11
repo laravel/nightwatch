@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\NightwatchTerminatingMiddleware;
+use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
 
@@ -10,7 +10,7 @@ use function Pest\Laravel\get;
 
 it('gracefully handles exceptions', function () {
     fakeIngest();
-    app()->instance(NightwatchTerminatingMiddleware::class, new NightwatchTerminatingMiddleware(new class extends SensorManager
+    app()->instance(TerminatingMiddleware::class, new TerminatingMiddleware(new class extends SensorManager
     {
         public function __construct() {}
 

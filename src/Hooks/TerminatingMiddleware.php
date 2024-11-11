@@ -1,13 +1,15 @@
 <?php
 
-namespace Laravel\Nightwatch;
+namespace Laravel\Nightwatch\Hooks;
 
 use Closure;
 use Exception;
 use Illuminate\Http\Request;
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionState;
+use Laravel\Nightwatch\SensorManager;
 
-final class NightwatchTerminatingMiddleware
+final class TerminatingMiddleware
 {
     public function __construct(
         private SensorManager $sensor,

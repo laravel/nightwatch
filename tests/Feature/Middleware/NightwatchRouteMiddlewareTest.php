@@ -2,14 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\NightwatchRouteMiddleware;
+use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\SensorManager;
 
 use function Pest\Laravel\get;
 
 it('gracefully handles exceptions', function () {
     fakeIngest();
-    app()->instance(NightwatchRouteMiddleware::class, new NightwatchRouteMiddleware(new class extends SensorManager
+    app()->instance(RouteMiddleware::class, new RouteMiddleware(new class extends SensorManager
     {
         public function __construct() {}
 

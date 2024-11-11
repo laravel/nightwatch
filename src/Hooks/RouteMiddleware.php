@@ -1,12 +1,14 @@
 <?php
 
-namespace Laravel\Nightwatch;
+namespace Laravel\Nightwatch\Hooks;
 
 use Closure;
 use Exception;
 use Illuminate\Http\Request;
+use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\SensorManager;
 
-final class NightwatchRouteMiddleware
+final class RouteMiddleware
 {
     public function __construct(private SensorManager $sensor)
     {
