@@ -50,8 +50,6 @@ class SensorManager
 
     private ?PeakMemoryProvider $peakMemoryProvider;
 
-    private ?Location $location;
-
     private ?Config $config;
 
     private ?UserProvider $userProvider;
@@ -59,6 +57,7 @@ class SensorManager
     public function __construct(
         private ExecutionState $executionState,
         private Clock $clock,
+        private Location $location,
         private Application $app,
         private RecordsBuffer $recordsBuffer = new RecordsBuffer,
     ) {
@@ -121,7 +120,7 @@ class SensorManager
         $sensor = $this->querySensor ??= new QuerySensor(
             clock: $this->clock,
             executionState: $this->executionState,
-            location: $this->location(),
+            location: $this->location,
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
         );
@@ -158,7 +157,7 @@ class SensorManager
         $sensor = $this->exceptionSensor ??= new ExceptionSensor(
             clock: $this->clock,
             executionState: $this->executionState,
-            location: $this->location(),
+            location: $this->location,
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
         );
@@ -192,11 +191,6 @@ class SensorManager
     private function user(): UserProvider
     {
         return $this->userProvider ??= $this->app->make(UserProvider::class);
-    }
-
-    private function location(): Location
-    {
-        return $this->location ??= $this->app->make(Location::class);
     }
 
     private function config(): Config

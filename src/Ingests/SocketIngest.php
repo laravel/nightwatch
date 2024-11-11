@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Ingests;
 
-use Laravel\Nightwatch\Contracts\Ingest;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use React\Socket\ConnectorInterface;
 use Throwable;
 
@@ -11,7 +11,7 @@ use function React\Async\await;
 /**
  * @internal
  */
-final class SocketIngest implements Ingest
+final class SocketIngest implements LocalIngest
 {
     public function __construct(
         private ConnectorInterface $connector,

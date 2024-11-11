@@ -18,11 +18,11 @@ beforeEach(function () {
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 
     Config::set('app.debug', false);
-    App::setBasePath(realpath(__DIR__.'/../../../'));
     ini_set('zend.exception_ignore_args', '0');
 });
 
 it('can ingest thrown exceptions', function () {
+    setBasePath(realpath(__DIR__.'/../../../'));
     $ingest = fakeIngest();
     $trace = null;
     $line = null;
@@ -70,6 +70,7 @@ it('can ingest thrown exceptions', function () {
 });
 
 it('captures the code', function () {
+    setBasePath(realpath(__DIR__.'/../../../'));
     $ingest = fakeIngest();
     $line = null;
     Route::get('/users', function () use (&$line) {
@@ -86,6 +87,7 @@ it('captures the code', function () {
 });
 
 it('can ingest reported exceptions', function () {
+    setBasePath(realpath(__DIR__.'/../../../'));
     $ingest = fakeIngest();
     $trace = null;
     $line = null;
@@ -150,7 +152,6 @@ it('captures aggregate query data on the request', function () {
 it('handles view exceptions', function () {
     expect(App::providerIsLoaded(IgnitionServiceProvider::class))->toBe(false);
 
-    App::setBasePath(realpath(__DIR__.'/../../../../nightwatch/workbench'));
     $ingest = fakeIngest();
     Route::view('exception', 'exception');
 
@@ -170,7 +171,6 @@ it('handles spatie view exceptions', function () {
     App::register(IgnitionServiceProvider::class);
     expect(App::providerIsLoaded(IgnitionServiceProvider::class))->toBe(true);
 
-    App::setBasePath(realpath(__DIR__.'/../../../../nightwatch/workbench'));
     $ingest = fakeIngest();
     Route::view('exception', 'exception');
 
@@ -492,6 +492,7 @@ it('handles ini setting disabling args in exceptions', function () {
 });
 
 it('strips base_path from trace files', function () {
+    setBasePath(realpath(__DIR__.'/../../../'));
     $ingest = fakeIngest();
     Route::get('/users', function () {
         throw new RuntimeException;

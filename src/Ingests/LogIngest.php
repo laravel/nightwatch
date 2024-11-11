@@ -3,7 +3,7 @@
 namespace Laravel\Nightwatch\Ingests;
 
 use Illuminate\Log\LogManager;
-use Laravel\Nightwatch\Contracts\Ingest;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 
 use function json_decode;
 use function json_encode;
@@ -11,7 +11,7 @@ use function json_encode;
 /**
  * @internal
  */
-final class LogIngest implements Ingest
+final class LogIngest implements LocalIngest
 {
     public function __construct(private LogManager $log)
     {

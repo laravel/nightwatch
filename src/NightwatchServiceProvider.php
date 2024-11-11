@@ -28,7 +28,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Console\Agent;
-use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Ingests\HttpIngest;
 use Laravel\Nightwatch\Ingests\NullIngest;
@@ -70,7 +70,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->configureIngest();
         $this->configureLocation();
         $this->configureMiddleware();
-        $this->configureSensorManager();
         $this->configurePeakMemoryProvider();
     }
 
@@ -91,11 +90,6 @@ final class NightwatchServiceProvider extends ServiceProvider
     private function mergeConfig(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
-    }
-
-    private function configureSensorManager(): void
-    {
-        $this->app->singleton(SensorManager::class);
     }
 
     private function configureMiddleware(): void
@@ -171,11 +165,14 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function configureIngest(): void
     {
-        $this->app->singleton(IngestContract::class, function (Application $app) {
+        $this->app->singleton(LocalIngest::class, function (Application $app) {
             /** @var Config */
             $config = $app->make('config');
 
-            $connector = new TimeoutConnector(new TcpConnector, $config->get('nightwatch.collector.connection_timeout'));
+            $connector = new TimeoutConnector(
+                new TcpConnector,
+                $config->get('nightwatch.collector.connection_timeout'),
+            );
 
             $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
 
@@ -209,6 +206,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Dispatcher */
         $events = $this->app->make('events');
 
+        /** @var Clock */
         $clock = $this->app->instance(Clock::class, new Clock(match (true) {
             defined('LARAVEL_START') => LARAVEL_START,
             default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
@@ -219,13 +217,22 @@ final class NightwatchServiceProvider extends ServiceProvider
             trace: $traceId = (string) Str::uuid(),
             id: $traceId,
             context: 'request', // TODO
+            currentExecutionStageStartedAtMicrotime: $clock->executionStartInMicrotime(),
             deploy: $this->app['config']->get('nightwatch.deploy') ?? '',
             server: $this->app['config']->get('nightwatch.server') ?? '',
-            currentExecutionStageStartedAtMicrotime: $clock->executionStartInMicrotime(),
+        ));
+
+        /** @var Location */
+        $location = $this->app->instance(Location::class, new Location(
+            basePath: $this->app->basePath(),
+            publicPath: $this->app->publicPath(),
         ));
 
         /** @var SensorManager */
-        $sensor = $this->app->instance(SensorManager::class, new SensorManager($state, $clock, $this->app));
+        $sensor = $this->app->instance(SensorManager::class, new SensorManager(
+            $state, $clock,
+            $location, $this->app,
+        ));
 
         /*
          * Stage: Before middleware.
@@ -239,7 +246,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         });
 
         /*
-         * Stage: Action, After middleware, and Terminating.
+         * Stage: Action, After Middleware, and Terminating.
          */
         $events->listen(RouteMatched::class, function (RouteMatched $event) {
             try {
@@ -362,8 +369,8 @@ final class NightwatchServiceProvider extends ServiceProvider
 
                         $sensor->request($request, $response);
 
-                        /** @var IngestContract */
-                        $ingest = $app->make(IngestContract::class);
+                        /** @var LocalIngest */
+                        $ingest = $app->make(LocalIngest::class);
 
                         $ingest->write($sensor->flush());
                     } catch (Exception $e) {
@@ -414,8 +421,8 @@ final class NightwatchServiceProvider extends ServiceProvider
                         }
 
                         $sensor->command($startedAt, $input, $status);
-                        /** @var IngestContract */
-                        $ingest = $app->make(IngestContract::class);
+                        /** @var LocalIngest */
+                        $ingest = $app->make(LocalIngest::class);
 
                         $ingest->write($sensor->flush());
                     } catch (Exception $e) {

@@ -4,14 +4,14 @@ namespace Tests;
 
 use Closure;
 use Illuminate\Support\Arr;
-use Laravel\Nightwatch\Contracts\Ingest;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 
 use function count;
 use function expect;
 use function is_array;
 use function json_decode;
 
-final class FakeIngest implements Ingest
+final class FakeIngest implements LocalIngest
 {
     /**
      * @var list<string>
