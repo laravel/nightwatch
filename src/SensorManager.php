@@ -55,7 +55,7 @@ class SensorManager
     private ?UserProvider $userProvider;
 
     public function __construct(
-        private ExecutionState $executionState,
+        private ExecutionState $state,
         private Clock $clock,
         private Location $location,
         private Application $app,
@@ -71,7 +71,7 @@ class SensorManager
         // instance.
         $sensor = new StageSensor(
             clock: $this->clock,
-            executionState: $this->executionState,
+            executionState: $this->state,
         );
 
         $sensor($executionStage);
@@ -79,14 +79,14 @@ class SensorManager
 
     public function executionStage(): ExecutionStage
     {
-        return $this->executionState->stage;
+        return $this->state->stage;
     }
 
     public function request(Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
             clock: $this->clock,
-            executionState: $this->executionState,
+            executionState: $this->state,
             peakMemory: $this->peakMemoryProvider(),
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
@@ -104,7 +104,7 @@ class SensorManager
     {
         $sensor = new CommandSensor(
             recordsBuffer: $this->recordsBuffer,
-            executionState: $this->executionState,
+            executionState: $this->state,
             peakMemory: $this->peakMemoryProvider(),
             user: $this->user(),
         );
@@ -119,7 +119,7 @@ class SensorManager
     {
         $sensor = $this->querySensor ??= new QuerySensor(
             clock: $this->clock,
-            executionState: $this->executionState,
+            executionState: $this->state,
             location: $this->location,
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
@@ -132,7 +132,7 @@ class SensorManager
     {
         $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
             recordsBuffer: $this->recordsBuffer,
-            executionState: $this->executionState,
+            executionState: $this->state,
             clock: $this->clock,
             user: $this->user(),
         );
@@ -144,7 +144,7 @@ class SensorManager
     {
         $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
             recordsBuffer: $this->recordsBuffer,
-            executionState: $this->executionState,
+            executionState: $this->state,
             user: $this->user(),
             clock: $this->clock,
         );
@@ -156,7 +156,7 @@ class SensorManager
     {
         $sensor = $this->exceptionSensor ??= new ExceptionSensor(
             clock: $this->clock,
-            executionState: $this->executionState,
+            executionState: $this->state,
             location: $this->location,
             recordsBuffer: $this->recordsBuffer,
             user: $this->user(),
@@ -169,7 +169,7 @@ class SensorManager
     {
         $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
             recordsBuffer: $this->recordsBuffer,
-            executionState: $this->executionState,
+            executionState: $this->state,
             user: $this->user(),
             clock: $this->clock,
             config: $this->config(),
