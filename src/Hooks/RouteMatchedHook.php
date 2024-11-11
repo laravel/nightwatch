@@ -5,8 +5,6 @@ namespace Laravel\Nightwatch\Hooks;
 use Exception;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Routing\Events\RouteMatched;
-use Laravel\Nightwatch\Hooks\RouteMiddleware;
-use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 
 use function array_unshift;
 use function class_exists;
