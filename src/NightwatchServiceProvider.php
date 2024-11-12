@@ -55,6 +55,7 @@ use React\Socket\TcpServer;
 use React\Socket\TimeoutConnector;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 use function class_exists;
 use function defined;
@@ -294,6 +295,36 @@ final class NightwatchServiceProvider extends ServiceProvider
                 //
             }
         });
+
+        /**
+         * @see \Laravel\Nightwatch\Records\Exception
+         */
+        $this->callAfterResolving(ExceptionHandler::class, new ExceptionHandlerResolvedHandler($sensor));
+            //try {
+            //    if (! $handler instanceof Handler) {
+            //        return;
+            //    }
+
+            //    $handler->reportable($sensor->exception(...));
+            //} catch (Exception $e) {
+            //    //
+            //}
+        //});
+        new class {
+            public function __invoke(ExceptionHandler $handler) {
+                    if (! $handler instanceof Handler) {
+                        return;
+                    }
+
+                    $handler->reportable(function (Throwable $exception) {
+                        try {
+                            $sensor->exception($exception));
+                        } catch (Exception $e) {
+                            //
+                        }
+                    });
+            }
+        };
 
         /*
          * Sensor: Request + final ingest.
