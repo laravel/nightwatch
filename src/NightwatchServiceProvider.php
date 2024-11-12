@@ -91,7 +91,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerCommands();
         }
 
-        $this->registerSensors();
+        $this->registerHooks();
     }
 
     private function mergeConfig(): void
@@ -200,7 +200,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      * recorders were registered early but out ingest was registered last. This
      * we used the `booted` callback.
      */
-    private function registerSensors(): void
+    private function registerHooks(): void
     {
         /** @var Dispatcher */
         $events = $this->app->make('events');
