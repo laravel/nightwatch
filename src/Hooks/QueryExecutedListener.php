@@ -15,7 +15,7 @@ class QueryExecutedListener
         //
     }
 
-    public function __invoke(QueryExecuted $event)
+    public function __invoke(QueryExecuted $event): void
     {
         try {
             $this->sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
@@ -24,4 +24,3 @@ class QueryExecutedListener
         }
     }
 }
-
