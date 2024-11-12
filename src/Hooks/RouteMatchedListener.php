@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Exception;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Routing\Events\RouteMatched;
 
@@ -13,18 +12,14 @@ class RouteMatchedListener
 {
     public function __invoke(RouteMatched $event): void
     {
-        try {
-            $middleware = $event->route->action['middleware'] ?? [];
+        $middleware = $event->route->action['middleware'] ?? [];
 
-            $middleware[] = RouteMiddleware::class; // TODO ensure adding these is not a memory leak in Octane (event though Laravel will make sure they are unique)
+        $middleware[] = RouteMiddleware::class; // TODO ensure adding these is not a memory leak in Octane (event though Laravel will make sure they are unique)
 
-            if (! class_exists(Terminating::class)) {
-                array_unshift($middleware, TerminatingMiddleware::class);
-            }
-
-            $event->route->action['middleware'] = $middleware;
-        } catch (Exception $e) {
-            //
+        if (! class_exists(Terminating::class)) {
+            array_unshift($middleware, TerminatingMiddleware::class);
         }
+
+        $event->route->action['middleware'] = $middleware;
     }
 }
