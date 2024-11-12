@@ -33,6 +33,7 @@ use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
+use Laravel\Nightwatch\Hooks\QueryExecutedListener;
 use Laravel\Nightwatch\Hooks\RequestHandledListener;
 use Laravel\Nightwatch\Hooks\ResponsePreparedListener;
 use Laravel\Nightwatch\Hooks\RouteMatchedListener;
@@ -56,7 +57,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 use function class_exists;
-use function debug_backtrace;
 use function defined;
 use function microtime;
 
@@ -233,39 +233,39 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         //
         // -------------------------------------------------------------------------
-        // Stage hooks
+        // Execution stage hooks
         // --------------------------------------------------------------------------
         //
 
         /**
-         * @see ExecutionStage::BeforeMiddleware
+         * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
          */
         $this->app->booted(new BootedHandler($sensor));
 
         /**
-         * @see ExecutionStage::Action
-         * @see ExecutionStage::AfterMiddleware
-         * @see ExecutionStage::Terminating
+         * @see \Laravel\Nightwatch\ExecutionStage::Action
+         * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
         $events->listen(RouteMatched::class, new RouteMatchedListener);
 
         /**
-         * @see ExecutionStage::Render
+         * @see \Laravel\Nightwatch\ExecutionStage::Render
          */
         $events->listen(PreparingResponse::class, new PreparingResponseListener($sensor, $state));
 
         /**
-         * @see ExecutionStage::AfterMiddleware
+         * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
          */
         $events->listen(ResponsePrepared::class, new ResponsePreparedListener($sensor, $state));
 
         /**
-         * @see ExecutionStage::Sending
+         * @see \Laravel\Nightwatch\ExecutionStage::Sending
          */
         $events->listen(RequestHandled::class, new RequestHandledListener($sensor));
 
         /**
-         * @see ExecutionStage::Terminating
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
         $events->listen(Terminating::class, new TerminatingListener($sensor));
 
@@ -275,21 +275,10 @@ final class NightwatchServiceProvider extends ServiceProvider
         // --------------------------------------------------------------------------
         //
 
-        /*
-         * Sensor: Query.
-         *
-         * The trace will include this listener frame. Instead of trying to
-         * slice out the current frame from the trace and having to re-key the
-         * array, internally the query sensor will skip the first frame while
-         * iterating.
+        /**
+         * @see \Laravel\Nightwatch\Records\Query
          */
-        $events->listen(QueryExecuted::class, static function (QueryExecuted $event) use ($sensor) {
-            try {
-                $sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
-            } catch (Exception $e) {
-                //
-            }
-        });
+        $events->listen(QueryExecuted::class, new QueryExecutedListener($sensor));
 
         /*
          * Sensor: Exceptions.
