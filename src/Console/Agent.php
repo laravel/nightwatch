@@ -71,10 +71,10 @@ final class Agent extends Command
             $connection->on('end', function () use ($connection) {
                 $this->buffer->write($this->flushConnectionBuffer($connection));
 
-                $this->queueOrPerformIngest(function (PromiseInterface $response) {
-                    $response->then(function (IngestSucceededResult $result) {
+                $this->queueOrPerformIngest(static function (PromiseInterface $response) {
+                    $response->then(static function (IngestSucceededResult $result) {
                         echo date('Y-m-d H:i:s')." Ingest successful. Took {$result->duration} ms.".PHP_EOL;
-                    }, function (Throwable $e) {
+                    }, static function (Throwable $e) {
                         if ($e instanceof IngestFailedException) {
                             echo date('Y-m-d H:i:s')." Ingestion failed. Took {$e->duration} ms. Recieved: [{$e->getMessage()}].".PHP_EOL;
                         } else {
@@ -111,7 +111,7 @@ final class Agent extends Command
 
     private function accept(ConnectionInterface $connection): void
     {
-        $timeoutTimer = $this->loop->addPeriodicTimer($this->timeout, function () use ($connection) {
+        $timeoutTimer = $this->loop->addPeriodicTimer($this->timeout, static function () use ($connection) {
             $connection->emit('timeout');
         });
 

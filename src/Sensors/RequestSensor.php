@@ -72,7 +72,7 @@ final class RequestSensor
                 'https' => 443,
             }),
             path: $request->getPathInfo(),
-            query: rescue(fn () => $request->server->getString('QUERY_STRING'), '', report: false),
+            query: rescue(static fn () => $request->server->getString('QUERY_STRING'), '', report: false),
             route_name: $route?->getName() ?? '',
             route_methods: $routeMethods,
             route_domain: $routeDomain,

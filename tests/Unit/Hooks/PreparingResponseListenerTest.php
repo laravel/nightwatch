@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Http\Request;
-use Illuminate\Routing\Events\ResponsePrepared;
+use Illuminate\Routing\Events\PreparingResponse;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Hooks\ResponsePreparedListener;
+use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
 
@@ -22,9 +22,9 @@ it('gracefully handles exceptions', function () {
         }
     };
     $state = app(ExecutionState::class);
-    $state->stage = ExecutionStage::Render;
-    $listener = new ResponsePreparedListener($sensor, $state);
-    $event = new ResponsePrepared(Request::create('/tests'), response(''));
+    $state->stage = ExecutionStage::Action;
+    $listener = new PreparingResponseListener($sensor, $state);
+    $event = new PreparingResponse(Request::create('/tests'), response(''));
 
     $listener($event);
 

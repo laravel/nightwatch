@@ -19,7 +19,7 @@ final class Clock
 
     public function __construct(public float $executionStartInMicrotime)
     {
-        $this->microtimeResolver = fn () => microtime(true);
+        $this->microtimeResolver = static fn () => microtime(true);
     }
 
     public function microtime(): float

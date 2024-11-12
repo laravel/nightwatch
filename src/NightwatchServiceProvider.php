@@ -119,7 +119,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      */
     private function configureAgent(): void
     {
-        $this->app->singleton(Agent::class, function (Application $app) {
+        $this->app->singleton(Agent::class, static function (Application $app) {
             /** @var Config */
             $config = $app->make('config');
             /** @var Clock */
@@ -133,7 +133,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             // the server in the handle method instead.
             $app->when([Agent::class, 'handle'])
                 ->needs(ServerInterface::class)
-                ->give(function () use ($config, $loop) {
+                ->give(static function () use ($config, $loop) {
                     $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
 
                     $server = new TcpServer($uri, $loop);
@@ -164,7 +164,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function configureIngest(): void
     {
-        $this->app->singleton(LocalIngest::class, function (Application $app) {
+        $this->app->singleton(LocalIngest::class, static function (Application $app) {
             /** @var Config */
             $config = $app->make('config');
 
@@ -283,7 +283,7 @@ final class NightwatchServiceProvider extends ServiceProvider
          * array, internally the query sensor will skip the first frame while
          * iterating.
          */
-        $events->listen(QueryExecuted::class, function (QueryExecuted $event) use ($sensor) {
+        $events->listen(QueryExecuted::class, static function (QueryExecuted $event) use ($sensor) {
             try {
                 $sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
             } catch (Exception $e) {
@@ -294,7 +294,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /*
          * Sensor: Exceptions.
          */
-        $this->callAfterResolving(ExceptionHandler::class, function (ExceptionHandler $handler) use ($sensor) {
+        $this->callAfterResolving(ExceptionHandler::class, static function (ExceptionHandler $handler) use ($sensor) {
             try {
                 if (! $handler instanceof Handler) {
                     return;
@@ -313,7 +313,7 @@ final class NightwatchServiceProvider extends ServiceProvider
          * `whenRequestLifecycleIsLongerThan` method is not present. We likely
          * want to hook into the terminating callback system.
          */
-        $this->callAfterResolving(HttpKernelContract::class, function (HttpKernelContract $kernel, Application $app) use ($sensor) {
+        $this->callAfterResolving(HttpKernelContract::class, static function (HttpKernelContract $kernel, Application $app) use ($sensor) {
             try {
                 if (! $kernel instanceof HttpKernel) {
                     return;
@@ -326,7 +326,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                     ]);
                 }
 
-                $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
+                $kernel->whenRequestLifecycleIsLongerThan(-1, static function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
                     try {
                         $sensor->stage(ExecutionStage::End);
 
@@ -347,7 +347,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         return;
 
-        $events->listen([CacheMissed::class, CacheHit::class], function (CacheMissed|CacheHit $event) use ($sensor) {
+        $events->listen([CacheMissed::class, CacheHit::class], static function (CacheMissed|CacheHit $event) use ($sensor) {
             try {
                 $sensor->cacheEvent($event);
             } catch (Exception $e) {
@@ -355,7 +355,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             }
         });
 
-        $events->listen(JobQueued::class, function (JobQueued $event) use ($sensor) {
+        $events->listen(JobQueued::class, static function (JobQueued $event) use ($sensor) {
             try {
                 $sensor->queuedJob($sensor);
             } catch (Exception $e) {
@@ -363,7 +363,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             }
         });
 
-        $this->callAfterResolving(Http::class, function (Http $http) use ($sensor, $clock) {
+        $this->callAfterResolving(Http::class, static function (Http $http) use ($sensor, $clock) {
             try {
                 $http->globalMiddleware(new GuzzleMiddleware($sensor, $clock));
             } catch (Exception $e) {

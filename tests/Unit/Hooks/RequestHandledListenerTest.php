@@ -1,10 +1,9 @@
 <?php
 
+use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Events\ResponsePrepared;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Hooks\ResponsePreparedListener;
-use Laravel\Nightwatch\Records\ExecutionState;
+use Laravel\Nightwatch\Hooks\RequestHandledListener;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
@@ -21,10 +20,8 @@ it('gracefully handles exceptions', function () {
             throw new RuntimeException('Whoops!');
         }
     };
-    $state = app(ExecutionState::class);
-    $state->stage = ExecutionStage::Render;
-    $listener = new ResponsePreparedListener($sensor, $state);
-    $event = new ResponsePrepared(Request::create('/tests'), response(''));
+    $listener = new RequestHandledListener($sensor);
+    $event = new RequestHandled(Request::create('/tests'), response(''));
 
     $listener($event);
 

@@ -121,7 +121,7 @@ final class ExceptionSensor
             $source .= '(';
 
             if (isset($frame['args']) && is_array($frame['args']) && count($frame['args']) > 0) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
-                $args = array_map(fn ($argument) => match (gettype($argument)) {
+                $args = array_map(static fn ($argument) => match (gettype($argument)) {
                     'NULL' => 'null',
                     'boolean' => 'bool',
                     'integer' => 'int',
@@ -135,7 +135,7 @@ final class ExceptionSensor
                 }, $frame['args']);
 
                 if (! array_is_list($args)) {
-                    $args = array_map(fn ($value, $key) => "{$key}: {$value}", $args, array_keys($args));
+                    $args = array_map(static fn ($value, $key) => "{$key}: {$value}", $args, array_keys($args));
                 }
 
                 $source .= implode(', ', $args);
