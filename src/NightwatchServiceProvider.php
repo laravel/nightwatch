@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
+use Closure;
 use Exception;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
@@ -14,7 +15,6 @@ use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Foundation\Events\Terminating;
-use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Http\Client\Factory as Http;
@@ -31,6 +31,7 @@ use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Hooks\BootedHandler;
+use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
@@ -55,7 +56,6 @@ use React\Socket\TcpServer;
 use React\Socket\TimeoutConnector;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Throwable;
 
 use function class_exists;
 use function defined;
@@ -281,50 +281,10 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $events->listen(QueryExecuted::class, new QueryExecutedListener($sensor));
 
-        /*
-         * Sensor: Exceptions.
-         */
-        $this->callAfterResolving(ExceptionHandler::class, static function (ExceptionHandler $handler) use ($sensor) {
-            try {
-                if (! $handler instanceof Handler) {
-                    return;
-                }
-
-                $handler->reportable($sensor->exception(...));
-            } catch (Exception $e) {
-                //
-            }
-        });
-
         /**
          * @see \Laravel\Nightwatch\Records\Exception
          */
-        $this->callAfterResolving(ExceptionHandler::class, new ExceptionHandlerResolvedHandler($sensor));
-            //try {
-            //    if (! $handler instanceof Handler) {
-            //        return;
-            //    }
-
-            //    $handler->reportable($sensor->exception(...));
-            //} catch (Exception $e) {
-            //    //
-            //}
-        //});
-        new class {
-            public function __invoke(ExceptionHandler $handler) {
-                    if (! $handler instanceof Handler) {
-                        return;
-                    }
-
-                    $handler->reportable(function (Throwable $exception) {
-                        try {
-                            $sensor->exception($exception));
-                        } catch (Exception $e) {
-                            //
-                        }
-                    });
-            }
-        };
+        $this->callAfterResolving(ExceptionHandler::class, Closure::fromCallable(new ExceptionHandlerResolvedHandler($sensor)));
 
         /*
          * Sensor: Request + final ingest.

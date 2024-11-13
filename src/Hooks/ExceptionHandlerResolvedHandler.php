@@ -18,6 +18,7 @@ class ExceptionHandlerResolvedHandler
     public function __invoke(ExceptionHandler $handler): void
     {
         if (! $handler instanceof Handler) {
+            // TODO: https://linear.app/laravel/issue/NW-156/manual-exception-capturing
             return;
         }
 
@@ -30,4 +31,3 @@ class ExceptionHandlerResolvedHandler
         });
     }
 }
-
