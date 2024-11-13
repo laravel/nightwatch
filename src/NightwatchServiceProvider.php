@@ -30,9 +30,11 @@ use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
+use Laravel\Nightwatch\Factories\SocketIngestFactory;
 use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
+use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
 use Laravel\Nightwatch\Hooks\RequestHandledListener;
@@ -165,19 +167,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function configureIngest(): void
     {
-        $this->app->singleton(LocalIngest::class, static function (Application $app) {
-            /** @var Config */
-            $config = $app->make('config');
-
-            $connector = new TimeoutConnector(
-                new TcpConnector,
-                $config->get('nightwatch.collector.connection_timeout'),
-            );
-
-            $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
-
-            return new SocketIngest($connector, $uri);
-        });
+        $this->app->singleton(LocalIngest::class, (new SocketIngestFactory)(...));
     }
 
     private function registerPublications(): void
@@ -203,6 +193,8 @@ final class NightwatchServiceProvider extends ServiceProvider
      */
     private function registerHooks(): void
     {
+        // TODO what of this can we delay?
+
         /** @var Dispatcher */
         $events = $this->app->make('events');
 
@@ -284,46 +276,14 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\Records\Exception
          */
-        $this->callAfterResolving(ExceptionHandler::class, Closure::fromCallable(new ExceptionHandlerResolvedHandler($sensor)));
+        $this->callAfterResolving(ExceptionHandler::class, (new ExceptionHandlerResolvedHandler($sensor))(...));
 
-        /*
-         * Sensor: Request + final ingest.
-         *
-         * TODO we need to determine what to do if the
-         * `whenRequestLifecycleIsLongerThan` method is not present. We likely
-         * want to hook into the terminating callback system.
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         * @see \Laravel\Nightwatch\ExecutionStage::End
+         * @see \Laravel\Nightwatch\Contracts\LocalIngest
          */
-        $this->callAfterResolving(HttpKernelContract::class, static function (HttpKernelContract $kernel, Application $app) use ($sensor) {
-            try {
-                if (! $kernel instanceof HttpKernel) {
-                    return;
-                }
-
-                if (! class_exists(Terminating::class)) {
-                    $kernel->setGlobalMiddleware([
-                        TerminatingMiddleware::class, // Check this isn't a memory leak in Octane
-                        ...$kernel->getGlobalMiddleware(),
-                    ]);
-                }
-
-                $kernel->whenRequestLifecycleIsLongerThan(-1, static function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
-                    try {
-                        $sensor->stage(ExecutionStage::End);
-
-                        $sensor->request($request, $response);
-
-                        /** @var LocalIngest */
-                        $ingest = $app->make(LocalIngest::class);
-
-                        $ingest->write($sensor->flush());
-                    } catch (Exception $e) {
-                        //
-                    }
-                });
-            } catch (Exception $e) {
-                //
-            }
-        });
+        $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($sensor))(...));
 
         return;
 
