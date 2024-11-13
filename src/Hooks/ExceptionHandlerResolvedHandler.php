@@ -17,17 +17,8 @@ class ExceptionHandlerResolvedHandler
 
     public function __invoke(ExceptionHandler $handler): void
     {
-        if (! $handler instanceof Handler) {
-            // TODO: https://linear.app/laravel/issue/NW-156/manual-exception-capturing
-            return;
+        if ($handler instanceof Handler) {
+            $handler->reportable(new ReportableHandler($this->sensor));
         }
-
-        $handler->reportable(function (Throwable $exception) {
-            try {
-                $this->sensor->exception($exception);
-            } catch (Exception $e) {
-                //
-            }
-        });
     }
 }
