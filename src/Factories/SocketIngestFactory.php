@@ -13,14 +13,27 @@ class SocketIngestFactory
     public function __invoke(Application $app): SocketIngest
     {
         /** @var Repository */
-        $config = $app->make('config');
+        $repository = $app->make(Repository::class);
+        $config = $repository->get('nightwatch');
+        if (! is_array($config)) {
+            $config = [];
+        }
 
-        $connector = new TimeoutConnector(
-            new TcpConnector,
-            $config->get('nightwatch.collector.connection_timeout'),
-        );
+        $timeout = $config['collector']['connection_timeout'] ?? null;
+        if (! is_float($timeout)) {
+            if (is_numeric($timeout)) {
+                $timeout = (float) $timeout;
+            } else {
+                $timeout = 0.2;
+            }
+        }
 
-        $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
+        $uri = $config['agent']['uri'] ?? null;
+        if (! is_string($uri)) {
+            $uri = '127.0.0.1:2357';
+        }
+
+        $connector = new TimeoutConnector(new TcpConnector, $timeout);
 
         return new SocketIngest($connector, $uri);
     }

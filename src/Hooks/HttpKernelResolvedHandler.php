@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
+use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Events\Terminating;

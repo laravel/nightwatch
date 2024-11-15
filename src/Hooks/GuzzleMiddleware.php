@@ -26,25 +26,24 @@ final class GuzzleMiddleware
         return function (RequestInterface $request, array $options) use ($handler) {
             try {
                 $startMicrotime = $this->clock->microtime();
-
-                return $handler($request, $options)
-                    ->then(function (ResponseInterface $response) use ($request, $startMicrotime) {
-                        try {
-                            $endMicrotime = $this->clock->microtime();
-
-                            $this->sensor->outgoingRequest(
-                                $startMicrotime, $endMicrotime,
-                                $request, $response,
-                            );
-
-                            return $response;
-                        } catch (Exception $e) {
-                            //
-                        }
-                    });
             } catch (Exception $e) {
-                //
+                return $handler($request, $options);
             }
+
+            return $handler($request, $options)->then(function (ResponseInterface $response) use ($request, $startMicrotime) {
+                try {
+                    $endMicrotime = $this->clock->microtime();
+
+                    $this->sensor->outgoingRequest(
+                        $startMicrotime, $endMicrotime,
+                        $request, $response,
+                    );
+                } catch (Exception $e) {
+                    //
+                }
+
+                return $response;
+            });
         };
     }
 }

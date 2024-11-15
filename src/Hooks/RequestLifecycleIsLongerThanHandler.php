@@ -24,9 +24,17 @@ class RequestLifecycleIsLongerThanHandler
     {
         try {
             $this->sensor->stage(ExecutionStage::End);
+        } catch (Exception $e) {
+            //
+        }
 
+        try {
             $this->sensor->request($request, $response);
+        } catch (Exception $e) {
+            //
+        }
 
+        try {
             // TODO: would caching this locally in a class variable be useful
             // for Octane?
             /** @var LocalIngest */

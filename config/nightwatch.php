@@ -15,8 +15,7 @@ return [
     ],
 
     'agent' => [
-        'address' => '127.0.0.1',
-        'port' => '9247',
+        'uri' => '127.0.0.1:2357',
         'connection_limit' => 20,
         'buffer_threshold' => 10 * 1_000 * 1_000, // 5 MB
     ],

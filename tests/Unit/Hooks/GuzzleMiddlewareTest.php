@@ -39,10 +39,11 @@ it('gracefully handles exceptions in the before middleware', function () {
 
     $middleware = new GuzzleMiddleware($sensor, $clock);
 
-    $stack = $middleware(static function () {});
-    $stack(new Request('GET', '/test'), []);
+    $stack = $middleware(fn () => new Response(body: 'ok'));
+    $response = $stack(new Request('GET', '/test'), []);
 
     $this->assertTrue($clock->thrown);
+    $this->assertSame('ok', (string) $response->getBody());
 });
 
 it('gracefully handles exceptions in the after middleware', function () {
@@ -60,9 +61,10 @@ it('gracefully handles exceptions in the after middleware', function () {
         }
     };
     $middleware = new GuzzleMiddleware($sensor, app(Clock::class));
-    $stack = $middleware(fn () => new FulfilledPromise(new Response()));
+    $stack = $middleware(fn () => new FulfilledPromise(new Response(body: 'ok')));
 
-    $stack(new Request('GET', '/test'), [])->wait();
+    $response = $stack(new Request('GET', '/test'), [])->wait();
 
     $this->assertTrue($sensor->thrown);
+    $this->assertSame('ok', (string) $response->getBody());
 });

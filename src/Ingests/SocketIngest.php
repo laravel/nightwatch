@@ -20,28 +20,14 @@ final class SocketIngest implements LocalIngest
         //
     }
 
-    /**
-     * TODO retry / fallback logic
-     * TODO protocol?
-     * TODO should we put a timeout on this side?
-     * $timeoutTimer = Loop::addTimer($timeout, function () use ($connection) {
-     *     $this->error('Sending data timed out.');
-     *     $connection->close();
-     * });
-     * TODO error handling?
-     */
     public function write(string $payload): void
     {
         if ($payload === '') {
             return;
         }
 
-        // try {
         $connection = await($this->connector->connect($this->uri));
 
         $connection->end($payload);
-        // } catch (Throwable $e) {
-        //     // TODO what to do with this failure?
-        // }
     }
 }
