@@ -20,13 +20,15 @@ class RequestLifecycleIsLongerThanHandler
         //
     }
 
-    public function __invoke(Carbon $startedAt, Request $request, Response $response)
+    public function __invoke(Carbon $startedAt, Request $request, Response $response): void
     {
         try {
             $this->sensor->stage(ExecutionStage::End);
 
             $this->sensor->request($request, $response);
 
+            // TODO: would caching this locally in a class variable be useful
+            // for Octane?
             /** @var LocalIngest */
             $ingest = $this->app->make(LocalIngest::class);
 

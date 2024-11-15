@@ -14,9 +14,13 @@ class RouteMatchedListener
     {
         $middleware = $event->route->action['middleware'] ?? [];
 
-        $middleware[] = RouteMiddleware::class; // TODO ensure adding these is not a memory leak in Octane (event though Laravel will make sure they are unique)
+        // TODO check this isn't a memory leak in Octane. When checking this one
+        // remember that Laravel will automaticall deduplicate middleware, so you
+        // will need to manually inspect the middleware array.
+        $middleware[] = RouteMiddleware::class;
 
         if (! class_exists(Terminating::class)) {
+            // TODO check this isn't a memory leak in octane.
             array_unshift($middleware, TerminatingMiddleware::class);
         }
 

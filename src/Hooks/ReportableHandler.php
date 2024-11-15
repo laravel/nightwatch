@@ -13,7 +13,7 @@ class ReportableHandler
         //
     }
 
-    public function __invoke(Throwable $exception)
+    public function __invoke(Throwable $exception): void
     {
         try {
             $this->sensor->exception($exception);

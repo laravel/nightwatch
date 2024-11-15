@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch;
 
-use Closure;
 use Exception;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
@@ -16,9 +15,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Events\RequestHandled;
-use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Http\Client\Factory as Http;
-use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
@@ -45,7 +42,6 @@ use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\Ingests\HttpIngest;
 use Laravel\Nightwatch\Ingests\NullIngest;
-use Laravel\Nightwatch\Ingests\SocketIngest;
 use Laravel\Nightwatch\Providers\PeakMemory;
 use Laravel\Nightwatch\Records\ExecutionState;
 use React\EventLoop\StreamSelectLoop;
@@ -53,11 +49,8 @@ use React\Http\Browser;
 use React\Socket\Connector;
 use React\Socket\LimitingServer;
 use React\Socket\ServerInterface;
-use React\Socket\TcpConnector;
 use React\Socket\TcpServer;
-use React\Socket\TimeoutConnector;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\HttpFoundation\Response;
 
 use function class_exists;
 use function defined;
@@ -285,57 +278,55 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($sensor))(...));
 
-        return;
+        //$events->listen([CacheMissed::class, CacheHit::class], static function (CacheMissed|CacheHit $event) use ($sensor) {
+        //    try {
+        //        $sensor->cacheEvent($event);
+        //    } catch (Exception $e) {
+        //        //
+        //    }
+        //});
 
-        $events->listen([CacheMissed::class, CacheHit::class], static function (CacheMissed|CacheHit $event) use ($sensor) {
-            try {
-                $sensor->cacheEvent($event);
-            } catch (Exception $e) {
-                //
-            }
-        });
+        //$events->listen(JobQueued::class, static function (JobQueued $event) use ($sensor) {
+        //    try {
+        //        $sensor->queuedJob($sensor);
+        //    } catch (Exception $e) {
+        //        //
+        //    }
+        //});
 
-        $events->listen(JobQueued::class, static function (JobQueued $event) use ($sensor) {
-            try {
-                $sensor->queuedJob($sensor);
-            } catch (Exception $e) {
-                //
-            }
-        });
+        //$this->callAfterResolving(Http::class, static function (Http $http) use ($sensor, $clock) {
+        //    try {
+        //        $http->globalMiddleware(new GuzzleMiddleware($sensor, $clock));
+        //    } catch (Exception $e) {
+        //        //
+        //    }
+        //});
 
-        $this->callAfterResolving(Http::class, static function (Http $http) use ($sensor, $clock) {
-            try {
-                $http->globalMiddleware(new GuzzleMiddleware($sensor, $clock));
-            } catch (Exception $e) {
-                //
-            }
-        });
+        //$this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor) {
+        //    try {
+        //        if (! $kernel instanceof ConsoleKernel) {
+        //            return;
+        //        }
 
-        $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor) {
-            try {
-                if (! $kernel instanceof ConsoleKernel) {
-                    return;
-                }
+        //        $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
+        //            try {
+        //                if (! $this->app->runningInConsole()) {
+        //                    return;
+        //                }
 
-                $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
-                    try {
-                        if (! $this->app->runningInConsole()) {
-                            return;
-                        }
+        //                $sensor->command($startedAt, $input, $status);
+        //                /** @var LocalIngest */
+        //                $ingest = $app->make(LocalIngest::class);
 
-                        $sensor->command($startedAt, $input, $status);
-                        /** @var LocalIngest */
-                        $ingest = $app->make(LocalIngest::class);
-
-                        $ingest->write($sensor->flush());
-                    } catch (Exception $e) {
-                        //
-                    }
-                });
-            } catch (Exception $e) {
-                //
-            }
-        });
+        //                $ingest->write($sensor->flush());
+        //            } catch (Exception $e) {
+        //                //
+        //            }
+        //        });
+        //    } catch (Exception $e) {
+        //        //
+        //    }
+        //});
     }
 
     private function disabled(): bool
