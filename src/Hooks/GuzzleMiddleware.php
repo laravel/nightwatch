@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\SensorManager;
 use Psr\Http\Message\RequestInterface;
@@ -27,6 +28,8 @@ final class GuzzleMiddleware
             try {
                 $startMicrotime = $this->clock->microtime();
             } catch (Exception $e) {
+                Log::critical('[nightwatch] '.$e->getMessage());
+
                 return $handler($request, $options);
             }
 
@@ -39,7 +42,7 @@ final class GuzzleMiddleware
                         $request, $response,
                     );
                 } catch (Exception $e) {
-                    //
+                    Log::critical('[nightwatch] '.$e->getMessage());
                 }
 
                 return $response;

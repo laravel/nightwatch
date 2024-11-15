@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Exception;
 use Illuminate\Routing\Events\PreparingResponse;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
@@ -22,7 +23,7 @@ class PreparingResponseListener
                 $this->sensor->stage(ExecutionStage::Render);
             }
         } catch (Exception $e) {
-            //
+            Log::critical('[nightwatch] '.$e->getMessage());
         }
     }
 }

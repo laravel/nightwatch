@@ -20,6 +20,6 @@ final class LogIngest implements LocalIngest
 
     public function write(string $payload): void
     {
-        $this->log->debug('[nightwatch:ingest] '.$payload);
+        $this->log->debug('[nightwatch] Ingested '.$payload);
     }
 }

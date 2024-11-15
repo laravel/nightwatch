@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Hooks;
 use Closure;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
@@ -31,7 +32,7 @@ final class TerminatingMiddleware
                 $this->sensor->stage(ExecutionStage::Terminating);
             }
         } catch (Exception $e) {
-            //
+            Log::critical('[nightwatch] '.$e->getMessage());
         }
     }
 }

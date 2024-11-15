@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\SensorManager;
 use Throwable;
 
@@ -18,7 +19,7 @@ class ReportableHandler
         try {
             $this->sensor->exception($exception);
         } catch (Exception $e) {
-            //
+            Log::critical('[nightwatch] '.$e->getMessage());
         }
     }
 }
