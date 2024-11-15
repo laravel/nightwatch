@@ -30,7 +30,6 @@ use Throwable;
 
 /**
  * TODO refresh application instance.
- * TODO wrap everything in resuce so we never interfere with the running application.
  *
  * @internal
  */

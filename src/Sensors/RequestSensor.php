@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
@@ -13,7 +14,9 @@ use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\UserProvider;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Exception\UnexpectedValueException;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 use function array_sum;
 use function hash;
@@ -44,17 +47,35 @@ final class RequestSensor
     {
         /** @var Route|null */
         $route = $request->route();
+
         /** @var 'http'|'https' */
         $scheme = $request->getScheme();
+
         /** @var list<string> */
         $routeMethods = $route?->methods() ?? [];
+
         sort($routeMethods);
+
         $routeDomain = $route?->getDomain() ?? '';
+
         $routePath = match ($routeUri = $route?->uri()) {
             null => '',
             '/' => '/',
             default => "/{$routeUri}",
         };
+
+        $port = (int) ($request->getPort() ?? match ($scheme) {
+            'http' => 80,
+            'https' => 443,
+        });
+
+        $query = '';
+
+        try {
+            $query = $request->server->getString('QUERY_STRING');
+        } catch (UnexpectedValueException $e) {
+            //
+        }
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
             timestamp: $this->clock->executionStartInMicrotime(),
@@ -67,12 +88,9 @@ final class RequestSensor
             scheme: $scheme,
             url_user: $request->getUser() ?? '',
             host: $request->getHost(),
-            port: (int) ($request->getPort() ?? match ($scheme) {
-                'http' => 80,
-                'https' => 443,
-            }),
+            port: $port,
             path: $request->getPathInfo(),
-            query: rescue(static fn () => $request->server->getString('QUERY_STRING'), '', report: false),
+            query: $query,
             route_name: $route?->getName() ?? '',
             route_methods: $routeMethods,
             route_domain: $routeDomain,
