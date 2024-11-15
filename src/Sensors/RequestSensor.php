@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\Providers\PeakMemory;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\UserProvider;
@@ -33,7 +33,7 @@ final class RequestSensor
     public function __construct(
         private Clock $clock,
         private ExecutionState $executionState,
-        private PeakMemoryProvider $peakMemory,
+        private PeakMemory $peakMemory,
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
     ) {

@@ -27,7 +27,6 @@ use Illuminate\Support\Str;
 use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
-use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Factories\SocketIngestFactory;
 use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
@@ -74,7 +73,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->configureAgent();
         $this->configureIngest();
         $this->configureMiddleware();
-        $this->configurePeakMemoryProvider();
     }
 
     public function boot(): void
@@ -103,11 +101,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         if (! class_exists(Terminating::class)) {
             $this->app->singleton(TerminatingMiddleware::class);
         }
-    }
-
-    private function configurePeakMemoryProvider(): void
-    {
-        $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
     }
 
     /**
@@ -214,10 +207,11 @@ final class NightwatchServiceProvider extends ServiceProvider
         ));
 
         $userProvider = new UserProvider($this->app->make(AuthManager::class));
+        $peakMemory = $this->app->instance(PeakMemory::class, new PeakMemory);
 
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
-            $state, $clock, $location, $userProvider, $this->app,
+            $state, $clock, $location, $userProvider, $peakMemory
         ));
 
         //

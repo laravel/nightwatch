@@ -2,17 +2,26 @@
 
 namespace Laravel\Nightwatch\Providers;
 
-use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-
+use Closure;
 use function memory_get_peak_usage;
 
 /**
  * @internal
  */
-final class PeakMemory implements PeakMemoryProvider
+final class PeakMemory
 {
+    /**
+     * @var (Closure(): int)
+     */
+    public Closure $peakMemoryResolver;
+
+    public function __construct()
+    {
+        $this->peakMemoryResolver = static fn () => memory_get_peak_usage(true);
+    }
+
     public function bytes(): int
     {
-        return memory_get_peak_usage(true);
+        return call_user_func($this->peakMemoryResolver);
     }
 }

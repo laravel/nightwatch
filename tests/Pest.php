@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Event;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\LocalIngest;
-use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Location;
+use Laravel\Nightwatch\Providers\PeakMemory;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Tests\FakeIngest;
 
@@ -66,18 +66,7 @@ function setExecutionId(string $executionId): void
 
 function setPeakMemory(int $value): void
 {
-    App::singleton(PeakMemoryProvider::class, fn () => new class($value) implements PeakMemoryProvider
-    {
-        public function __construct(private int $bytes)
-        {
-            //
-        }
-
-        public function bytes(): int
-        {
-            return $this->bytes;
-        }
-    });
+    app(PeakMemory::class)->peakMemoryResolver = fn () => $value;
 }
 
 function fakeIngest(): FakeIngest

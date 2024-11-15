@@ -43,19 +43,19 @@ final class CacheEventSensor
             $this->executionState->cache_misses++;
         }
 
-        $this->recordsBuffer->writeCacheEvent(new CacheEvent(
-            timestamp: (int) $nowMicrotime,
-            deploy: $this->executionState->deploy,
-            server: $this->server,
-            group: hash('sha256', ''),
-            trace_id: $this->traceId,
-            execution_context: 'request',
-            execution_id: '00000000-0000-0000-0000-000000000000',
-            execution_offset: $this->clock->executionOffset($nowMicrotime),
-            user: $this->user->id(),
-            store: $event->storeName ?? '',
-            key: $event->key,
-            type: $type,
-        ));
+        // $this->recordsBuffer->writeCacheEvent(new CacheEvent(
+        //     timestamp: (int) $nowMicrotime,
+        //     deploy: $this->executionState->deploy,
+        //     server: $this->server,
+        //     group: hash('sha256', ''),
+        //     trace_id: $this->traceId,
+        //     execution_context: 'request',
+        //     execution_id: '00000000-0000-0000-0000-000000000000',
+        //     execution_offset: $this->clock->executionOffset($nowMicrotime),
+        //     user: $this->user->id(),
+        //     store: $event->storeName ?? '',
+        //     key: $event->key,
+        //     type: $type,
+        // ));
     }
 }

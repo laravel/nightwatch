@@ -11,7 +11,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
+use Laravel\Nightwatch\Providers\PeakMemory;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
@@ -36,25 +36,19 @@ use Throwable;
  */
 class SensorManager
 {
-    private ?CacheEventSensor $cacheEventSensor;
+    // private ?CacheEventSensor $cacheEventSensor;
     private ?ExceptionSensor $exceptionSensor;
-    private ?OutgoingRequestSensor $outgoingRequestSensor;
+    // private ?OutgoingRequestSensor $outgoingRequestSensor;
     private ?QuerySensor $querySensor;
-    private ?QueuedJobSensor $queuedJobSensor;
+    // private ?QueuedJobSensor $queuedJobSensor;
     private ?StageSensor $stageSensor;
-
-    private ?PeakMemoryProvider $peakMemoryProvider;
-
-    private ?Config $config;
-
-    private ?UserProvider $userProvider;
 
     public function __construct(
         private ExecutionState $state,
         private Clock $clock,
         private Location $location,
         private UserProvider $user,
-        private Application $app,
+        private PeakMemory $peakMemory,
         private RecordsBuffer $recordsBuffer = new RecordsBuffer,
     ) {
         //
@@ -62,7 +56,7 @@ class SensorManager
 
     public function stage(ExecutionStage $executionStage): void
     {
-        $sensor = $this->stageSensor ?? new StageSensor(
+        $sensor = $this->stageSensor ??= new StageSensor(
             clock: $this->clock,
             executionState: $this->state,
         );
@@ -70,17 +64,12 @@ class SensorManager
         $sensor($executionStage);
     }
 
-    public function executionStage(): ExecutionStage
-    {
-        return $this->state->stage;
-    }
-
     public function request(Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
             clock: $this->clock,
             executionState: $this->state,
-            peakMemory: $this->peakMemoryProvider(),
+            peakMemory: $this->peakMemory,
             recordsBuffer: $this->recordsBuffer,
             user: $this->user,
         );
@@ -95,14 +84,14 @@ class SensorManager
      */
     public function command(Carbon $startedAt, InputInterface $input, int $status): void
     {
-        $sensor = new CommandSensor(
-            recordsBuffer: $this->recordsBuffer,
-            executionState: $this->state,
-            peakMemory: $this->peakMemoryProvider(),
-            user: $this->user,
-        );
+        // $sensor = new CommandSensor(
+        //     recordsBuffer: $this->recordsBuffer,
+        //     executionState: $this->state,
+        //     peakMemory: $this->peakMemoryProvider(),
+        //     user: $this->user,
+        // );
 
-        $sensor($startedAt, $input, $status);
+        // $sensor($startedAt, $input, $status);
     }
 
     /**
@@ -123,26 +112,26 @@ class SensorManager
 
     public function cacheEvent(CacheMissed|CacheHit $event): void
     {
-        $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
-            recordsBuffer: $this->recordsBuffer,
-            executionState: $this->state,
-            clock: $this->clock,
-            user: $this->user,
-        );
+        // $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
+        //     recordsBuffer: $this->recordsBuffer,
+        //     executionState: $this->state,
+        //     clock: $this->clock,
+        //     user: $this->user,
+        // );
 
-        $sensor($event);
+        // $sensor($event);
     }
 
     public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
-        $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
-            recordsBuffer: $this->recordsBuffer,
-            executionState: $this->state,
-            user: $this->user,
-            clock: $this->clock,
-        );
+        // $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
+        //     recordsBuffer: $this->recordsBuffer,
+        //     executionState: $this->state,
+        //     user: $this->user,
+        //     clock: $this->clock,
+        // );
 
-        $sensor($startMicrotime, $endMicrotime, $request, $response);
+        // $sensor($startMicrotime, $endMicrotime, $request, $response);
     }
 
     public function exception(Throwable $e): void
@@ -160,20 +149,15 @@ class SensorManager
 
     public function queuedJob(JobQueued $event): void
     {
-        $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
-            recordsBuffer: $this->recordsBuffer,
-            executionState: $this->state,
-            user: $this->user,
-            clock: $this->clock,
-            config: $this->app->make('config'),
-        );
+        // $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
+        //     recordsBuffer: $this->recordsBuffer,
+        //     executionState: $this->state,
+        //     user: $this->user,
+        //     clock: $this->clock,
+        //     config: $this->app->make('config'),
+        // );
 
-        $sensor($event);
-    }
-
-    private function peakMemoryProvider(): PeakMemoryProvider
-    {
-        return $this->peakMemoryProvider ??= $this->app->make(PeakMemoryProvider::class);
+        // $sensor($event);
     }
 
     public function flush(): string
@@ -183,18 +167,18 @@ class SensorManager
 
     public function prepareForNextInvocation(): void
     {
-        $this->recordsBuffer = new RecordsBuffer;
-        $this->clock->executionStartInMicrotime = $this->clock->microtime();
-        // $this->executionState = new ExecutionState(
-        //     traceId: $traceId = (string) Str::uuid(),
-        //     executionId: $traceId,
-        // );
+        // $this->recordsBuffer = new RecordsBuffer;
+        // $this->clock->executionStartInMicrotime = $this->clock->microtime();
+        // // $this->executionState = new ExecutionState(
+        // //     traceId: $traceId = (string) Str::uuid(),
+        // //     executionId: $traceId,
+        // // );
 
-        $this->cacheEventSensor = null;
-        $this->exceptionSensor = null;
-        $this->outgoingRequestSensor = null;
-        $this->querySensor = null;
-        $this->queuedJobSensor = null;
-        // ...
+        // $this->cacheEventSensor = null;
+        // $this->exceptionSensor = null;
+        // $this->outgoingRequestSensor = null;
+        // $this->querySensor = null;
+        // $this->queuedJobSensor = null;
+        // // ...
     }
 }

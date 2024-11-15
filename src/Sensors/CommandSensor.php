@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Carbon\Carbon;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\UserProvider;
@@ -23,7 +22,7 @@ final class CommandSensor
     public function __construct(
         private RecordsBuffer $recordsBuffer,
         private ExecutionState $executionState,
-        private PeakMemoryProvider $peakMemory,
+        private PeakMemory $peakMemory,
         private UserProvider $user,
         private string $traceId,
         private string $server,
