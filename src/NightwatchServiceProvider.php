@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch;
 
 use Exception;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Config\Repository as Config;
@@ -40,8 +41,8 @@ use Laravel\Nightwatch\Hooks\RouteMatchedListener;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
-use Laravel\Nightwatch\Ingests\HttpIngest;
-use Laravel\Nightwatch\Ingests\NullIngest;
+use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
+use Laravel\Nightwatch\Ingests\Remote\NullIngest;
 use Laravel\Nightwatch\Providers\PeakMemory;
 use Laravel\Nightwatch\Records\ExecutionState;
 use React\EventLoop\StreamSelectLoop;
@@ -212,9 +213,11 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->app->basePath(), $this->app->publicPath(),
         ));
 
+        $userProvider = new UserProvider($this->app->make(AuthManager::class));
+
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
-            $state, $clock, $location, $this->app,
+            $state, $clock, $location, $userProvider, $this->app,
         ));
 
         //

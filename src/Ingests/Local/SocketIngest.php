@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Nightwatch\Ingests;
+namespace Laravel\Nightwatch\Ingests\Local;
 
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use React\Socket\ConnectorInterface;

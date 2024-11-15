@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Nightwatch\Ingests;
+namespace Laravel\Nightwatch\Ingests\Local;
 
 use Illuminate\Log\LogManager;
 use Laravel\Nightwatch\Contracts\LocalIngest;
@@ -20,6 +20,6 @@ final class LogIngest implements LocalIngest
 
     public function write(string $payload): void
     {
-        $this->log->debug('Nightwatch ingest: '.json_encode(json_decode($payload), flags: JSON_PRETTY_PRINT));
+        $this->log->debug('[nightwatch:ingest] '.$payload);
     }
 }

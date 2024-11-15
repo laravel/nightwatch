@@ -37,15 +37,10 @@ use Throwable;
 class SensorManager
 {
     private ?CacheEventSensor $cacheEventSensor;
-
     private ?ExceptionSensor $exceptionSensor;
-
     private ?OutgoingRequestSensor $outgoingRequestSensor;
-
     private ?QuerySensor $querySensor;
-
     private ?QueuedJobSensor $queuedJobSensor;
-
     private ?StageSensor $stageSensor;
 
     private ?PeakMemoryProvider $peakMemoryProvider;
@@ -58,6 +53,7 @@ class SensorManager
         private ExecutionState $state,
         private Clock $clock,
         private Location $location,
+        private UserProvider $user,
         private Application $app,
         private RecordsBuffer $recordsBuffer = new RecordsBuffer,
     ) {
@@ -66,10 +62,7 @@ class SensorManager
 
     public function stage(ExecutionStage $executionStage): void
     {
-        // This cannot be cached because the clock is resolved very early on.
-        // We likely need to make the clock mutable rather than replacing the
-        // instance.
-        $sensor = new StageSensor(
+        $sensor = $this->stageSensor ?? new StageSensor(
             clock: $this->clock,
             executionState: $this->state,
         );
@@ -89,7 +82,7 @@ class SensorManager
             executionState: $this->state,
             peakMemory: $this->peakMemoryProvider(),
             recordsBuffer: $this->recordsBuffer,
-            user: $this->user(),
+            user: $this->user,
         );
 
         $sensor($request, $response);
@@ -106,7 +99,7 @@ class SensorManager
             recordsBuffer: $this->recordsBuffer,
             executionState: $this->state,
             peakMemory: $this->peakMemoryProvider(),
-            user: $this->user(),
+            user: $this->user,
         );
 
         $sensor($startedAt, $input, $status);
@@ -122,7 +115,7 @@ class SensorManager
             executionState: $this->state,
             location: $this->location,
             recordsBuffer: $this->recordsBuffer,
-            user: $this->user(),
+            user: $this->user,
         );
 
         $sensor($event, $trace);
@@ -134,7 +127,7 @@ class SensorManager
             recordsBuffer: $this->recordsBuffer,
             executionState: $this->state,
             clock: $this->clock,
-            user: $this->user(),
+            user: $this->user,
         );
 
         $sensor($event);
@@ -145,7 +138,7 @@ class SensorManager
         $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
             recordsBuffer: $this->recordsBuffer,
             executionState: $this->state,
-            user: $this->user(),
+            user: $this->user,
             clock: $this->clock,
         );
 
@@ -159,7 +152,7 @@ class SensorManager
             executionState: $this->state,
             location: $this->location,
             recordsBuffer: $this->recordsBuffer,
-            user: $this->user(),
+            user: $this->user,
         );
 
         $sensor($e);
@@ -170,9 +163,9 @@ class SensorManager
         $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
             recordsBuffer: $this->recordsBuffer,
             executionState: $this->state,
-            user: $this->user(),
+            user: $this->user,
             clock: $this->clock,
-            config: $this->config(),
+            config: $this->app->make('config'),
         );
 
         $sensor($event);
@@ -186,16 +179,6 @@ class SensorManager
     public function flush(): string
     {
         return $this->recordsBuffer->flush();
-    }
-
-    private function user(): UserProvider
-    {
-        return $this->userProvider ??= $this->app->make(UserProvider::class);
-    }
-
-    private function config(): Config
-    {
-        return $this->config ??= $this->app->make('config');
     }
 
     public function prepareForNextInvocation(): void
