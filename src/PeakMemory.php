@@ -3,6 +3,8 @@
 namespace Laravel\Nightwatch;
 
 use Closure;
+
+use function call_user_func;
 use function memory_get_peak_usage;
 
 /**

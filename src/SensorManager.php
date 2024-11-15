@@ -11,7 +11,6 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\PeakMemory;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
@@ -37,8 +36,10 @@ class SensorManager
 {
     // private ?CacheEventSensor $cacheEventSensor;
     private ?ExceptionSensor $exceptionSensor;
+
     // private ?OutgoingRequestSensor $outgoingRequestSensor;
     private ?QuerySensor $querySensor;
+
     // private ?QueuedJobSensor $queuedJobSensor;
     private ?StageSensor $stageSensor;
 

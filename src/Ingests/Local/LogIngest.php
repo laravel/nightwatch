@@ -5,9 +5,6 @@ namespace Laravel\Nightwatch\Ingests\Local;
 use Illuminate\Log\LogManager;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 
-use function json_decode;
-use function json_encode;
-
 /**
  * @internal
  */

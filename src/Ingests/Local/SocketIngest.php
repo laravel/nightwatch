@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch\Ingests\Local;
 
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use React\Socket\ConnectorInterface;
-use Throwable;
 
 use function React\Async\await;
 
