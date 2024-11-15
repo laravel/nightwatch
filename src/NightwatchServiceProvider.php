@@ -27,6 +27,7 @@ use Illuminate\Support\Str;
 use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Factories\AgentFactory;
 use Laravel\Nightwatch\Factories\SocketIngestFactory;
 use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
@@ -42,7 +43,7 @@ use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
 use Laravel\Nightwatch\Ingests\Remote\NullIngest;
-use Laravel\Nightwatch\Providers\PeakMemory;
+use Laravel\Nightwatch\PeakMemory;
 use Laravel\Nightwatch\Records\ExecutionState;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
@@ -103,53 +104,9 @@ final class NightwatchServiceProvider extends ServiceProvider
         }
     }
 
-    /**
-     * TODO test if the timeout connector timeout only applies to connection
-     * time and not transfer time.
-     */
     private function configureAgent(): void
     {
-        $this->app->singleton(Agent::class, static function (Application $app) {
-            /** @var Config */
-            $config = $app->make('config');
-            /** @var Clock */
-            $clock = $app->make(Clock::class);
-
-            $loop = new StreamSelectLoop;
-
-            // Creating an instance of the `TcpServer` will automatically start
-            // the server.  To ensure do not start the server when the command
-            // is constructed, but only when called, we make sure to resolve
-            // the server in the handle method instead.
-            $app->when([Agent::class, 'handle'])
-                ->needs(ServerInterface::class)
-                ->give(static function () use ($config, $loop) {
-                    $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
-
-                    $server = new TcpServer($uri, $loop);
-
-                    return new LimitingServer($server, (int) $config->get('nightwatch.agent.connection_limit'));
-                });
-
-            $buffer = new PayloadBuffer($config->get('nightwatch.agent.buffer_threshold'));
-
-            $connector = new Connector([
-                'timeout' => $config->get('nightwatch.http.connection_timeout'),
-            ], $loop);
-
-            $client = new Client((new Browser($connector, $loop))
-                ->withTimeout($config->get('nightwatch.agent.timeout'))
-                ->withHeader('User-Agent', 'NightwatchAgent/1')
-                ->withHeader('Content-Type', 'application/octet-stream')
-                ->withHeader('Content-Encoding', 'gzip')
-                ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
-                ->withBase('https://khq5ni773stuucqrxebn3a5zbi0ypexu.lambda-url.us-east-1.on.aws/'));
-
-            $ingest = new HttpIngest($client, $clock, $config->get('nightwatch.http.concurrent_request_limit'));
-            // $ingest = new NullIngest;
-
-            return new Agent($buffer, $ingest, $loop, $config->get('nightwatch.collector.timeout'));
-        });
+        $this->app->singleton(Agent::class, (new AgentFactory)(...));
     }
 
     private function configureIngest(): void

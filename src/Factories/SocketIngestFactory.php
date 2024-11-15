@@ -13,7 +13,7 @@ class SocketIngestFactory
     public function __invoke(Application $app): SocketIngest
     {
         /** @var Repository */
-        $repository = $app->make(Repository::class);
+        $repository = $app->make('config');
         $config = $repository->get('nightwatch');
         if (! is_array($config)) {
             $config = [];

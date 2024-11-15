@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Nightwatch\Providers;
+namespace Laravel\Nightwatch;
 
 use Closure;
 use function memory_get_peak_usage;

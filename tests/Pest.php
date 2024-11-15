@@ -11,7 +11,7 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Location;
-use Laravel\Nightwatch\Providers\PeakMemory;
+use Laravel\Nightwatch\PeakMemory;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Tests\FakeIngest;
 

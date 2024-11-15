@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Providers\PeakMemory;
+use Laravel\Nightwatch\PeakMemory;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\UserProvider;
