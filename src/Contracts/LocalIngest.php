@@ -5,7 +5,7 @@ namespace Laravel\Nightwatch\Contracts;
 /**
  * @internal
  */
-interface Ingest
+interface LocalIngest
 {
     public function write(string $payload): void;
 }

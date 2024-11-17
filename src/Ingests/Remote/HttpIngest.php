@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Nightwatch\Ingests;
+namespace Laravel\Nightwatch\Ingests\Remote;
 
 use Laravel\Nightwatch\Client;
 use Laravel\Nightwatch\Clock;

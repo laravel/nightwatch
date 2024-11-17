@@ -18,7 +18,6 @@ beforeEach(function () {
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 
     Config::set('app.debug', false);
-    App::setBasePath(realpath(__DIR__.'/../../../'));
     ini_set('zend.exception_ignore_args', '0');
 });
 
@@ -150,7 +149,6 @@ it('captures aggregate query data on the request', function () {
 it('handles view exceptions', function () {
     expect(App::providerIsLoaded(IgnitionServiceProvider::class))->toBe(false);
 
-    App::setBasePath(realpath(__DIR__.'/../../../../nightwatch/workbench'));
     $ingest = fakeIngest();
     Route::view('exception', 'exception');
 
@@ -159,18 +157,17 @@ it('handles view exceptions', function () {
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exceptions.0.line', 0);
-    $ingest->assertLatestWrite('exceptions.0.file', 'resources/views/exception.blade.php');
+    $ingest->assertLatestWrite('exceptions.0.file', 'workbench/resources/views/exception.blade.php');
     $ingest->assertLatestWrite('exceptions.0.class', 'Exception');
     $ingest->assertLatestWrite('exceptions.0.message', 'Whoops!');
     $ingest->assertLatestWrite('exceptions.0.code', 999);
-    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', 'Exception,999,resources/views/exception.blade.php,'));
+    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', 'Exception,999,workbench/resources/views/exception.blade.php,'));
 });
 
 it('handles spatie view exceptions', function () {
     App::register(IgnitionServiceProvider::class);
     expect(App::providerIsLoaded(IgnitionServiceProvider::class))->toBe(true);
 
-    App::setBasePath(realpath(__DIR__.'/../../../../nightwatch/workbench'));
     $ingest = fakeIngest();
     Route::view('exception', 'exception');
 
@@ -179,11 +176,11 @@ it('handles spatie view exceptions', function () {
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exceptions.0.line', 6);
-    $ingest->assertLatestWrite('exceptions.0.file', 'resources/views/exception.blade.php');
+    $ingest->assertLatestWrite('exceptions.0.file', 'workbench/resources/views/exception.blade.php');
     $ingest->assertLatestWrite('exceptions.0.class', 'Exception');
     $ingest->assertLatestWrite('exceptions.0.message', 'Whoops!');
     $ingest->assertLatestWrite('exceptions.0.code', 999);
-    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', 'Exception,999,resources/views/exception.blade.php,6'));
+    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', 'Exception,999,workbench/resources/views/exception.blade.php,6'));
 });
 
 it('handles unknown lines for internal locations', function () {

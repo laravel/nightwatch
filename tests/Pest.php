@@ -7,10 +7,11 @@ use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Clock as NightwatchClock;
-use Laravel\Nightwatch\Contracts\Ingest;
-use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
+use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\Location;
+use Laravel\Nightwatch\PeakMemory;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Tests\FakeIngest;
 
@@ -18,7 +19,9 @@ use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\travelTo;
 
 pest()->extends(Tests\TestCase::class)->beforeEach(function () {
-    app(NightwatchClock::class)->microtimeResolver = fn () => (float) now()->format('U.u');
+    app(Clock::class)->microtimeResolver = fn () => (float) now()->format('U.u');
+    app()->setBasePath($path = realpath(__DIR__.'/../'));
+    app(Location::class)->setBasePath($path)->setPublicPath("{$path}/public");
 });
 
 function setExecutionStart(CarbonImmutable $timestamp): void
@@ -32,7 +35,7 @@ function setExecutionStart(CarbonImmutable $timestamp): void
 
 function syncClock(DateTimeInterface $timestamp): void
 {
-    app(NightwatchClock::class)->executionStartInMicrotime = (float) $timestamp->format('U.u');
+    app(Clock::class)->executionStartInMicrotime = (float) $timestamp->format('U.u');
     travelTo($timestamp);
 }
 
@@ -63,23 +66,12 @@ function setExecutionId(string $executionId): void
 
 function setPeakMemory(int $value): void
 {
-    App::singleton(PeakMemoryProvider::class, fn () => new class($value) implements PeakMemoryProvider
-    {
-        public function __construct(private int $bytes)
-        {
-            //
-        }
-
-        public function bytes(): int
-        {
-            return $this->bytes;
-        }
-    });
+    app(PeakMemory::class)->peakMemoryResolver = fn () => $value;
 }
 
 function fakeIngest(): FakeIngest
 {
-    return App::instance(Ingest::class, new FakeIngest);
+    return App::instance(LocalIngest::class, new FakeIngest);
 }
 
 function afterMigrations(Closure $callback)

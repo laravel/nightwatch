@@ -4,15 +4,17 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\PeakMemory;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\UserProvider;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Exception\UnexpectedValueException;
 use Symfony\Component\HttpFoundation\Response;
 
 use function array_sum;
@@ -21,7 +23,6 @@ use function implode;
 use function is_int;
 use function is_numeric;
 use function is_string;
-use function rescue;
 use function sort;
 use function strlen;
 
@@ -33,7 +34,7 @@ final class RequestSensor
     public function __construct(
         private Clock $clock,
         private ExecutionState $executionState,
-        private PeakMemoryProvider $peakMemory,
+        private PeakMemory $peakMemory,
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
     ) {
@@ -44,17 +45,35 @@ final class RequestSensor
     {
         /** @var Route|null */
         $route = $request->route();
+
         /** @var 'http'|'https' */
         $scheme = $request->getScheme();
+
         /** @var list<string> */
         $routeMethods = $route?->methods() ?? [];
+
         sort($routeMethods);
+
         $routeDomain = $route?->getDomain() ?? '';
+
         $routePath = match ($routeUri = $route?->uri()) {
             null => '',
             '/' => '/',
             default => "/{$routeUri}",
         };
+
+        $port = (int) ($request->getPort() ?? match ($scheme) {
+            'http' => 80,
+            'https' => 443,
+        });
+
+        $query = '';
+
+        try {
+            $query = $request->server->getString('QUERY_STRING');
+        } catch (UnexpectedValueException $e) {
+            Log::critical('[nightwatch] '.$e->getMessage());
+        }
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
             timestamp: $this->clock->executionStartInMicrotime(),
@@ -67,12 +86,9 @@ final class RequestSensor
             scheme: $scheme,
             url_user: $request->getUser() ?? '',
             host: $request->getHost(),
-            port: (int) ($request->getPort() ?? match ($scheme) {
-                'http' => 80,
-                'https' => 443,
-            }),
+            port: $port,
             path: $request->getPathInfo(),
-            query: rescue(fn () => $request->server->getString('QUERY_STRING'), '', report: false),
+            query: $query,
             route_name: $route?->getName() ?? '',
             route_methods: $routeMethods,
             route_domain: $routeDomain,

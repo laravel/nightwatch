@@ -2,12 +2,13 @@
 
 namespace Laravel\Nightwatch;
 
+use Exception;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\WritingKey;
-use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -16,11 +17,8 @@ use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Foundation\Events\Terminating;
-use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Foundation\Http\Events\RequestHandled;
-use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Http\Client\Factory as Http;
-use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
@@ -28,29 +26,26 @@ use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Console\Agent;
-use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
-use Laravel\Nightwatch\Contracts\PeakMemoryProvider;
-use Laravel\Nightwatch\Ingests\HttpIngest;
-use Laravel\Nightwatch\Ingests\NullIngest;
-use Laravel\Nightwatch\Ingests\SocketIngest;
-use Laravel\Nightwatch\Providers\PeakMemory;
+use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Factories\AgentFactory;
+use Laravel\Nightwatch\Factories\SocketIngestFactory;
+use Laravel\Nightwatch\Hooks\BootedHandler;
+use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
+use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
+use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
+use Laravel\Nightwatch\Hooks\PreparingResponseListener;
+use Laravel\Nightwatch\Hooks\QueryExecutedListener;
+use Laravel\Nightwatch\Hooks\RequestHandledListener;
+use Laravel\Nightwatch\Hooks\ResponsePreparedListener;
+use Laravel\Nightwatch\Hooks\RouteMatchedListener;
+use Laravel\Nightwatch\Hooks\RouteMiddleware;
+use Laravel\Nightwatch\Hooks\TerminatingListener;
+use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\Records\ExecutionState;
-use React\EventLoop\StreamSelectLoop;
-use React\Http\Browser;
-use React\Socket\Connector;
-use React\Socket\LimitingServer;
-use React\Socket\ServerInterface;
-use React\Socket\TcpConnector;
-use React\Socket\TcpServer;
-use React\Socket\TimeoutConnector;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\HttpFoundation\Response;
 
-use function array_unshift;
 use function class_exists;
-use function debug_backtrace;
 use function defined;
 use function microtime;
 
@@ -67,16 +62,10 @@ final class NightwatchServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app->singleton(SensorManager::class);
-        $this->app->singleton(NightwatchRouteMiddleware::class);
-        if (! class_exists(Terminating::class)) {
-            $this->app->singleton(NightwatchTerminatingMiddleware::class);
-        }
-        $this->app->singleton(PeakMemoryProvider::class, PeakMemory::class);
-        $this->configureLocation();
+        $this->mergeConfig();
         $this->configureAgent();
         $this->configureIngest();
-        $this->mergeConfig();
+        $this->configureMiddleware();
     }
 
     public function boot(): void
@@ -90,7 +79,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerCommands();
         }
 
-        $this->registerSensors();
+        $this->registerHooks();
     }
 
     private function mergeConfig(): void
@@ -98,75 +87,23 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
     }
 
-    private function configureLocation(): void
+    private function configureMiddleware(): void
     {
-        $this->app->singleton(Location::class, fn (Application $app) => new Location(
-            basePath: $app->basePath(),
-            publicPath: $app->publicPath(),
-        ));
+        $this->app->singleton(RouteMiddleware::class);
+
+        if (! class_exists(Terminating::class)) {
+            $this->app->singleton(TerminatingMiddleware::class);
+        }
     }
 
-    /**
-     * TODO test if the timeout connector timeout only applies to connection
-     * time and not transfer time.
-     */
     private function configureAgent(): void
     {
-        $this->app->singleton(Agent::class, function (Application $app) {
-            /** @var Config */
-            $config = $app->make('config');
-            /** @var Clock */
-            $clock = $app->make(Clock::class);
-
-            $loop = new StreamSelectLoop;
-
-            // Creating an instance of the `TcpServer` will automatically start
-            // the server.  To ensure do not start the server when the command
-            // is constructed, but only when called, we make sure to resolve
-            // the server in the handle method instead.
-            $app->when([Agent::class, 'handle'])
-                ->needs(ServerInterface::class)
-                ->give(function () use ($config, $loop) {
-                    $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
-
-                    $server = new TcpServer($uri, $loop);
-
-                    return new LimitingServer($server, (int) $config->get('nightwatch.agent.connection_limit'));
-                });
-
-            $buffer = new PayloadBuffer($config->get('nightwatch.agent.buffer_threshold'));
-
-            $connector = new Connector([
-                'timeout' => $config->get('nightwatch.http.connection_timeout'),
-            ], $loop);
-
-            $client = new Client((new Browser($connector, $loop))
-                ->withTimeout($config->get('nightwatch.agent.timeout'))
-                ->withHeader('User-Agent', 'NightwatchAgent/1')
-                ->withHeader('Content-Type', 'application/octet-stream')
-                ->withHeader('Content-Encoding', 'gzip')
-                ->withHeader('Nightwatch-App-Id', $config->get('nightwatch.app_id'))
-                ->withBase('https://khq5ni773stuucqrxebn3a5zbi0ypexu.lambda-url.us-east-1.on.aws/'));
-
-            $ingest = new HttpIngest($client, $clock, $config->get('nightwatch.http.concurrent_request_limit'));
-            // $ingest = new NullIngest;
-
-            return new Agent($buffer, $ingest, $loop, $config->get('nightwatch.collector.timeout'));
-        });
+        $this->app->singleton(Agent::class, (new AgentFactory)(...));
     }
 
     private function configureIngest(): void
     {
-        $this->app->singleton(IngestContract::class, function (Application $app) {
-            /** @var Config */
-            $config = $app->make('config');
-
-            $connector = new TimeoutConnector(new TcpConnector, $config->get('nightwatch.collector.connection_timeout'));
-
-            $uri = $config->get('nightwatch.agent.address').':'.$config->get('nightwatch.agent.port');
-
-            return new SocketIngest($connector, $uri);
-        });
+        $this->app->singleton(LocalIngest::class, (new SocketIngestFactory)(...));
     }
 
     private function registerPublications(): void
@@ -190,11 +127,14 @@ final class NightwatchServiceProvider extends ServiceProvider
      * recorders were registered early but out ingest was registered last. This
      * we used the `booted` callback.
      */
-    private function registerSensors(): void
+    private function registerHooks(): void
     {
+        // TODO what of this can we delay?
+
         /** @var Dispatcher */
         $events = $this->app->make('events');
 
+        /** @var Clock */
         $clock = $this->app->instance(Clock::class, new Clock(match (true) {
             defined('LARAVEL_START') => LARAVEL_START,
             default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
@@ -205,107 +145,84 @@ final class NightwatchServiceProvider extends ServiceProvider
             trace: $traceId = (string) Str::uuid(),
             id: $traceId,
             context: 'request', // TODO
+            currentExecutionStageStartedAtMicrotime: $clock->executionStartInMicrotime(),
             deploy: $this->app['config']->get('nightwatch.deploy') ?? '',
             server: $this->app['config']->get('nightwatch.server') ?? '',
-            currentExecutionStageStartedAtMicrotime: $clock->executionStartInMicrotime(),
         ));
 
+        /** @var Location */
+        $location = $this->app->instance(Location::class, new Location(
+            $this->app->basePath(), $this->app->publicPath(),
+        ));
+
+        $userProvider = new UserProvider($this->app->make(AuthManager::class));
+        $peakMemory = $this->app->instance(PeakMemory::class, new PeakMemory);
+
         /** @var SensorManager */
-        $sensor = $this->app->instance(SensorManager::class, new SensorManager($state, $clock, $this->app));
+        $sensor = $this->app->instance(SensorManager::class, new SensorManager(
+            $state, $clock, $location, $userProvider, $peakMemory
+        ));
 
-        /*
-         * Stage: Before middleware.
+        //
+        // -------------------------------------------------------------------------
+        // Execution stage hooks
+        // --------------------------------------------------------------------------
+        //
+
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
          */
-        $this->app->booted(fn () => $sensor->stage(ExecutionStage::BeforeMiddleware));
+        $this->app->booted(new BootedHandler($sensor));
 
-        /*
-         * Stage: Action, After middleware, and Terminating.
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Action
+         * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
-        $events->listen(RouteMatched::class, function (RouteMatched $event) {
-            $middleware = $event->route->action['middleware'] ?? [];
+        $events->listen(RouteMatched::class, new RouteMatchedListener);
 
-            $middleware[] = NightwatchRouteMiddleware::class; // TODO ensure adding these is not a memory leak in Octane (event though Laravel will make sure they are unique)
-
-            if (! class_exists(Terminating::class)) {
-                array_unshift($middleware, NightwatchTerminatingMiddleware::class);
-            }
-
-            $event->route->action['middleware'] = $middleware;
-        });
-
-        /*
-         * Stage: Render.
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Render
          */
-        $events->listen(PreparingResponse::class, fn () => match ($state->stage) {
-            ExecutionStage::Action => $sensor->stage(ExecutionStage::Render),
-            default => null,
-        });
+        $events->listen(PreparingResponse::class, new PreparingResponseListener($sensor, $state));
 
-        /*
-         * Stage: After middleware.
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
          */
-        $events->listen(ResponsePrepared::class, fn () => match ($state->stage) {
-            ExecutionStage::Render => $sensor->stage(ExecutionStage::AfterMiddleware),
-            default => null,
-        });
+        $events->listen(ResponsePrepared::class, new ResponsePreparedListener($sensor, $state));
 
-        $events->listen(RequestHandled::class, fn () => $sensor->stage(ExecutionStage::Sending));
-
-        $events->listen(Terminating::class, fn () => $sensor->stage(ExecutionStage::Terminating));
-
-        /*
-         * Sensor: Query.
-         *
-         * The trace will include this listener frame. Instead of trying to
-         * slice out the current frame from the trace and having to re-key the
-         * array, internally the query sensor will skip the first frame while
-         * iterating.
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Sending
          */
-        $events->listen(QueryExecuted::class, fn (QueryExecuted $event) => $sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)));
+        $events->listen(RequestHandled::class, new RequestHandledListener($sensor));
 
-        /*
-         * Sensor: Exceptions.
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
-        $this->callAfterResolving(ExceptionHandler::class, function (ExceptionHandler $handler) use ($sensor) {
-            if (! $handler instanceof Handler) {
-                return;
-            }
+        $events->listen(Terminating::class, new TerminatingListener($sensor));
 
-            $handler->reportable($sensor->exception(...));
-        });
+        //
+        // -------------------------------------------------------------------------
+        // Sensor hooks
+        // --------------------------------------------------------------------------
+        //
 
-        /*
-         * Sensor: Request + final ingest.
-         *
-         * TODO we need to determine what to do if the
-         * `whenRequestLifecycleIsLongerThan` method is not present. We likely
-         * want to hook into the terminating callback system.
+        /**
+         * @see \Laravel\Nightwatch\Records\Query
          */
-        $this->callAfterResolving(HttpKernelContract::class, function (HttpKernelContract $kernel, Application $app) use ($sensor) {
-            if (! $kernel instanceof HttpKernel) {
-                return;
-            }
+        $events->listen(QueryExecuted::class, new QueryExecutedListener($sensor));
 
-            if (! class_exists(Terminating::class)) {
-                $kernel->setGlobalMiddleware([
-                    NightwatchTerminatingMiddleware::class, // Check this isn't a memory leak in Octane
-                    ...$kernel->getGlobalMiddleware(),
-                ]);
-            }
+        /**
+         * @see \Laravel\Nightwatch\Records\Exception
+         */
+        $this->callAfterResolving(ExceptionHandler::class, (new ExceptionHandlerResolvedHandler($sensor))(...));
 
-            $kernel->whenRequestLifecycleIsLongerThan(-1, function (Carbon $startedAt, Request $request, Response $response) use ($sensor, $app) {
-                $sensor->stage(ExecutionStage::End);
-
-                $sensor->request($request, $response);
-
-                /** @var IngestContract */
-                $ingest = $app->make(IngestContract::class);
-
-                $ingest->write($sensor->flush());
-            });
-        });
-
-        return;
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         * @see \Laravel\Nightwatch\ExecutionStage::End
+         * @see \Laravel\Nightwatch\Contracts\LocalIngest
+         */
+        $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($sensor))(...));
 
         $events->listen([
             RetrievingKey::class,
@@ -313,35 +230,55 @@ final class NightwatchServiceProvider extends ServiceProvider
             CacheHit::class,
             WritingKey::class,
             KeyWritten::class,
-        ],
-            $sensor->cacheEvent(...)
-        );
-        $events->listen(JobQueued::class, $sensor->queuedJob(...));
-
-        $this->callAfterResolving(Http::class, function (Http $http, Application $app) use ($sensor) {
-            /** @var GuzzleMiddleware */
-            $middleware = $app->make(GuzzleMiddleware::class, ['sensor' => $sensor]);
-
-            $http->globalMiddleware($middleware);
+        ], static function (RetrievingKey|CacheMissed|CacheHit|WritingKey|KeyWritten $event) use ($sensor) {
+           try {
+               $sensor->cacheEvent($event);
+           } catch (Exception $e) {
+               //
+           }
         });
 
-        $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor) {
-            if (! $kernel instanceof ConsoleKernel) {
-                return;
-            }
+        //$events->listen(JobQueued::class, static function (JobQueued $event) use ($sensor) {
+        //    try {
+        //        $sensor->queuedJob($sensor);
+        //    } catch (Exception $e) {
+        //        //
+        //    }
+        //});
 
-            $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
-                if (! $this->app->runningInConsole()) {
-                    return;
-                }
+        //$this->callAfterResolving(Http::class, static function (Http $http) use ($sensor, $clock) {
+        //    try {
+        //        $http->globalMiddleware(new GuzzleMiddleware($sensor, $clock));
+        //    } catch (Exception $e) {
+        //        //
+        //    }
+        //});
 
-                $sensor->command($startedAt, $input, $status);
-                /** @var IngestContract */
-                $ingest = $app->make(IngestContract::class);
+        //$this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor) {
+        //    try {
+        //        if (! $kernel instanceof ConsoleKernel) {
+        //            return;
+        //        }
 
-                $ingest->write($sensor->flush());
-            });
-        });
+        //        $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
+        //            try {
+        //                if (! $this->app->runningInConsole()) {
+        //                    return;
+        //                }
+
+        //                $sensor->command($startedAt, $input, $status);
+        //                /** @var LocalIngest */
+        //                $ingest = $app->make(LocalIngest::class);
+
+        //                $ingest->write($sensor->flush());
+        //            } catch (Exception $e) {
+        //                //
+        //            }
+        //        });
+        //    } catch (Exception $e) {
+        //        //
+        //    }
+        //});
     }
 
     private function disabled(): bool

@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Nightwatch\Ingests;
+namespace Laravel\Nightwatch\Ingests\Remote;
 
 use Laravel\Nightwatch\IngestSucceededResult;
 use React\Promise\Promise;
@@ -15,7 +15,7 @@ final class NullIngest
      */
     public function write(string $payload): Promise
     {
-        return new Promise(fn ($resolve) => $resolve(
+        return new Promise(static fn ($resolve) => $resolve(
             new IngestSucceededResult(0)
         ));
     }

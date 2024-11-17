@@ -15,8 +15,6 @@ use function strlen;
 use function substr;
 
 /**
- * TODO this should be a singleton
- *
  * @internal
  */
 final class Location
@@ -39,10 +37,10 @@ final class Location
     ) {
         $this->basePath = $basePath.DIRECTORY_SEPARATOR;
         $this->artisanPath = join_paths($basePath, 'artisan');
-        $this->publicIndexPath = join_paths($publicPath, 'index.php');
         $this->vendorPath = join_paths($basePath, 'vendor');
         $this->nightwatchPath = join_paths($this->vendorPath, 'laravel', 'nightwatch');
         $this->frameworkPath = join_paths($this->vendorPath, 'laravel', 'framework');
+        $this->publicIndexPath = join_paths($publicPath, 'index.php');
     }
 
     /**
@@ -202,5 +200,23 @@ final class Location
         }
 
         return substr($file, strlen($this->basePath));
+    }
+
+    public function setBasePath(string $path): self
+    {
+        $this->basePath = $path.DIRECTORY_SEPARATOR;
+        $this->artisanPath = join_paths($path, 'artisan');
+        $this->vendorPath = join_paths($path, 'vendor');
+        $this->nightwatchPath = join_paths($this->vendorPath, 'laravel', 'nightwatch');
+        $this->frameworkPath = join_paths($this->vendorPath, 'laravel', 'framework');
+
+        return $this;
+    }
+
+    public function setPublicPath(string $path): self
+    {
+        $this->publicIndexPath = join_paths($path, 'index.php');
+
+        return $this;
     }
 }

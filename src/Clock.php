@@ -10,7 +10,7 @@ use function microtime;
 /**
  * @internal
  */
-final class Clock
+class Clock
 {
     /**
      * @var (Closure(): float)
@@ -19,7 +19,7 @@ final class Clock
 
     public function __construct(public float $executionStartInMicrotime)
     {
-        $this->microtimeResolver = fn () => microtime(true);
+        $this->microtimeResolver = static fn () => microtime(true);
     }
 
     public function microtime(): float
