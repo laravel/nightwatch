@@ -231,11 +231,11 @@ final class NightwatchServiceProvider extends ServiceProvider
             WritingKey::class,
             KeyWritten::class,
         ], static function (RetrievingKey|CacheMissed|CacheHit|WritingKey|KeyWritten $event) use ($sensor) {
-           try {
-               $sensor->cacheEvent($event);
-           } catch (Exception $e) {
-               //
-           }
+            try {
+                $sensor->cacheEvent($event);
+            } catch (Exception $e) {
+                //
+            }
         });
 
         //$events->listen(JobQueued::class, static function (JobQueued $event) use ($sensor) {
