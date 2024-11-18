@@ -39,9 +39,9 @@ final class FakeIngest implements LocalIngest
             : [$key, $payload];
 
         if ($payload instanceof Closure) {
-            expect($payload($this->latestWrite($key)))->toBeTrue($key ? "Failed asserting [{$key}] was expected value." : null);
+            expect($payload($this->latestWrite($key)))->toBeTrue($key ? "Failed asserting [{$key}] was expected value." : '');
         } else {
-            expect($this->latestWrite($key))->toBe($payload, $key ? "Failed asserting [{$key}] was expected value." : null);
+            expect($this->latestWrite($key))->toBe($payload, $key ? "Failed asserting [{$key}] was expected value." : '');
         }
 
         return $this;
