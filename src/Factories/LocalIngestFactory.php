@@ -19,8 +19,8 @@ class LocalIngestFactory
         $driver = $config->get('nightwatch.ingest.local.driver') ?? 'socket';
 
         $factory = match ($driver) {
-            'log' => fn (Application$app) => new LogIngest($app->make(LogManager::class)),
-            'null' => fn (Application $app) => new NullIngest(),
+            'log' => static fn (Application $app) => new LogIngest($app->make(LogManager::class)),
+            'null' => static fn (Application $app) => new NullIngest,
             default => (new SocketIngestFactory)(...),
         };
 
