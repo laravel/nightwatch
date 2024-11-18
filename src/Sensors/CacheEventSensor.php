@@ -45,6 +45,7 @@ final class CacheEventSensor
         $eventType = match ($event::class) {
             RetrievingKey::class, CacheHit::class, CacheMissed::class => 'read',
             WritingKey::class, KeyWritten::class => 'write',
+            default => throw new Exception('Unexpected event type: ' . $event::class),
         };
 
         if ($event instanceof RetrievingKey || $event instanceof WritingKey) {
@@ -65,6 +66,7 @@ final class CacheEventSensor
             CacheHit::class => ['hit', 'cache_hits'],
             CacheMissed::class => ['miss', 'cache_misses'],
             KeyWritten::class => ['write', 'cache_writes'],
+            default => throw new Exception('Unexpected event type: ' . $event::class),
         };
 
         $this->executionState->{$counter}++;
@@ -83,7 +85,7 @@ final class CacheEventSensor
             key: $event->key,
             type: $type,
             duration: (int) $now - $startTime,
-            ttl: $event instanceof KeyWritten ? $event->seconds : 0,
+            ttl: $event instanceof KeyWritten ? $event->seconds || 0 : 0,
         ));
     }
 }
