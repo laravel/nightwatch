@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
 use Laravel\Nightwatch\Ingests\Remote\NullIngest;
-use Laravel\Nightwatch\IngestSucceededResult;
+use Laravel\Nightwatch\Ingests\Remote\IngestSucceededResult;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
 use React\Promise\PromiseInterface;

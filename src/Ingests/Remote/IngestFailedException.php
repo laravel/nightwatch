@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Nightwatch\Exceptions;
+namespace Laravel\Nightwatch\Ingests\Remote;
 
 use Psr\Http\Message\ResponseInterface;
 use React\Http\Message\ResponseException;

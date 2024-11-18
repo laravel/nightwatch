@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Nightwatch;
+namespace Laravel\Nightwatch\Ingests\Remote;
 
 /**
  * @internal
