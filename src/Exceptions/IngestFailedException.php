@@ -14,16 +14,16 @@ final class IngestFailedException extends RuntimeException
 {
     public ?ResponseInterface $response;
 
-    public function __construct(public int $duration, Throwable $previous)
+    public function __construct(public float $duration, Throwable $previous)
     {
         if ($previous instanceof ResponseException) {
             $this->response = $previous->getResponse();
 
             $message = (string) $this->response->getBody();
         } else {
-            $message = 'Unknown ingest error.';
+            $message = 'Unknown error.';
         }
 
-        parent::__construct($message, previous: $previous);
+        parent::__construct("Took [{$this->duration}]ms. {$message}", previous: $previous);
     }
 }

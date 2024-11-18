@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -27,6 +28,7 @@ use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
 use Laravel\Nightwatch\Factories\SocketIngestFactory;
+use Laravel\Nightwatch\Factories\SocketServerFactory;
 use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
@@ -40,6 +42,7 @@ use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\Records\ExecutionState;
+use React\Socket\ServerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 
 use function class_exists;
@@ -129,7 +132,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         // TODO what of this can we delay?
 
         /** @var Dispatcher */
-        $events = $this->app->make('events');
+        $events = $this->app->make(Dispatcher::class);
 
         /** @var Clock */
         $clock = $this->app->instance(Clock::class, new Clock(match (true) {
@@ -274,6 +277,12 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function disabled(): bool
     {
-        return $this->disabled ??= (bool) $this->app->make('config')->get('nightwatch.disabled', false);
+        if ($this->disabled === null) {
+            $config = $this->app->make(Config::class);
+
+            $this->disabled = $config->get('nightwatch.disabled');
+        }
+
+        return $this->disabled;
     }
 }

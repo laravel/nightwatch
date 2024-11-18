@@ -4,12 +4,12 @@ namespace Laravel\Nightwatch\Ingests\Remote;
 
 use Laravel\Nightwatch\Client;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Exceptions\ExceededConcurrentRequestLimitException;
 use Laravel\Nightwatch\Exceptions\IngestFailedException;
 use Laravel\Nightwatch\IngestSucceededResult;
 use Psr\Http\Message\ResponseInterface;
 use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
+use RuntimeException;
 use Throwable;
 
 use function round;
@@ -30,15 +30,13 @@ final class HttpIngest
     }
 
     /**
-     * TODO retry logic
-     *
      * @return PromiseInterface<IngestSucceededResult>
      */
     public function write(string $payload): PromiseInterface
     {
-        if ($this->concurrentRequests === $this->concurrentRequestLimit) {
+        if ($this->concurrentRequests >= $this->concurrentRequestLimit) {
             return new RejectedPromise(
-                new ExceededConcurrentRequestLimitException("Exceeded concurrent request limit [{$this->concurrentRequestLimit}].")
+                new RuntimeException("Exceeded concurrent request limit [{$this->concurrentRequestLimit}].")
             );
         }
 
@@ -48,17 +46,12 @@ final class HttpIngest
 
         return $this->client->send($payload)
             ->then(fn (ResponseInterface $response) => new IngestSucceededResult(
-                duration: (int) round($this->clock->diffInMicrotime($start) * 1000),
+                duration: $this->clock->diffInMicrotime($start),
             ), fn (Throwable $e) => throw new IngestFailedException(
-                duration: (int) round($this->clock->diffInMicrotime($start) * 1000),
+                duration: $this->clock->diffInMicrotime($start),
                 previous: $e
             ))->finally(function () {
                 $this->concurrentRequests--;
             });
-    }
-
-    public function concurrentRequests(): int
-    {
-        return $this->concurrentRequests;
     }
 }

@@ -29,9 +29,9 @@ final class Client
         $payload = gzencode($payload);
 
         if ($payload === false) {
-            return new RejectedPromise(new RuntimeException('Unable to compress payload'));
+            return new RejectedPromise(new RuntimeException('Unable to compress payload.'));
         }
 
-        return $this->browser->post('/nightwatch-ingest', body: $payload);
+        return $this->browser->post('/', body: $payload);
     }
 }

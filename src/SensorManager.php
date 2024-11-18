@@ -154,7 +154,6 @@ class SensorManager
         //     executionState: $this->state,
         //     user: $this->user,
         //     clock: $this->clock,
-        //     config: $this->app->make('config'),
         // );
 
         // $sensor($event);
