@@ -21,7 +21,7 @@ class LocalIngestFactory
         $factory = match ($driver) {
             'log' => static fn (Application $app) => new LogIngest($app->make(LogManager::class)),
             'null' => static fn (Application $app) => new NullIngest,
-            default => (new SocketIngestFactory)(...),
+            default => new SocketIngestFactory,
         };
 
         return $factory($app);
