@@ -138,14 +138,16 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Config */
         $config = $this->app->make(Config::class);
         /**
-         * @var string $deploy
-         * @var string $server
+         * @var string|null $deploy
+         * @var string|null $server
          */
-        [$deploy, $server] = $config->get([
+        [
+            'nightwatch.deploy' => $deploy,
+            'nightwatch.server' => $server,
+        ] = $config->get([
             'nightwatch.deploy',
             'nightwatch.server',
         ]);
-
 
         /** @var Clock */
         $clock = $this->app->instance(Clock::class, new Clock(match (true) {
@@ -159,8 +161,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             id: $traceId,
             context: 'request', // TODO
             currentExecutionStageStartedAtMicrotime: $clock->executionStartInMicrotime(),
-            deploy: $deploy,
-            server: $server,
+            deploy: $deploy ?? '',
+            server: $server ?? '',
         ));
 
         /** @var Location */
