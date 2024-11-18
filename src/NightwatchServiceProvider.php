@@ -253,7 +253,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             CacheHit::class,
             WritingKey::class,
             KeyWritten::class,
-        ], new CacheEventListener($sensor));
+        ], (new CacheEventListener($sensor))(...));
 
         //$events->listen(JobQueued::class, static function (JobQueued $event) use ($sensor) {
         //    try {
