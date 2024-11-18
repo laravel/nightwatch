@@ -20,6 +20,10 @@ class SocketServerFactory
     {
         /** @var Config */
         $config = $app->make(Config::class);
+        /**
+         * @var string $uri
+         * @var int $connectionLimit
+         */
         [
             'nightwatch.ingest.local.uri' => $uri,
             'nightwatch.ingest.local.connection_limit' => $connectionLimit,

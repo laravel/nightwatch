@@ -14,6 +14,11 @@ class SocketIngestFactory
     {
         /** @var Config */
         $config = $app->make(Config::class);
+        /**
+         * @var string $uri
+         * @var int $connectionTimeout
+         * @var int $timeout
+         */
         [
             'nightwatch.ingest.local.uri' => $uri,
             'nightwatch.ingest.local.connection_timeout' => $connectionTimeout,

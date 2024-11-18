@@ -20,6 +20,15 @@ class AgentFactory
     {
         /** @var Config */
         $config = $app->make(Config::class);
+        /**
+         * @var string $appId
+         * @var string $uri
+         * @var int $connectionLimit
+         * @var int $connectionTimeout
+         * @var int $timeout
+         * @var int $bufferThreshold
+         * @var int $localTimeout
+         */
         [
             'nightwatch.app_id' => $appId,
             'nightwatch.ingest.remote.uri' => $uri,
