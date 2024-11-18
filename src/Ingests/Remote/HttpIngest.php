@@ -4,8 +4,6 @@ namespace Laravel\Nightwatch\Ingests\Remote;
 
 use Laravel\Nightwatch\Client;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Ingests\Remote\IngestFailedException;
-use Laravel\Nightwatch\Ingests\Remote\IngestSucceededResult;
 use Psr\Http\Message\ResponseInterface;
 use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
