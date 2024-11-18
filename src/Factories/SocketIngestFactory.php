@@ -8,11 +8,6 @@ use Laravel\Nightwatch\Ingests\Local\SocketIngest;
 use React\Socket\TcpConnector;
 use React\Socket\TimeoutConnector;
 
-use function is_array;
-use function is_float;
-use function is_numeric;
-use function is_string;
-
 class SocketIngestFactory
 {
     public function __invoke(Application $app): SocketIngest

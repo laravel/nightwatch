@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Factories;
 
+use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Foundation\Application;
 use Laravel\Nightwatch\Buffers\PayloadBuffer;
 use Laravel\Nightwatch\Client;
@@ -12,11 +13,6 @@ use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
 use React\Socket\Connector;
 use React\Socket\ServerInterface;
-use Illuminate\Contracts\Config\Repository as Config;
-
-use function is_array;
-use function is_int;
-use function is_string;
 
 class AgentFactory
 {
@@ -25,7 +21,7 @@ class AgentFactory
         /** @var Config */
         $config = $app->make(Config::class);
         [
-             'nightwatch.app_id' => $appId,
+            'nightwatch.app_id' => $appId,
             'nightwatch.ingest.remote.uri' => $uri,
             'nightwatch.ingest.remote.connection_limit' => $connectionLimit,
             'nightwatch.ingest.remote.connection_timeout' => $connectionTimeout,
@@ -65,6 +61,7 @@ class AgentFactory
         $clock = $app->make(Clock::class);
         $buffer = new PayloadBuffer($bufferThreshold);
         $ingest = new HttpIngest($client, $clock, $connectionLimit);
+
         return new Agent($buffer, $ingest, $loop, $localTimeout);
     }
 }

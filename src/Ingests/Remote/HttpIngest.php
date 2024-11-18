@@ -12,8 +12,6 @@ use React\Promise\PromiseInterface;
 use RuntimeException;
 use Throwable;
 
-use function round;
-
 /**
  * @internal
  */

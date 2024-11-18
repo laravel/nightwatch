@@ -28,7 +28,6 @@ use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
 use Laravel\Nightwatch\Factories\SocketIngestFactory;
-use Laravel\Nightwatch\Factories\SocketServerFactory;
 use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
@@ -42,7 +41,6 @@ use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\Records\ExecutionState;
-use React\Socket\ServerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 
 use function class_exists;
