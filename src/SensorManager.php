@@ -38,6 +38,7 @@ use Throwable;
 class SensorManager
 {
     private ?CacheEventSensor $cacheEventSensor;
+
     private ?ExceptionSensor $exceptionSensor;
 
     // private ?OutgoingRequestSensor $outgoingRequestSensor;
