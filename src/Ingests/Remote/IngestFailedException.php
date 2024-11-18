@@ -24,6 +24,6 @@ final class IngestFailedException extends RuntimeException
             $message = 'Unknown error.';
         }
 
-        parent::__construct("Took [{$this->duration}]ms. {$message}", previous: $previous);
+        parent::__construct("Took [{$this->duration}]s. {$message}", previous: $previous);
     }
 }

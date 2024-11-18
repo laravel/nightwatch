@@ -11,6 +11,8 @@ return [
 
     'ingest' => [
         'local' => [
+            // options: omitted, "log", "null"
+            'driver' => 'log',
             'uri' => '127.0.0.1:2357',
             'connection_limit' => 20,
             'connection_timeout' => 0.5,              // seconds
