@@ -16,7 +16,7 @@ final class CacheEvent
      * @param  'hit'|'miss'|'write'  $type
      */
     public function __construct(
-        public int $timestamp,
+        public float $timestamp,
         public string $deploy,
         public string $server,
         public string $group,

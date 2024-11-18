@@ -225,6 +225,9 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($sensor))(...));
 
+        /**
+         * @see \Laravel\Nightwatch\Records\CacheEvent
+         */
         $events->listen([
             RetrievingKey::class,
             CacheMissed::class,
