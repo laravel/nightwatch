@@ -31,6 +31,7 @@ use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
 use Laravel\Nightwatch\Factories\SocketIngestFactory;
 use Laravel\Nightwatch\Hooks\BootedHandler;
+use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
@@ -230,13 +231,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             CacheHit::class,
             WritingKey::class,
             KeyWritten::class,
-        ], static function (RetrievingKey|CacheMissed|CacheHit|WritingKey|KeyWritten $event) use ($sensor) {
-            try {
-                $sensor->cacheEvent($event);
-            } catch (Exception $e) {
-                //
-            }
-        });
+        ], new CacheEventListener($sensor));
 
         //$events->listen(JobQueued::class, static function (JobQueued $event) use ($sensor) {
         //    try {
