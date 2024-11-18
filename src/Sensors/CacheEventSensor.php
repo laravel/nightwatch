@@ -14,7 +14,6 @@ use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\UserProvider;
 
-use function get_class;
 use function hash;
 
 /**
@@ -57,7 +56,7 @@ final class CacheEventSensor
         $startTime = $this->startTimes["{$eventType}:{$event->key}"] ?? null;
 
         if ($startTime === null) {
-            throw new Exception('No start time found for '.get_class($event)." event with key {$event->key}.");
+            throw new Exception('No start time found for '.$event::class." event with key {$event->key}.");
         }
 
         unset($this->startTimes["{$eventType}:{$event->key}"]);
