@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Exception;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\KeyWritten;
@@ -38,17 +39,26 @@ final class CacheEventSensor
 
     public function __invoke(RetrievingKey|CacheHit|CacheMissed|WritingKey|KeyWritten $event): void
     {
-        $nowMicrotime = $this->clock->microtime();
+        $now = $this->clock->microtime();
+
+        $eventType = match ($event::class) {
+            RetrievingKey::class, CacheHit::class, CacheMissed::class => 'read',
+            WritingKey::class, KeyWritten::class => 'write',
+        };
 
         if ($event instanceof RetrievingKey || $event instanceof WritingKey) {
-            $eventType = match ($event::class) {
-                RetrievingKey::class => 'retrieving',
-                WritingKey::class => 'writing',
-            };
-            $this->startTimes["{$eventType}:{$event->key}"] = $nowMicrotime;
+            $this->startTimes["{$eventType}:{$event->key}"] = $now;
 
             return;
         }
+
+        $startTime = $this->startTimes["{$eventType}:{$event->key}"] ?? null;
+
+        if ($startTime === null) {
+            throw new Exception("No start time found for {$event::class} event with key {$event->key}.");
+        }
+
+        unset($this->startTimes["{$eventType}:{$event->key}"]);
 
         [$type, $counter] = match ($event::class) {
             CacheHit::class => ['hit', 'cache_hits'],
@@ -59,7 +69,7 @@ final class CacheEventSensor
         $this->executionState->{$counter}++;
 
         $this->recordsBuffer->writeCacheEvent(new CacheEvent(
-            timestamp: $nowMicrotime,
+            timestamp: $startTime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             group: hash('md5', "{$event->storeName},{$event->key}"),
@@ -71,26 +81,8 @@ final class CacheEventSensor
             store: $event->storeName ?? '',
             key: $event->key,
             type: $type,
-            duration: $this->getDuration($event, $nowMicrotime),
+            duration: (int) $now - $startTime,
             ttl: $event instanceof KeyWritten ? $event->seconds : 0,
         ));
-    }
-
-    private function getDuration(CacheHit|CacheMissed|KeyWritten $event, float $nowMicrotime): int
-    {
-        $eventType = match ($event::class) {
-            CacheHit::class, CacheMissed::class => 'retrieving',
-            KeyWritten::class => 'writing',
-        };
-
-        $startTime = $this->startTimes["{$eventType}:{$event->key}"] ?? null;
-
-        if ($startTime === null) {
-            return 0;
-        }
-
-        unset($this->startTimes["{$eventType}:{$event->key}"]);
-
-        return (int) $nowMicrotime - $startTime;
     }
 }
