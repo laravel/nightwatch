@@ -131,7 +131,21 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         /** @var Dispatcher */
         $events = $this->app->make(Dispatcher::class);
+
+        /** @var AuthManager */
+        $auth = $this->app->make(AuthManager::class);
+
+        /** @var Config */
         $config = $this->app->make(Config::class);
+        /**
+         * @var string $deploy
+         * @var string $server
+         */
+        [$deploy, $server] = $config->get([
+            'nightwatch.deploy',
+            'nightwatch.server',
+        ]);
+
 
         /** @var Clock */
         $clock = $this->app->instance(Clock::class, new Clock(match (true) {
@@ -145,8 +159,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             id: $traceId,
             context: 'request', // TODO
             currentExecutionStageStartedAtMicrotime: $clock->executionStartInMicrotime(),
-            deploy: $config->get('nightwatch.deploy') ?? '',
-            server: $config->get('nightwatch.server') ?? '',
+            deploy: $deploy,
+            server: $server,
         ));
 
         /** @var Location */
@@ -154,7 +168,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->app->basePath(), $this->app->publicPath(),
         ));
 
-        $userProvider = new UserProvider($this->app->make(AuthManager::class));
+        $userProvider = new UserProvider($auth);
+        /** @var PeakMemory */
         $peakMemory = $this->app->instance(PeakMemory::class, new PeakMemory);
 
         /** @var SensorManager */
@@ -171,34 +186,34 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
          */
-        $this->app->booted(new BootedHandler($sensor));
+        $this->app->booted((new BootedHandler($sensor))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Action
          * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
-        $events->listen(RouteMatched::class, new RouteMatchedListener);
+        $events->listen(RouteMatched::class, (new RouteMatchedListener)(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Render
          */
-        $events->listen(PreparingResponse::class, new PreparingResponseListener($sensor, $state));
+        $events->listen(PreparingResponse::class, (new PreparingResponseListener($sensor, $state))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
          */
-        $events->listen(ResponsePrepared::class, new ResponsePreparedListener($sensor, $state));
+        $events->listen(ResponsePrepared::class, (new ResponsePreparedListener($sensor, $state))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Sending
          */
-        $events->listen(RequestHandled::class, new RequestHandledListener($sensor));
+        $events->listen(RequestHandled::class, (new RequestHandledListener($sensor))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
-        $events->listen(Terminating::class, new TerminatingListener($sensor));
+        $events->listen(Terminating::class, (new TerminatingListener($sensor))(...));
 
         //
         // -------------------------------------------------------------------------
@@ -209,7 +224,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\Records\Query
          */
-        $events->listen(QueryExecuted::class, new QueryExecutedListener($sensor));
+        $events->listen(QueryExecuted::class, (new QueryExecutedListener($sensor))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\Exception
@@ -277,9 +292,10 @@ final class NightwatchServiceProvider extends ServiceProvider
     private function disabled(): bool
     {
         if ($this->disabled === null) {
+            /** @var Config */
             $config = $this->app->make(Config::class);
 
-            $this->disabled = $config->get('nightwatch.disabled');
+            $this->disabled = (bool) $config->get('nightwatch.disabled');
         }
 
         return $this->disabled;
