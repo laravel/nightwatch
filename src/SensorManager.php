@@ -37,7 +37,7 @@ use Throwable;
  */
 class SensorManager
 {
-    // private ?CacheEventSensor $cacheEventSensor;
+    private ?CacheEventSensor $cacheEventSensor;
     private ?ExceptionSensor $exceptionSensor;
 
     // private ?OutgoingRequestSensor $outgoingRequestSensor;
@@ -115,14 +115,14 @@ class SensorManager
 
     public function cacheEvent(RetrievingKey|CacheHit|CacheMissed|WritingKey|KeyWritten $event): void
     {
-        // $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
-        //     recordsBuffer: $this->recordsBuffer,
-        //     executionState: $this->state,
-        //     clock: $this->clock,
-        //     user: $this->user,
-        // );
+        $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
+            recordsBuffer: $this->recordsBuffer,
+            executionState: $this->state,
+            clock: $this->clock,
+            user: $this->user,
+        );
 
-        // $sensor($event);
+        $sensor($event);
     }
 
     public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void

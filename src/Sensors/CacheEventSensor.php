@@ -28,19 +28,14 @@ final class CacheEventSensor
     protected $startTimes = [];
 
     public function __construct(
-        private RecordsBuffer $recordsBuffer,
-        private ExecutionState $executionState,
-        private UserProvider $user,
         private Clock $clock,
-        private string $server,
-        private string $traceId,
+        private ExecutionState $executionState,
+        private RecordsBuffer $recordsBuffer,
+        private UserProvider $user,
     ) {
         //
     }
 
-    /**
-     * TODO grouping, execution_context, execution_id
-     */
     public function __invoke(RetrievingKey|CacheHit|CacheMissed|WritingKey|KeyWritten $event): void
     {
         $nowMicrotime = $this->clock->microtime();
@@ -63,22 +58,22 @@ final class CacheEventSensor
 
         $this->executionState->{$counter}++;
 
-        // $this->recordsBuffer->writeCacheEvent(new CacheEvent(
-        //     timestamp: (int) $nowMicrotime,
-        //     deploy: $this->executionState->deploy,
-        //     server: $this->server,
-        //     group: hash('sha256', ''),
-        //     trace_id: $this->traceId,
-        //     execution_context: 'request',
-        //     execution_id: '00000000-0000-0000-0000-000000000000',
-        //     execution_offset: $this->clock->executionOffset($nowMicrotime),
-        //     user: $this->user->id(),
-        //     store: $event->storeName ?? '',
-        //     key: $event->key,
-        //     type: $type,
-        //     duration: $this->getDuration($event, $nowMicrotime),
-        //     ttl: $event instanceof KeyWritten ? $event->seconds : 0,
-        // ));
+        $this->recordsBuffer->writeCacheEvent(new CacheEvent(
+            timestamp: (int) $nowMicrotime,
+            deploy: $this->executionState->deploy,
+            server: $this->executionState->server,
+            group: hash('md5', "{$event->storeName},{$event->key}"),
+            trace_id: $this->executionState->trace,
+            execution_context: 'request',
+            execution_id: '00000000-0000-0000-0000-000000000000',
+            execution_stage: $this->executionState->stage,
+            user: $this->user->id(),
+            store: $event->storeName ?? '',
+            key: $event->key,
+            type: $type,
+            duration: $this->getDuration($event, $nowMicrotime),
+            ttl: $event instanceof KeyWritten ? $event->seconds : 0,
+        ));
     }
 
     private function getDuration(CacheHit|CacheMissed|KeyWritten $event, float $nowMicrotime): int
