@@ -59,13 +59,13 @@ final class CacheEventSensor
         $this->executionState->{$counter}++;
 
         $this->recordsBuffer->writeCacheEvent(new CacheEvent(
-            timestamp: (int) $nowMicrotime,
+            timestamp: $nowMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             group: hash('md5', "{$event->storeName},{$event->key}"),
             trace_id: $this->executionState->trace,
-            execution_context: 'request',
-            execution_id: '00000000-0000-0000-0000-000000000000',
+            execution_context: $this->executionState->context,
+            execution_id: $this->executionState->id,
             execution_stage: $this->executionState->stage,
             user: $this->user->id(),
             store: $event->storeName ?? '',
