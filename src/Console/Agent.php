@@ -4,10 +4,9 @@ namespace Laravel\Nightwatch\Console;
 
 use Illuminate\Console\Command;
 use Laravel\Nightwatch\Buffers\PayloadBuffer;
-use Laravel\Nightwatch\Exceptions\IngestFailedException;
 use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
+use Laravel\Nightwatch\Ingests\Remote\IngestSucceededResult;
 use Laravel\Nightwatch\Ingests\Remote\NullIngest;
-use Laravel\Nightwatch\IngestSucceededResult;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
 use React\Promise\PromiseInterface;
@@ -53,12 +52,6 @@ final class Agent extends Command
         $this->connections = new WeakMap;
     }
 
-    /**
-     * TODO
-     * - Limit incoming stream length on both ends?
-     * - Locally buffer data in files? Worried about build up. Opt-in failover
-     * mechanism, esp if we gzip the contents first. Might not be too bad.
-     */
     public function handle(Server $server): void
     {
         $server->on('connection', function (ConnectionInterface $connection) {
@@ -73,13 +66,9 @@ final class Agent extends Command
 
                 $this->queueOrPerformIngest(static function (PromiseInterface $response) {
                     $response->then(static function (IngestSucceededResult $result) {
-                        echo date('Y-m-d H:i:s')." Ingest successful. Took {$result->duration} ms.".PHP_EOL;
+                        echo date('Y-m-d H:i:s')." SUCCESS: Took [{$result->duration}]s.".PHP_EOL;
                     }, static function (Throwable $e) {
-                        if ($e instanceof IngestFailedException) {
-                            echo date('Y-m-d H:i:s')." Ingestion failed. Took {$e->duration} ms. Recieved: [{$e->getMessage()}].".PHP_EOL;
-                        } else {
-                            echo date('Y-m-d H:i:s')." Unknown error. Recieved: [{$e->getMessage()}].".PHP_EOL;
-                        }
+                        echo date('Y-m-d H:i:s')." ERROR: {$e->getMessage()}.".PHP_EOL;
                     });
                 });
             });

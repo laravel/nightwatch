@@ -9,6 +9,7 @@ use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\WritingKey;
+use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -29,7 +30,7 @@ use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
-use Laravel\Nightwatch\Factories\SocketIngestFactory;
+use Laravel\Nightwatch\Factories\LocalIngestFactory;
 use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
@@ -104,7 +105,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function configureIngest(): void
     {
-        $this->app->singleton(LocalIngest::class, (new SocketIngestFactory)(...));
+        $this->app->singleton(LocalIngest::class, (new LocalIngestFactory)(...));
     }
 
     private function registerPublications(): void
@@ -133,7 +134,24 @@ final class NightwatchServiceProvider extends ServiceProvider
         // TODO what of this can we delay?
 
         /** @var Dispatcher */
-        $events = $this->app->make('events');
+        $events = $this->app->make(Dispatcher::class);
+
+        /** @var AuthManager */
+        $auth = $this->app->make(AuthManager::class);
+
+        /** @var Config */
+        $config = $this->app->make(Config::class);
+        /**
+         * @var string|null $deploy
+         * @var string|null $server
+         */
+        [
+            'nightwatch.deploy' => $deploy,
+            'nightwatch.server' => $server,
+        ] = $config->get([
+            'nightwatch.deploy',
+            'nightwatch.server',
+        ]);
 
         /** @var Clock */
         $clock = $this->app->instance(Clock::class, new Clock(match (true) {
@@ -147,8 +165,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             id: $traceId,
             context: 'request', // TODO
             currentExecutionStageStartedAtMicrotime: $clock->executionStartInMicrotime(),
-            deploy: $this->app['config']->get('nightwatch.deploy') ?? '',
-            server: $this->app['config']->get('nightwatch.server') ?? '',
+            deploy: $deploy ?? '',
+            server: $server ?? '',
         ));
 
         /** @var Location */
@@ -156,7 +174,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->app->basePath(), $this->app->publicPath(),
         ));
 
-        $userProvider = new UserProvider($this->app->make(AuthManager::class));
+        $userProvider = new UserProvider($auth);
+        /** @var PeakMemory */
         $peakMemory = $this->app->instance(PeakMemory::class, new PeakMemory);
 
         /** @var SensorManager */
@@ -173,34 +192,34 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
          */
-        $this->app->booted(new BootedHandler($sensor));
+        $this->app->booted((new BootedHandler($sensor))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Action
          * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
-        $events->listen(RouteMatched::class, new RouteMatchedListener);
+        $events->listen(RouteMatched::class, (new RouteMatchedListener)(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Render
          */
-        $events->listen(PreparingResponse::class, new PreparingResponseListener($sensor, $state));
+        $events->listen(PreparingResponse::class, (new PreparingResponseListener($sensor, $state))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
          */
-        $events->listen(ResponsePrepared::class, new ResponsePreparedListener($sensor, $state));
+        $events->listen(ResponsePrepared::class, (new ResponsePreparedListener($sensor, $state))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Sending
          */
-        $events->listen(RequestHandled::class, new RequestHandledListener($sensor));
+        $events->listen(RequestHandled::class, (new RequestHandledListener($sensor))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
-        $events->listen(Terminating::class, new TerminatingListener($sensor));
+        $events->listen(Terminating::class, (new TerminatingListener($sensor))(...));
 
         //
         // -------------------------------------------------------------------------
@@ -211,7 +230,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\Records\Query
          */
-        $events->listen(QueryExecuted::class, new QueryExecutedListener($sensor));
+        $events->listen(QueryExecuted::class, (new QueryExecutedListener($sensor))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\Exception
@@ -281,6 +300,13 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function disabled(): bool
     {
-        return $this->disabled ??= (bool) $this->app->make('config')->get('nightwatch.disabled', false);
+        if ($this->disabled === null) {
+            /** @var Config */
+            $config = $this->app->make(Config::class);
+
+            $this->disabled = (bool) $config->get('nightwatch.disabled');
+        }
+
+        return $this->disabled;
     }
 }

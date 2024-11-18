@@ -21,12 +21,8 @@ final class SocketIngest implements LocalIngest
 
     public function write(string $payload): void
     {
-        if ($payload === '') {
-            return;
+        if ($payload !== '') {
+            await($this->connector->connect($this->uri))->end($payload);
         }
-
-        $connection = await($this->connector->connect($this->uri));
-
-        $connection->end($payload);
     }
 }

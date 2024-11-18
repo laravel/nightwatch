@@ -8,7 +8,6 @@ use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\WritingKey;
-use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
@@ -158,7 +157,6 @@ class SensorManager
         //     executionState: $this->state,
         //     user: $this->user,
         //     clock: $this->clock,
-        //     config: $this->app->make('config'),
         // );
 
         // $sensor($event);
