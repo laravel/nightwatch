@@ -100,7 +100,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function configureAgent(): void
     {
-        // $this->app->singleton(Agent::class, (new AgentFactory)(...));
+        $this->app->singleton(Agent::class, (new AgentFactory)(...));
     }
 
     private function configureIngest(): void
