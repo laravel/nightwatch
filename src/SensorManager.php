@@ -40,7 +40,8 @@ class SensorManager
 
     private ?ExceptionSensor $exceptionSensor;
 
-    // private ?OutgoingRequestSensor $outgoingRequestSensor;
+    private ?OutgoingRequestSensor $outgoingRequestSensor;
+
     private ?QuerySensor $querySensor;
 
     // private ?QueuedJobSensor $queuedJobSensor;
@@ -51,7 +52,6 @@ class SensorManager
         private Clock $clock,
         private Location $location,
         private UserProvider $user,
-        private PeakMemory $peakMemory,
         private RecordsBuffer $recordsBuffer = new RecordsBuffer,
     ) {
         //
@@ -72,7 +72,6 @@ class SensorManager
         $sensor = new RequestSensor(
             clock: $this->clock,
             executionState: $this->state,
-            peakMemory: $this->peakMemory,
             recordsBuffer: $this->recordsBuffer,
             user: $this->user,
         );
@@ -90,7 +89,6 @@ class SensorManager
         // $sensor = new CommandSensor(
         //     recordsBuffer: $this->recordsBuffer,
         //     executionState: $this->state,
-        //     peakMemory: $this->peakMemoryProvider(),
         //     user: $this->user,
         // );
 
@@ -127,14 +125,13 @@ class SensorManager
 
     public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
-        // $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
-        //     recordsBuffer: $this->recordsBuffer,
-        //     executionState: $this->state,
-        //     user: $this->user,
-        //     clock: $this->clock,
-        // );
+        $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
+            recordsBuffer: $this->recordsBuffer,
+            executionState: $this->state,
+            user: $this->user,
+        );
 
-        // $sensor($startMicrotime, $endMicrotime, $request, $response);
+        $sensor($startMicrotime, $endMicrotime, $request, $response);
     }
 
     public function exception(Throwable $e): void

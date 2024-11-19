@@ -2,8 +2,12 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Closure;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Types\Str;
+
+use function call_user_func;
+use function memory_get_peak_usage;
 
 /**
  * @internal
@@ -11,6 +15,11 @@ use Laravel\Nightwatch\Types\Str;
 final class ExecutionState
 {
     public int $v = 1;
+
+    /**
+     * @var (Closure(): int)|null
+     */
+    public ?Closure $peakMemoryResolver = null;
 
     /**
      * @param  array<value-of<ExecutionStage>, int>  $stageDurations
@@ -52,5 +61,14 @@ final class ExecutionState
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
+    }
+
+    public function peakMemory(): int
+    {
+        if ($this->peakMemoryResolver !== null) {
+            return call_user_func($this->peakMemoryResolver);
+        }
+
+        return memory_get_peak_usage(true);
     }
 }

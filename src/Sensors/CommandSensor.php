@@ -22,7 +22,6 @@ final class CommandSensor
     public function __construct(
         private RecordsBuffer $recordsBuffer,
         private ExecutionState $executionState,
-        private PeakMemory $peakMemory,
         private UserProvider $user,
         private string $traceId,
         private string $server,
@@ -78,7 +77,7 @@ final class CommandSensor
             cache_misses: $this->executionState->cache_misses,
             cache_writes: $this->executionState->cache_writes,
             hydrated_models: $this->executionState->hydrated_models,
-            peak_memory_usage: $this->peakMemory->kilobytes(),
+            peak_memory_usage: $this->executionState->peakMemory(),
         ));
     }
 }

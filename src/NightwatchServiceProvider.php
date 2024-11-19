@@ -34,7 +34,7 @@ use Laravel\Nightwatch\Factories\LocalIngestFactory;
 use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
-use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
+use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
@@ -175,12 +175,10 @@ final class NightwatchServiceProvider extends ServiceProvider
         ));
 
         $userProvider = new UserProvider($auth);
-        /** @var PeakMemory */
-        $peakMemory = $this->app->instance(PeakMemory::class, new PeakMemory);
 
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
-            $state, $clock, $location, $userProvider, $peakMemory
+            $state, $clock, $location, $userProvider
         ));
 
         //
@@ -238,6 +236,11 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->callAfterResolving(ExceptionHandler::class, (new ExceptionHandlerResolvedHandler($sensor))(...));
 
         /**
+         * @see \Laravel\Nightwatch\Records\OutgoingRequest
+         */
+        $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($sensor, $clock))(...));
+
+        /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Contracts\LocalIngest
@@ -258,14 +261,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         //$events->listen(JobQueued::class, static function (JobQueued $event) use ($sensor) {
         //    try {
         //        $sensor->queuedJob($sensor);
-        //    } catch (Exception $e) {
-        //        //
-        //    }
-        //});
-
-        //$this->callAfterResolving(Http::class, static function (Http $http) use ($sensor, $clock) {
-        //    try {
-        //        $http->globalMiddleware(new GuzzleMiddleware($sensor, $clock));
         //    } catch (Exception $e) {
         //        //
         //    }

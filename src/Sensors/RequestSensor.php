@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\PeakMemory;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\UserProvider;
@@ -34,7 +33,6 @@ final class RequestSensor
     public function __construct(
         private Clock $clock,
         private ExecutionState $executionState,
-        private PeakMemory $peakMemory,
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
     ) {
@@ -121,7 +119,7 @@ final class RequestSensor
             cache_misses: $this->executionState->cache_misses,
             cache_writes: $this->executionState->cache_writes,
             hydrated_models: $this->executionState->hydrated_models,
-            peak_memory_usage: $this->peakMemory->bytes(),
+            peak_memory_usage: $this->executionState->peakMemory(),
         ));
     }
 
