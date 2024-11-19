@@ -13,7 +13,7 @@ use function gzencode;
 /**
  * @internal
  */
-final class Client
+class Client
 {
     public function __construct(private Browser $browser)
     {
