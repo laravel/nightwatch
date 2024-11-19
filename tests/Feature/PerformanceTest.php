@@ -9,13 +9,13 @@ it('goes fast', function () {
 
     Benchmark::dd([
         function () {
-            //
+            // ...
         },
         function () {
-            //
+            // ...
         },
         function () {
-            //
+            // ...
         },
     ], 1000);
 })->skip();
