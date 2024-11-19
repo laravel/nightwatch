@@ -7,6 +7,9 @@
         <testsuite name="Feature">
             <directory suffix="Test.php">./tests/Feature</directory>
         </testsuite>
+        <testsuite name="Architecture">
+            <file>tests/ArchitectureTest.php</file>
+        </testsuite>
     </testsuites>
     <php>
         <env name="APP_KEY" value="base64:uz4B1RtFO57QGzbZX1kRYX9hIRB50+QzqFeg9zbFJlY="/>
