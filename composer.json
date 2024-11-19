@@ -15,7 +15,7 @@
         }
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^8.1",
         "illuminate/console": "^11.0",
         "illuminate/support": "^11.0",
         "react/async": "^4.2",
