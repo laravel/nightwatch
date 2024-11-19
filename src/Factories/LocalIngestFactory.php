@@ -4,10 +4,7 @@ namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Log\LogManager;
 use Laravel\Nightwatch\Contracts\LocalIngest;
-use Laravel\Nightwatch\Ingests\Local\LogIngest;
-use Laravel\Nightwatch\Ingests\Local\NullIngest;
 
 class LocalIngestFactory
 {

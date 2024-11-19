@@ -6,6 +6,9 @@ use Closure;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Types\Str;
 
+use function call_user_func;
+use function memory_get_peak_usage;
+
 /**
  * @internal
  */
@@ -14,7 +17,7 @@ final class ExecutionState
     public int $v = 1;
 
     /**
-     * @var (\Closure(): int)|null
+     * @var (Closure(): int)|null
      */
     public ?Closure $peakMemoryResolver = null;
 

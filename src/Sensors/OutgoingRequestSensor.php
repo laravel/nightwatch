@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\UserProvider;

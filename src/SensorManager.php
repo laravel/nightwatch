@@ -37,6 +37,7 @@ class SensorManager
     private ?ExceptionSensor $exceptionSensor;
 
     private ?OutgoingRequestSensor $outgoingRequestSensor;
+
     private ?QuerySensor $querySensor;
 
     // private ?QueuedJobSensor $queuedJobSensor;
