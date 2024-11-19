@@ -47,7 +47,6 @@ class SensorManager
         private Clock $clock,
         private Location $location,
         private UserProvider $user,
-        private PeakMemory $peakMemory,
         private RecordsBuffer $recordsBuffer = new RecordsBuffer,
     ) {
         //
@@ -68,7 +67,6 @@ class SensorManager
         $sensor = new RequestSensor(
             clock: $this->clock,
             executionState: $this->state,
-            peakMemory: $this->peakMemory,
             recordsBuffer: $this->recordsBuffer,
             user: $this->user,
         );
@@ -86,7 +84,6 @@ class SensorManager
         // $sensor = new CommandSensor(
         //     recordsBuffer: $this->recordsBuffer,
         //     executionState: $this->state,
-        //     peakMemory: $this->peakMemoryProvider(),
         //     user: $this->user,
         // );
 

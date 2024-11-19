@@ -172,12 +172,10 @@ final class NightwatchServiceProvider extends ServiceProvider
         ));
 
         $userProvider = new UserProvider($auth);
-        /** @var PeakMemory */
-        $peakMemory = $this->app->instance(PeakMemory::class, new PeakMemory);
 
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
-            $state, $clock, $location, $userProvider, $peakMemory
+            $state, $clock, $location, $userProvider
         ));
 
         //
