@@ -5,18 +5,17 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 
 it('goes fast', function () {
-    Config::set('logging.default', 'null');
-    Http::preventStrayRequests();
-    $response = Http::response('ok');
-    Http::fake(fn () => $response);
+    $config = app('config');
 
-    $length = null;
     Benchmark::dd([
         function () {
-            return base_path('foo/bar/baz');
+            //
         },
-        function () use (&$length) {
-            $length ??= base_path('foo/bar/baz');
+        function () {
+            //
         },
-    ], 300);
+        function () {
+            //
+        },
+    ], 1000);
 })->skip();
