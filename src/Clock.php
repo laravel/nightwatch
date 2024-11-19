@@ -17,7 +17,7 @@ class Clock
      */
     public Closure $microtimeResolver;
 
-    public function __construct(public float $executionStartInMicrotime)
+    public function __construct()
     {
         $this->microtimeResolver = static fn () => microtime(true);
     }
@@ -30,10 +30,5 @@ class Clock
     public function diffInMicrotime(float $start): float
     {
         return call_user_func($this->microtimeResolver) - $start;
-    }
-
-    public function executionStartInMicrotime(): float
-    {
-        return $this->executionStartInMicrotime;
     }
 }

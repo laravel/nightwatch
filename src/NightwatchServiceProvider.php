@@ -53,12 +53,20 @@ use function microtime;
 final class NightwatchServiceProvider extends ServiceProvider
 {
     private ?bool $disabled = false;
+    private float $timestamp;
 
     public function register(): void
     {
         if ($this->disabled()) {
             return;
         }
+
+        // We want to capture this as early as possible in case the the
+        // constant and server variable are not defined.
+        $this->timestamp = match (true) {
+            defined('LARAVEL_START') => LARAVEL_START,
+            default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
+        };
 
         $this->mergeConfig();
         $this->configureAgent();
@@ -150,17 +158,15 @@ final class NightwatchServiceProvider extends ServiceProvider
         ]);
 
         /** @var Clock */
-        $clock = $this->app->instance(Clock::class, new Clock(match (true) {
-            defined('LARAVEL_START') => LARAVEL_START,
-            default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
-        }));
+        $clock = $this->app->instance(Clock::class, new Clock);
 
         /** @var ExecutionState */
         $state = $this->app->instance(ExecutionState::class, new ExecutionState(
+            timestamp: $this->timestamp,
             trace: $traceId = (string) Str::uuid(),
             id: $traceId,
             context: 'request', // TODO
-            currentExecutionStageStartedAtMicrotime: $clock->executionStartInMicrotime(),
+            currentExecutionStageStartedAtMicrotime: $this->timestamp,
             deploy: $deploy ?? '',
             server: $server ?? '',
         ));

@@ -31,7 +31,6 @@ use function strlen;
 final class RequestSensor
 {
     public function __construct(
-        private Clock $clock,
         private ExecutionState $executionState,
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
@@ -74,7 +73,7 @@ final class RequestSensor
         }
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
-            timestamp: $this->clock->executionStartInMicrotime(),
+            timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', implode('|', $routeMethods).",{$routeDomain},{$routePath}"),
