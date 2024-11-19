@@ -53,6 +53,7 @@ use function microtime;
 final class NightwatchServiceProvider extends ServiceProvider
 {
     private ?bool $disabled = false;
+
     private float $timestamp;
 
     public function register(): void
