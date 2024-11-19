@@ -24,9 +24,6 @@ final class OutgoingRequestSensor
         private RecordsBuffer $recordsBuffer,
         private ExecutionState $executionState,
         private UserProvider $user,
-        private Clock $clock,
-        private string $server,
-        private string $traceId,
     ) {
         //
     }
@@ -36,37 +33,37 @@ final class OutgoingRequestSensor
      */
     public function __invoke(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
-        // $duration = (int) round(($endMicrotime - $startMicrotime) * 1000);
-        // /** @var 'http'|'https' */
-        // $scheme = $request->getUri()->getScheme();
+        $duration = (int) round(($endMicrotime - $startMicrotime) * 1_000_000);
 
-        // $this->executionState->outgoing_requests++;
-        // // $this->executionState->outgoing_requests_duration += $duration;
+        /** @var 'http'|'https' */
+        $scheme = $request->getUri()->getScheme();
 
-        // // $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
-        // //     timestamp: (int) $startMicrotime,
-        // //     deploy: $this->executionState->deploy,
-        // //     server: $this->server,
-        // //     group: hash('sha256', ''),
-        // //     trace_id: $this->traceId,
-        // //     execution_context: 'request',
-        // //     execution_id: '00000000-0000-0000-0000-000000000000',
-        // //     execution_offset: $this->clock->executionOffset($startMicrotime),
-        // //     user: $this->user->id(),
-        // //     method: $request->getMethod(),
-        // //     scheme: $scheme,
-        // //     host: $request->getUri()->getHost(),
-        // //     port: (string) ($request->getUri()->getPort() ?? match ($scheme) {
-        // //         'http' => 80,
-        // //         'https' => 443,
-        // //     }),
-        // //     path: $request->getUri()->getPath(),
-        // //     route: '',
-        // //     duration: $duration,
-        // //     request_size: $this->resolveMessageSize($request),
-        // //     response_size: $this->resolveMessageSize($response),
-        // //     status_code: (string) $response->getStatusCode(),
-        // // ));
+        $port = (string) ($request->getUri()->getPort() ?? match ($scheme) {
+            'http' => 80,
+            'https' => 443,
+        });
+
+        $this->executionState->outgoing_requests++;
+
+        $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
+            timestamp: $startMicrotime,
+            deploy: $this->executionState->deploy,
+            server: $this->executionState->server,
+            group: hash('sha256', ''),
+            trace_id: $this->executionState->trace,
+            execution_context: $this->executionState->context,
+            execution_id: $this->executionState->id,
+            user: $this->user->id(),
+            method: $request->getMethod(),
+            scheme: $scheme,
+            host: $request->getUri()->getHost(),
+            port: $port,
+            path: $request->getUri()->getPath(),
+            duration: $duration,
+            request_size: $this->resolveMessageSize($request),
+            response_size: $this->resolveMessageSize($response),
+            status_code: (string) $response->getStatusCode(),
+        ));
     }
 
     private function resolveMessageSize(MessageInterface $message): ?int

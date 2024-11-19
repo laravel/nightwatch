@@ -36,7 +36,7 @@ class SensorManager
     // private ?CacheEventSensor $cacheEventSensor;
     private ?ExceptionSensor $exceptionSensor;
 
-    // private ?OutgoingRequestSensor $outgoingRequestSensor;
+    private ?OutgoingRequestSensor $outgoingRequestSensor;
     private ?QuerySensor $querySensor;
 
     // private ?QueuedJobSensor $queuedJobSensor;
@@ -123,14 +123,13 @@ class SensorManager
 
     public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
-        // $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
-        //     recordsBuffer: $this->recordsBuffer,
-        //     executionState: $this->state,
-        //     user: $this->user,
-        //     clock: $this->clock,
-        // );
+        $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
+            recordsBuffer: $this->recordsBuffer,
+            executionState: $this->state,
+            user: $this->user,
+        );
 
-        // $sensor($startMicrotime, $endMicrotime, $request, $response);
+        $sensor($startMicrotime, $endMicrotime, $request, $response);
     }
 
     public function exception(Throwable $e): void

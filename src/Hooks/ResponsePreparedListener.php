@@ -11,7 +11,7 @@ use Laravel\Nightwatch\SensorManager;
 
 class ResponsePreparedListener
 {
-    public function __construct(private SensorManager $sensor, private ExecutionState $state)
+    public function __construct(private SensorManager $sensor, private ExecutionState $executionState)
     {
         //
     }
@@ -19,7 +19,7 @@ class ResponsePreparedListener
     public function __invoke(ResponsePrepared $event): void
     {
         try {
-            if ($this->state->stage === ExecutionStage::Render) {
+            if ($this->executionState->stage === ExecutionStage::Render) {
                 $this->sensor->stage(ExecutionStage::AfterMiddleware);
             }
         } catch (Exception $e) {

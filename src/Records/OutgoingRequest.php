@@ -13,14 +13,13 @@ final class OutgoingRequest
      * TODO limit string length
      */
     public function __construct(
-        public int $timestamp,
+        public float $timestamp,
         public string $deploy,
         public string $server,
         public string $group,
         public string $trace_id,
         public string $execution_context,
         public string $execution_id,
-        public int $execution_offset,
         public string $user,
         // --- /
         public string $method,
@@ -28,7 +27,6 @@ final class OutgoingRequest
         public string $host,
         public string $port,
         public string $path,
-        public string $route,
         public int $duration,
         public ?int $request_size,
         public ?int $response_size,
