@@ -49,7 +49,7 @@ class Config
      * }  $config
      */
     public function __construct(
-        #[\SensitiveParameter] array $config
+        #[SensitiveParameter] array $config
     ) {
         $this->disabled = $config['disabled'] ?? false;
         $this->envId = $config['env_id'] ?? '';
