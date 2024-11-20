@@ -2,15 +2,15 @@
 
 namespace Laravel\Nightwatch\Ingests\Local;
 
-use Illuminate\Log\LogManager;
 use Laravel\Nightwatch\Contracts\LocalIngest;
+use Psr\Log\LoggerInterface;
 
 /**
  * @internal
  */
 final class LogIngest implements LocalIngest
 {
-    public function __construct(private LogManager $log)
+    public function __construct(private LoggerInterface $log)
     {
         //
     }

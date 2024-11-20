@@ -11,7 +11,7 @@ final class PayloadBuffer
 {
     protected string $records = '';
 
-    public function __construct(private int $threshold)
+    public function __construct(private int $threshold = 8_000_000)
     {
         //
     }
