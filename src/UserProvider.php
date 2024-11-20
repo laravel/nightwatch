@@ -17,6 +17,7 @@ final class UserProvider
 
     public function id(): string
     {
+        // TODO: see pulse user ID resolution
         return Str::tinyText((string) $this->auth->id());
     }
 }

@@ -2,23 +2,25 @@
 
 namespace Laravel\Nightwatch\Factories;
 
-use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Foundation\Application;
+use Laravel\Nightwatch\Config\Config;
 use Laravel\Nightwatch\Contracts\LocalIngest;
+use RuntimeException;
 
 class LocalIngestFactory
 {
+    public function __construct(private Config $config)
+    {
+        //
+    }
+
     public function __invoke(Application $app): LocalIngest
     {
-        /** @var Config */
-        $config = $app->make(Config::class);
-        /** @var string */
-        $driver = $config->get('nightwatch.ingest.local.driver') ?? 'socket';
-
-        $factory = match ($driver) {
-            'log' => new LogIngestFactory,
+        $factory = match ($this->config->localIngest) {
+            'log' => new LogIngestFactory($this->config),
             'null' => new NullIngestFactory,
-            default => new SocketIngestFactory,
+            'socket' => new SocketIngestFactory($this->config),
+            default => throw new RuntimeException("Unknown local ingest [{$this->config->localIngest}]."),
         };
 
         return $factory($app);
