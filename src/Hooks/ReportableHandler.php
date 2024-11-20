@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\SensorManager;
 use Throwable;
 
-class ReportableHandler
+final class ReportableHandler
 {
     public function __construct(private SensorManager $sensor)
     {

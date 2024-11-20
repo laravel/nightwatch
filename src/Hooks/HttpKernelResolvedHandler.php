@@ -10,7 +10,7 @@ use Laravel\Nightwatch\SensorManager;
 
 use function class_exists;
 
-class HttpKernelResolvedHandler
+final class HttpKernelResolvedHandler
 {
     public function __construct(private SensorManager $sensor)
     {

@@ -9,7 +9,7 @@ use React\Socket\LimitingServer;
 use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
 
-class SocketServerFactory
+final class SocketServerFactory
 {
     public function __construct(private LoopInterface $loop)
     {

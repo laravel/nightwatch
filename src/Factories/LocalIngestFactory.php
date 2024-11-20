@@ -6,7 +6,7 @@ use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Foundation\Application;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 
-class LocalIngestFactory
+final class LocalIngestFactory
 {
     public function __invoke(Application $app): LocalIngest
     {

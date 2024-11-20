@@ -9,7 +9,7 @@ use Laravel\Nightwatch\SensorManager;
 
 use function debug_backtrace;
 
-class QueryExecutedListener
+final class QueryExecutedListener
 {
     public function __construct(private SensorManager $sensor)
     {
