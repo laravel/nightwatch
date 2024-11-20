@@ -18,12 +18,12 @@ use function hash;
 final class CacheEventSensor
 {
     public function __construct(
-        private RecordsBuffer $recordsBuffer,
-        private ExecutionState $executionState,
-        private UserProvider $user,
-        private Clock $clock,
-        private string $server,
-        private string $traceId,
+        // private RecordsBuffer $recordsBuffer,
+        // private ExecutionState $executionState,
+        // private UserProvider $user,
+        // private Clock $clock,
+        // private string $server,
+        // private string $traceId,
     ) {
         //
     }
@@ -33,15 +33,15 @@ final class CacheEventSensor
      */
     public function __invoke(CacheMissed|CacheHit $event): void
     {
-        $nowMicrotime = $this->clock->microtime();
+        // $nowMicrotime = $this->clock->microtime();
 
-        if ($event::class === CacheHit::class) {
-            $type = 'hit';
-            $this->executionState->cache_hits++;
-        } else {
-            $type = 'miss';
-            $this->executionState->cache_misses++;
-        }
+        // if ($event::class === CacheHit::class) {
+        //     $type = 'hit';
+        //     $this->executionState->cache_hits++;
+        // } else {
+        //     $type = 'miss';
+        //     $this->executionState->cache_misses++;
+        // }
 
         // $this->recordsBuffer->writeCacheEvent(new CacheEvent(
         //     timestamp: (int) $nowMicrotime,
