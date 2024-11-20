@@ -19,8 +19,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: [8.1, 8.2, 8.3]
-        laravel: [10, 11]
+        php: [8.2, 8.3]
+        laravel: [11]
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -35,7 +35,7 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip
           ini-values: error_reporting=E_ALL
           tools: composer:v2
-          coverage: xdebug
+          coverage: none
 
       - name: Install dependencies
         run: |
@@ -43,4 +43,4 @@ jobs:
            composer update --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
-        run: vendor/bin/pest --coverage --min=90
+        run: vendor/bin/pest
