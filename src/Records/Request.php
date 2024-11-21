@@ -10,6 +10,7 @@ use Laravel\Nightwatch\Types\Str;
 final class Request
 {
     public int $v = 1;
+
     public string $t = 'request';
 
     /**

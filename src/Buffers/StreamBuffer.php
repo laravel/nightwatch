@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Buffers;
 
 use function strlen;
+use function substr;
 
 /**
  * @internal

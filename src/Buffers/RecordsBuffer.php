@@ -10,6 +10,7 @@ use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Records\Request;
 
+use function count;
 use function json_encode;
 
 /**

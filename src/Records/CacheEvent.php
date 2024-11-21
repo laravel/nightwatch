@@ -10,6 +10,7 @@ use Laravel\Nightwatch\Types\Str;
 final class CacheEvent
 {
     public int $v = 1;
+
     public string $t = 'cache_event';
 
     public function __construct(
