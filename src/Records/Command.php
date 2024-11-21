@@ -10,6 +10,7 @@ use Laravel\Nightwatch\Types\Str;
 final class Command
 {
     public int $v = 1;
+    public string $t = 'command';
 
     /**
      * TODO limit size of all int values across all record types.

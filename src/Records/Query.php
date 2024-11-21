@@ -11,6 +11,7 @@ use Laravel\Nightwatch\Types\Str;
 final class Query
 {
     public int $v = 1;
+    public string $t = 'query';
 
     public function __construct(
         public float $timestamp,
