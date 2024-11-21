@@ -121,8 +121,8 @@ it('does not read the stream into memory to determine the size of the response',
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('outgoing-request:0.request_size', null);
-    $ingest->assertLatestWrite('outgoing-request:0.response_size', null);
+    $ingest->assertLatestWrite('outgoing-request:0.request_size', 0);
+    $ingest->assertLatestWrite('outgoing-request:0.response_size', 0);
 });
 
 it('captures the port when specified', function () {
@@ -177,6 +177,25 @@ it('captures the default port for secure requests when not specified', function 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('outgoing-request:0.port', '443');
+});
+
+it('gracefully handles request / response sizes that are streams', function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        Http::withBody(new NoReadStream(null))->post('https://laravel.com');
+    });
+    Http::fake([
+        'https://laravel.com' => function () {
+            return Http::response(new NoReadStream(null));
+        },
+    ]);
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('outgoing-request:0.request_size', 0);
+    $ingest->assertLatestWrite('outgoing-request:0.response_size', 0);
 });
 
 final class NoReadStream implements StreamInterface

@@ -59,8 +59,8 @@ final class OutgoingRequestSensor
             port: $port,
             path: $request->getUri()->getPath(),
             duration: $duration,
-            request_size: $this->resolveMessageSize($request),
-            response_size: $this->resolveMessageSize($response),
+            request_size: $this->resolveMessageSize($request) ?? 0,
+            response_size: $this->resolveMessageSize($response) ?? 0,
             status_code: (string) $response->getStatusCode(),
         ));
     }
