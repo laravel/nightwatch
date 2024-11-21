@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\SensorManager;
 
-class HttpClientFactoryResolvedHandler
+final class HttpClientFactoryResolvedHandler
 {
     public function __construct(private SensorManager $sensor, private Clock $clock)
     {

@@ -25,16 +25,13 @@ it('gracefully handles exceptions in the before middleware', function () {
             throw new RuntimeException('Whoops!');
         }
     };
-    $clock = new class(0) extends Clock
-    {
-        public $thrown = false;
 
-        public function microtime(): float
-        {
-            $this->thrown = true;
+    $thrown = false;
+    $clock = app(Clock::class);
+    $clock->microtimeResolver = function () use (&$thrown) : float {
+        $thrown = true;
 
-            throw new RuntimeException('Whoops!');
-        }
+        throw new RuntimeException('Whoops!');
     };
 
     $middleware = new GuzzleMiddleware($sensor, $clock);
@@ -42,7 +39,7 @@ it('gracefully handles exceptions in the before middleware', function () {
     $stack = $middleware(fn () => new Response(body: 'ok'));
     $response = $stack(new Request('GET', '/test'), []);
 
-    $this->assertTrue($clock->thrown);
+    $this->assertTrue($thrown);
     $this->assertSame('ok', (string) $response->getBody());
 });
 

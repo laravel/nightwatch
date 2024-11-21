@@ -4,7 +4,7 @@ namespace Laravel\Nightwatch\Factories;
 
 use Laravel\Nightwatch\Ingests\Local\NullIngest;
 
-class NullIngestFactory
+final class NullIngestFactory
 {
     public function __invoke(): NullIngest
     {

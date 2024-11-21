@@ -4,7 +4,7 @@ namespace Laravel\Nightwatch\Config;
 
 use SensitiveParameter;
 
-class Config
+final class Config
 {
     public bool $disabled;
 

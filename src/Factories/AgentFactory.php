@@ -14,7 +14,7 @@ use React\Http\Browser;
 use React\Socket\Connector;
 use React\Socket\ServerInterface;
 
-class AgentFactory
+final class AgentFactory
 {
     public function __construct(private Config $config)
     {

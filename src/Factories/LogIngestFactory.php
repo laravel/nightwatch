@@ -7,7 +7,7 @@ use Illuminate\Log\LogManager;
 use Laravel\Nightwatch\Config\Config;
 use Laravel\Nightwatch\Ingests\Local\LogIngest;
 
-class LogIngestFactory
+final class LogIngestFactory
 {
     public function __construct(private Config $config)
     {

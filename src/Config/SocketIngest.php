@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Config;
 
-class SocketIngest
+final class SocketIngest
 {
     public string $uri;
 

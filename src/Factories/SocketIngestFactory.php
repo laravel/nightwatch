@@ -8,7 +8,7 @@ use Laravel\Nightwatch\Ingests\Local\SocketIngest;
 use React\Socket\TcpConnector;
 use React\Socket\TimeoutConnector;
 
-class SocketIngestFactory
+final class SocketIngestFactory
 {
     public function __construct(private Config $config)
     {

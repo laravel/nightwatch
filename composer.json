@@ -1,12 +1,12 @@
 {
     "name": "laravel/nightwatch",
-    "description": "Laravel Package ...",
+    "description": "Laravel Nightwatch is a hosted application monitoring platform built for Laravel developers and teams that demand real-time insights into their applications.",
     "keywords": ["laravel"],
-    "homepage": "https://github.com/laravel/package-template",
+    "homepage": "https://github.com/laravel/nightwatch",
     "license": "MIT",
     "support": {
-        "issues": "https://github.com/laravel/package-template/issues",
-        "source": "https://github.com/laravel/package-template"
+        "issues": "https://github.com/laravel/nightwatch/issues",
+        "source": "https://github.com/laravel/nightwatch"
     },
     "authors": [
         {
@@ -15,9 +15,9 @@
         }
     ],
     "require": {
-        "php": "^8.2",
-        "illuminate/console": "^11.0",
-        "illuminate/support": "^11.0",
+        "php": "^8.1",
+        "illuminate/console": "^10.0|^11.0",
+        "illuminate/support": "^10.0|^11.0",
         "react/async": "^4.2",
         "react/http": "^1.10.0",
         "react/socket": "^1.15.0"
@@ -52,6 +52,12 @@
             "Composer\\Config::disableProcessTimeout",
             "@php vendor/bin/testbench workbench:build --ansi",
             "@php vendor/bin/testbench serve"
+        ],
+        "lint": [
+            "@php vendor/bin/phpstan analyse"
+        ],
+        "test": [
+            "@php vendor/bin/pest"
         ]
     },
     "extra": {

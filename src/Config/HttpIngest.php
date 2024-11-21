@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Config;
 
-class HttpIngest
+final class HttpIngest
 {
     public string $uri;
 

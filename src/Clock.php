@@ -10,7 +10,7 @@ use function microtime;
 /**
  * @internal
  */
-class Clock
+final class Clock
 {
     /**
      * @var (Closure(): float)

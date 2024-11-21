@@ -6,7 +6,7 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Exceptions\Handler;
 use Laravel\Nightwatch\SensorManager;
 
-class ExceptionHandlerResolvedHandler
+final class ExceptionHandlerResolvedHandler
 {
     public function __construct(private SensorManager $sensor)
     {

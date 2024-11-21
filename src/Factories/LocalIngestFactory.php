@@ -7,7 +7,7 @@ use Laravel\Nightwatch\Config\Config;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use RuntimeException;
 
-class LocalIngestFactory
+final class LocalIngestFactory
 {
     public function __construct(private Config $config)
     {
