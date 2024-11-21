@@ -3,29 +3,42 @@
 return [
     'disabled' => env('NIGHTWATCH_DISABLED', false),
 
-    'app_id' => '123',
-    'app_secret' => 'abc',
+    'env_id' => env('NIGHTWATCH_ENV_ID'),
+    'env_secret' => env('NIGHTWATCH_ENV_SECRET'),
 
-    'deploy' => env('NIGHTWATCH_DEPLOY'),
-    'server' => gethostname(),
+    'deployment' => env('NIGHTWATCH_DEPLOY'),
+    'server' => env('NIGHTWATCH_SERVER', gethostname() ?: ''),
 
-    'ingest' => [
-        'local' => [
-            // options: omitted, "log", "null"
-            'driver' => 'log',
-            'uri' => '127.0.0.1:2357',
-            'connection_limit' => 20,
-            'connection_timeout' => 0.5,              // seconds
-            'timeout' => 0.5,                         // seconds
-            'buffer_threshold' => 1 * 1_000 * 1_000, // bytes
+    'local_ingest' => env('NIGHTWATCH_LOCAL_INGEST', 'socket'), // "socket"|"log"|"null"
+    'remote_ingest' => env('NIGHTWATCH_REMOTE_INGEST', 'http'),
+
+    'buffer_threshold' => env('NIGHTWATCH_BUFFER_THRESHOLD', 1_000_000),
+
+    // TODO what is the best default here? Could be a LOT of errors depending on the traffic.
+    'error_log_channel' => env('NIGHTWATCH_ERROR_LOG_CHANNEL', 'stderr'),
+
+    'ingests' => [
+
+        'socket' => [
+            'uri' => env('NIGHTWATCH_SOCKET_INGEST_URI', '127.0.0.1:2407'),
+            'connection_limit' => env('NIGHTWATCH_SOCKET_INGEST_CONNECTION_LIMIT', 20),
+            'connection_timeout' => env('NIGHTWATCH_SOCKET_INGEST_CONNECTION_TIMEOUT', 0.5),
+            'timeout' => env('NIGHTWATCH_SOCKET_INGEST_CONNECTION_TIMEOUT', 0.5),
         ],
 
-        'remote' => [
-            'uri' => 'https://khq5ni773stuucqrxebn3a5zbi0ypexu.lambda-url.us-east-1.on.aws',
-            'connection_limit' => 2,
-            'timeout' => 3,                           // seconds
-            'connection_timeout' => 1,                // seconds
-            'buffer_threshold' => 10 * 1_000 * 1_000, // bytes
+        // TODO should this be "remote:http" || "local:http" etc. Will Vapor send directly via HTTP? What about local:log and remote:log?
+        'http' => [
+            // TODO remove the fallback here.
+            'uri' => env('NIGHTWATCH_HTTP_INGEST_URI', 'https://khq5ni773stuucqrxebn3a5zbi0ypexu.lambda-url.us-east-1.on.aws'),
+            // TODO should remote http ingest connnection limit be configurable? Probably not.
+            'connection_limit' => env('NIGHTWATCH_HTTP_INGEST_CONNECTION_LIMIT', 2),
+            'connection_timeout' => env('NIGHTWATCH_HTTP_INGEST_CONNECTION_TIMEOUT', 1),
+            'timeout' => env('NIGHTWATCH_HTTP_INGEST_TIMEOUT', 3),
         ],
+
+        'log' => [
+            'channel' => env('NIGHTWATCH_LOG_INGEST_CHANNEL', 'single'),
+        ],
+
     ],
 ];

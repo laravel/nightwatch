@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 
-class BootedHandler
+final class BootedHandler
 {
     public function __construct(private SensorManager $sensor)
     {

@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
@@ -31,7 +30,6 @@ use function strlen;
 final class RequestSensor
 {
     public function __construct(
-        private Clock $clock,
         private ExecutionState $executionState,
         private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
@@ -74,7 +72,7 @@ final class RequestSensor
         }
 
         $this->recordsBuffer->writeRequest(new RequestRecord(
-            timestamp: $this->clock->executionStartInMicrotime(),
+            timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', implode('|', $routeMethods).",{$routeDomain},{$routePath}"),

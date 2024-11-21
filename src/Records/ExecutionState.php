@@ -25,6 +25,7 @@ final class ExecutionState
      * @param  array<value-of<ExecutionStage>, int>  $stageDurations
      */
     public function __construct(
+        public float $timestamp,
         public string $trace,
         public string $id,
         public string $context,

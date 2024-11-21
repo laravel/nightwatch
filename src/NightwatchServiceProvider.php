@@ -9,7 +9,7 @@ use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\WritingKey;
-use Illuminate\Contracts\Config\Repository as Config;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -27,6 +27,7 @@ use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Nightwatch\Config\Config;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
@@ -56,40 +57,55 @@ use function microtime;
  */
 final class NightwatchServiceProvider extends ServiceProvider
 {
-    private ?bool $disabled = false;
+    private float $timestamp;
+
+    private Config $config;
 
     public function register(): void
     {
-        if ($this->disabled()) {
-            return;
-        }
+        // We capture this as early as possible in case the the constant and
+        // server variable are not defined.
+        $this->timestamp = match (true) {
+            defined('LARAVEL_START') => LARAVEL_START,
+            default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
+        };
 
-        $this->mergeConfig();
-        $this->configureAgent();
-        $this->configureIngest();
-        $this->configureMiddleware();
+        $this->registerConfig();
+        $this->registerBindings();
     }
 
     public function boot(): void
     {
-        if ($this->disabled()) {
-            return;
-        }
-
         if ($this->app->runningInConsole()) {
             $this->registerPublications();
             $this->registerCommands();
         }
 
+        if ($this->config->disabled) {
+            return;
+        }
+
         $this->registerHooks();
     }
 
-    private function mergeConfig(): void
+    private function registerConfig(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
+
+        /** @var Repository */
+        $config = $this->app->make(Repository::class);
+
+        $this->config = new Config($config->all()['nightwatch'] ?? []);
     }
 
-    private function configureMiddleware(): void
+    private function registerBindings(): void
+    {
+        $this->registerAgent();
+        $this->registerLocalIngest();
+        $this->registerMiddleware();
+    }
+
+    private function registerMiddleware(): void
     {
         $this->app->singleton(RouteMiddleware::class);
 
@@ -98,14 +114,14 @@ final class NightwatchServiceProvider extends ServiceProvider
         }
     }
 
-    private function configureAgent(): void
+    private function registerAgent(): void
     {
-        $this->app->singleton(Agent::class, (new AgentFactory)(...));
+        $this->app->singleton(Agent::class, (new AgentFactory($this->config))(...));
     }
 
-    private function configureIngest(): void
+    private function registerLocalIngest(): void
     {
-        $this->app->singleton(LocalIngest::class, (new LocalIngestFactory)(...));
+        $this->app->singleton(LocalIngest::class, (new LocalIngestFactory($this->config))(...));
     }
 
     private function registerPublications(): void
@@ -139,34 +155,18 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var AuthManager */
         $auth = $this->app->make(AuthManager::class);
 
-        /** @var Config */
-        $config = $this->app->make(Config::class);
-        /**
-         * @var string|null $deploy
-         * @var string|null $server
-         */
-        [
-            'nightwatch.deploy' => $deploy,
-            'nightwatch.server' => $server,
-        ] = $config->get([
-            'nightwatch.deploy',
-            'nightwatch.server',
-        ]);
-
         /** @var Clock */
-        $clock = $this->app->instance(Clock::class, new Clock(match (true) {
-            defined('LARAVEL_START') => LARAVEL_START,
-            default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
-        }));
+        $clock = $this->app->instance(Clock::class, new Clock);
 
         /** @var ExecutionState */
         $state = $this->app->instance(ExecutionState::class, new ExecutionState(
+            timestamp: $this->timestamp,
             trace: $traceId = (string) Str::uuid(),
             id: $traceId,
             context: 'request', // TODO
-            currentExecutionStageStartedAtMicrotime: $clock->executionStartInMicrotime(),
-            deploy: $deploy ?? '',
-            server: $server ?? '',
+            currentExecutionStageStartedAtMicrotime: $this->timestamp,
+            deploy: $this->config->deployment,
+            server: $this->config->server,
         ));
 
         /** @var Location */
@@ -291,17 +291,5 @@ final class NightwatchServiceProvider extends ServiceProvider
         //        //
         //    }
         //});
-    }
-
-    private function disabled(): bool
-    {
-        if ($this->disabled === null) {
-            /** @var Config */
-            $config = $this->app->make(Config::class);
-
-            $this->disabled = (bool) $config->get('nightwatch.disabled');
-        }
-
-        return $this->disabled;
     }
 }

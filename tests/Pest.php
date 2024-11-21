@@ -34,7 +34,7 @@ function setExecutionStart(CarbonImmutable $timestamp): void
 
 function syncClock(DateTimeInterface $timestamp): void
 {
-    app(Clock::class)->executionStartInMicrotime = (float) $timestamp->format('U.u');
+    app(ExecutionState::class)->timestamp = (float) $timestamp->format('U.u');
     travelTo($timestamp);
 }
 

@@ -3,7 +3,6 @@ name: tests
 on:
   push:
     branches:
-      - master
       - '*.x'
   pull_request:
   schedule:
@@ -14,7 +13,7 @@ permissions:
 
 jobs:
   tests:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: true
@@ -35,12 +34,10 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip
           ini-values: error_reporting=E_ALL
           tools: composer:v2
-          coverage: none
+          coverage: xdebug
 
       - name: Install dependencies
-        run: |
-           composer require "illuminate/contracts=^${{ matrix.laravel }}" --no-update
-           composer update --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
-        run: vendor/bin/pest
+        run: vendor/bin/pest --coverage --min=80

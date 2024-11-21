@@ -9,7 +9,7 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
 
-class PreparingResponseListener
+final class PreparingResponseListener
 {
     public function __construct(private SensorManager $sensor, private ExecutionState $executionState)
     {

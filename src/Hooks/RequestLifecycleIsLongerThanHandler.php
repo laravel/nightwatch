@@ -12,7 +12,7 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\Response;
 
-class RequestLifecycleIsLongerThanHandler
+final class RequestLifecycleIsLongerThanHandler
 {
     public function __construct(
         private SensorManager $sensor,
