@@ -3,7 +3,7 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
-use Laravel\Nightwatch\Buffers\PayloadBuffer;
+use Laravel\Nightwatch\Buffers\StreamBuffer;
 use Laravel\Nightwatch\Client;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Config\Config;
@@ -44,7 +44,7 @@ final class AgentFactory
 
         /** @var Clock */
         $clock = $app->make(Clock::class);
-        $buffer = new PayloadBuffer;
+        $buffer = new StreamBuffer;
         $ingest = new HttpIngest($client, $clock, $this->config->httpIngest->connectionLimit);
 
         return new Agent($buffer, $ingest, $loop, $this->config->socketIngest->timeout);

@@ -43,7 +43,7 @@ final class CacheEventSensor
         //     $this->executionState->cache_misses++;
         // }
 
-        // $this->recordsBuffer->writeCacheEvent(new CacheEvent(
+        // $this->recordsBuffer->write(new CacheEvent(
         //     timestamp: (int) $nowMicrotime,
         //     deploy: $this->executionState->deploy,
         //     server: $this->server,

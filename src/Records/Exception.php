@@ -12,6 +12,8 @@ final class Exception
 {
     public int $v = 1;
 
+    public string $t = 'exception';
+
     public function __construct(
         public float $timestamp,
         public string $deploy,

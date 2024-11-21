@@ -57,7 +57,7 @@ final class QueuedJobSensor
 
         // $this->executionState->jobs_queued++;
 
-        // $this->recordsBuffer->writeQueuedJob(new QueuedJob(
+        // $this->recordsBuffer->write(new QueuedJob(
         //     timestamp: (int) $nowMicrotime,
         //     deploy: $this->executionState->deploy,
         //     server: $this->server,

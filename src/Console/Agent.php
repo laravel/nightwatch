@@ -3,7 +3,7 @@
 namespace Laravel\Nightwatch\Console;
 
 use Illuminate\Console\Command;
-use Laravel\Nightwatch\Buffers\PayloadBuffer;
+use Laravel\Nightwatch\Buffers\StreamBuffer;
 use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
 use Laravel\Nightwatch\Ingests\Remote\IngestSucceededResult;
 use Laravel\Nightwatch\Ingests\Remote\NullIngest;
@@ -42,7 +42,7 @@ final class Agent extends Command
     private ?TimerInterface $flushBufferAfterDelayTimer;
 
     public function __construct(
-        private PayloadBuffer $buffer,
+        private StreamBuffer $buffer,
         private HttpIngest|NullIngest $ingest,
         private LoopInterface $loop,
         private int|float $timeout,

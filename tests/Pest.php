@@ -6,7 +6,6 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
@@ -36,11 +35,6 @@ function syncClock(DateTimeInterface $timestamp): void
 {
     app(ExecutionState::class)->timestamp = (float) $timestamp->format('U.u');
     travelTo($timestamp);
-}
-
-function records(): RecordsBuffer
-{
-    return app(RecordsBuffer::class);
 }
 
 function setDeploy(string $deploy): void

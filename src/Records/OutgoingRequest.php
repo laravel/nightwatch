@@ -9,6 +9,8 @@ final class OutgoingRequest
 {
     public int $v = 1;
 
+    public string $t = 'outgoing_request';
+
     /**
      * TODO limit string length
      */

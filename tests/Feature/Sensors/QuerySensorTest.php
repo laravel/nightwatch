@@ -45,9 +45,10 @@ it('can ingest queries', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('queries', [
+    $ingest->assertLatestWrite('query:*', [
         [
             'v' => 1,
+            't' => 'query',
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
@@ -84,7 +85,7 @@ it('captures aggregate query data on the request', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.queries', 2);
+    $ingest->assertLatestWrite('request:0.queries', 2);
 });
 
 it('always uses current time minus execution time for the timestamp', function () {
@@ -104,5 +105,5 @@ it('always uses current time minus execution time for the timestamp', function (
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('queries.0.timestamp', 946688523.466665);
+    $ingest->assertLatestWrite('query:0.timestamp', 946688523.466665);
 });

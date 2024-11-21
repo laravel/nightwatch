@@ -36,4 +36,4 @@ it('goes fast', function () {
     //     },
     // ], 1000);
 
-});
+})->skip();

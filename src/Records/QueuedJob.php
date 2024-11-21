@@ -11,6 +11,8 @@ final class QueuedJob
 {
     public int $v = 1;
 
+    public string $t = 'queued_job';
+
     public function __construct(
         public int $timestamp,
         public string $deploy,
