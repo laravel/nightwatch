@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Config;
 
-class LogIngest
+final class LogIngest
 {
     public string $channel;
 
