@@ -84,6 +84,7 @@ it('can ingest cache misses', function () {
         'cache_events' => [
             [
                 'v' => 1,
+                't' => 'cache-event',
                 'timestamp' => 946688523.459289,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
@@ -181,6 +182,7 @@ it('can ingest cache hits', function () {
         'cache_events' => [
             [
                 'v' => 1,
+                't' => 'cache-event',
                 'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
@@ -198,6 +200,7 @@ it('can ingest cache hits', function () {
             ],
             [
                 'v' => 1,
+                't' => 'cache-event',
                 'timestamp' => 946688523.459289,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
@@ -294,6 +297,7 @@ it('can ingest cache writes', function () {
         'cache_events' => [
             [
                 'v' => 1,
+                't' => 'cache-event',
                 'timestamp' => 946688523.459289,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
