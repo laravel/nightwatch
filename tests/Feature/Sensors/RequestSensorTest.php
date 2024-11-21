@@ -35,9 +35,10 @@ it('can ingest requests', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests', [
+    $ingest->assertLatestWrite([
         [
             'v' => 1,
+            't' => 'request',
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
@@ -95,7 +96,7 @@ it('captures the response size', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.response_size', 16);
+    $ingest->assertLatestWrite('request:0.response_size', 16);
 });
 
 it('captures the response size of a streamed file', function () {
@@ -104,7 +105,7 @@ it('captures the response size of a streamed file', function () {
 
     $response = get('/users');
 
-    $ingest->assertLatestWrite('requests.0.response_size', 17);
+    $ingest->assertLatestWrite('request:0.response_size', 17);
 });
 
 it('gracefully handles response size for a streamed file that is deleted after sending the response', function () {
@@ -126,7 +127,7 @@ it('gracefully handles response size for a streamed file that is deleted after s
     $sensor->request($request, $response);
     $ingest->write($sensor->flush());
 
-    $ingest->assertLatestWrite('requests.0.response_size', 0);
+    $ingest->assertLatestWrite('request:0.response_size', 0);
 });
 
 it('gracefully handles response size for streamed responses', function () {
@@ -137,7 +138,7 @@ it('gracefully handles response size for streamed responses', function () {
 
     get('/users');
 
-    $ingest->assertLatestWrite('requests.0.response_size', 0);
+    $ingest->assertLatestWrite('request:0.response_size', 0);
 });
 
 it('captures the content-length when present on a streamed response of unknown size', function () {
@@ -148,7 +149,7 @@ it('captures the content-length when present on a streamed response of unknown s
 
     get('/users');
 
-    $ingest->assertLatestWrite('requests.0.response_size', 2);
+    $ingest->assertLatestWrite('request:0.response_size', 2);
 });
 
 it('uses the content-length header as the response size when present on a streamed file response where the file is deleted after sending', function () {
@@ -168,7 +169,7 @@ it('uses the content-length header as the response size when present on a stream
     $sensor->request($request, $response);
     $ingest->write($sensor->flush());
 
-    $ingest->assertLatestWrite('requests.0.response_size', 17);
+    $ingest->assertLatestWrite('request:0.response_size', 17);
 });
 
 it('captures the request size', function () {
@@ -179,7 +180,7 @@ it('captures the request size', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.request_size', 3);
+    $ingest->assertLatestWrite('request:0.request_size', 3);
 });
 
 it('captures the authenticated user', function () {
@@ -191,7 +192,7 @@ it('captures the authenticated user', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.user', 'abc-123');
+    $ingest->assertLatestWrite('request:0.user', 'abc-123');
 });
 
 it('uses the default port for the scheme when not port is available to the request', function () {
@@ -212,7 +213,7 @@ it('uses the default port for the scheme when not port is available to the reque
     expect($request->getPort())->toBeNull();
     expect($request->getScheme())->toBe('https');
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.port', 443);
+    $ingest->assertLatestWrite('request:0.port', 443);
 
     $request = (new class extends Request
     {
@@ -227,7 +228,7 @@ it('uses the default port for the scheme when not port is available to the reque
     expect($request->getPort())->toBeNull();
     expect($request->getScheme())->toBe('http');
     $ingest->assertWrittenTimes(2);
-    $ingest->assertLatestWrite('requests.0.port', 80);
+    $ingest->assertLatestWrite('request:0.port', 80);
 });
 
 it('captures query parameters', function () {
@@ -238,7 +239,7 @@ it('captures query parameters', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.query', 'key_1=value&key_2[sub_field]=value&key_3[]=value&key_4[9]=value&key_5[][][foo][9]=bar&flag_value');
+    $ingest->assertLatestWrite('request:0.query', 'key_1=value&key_2[sub_field]=value&key_3[]=value&key_4[9]=value&key_5[][][foo][9]=bar&flag_value');
 });
 
 it('captures the route name', function () {
@@ -249,7 +250,7 @@ it('captures the route name', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.route_name', 'users.index');
+    $ingest->assertLatestWrite('request:0.route_name', 'users.index');
 });
 
 it('captures the route methods', function () {
@@ -260,7 +261,7 @@ it('captures the route methods', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.route_methods', ['GET', 'HEAD']);
+    $ingest->assertLatestWrite('request:0.route_methods', ['GET', 'HEAD']);
 });
 
 it('captures route actions for closures', function () {
@@ -271,7 +272,7 @@ it('captures route actions for closures', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.route_action', 'Closure');
+    $ingest->assertLatestWrite('request:0.route_action', 'Closure');
 });
 
 it('captures route actions for controller classes', function () {
@@ -282,7 +283,7 @@ it('captures route actions for controller classes', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.route_action', 'App\Http\UserController@index');
+    $ingest->assertLatestWrite('request:0.route_action', 'App\Http\UserController@index');
 });
 
 it('captures real path and route path', function () {
@@ -293,8 +294,8 @@ it('captures real path and route path', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.path', '/users/123');
-    $ingest->assertLatestWrite('requests.0.route_path', '/users/{user}');
+    $ingest->assertLatestWrite('request:0.path', '/users/123');
+    $ingest->assertLatestWrite('request:0.route_path', '/users/{user}');
 });
 
 it('captures subdomain and route domain', function () {
@@ -305,8 +306,8 @@ it('captures subdomain and route domain', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.host', 'forge.laravel.com');
-    $ingest->assertLatestWrite('requests.0.route_domain', '{product}.laravel.com');
+    $ingest->assertLatestWrite('request:0.host', 'forge.laravel.com');
+    $ingest->assertLatestWrite('request:0.route_domain', '{product}.laravel.com');
 });
 
 it('captures the request URL user', function () {
@@ -317,7 +318,7 @@ it('captures the request URL user', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.url_user', 'tim');
+    $ingest->assertLatestWrite('request:0.url_user', 'tim');
     expect($ingest->latestWriteAsString())->not->toContain('secret');
 });
 
@@ -329,8 +330,8 @@ it('records the requests user whilst ommiting the password', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.host', 'forge.laravel.com');
-    $ingest->assertLatestWrite('requests.0.route_domain', '{product}.laravel.com');
+    $ingest->assertLatestWrite('request:0.host', 'forge.laravel.com');
+    $ingest->assertLatestWrite('request:0.route_domain', '{product}.laravel.com');
 });
 
 it('captures the duration in microseconds', function () {
@@ -345,7 +346,7 @@ it('captures the duration in microseconds', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('consistently sorts the route methods', function () {
@@ -356,12 +357,12 @@ it('consistently sorts the route methods', function () {
     $response = get('/users');
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.route_methods', ['GET', 'HEAD', 'PATCH', 'POST']);
+    $ingest->assertLatestWrite('request:0.route_methods', ['GET', 'HEAD', 'PATCH', 'POST']);
 
     $response = get('/users/123');
     $response->assertOk();
     $ingest->assertWrittenTimes(2);
-    $ingest->assertLatestWrite('requests.0.route_methods', ['GET', 'HEAD', 'PATCH', 'POST']);
+    $ingest->assertLatestWrite('request:0.route_methods', ['GET', 'HEAD', 'PATCH', 'POST']);
 });
 
 it('handles HEAD requests', function () {
@@ -372,7 +373,7 @@ it('handles HEAD requests', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.response_size', 0);
+    $ingest->assertLatestWrite('request:0.response_size', 0);
 });
 
 it('handles 204 no content requests', function () {
@@ -383,7 +384,7 @@ it('handles 204 no content requests', function () {
 
     $response->assertNoContent();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.response_size', 0);
+    $ingest->assertLatestWrite('request:0.response_size', 0);
 });
 
 it('captures the route group', function () {
@@ -394,7 +395,7 @@ it('captures the route group', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0._group', hash('md5', 'GET|HEAD,{product}.laravel.com,/users/{user}'));
+    $ingest->assertLatestWrite('request:0._group', hash('md5', 'GET|HEAD,{product}.laravel.com,/users/{user}'));
 });
 
 it('handles the root path', function () {
@@ -405,8 +406,8 @@ it('handles the root path', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.route_path', '/');
-    $ingest->assertLatestWrite('requests.0.path', '/');
+    $ingest->assertLatestWrite('request:0.route_path', '/');
+    $ingest->assertLatestWrite('request:0.path', '/');
 });
 
 it('gracefully handles non-string query string', function () {
@@ -419,7 +420,7 @@ it('gracefully handles non-string query string', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.query', '');
+    $ingest->assertLatestWrite('request:0.query', '');
 });
 
 it('captures bootstrap execution stage', function () {
@@ -434,8 +435,8 @@ it('captures bootstrap execution stage', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.bootstrap', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.bootstrap', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('captures global before middleware duration', function () {
@@ -456,8 +457,8 @@ it('captures global before middleware duration', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.before_middleware', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.before_middleware', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('captures route before middleware duration', function () {
@@ -473,8 +474,8 @@ it('captures route before middleware duration', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.before_middleware', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.before_middleware', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('captures action duration', function () {
@@ -489,8 +490,8 @@ it('captures action duration', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.action', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.action', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('captures render duration', function () {
@@ -509,8 +510,8 @@ it('captures render duration', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.render', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.render', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('captures route after middleware duration', function () {
@@ -526,8 +527,8 @@ it('captures route after middleware duration', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.after_middleware', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.after_middleware', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('captures global after middleware duration', function () {
@@ -547,8 +548,8 @@ it('captures global after middleware duration', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.after_middleware', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.after_middleware', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('captures sending duration', function () {
@@ -567,8 +568,8 @@ it('captures sending duration', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.sending', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.sending', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('captures global middleware terminating duration', function () {
@@ -595,8 +596,8 @@ it('captures global middleware terminating duration', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.terminating', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.terminating', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('captures route middleware terminating duration', function () {
@@ -619,8 +620,8 @@ it('captures route middleware terminating duration', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.terminating', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.terminating', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('captures terminating callback duration', function () {
@@ -634,8 +635,8 @@ it('captures terminating callback duration', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.terminating', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.terminating', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('captures terminating duration for unknown routes', function () {
@@ -649,8 +650,8 @@ it('captures terminating duration for unknown routes', function () {
 
     $response->assertNotFound();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.terminating', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.terminating', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('captures middleware duration for unknown routes and collapses "after" middleware into "before"', function () {
@@ -671,9 +672,9 @@ it('captures middleware duration for unknown routes and collapses "after" middle
 
     $response->assertNotFound();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.before_middleware', 3);
-    $ingest->assertLatestWrite('requests.0.after_middleware', 0);
-    $ingest->assertLatestWrite('requests.0.duration', 3);
+    $ingest->assertLatestWrite('request:0.before_middleware', 3);
+    $ingest->assertLatestWrite('request:0.after_middleware', 0);
+    $ingest->assertLatestWrite('request:0.duration', 3);
 });
 
 it('captures middleware durations for global middleware that return a response and it collapses "after" middleware into "before"', function () {
@@ -701,9 +702,9 @@ it('captures middleware durations for global middleware that return a response a
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.before_middleware', 6);
-    $ingest->assertLatestWrite('requests.0.after_middleware', 0);
-    $ingest->assertLatestWrite('requests.0.duration', 6);
+    $ingest->assertLatestWrite('request:0.before_middleware', 6);
+    $ingest->assertLatestWrite('request:0.after_middleware', 0);
+    $ingest->assertLatestWrite('request:0.duration', 6);
 });
 
 it('captures the render duration for responses returned from a middleware as part of the middleware stage', function () {
@@ -723,8 +724,8 @@ it('captures the render duration for responses returned from a middleware as par
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.before_middleware', 5);
-    $ingest->assertLatestWrite('requests.0.duration', 5);
+    $ingest->assertLatestWrite('request:0.before_middleware', 5);
+    $ingest->assertLatestWrite('request:0.duration', 5);
 });
 
 it('supports custom request methods', function () {
@@ -736,6 +737,6 @@ it('supports custom request methods', function () {
     $response->assertOk();
     $response->assertContent('Welcome!');
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.method', 'BLAH');
-    $ingest->assertLatestWrite('requests.0.route_methods', ['BLAH']);
+    $ingest->assertLatestWrite('request:0.method', 'BLAH');
+    $ingest->assertLatestWrite('request:0.route_methods', ['BLAH']);
 });

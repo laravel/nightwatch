@@ -38,7 +38,7 @@ final class QuerySensor
 
         $this->executionState->queries++;
 
-        $this->recordsBuffer->writeQuery(new Query(
+        $this->recordsBuffer->write(new Query(
             timestamp: $this->clock->microtime() - ($event->time / 1000),
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

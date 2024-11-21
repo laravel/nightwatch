@@ -44,7 +44,7 @@ final class OutgoingRequestSensor
 
         $this->executionState->outgoing_requests++;
 
-        $this->recordsBuffer->writeOutgoingRequest(new OutgoingRequest(
+        $this->recordsBuffer->write(new OutgoingRequest(
             timestamp: $startMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

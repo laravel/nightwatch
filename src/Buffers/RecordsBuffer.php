@@ -18,106 +18,24 @@ use function json_encode;
 final class RecordsBuffer
 {
     /**
-     * @var array{
-     *            requests: list<Request>,
-     *            cache_events: list<CacheEvent>,
-     *            commands: list<Command>,
-     *            exceptions: list<Exception>,
-     *            outgoing_requests: list<OutgoingRequest>,
-     *            queries: list<Query>,
-     *            queued_jobs: list<QueuedJob>,
-     *            }
+     * @var list<Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob>
      */
-    private array $records = [
-        'requests' => [],
-        'cache_events' => [],
-        'commands' => [],
-        'exceptions' => [],
-        'job_attempts' => [],
-        'lazy_loads' => [],
-        'logs' => [],
-        'mail' => [],
-        'notifications' => [],
-        'outgoing_requests' => [],
-        'queries' => [],
-        'queued_jobs' => [],
-    ];
+    private array $records = [];
 
-    private int $recordsCount = 0;
-
-    public function writeRequest(Request $request): void
+    public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob $record): void
     {
-        $this->records['requests'][] = $request;
-
-        $this->recordsCount++;
-    }
-
-    public function writeCommand(Command $command): void
-    {
-        $this->records['commands'][] = $command;
-
-        $this->recordsCount++;
-    }
-
-    public function writeQuery(Query $query): void
-    {
-        $this->records['queries'][] = $query;
-
-        $this->recordsCount++;
-    }
-
-    public function writeException(Exception $exception): void
-    {
-        $this->records['exceptions'][] = $exception;
-
-        $this->recordsCount++;
-    }
-
-    public function writeCacheEvent(CacheEvent $cacheEvent): void
-    {
-        $this->records['cache_events'][] = $cacheEvent;
-
-        $this->recordsCount++;
-    }
-
-    public function writeOutgoingRequest(OutgoingRequest $outgoingRequest): void
-    {
-        $this->records['outgoing_requests'][] = $outgoingRequest;
-
-        $this->recordsCount++;
-    }
-
-    public function writeQueuedJob(QueuedJob $queuedJob): void
-    {
-        $this->records['queued_jobs'][] = $queuedJob;
-
-        $this->recordsCount++;
+        $this->records[] = $record;
     }
 
     public function flush(): string
     {
-        if ($this->recordsCount === 0) {
+        if (count($this->records) === 0) {
             return '';
         }
 
         $records = json_encode($this->records, flags: JSON_THROW_ON_ERROR);
 
-        $this->records = [
-            'requests' => [],
-            'cache_events' => [],
-            'commands' => [],
-            'exceptions' => [],
-            'job_attempts' => [],
-            'lazy_loads' => [],
-            'logs' => [],
-            'mail' => [],
-            'notifications' => [],
-            'outgoing_requests' => [],
-            'queries' => [],
-            'queued_jobs' => [],
-        ];
-
-        $this->recordsCount = 0;
+        $this->records = [];
 
         return $records;
     }

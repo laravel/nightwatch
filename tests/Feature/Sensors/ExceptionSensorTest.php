@@ -38,9 +38,10 @@ it('can ingest thrown exceptions', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions', [
+    $ingest->assertLatestWrite('exception:*', [
         [
             'v' => 1,
+            't' => 'exception',
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
@@ -80,8 +81,8 @@ it('captures the code', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', "MyException,999,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"));
-    $ingest->assertLatestWrite('exceptions.0.code', 999);
+    $ingest->assertLatestWrite('exception:0._group', hash('md5', "MyException,999,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"));
+    $ingest->assertLatestWrite('exception:0.code', 999);
 });
 
 it('can ingest reported exceptions', function () {
@@ -101,9 +102,10 @@ it('can ingest reported exceptions', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions', [
+    $ingest->assertLatestWrite('exception:*', [
         [
             'v' => 1,
+            't' => 'exception',
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
@@ -131,7 +133,7 @@ it('can ingest reported exceptions', function () {
     ]);
 });
 
-it('captures aggregate query data on the request', function () {
+it('captures aggregate exception data on the request', function () {
     $ingest = fakeIngest();
     Route::get('/users', function () {
         report(new RuntimeException('Whoops!'));
@@ -143,7 +145,7 @@ it('captures aggregate query data on the request', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.exceptions', 3);
+    $ingest->assertLatestWrite('request:0.exceptions', 3);
 });
 
 it('handles view exceptions', function () {
@@ -156,12 +158,12 @@ it('handles view exceptions', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.line', 0);
-    $ingest->assertLatestWrite('exceptions.0.file', 'workbench/resources/views/exception.blade.php');
-    $ingest->assertLatestWrite('exceptions.0.class', 'Exception');
-    $ingest->assertLatestWrite('exceptions.0.message', 'Whoops!');
-    $ingest->assertLatestWrite('exceptions.0.code', 999);
-    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', 'Exception,999,workbench/resources/views/exception.blade.php,'));
+    $ingest->assertLatestWrite('exception:0.line', 0);
+    $ingest->assertLatestWrite('exception:0.file', 'workbench/resources/views/exception.blade.php');
+    $ingest->assertLatestWrite('exception:0.class', 'Exception');
+    $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+    $ingest->assertLatestWrite('exception:0.code', 999);
+    $ingest->assertLatestWrite('exception:0._group', hash('md5', 'Exception,999,workbench/resources/views/exception.blade.php,'));
 });
 
 it('handles spatie view exceptions', function () {
@@ -175,12 +177,12 @@ it('handles spatie view exceptions', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.line', 6);
-    $ingest->assertLatestWrite('exceptions.0.file', 'workbench/resources/views/exception.blade.php');
-    $ingest->assertLatestWrite('exceptions.0.class', 'Exception');
-    $ingest->assertLatestWrite('exceptions.0.message', 'Whoops!');
-    $ingest->assertLatestWrite('exceptions.0.code', 999);
-    $ingest->assertLatestWrite('exceptions.0._group', hash('md5', 'Exception,999,workbench/resources/views/exception.blade.php,6'));
+    $ingest->assertLatestWrite('exception:0.line', 6);
+    $ingest->assertLatestWrite('exception:0.file', 'workbench/resources/views/exception.blade.php');
+    $ingest->assertLatestWrite('exception:0.class', 'Exception');
+    $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+    $ingest->assertLatestWrite('exception:0.code', 999);
+    $ingest->assertLatestWrite('exception:0._group', hash('md5', 'Exception,999,workbench/resources/views/exception.blade.php,6'));
 });
 
 it('handles unknown lines for internal locations', function () {
@@ -201,8 +203,8 @@ it('handles unknown lines for internal locations', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.file', 'app/Models/User.php');
-    $ingest->assertLatestWrite('exceptions.0.line', 0);
+    $ingest->assertLatestWrite('exception:0.file', 'app/Models/User.php');
+    $ingest->assertLatestWrite('exception:0.line', 0);
 });
 
 it('captures handled and unhandled exceptions', function () {
@@ -218,8 +220,8 @@ it('captures handled and unhandled exceptions', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.handled', true);
-    $ingest->assertLatestWrite('exceptions.1.handled', false);
+    $ingest->assertLatestWrite('exception:0.handled', true);
+    $ingest->assertLatestWrite('exception:1.handled', false);
 });
 
 it('handles the file in the trace', function () {
@@ -245,7 +247,7 @@ it('handles the file in the trace', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+    $ingest->assertLatestWrite('exception:0.trace', json_encode([
         [
             'file' => '[internal function]',
             'source' => '()',
@@ -284,7 +286,7 @@ it('handles the line in the trace', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+    $ingest->assertLatestWrite('exception:0.trace', json_encode([
         [
             'file' => '[internal function]',
             'source' => '()',
@@ -323,7 +325,7 @@ it('handles the class in the trace', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+    $ingest->assertLatestWrite('exception:0.trace', json_encode([
         [
             'file' => '[internal function]',
             'source' => '()',
@@ -362,7 +364,7 @@ it('handles the function in the trace', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+    $ingest->assertLatestWrite('exception:0.trace', json_encode([
         [
             'file' => '[internal function]',
             'source' => '()',
@@ -416,7 +418,7 @@ it('handles the args in the trace', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+    $ingest->assertLatestWrite('exception:0.trace', json_encode([
         [
             'file' => '[internal function]',
             'source' => '()',
@@ -461,7 +463,7 @@ it('handles named arguments for variadic functions', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', json_encode([
+    $ingest->assertLatestWrite('exception:0.trace', json_encode([
         [
             'file' => '[internal function]',
             'source' => '(foo: int, bar: int)',
@@ -479,13 +481,13 @@ it('handles ini setting disabling args in exceptions', function () {
     $response = get('/users');
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => ! str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
+    $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => ! str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
 
     ini_set('zend.exception_ignore_args', '0');
     $response = get('/users');
     $response->assertServerError();
     $ingest->assertWrittenTimes(2);
-    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
+    $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
 });
 
 it('strips base_path from trace files', function () {
@@ -498,7 +500,7 @@ it('strips base_path from trace files', function () {
 
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('exceptions.0.trace', fn ($trace) => str_contains($trace, '"file":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Route.php:'));
+    $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '"file":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Route.php:'));
 });
 
 final class MyException extends RuntimeException

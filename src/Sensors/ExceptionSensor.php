@@ -55,7 +55,7 @@ final class ExceptionSensor
 
         $this->executionState->exceptions++;
 
-        $this->recordsBuffer->writeException(new Exception(
+        $this->recordsBuffer->write(new Exception(
             timestamp: $nowMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
