@@ -8,20 +8,21 @@ on:
   schedule:
     - cron: '0 0 * * *'
 
-permissions:
-  contents: read
+# permissions:
+#   contents: read
 
 jobs:
   tests:
     runs-on: latest
 
-    strategy:
-      fail-fast: true
-      matrix:
-        php: [8.2, 8.3]
-        laravel: [11]
+    # strategy:
+    #   fail-fast: true
+      # matrix:
+      #   php: [8.2, 8.3]
+      #   laravel: [11]
 
-    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    # name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    name: PHP
 
     steps:
       - name: Checkout code
