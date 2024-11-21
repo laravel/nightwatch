@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   tests:
-    runs-on: latest
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: true
