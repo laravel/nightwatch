@@ -71,7 +71,7 @@ final class RequestSensor
             Log::critical('[nightwatch] '.$e->getMessage());
         }
 
-        $this->recordsBuffer->writeRequest(new RequestRecord(
+        $this->recordsBuffer->write(new RequestRecord(
             timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

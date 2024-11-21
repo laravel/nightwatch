@@ -3,13 +3,14 @@
 namespace Laravel\Nightwatch\Buffers;
 
 use function strlen;
+use function substr;
 
 /**
  * @internal
  */
-final class PayloadBuffer
+final class StreamBuffer
 {
-    protected string $records = '';
+    protected string $buffer = '';
 
     public function __construct(private int $threshold = 8_000_000)
     {
@@ -18,16 +19,18 @@ final class PayloadBuffer
 
     public function write(string $input): void
     {
-        if ($this->records === '') {
-            $this->records = $input;
+        $input = substr(substr($input, 1), 0, -1);
+
+        if ($this->buffer === '') {
+            $this->buffer = $input;
         } else {
-            $this->records .= ",{$input}";
+            $this->buffer .= ",{$input}";
         }
     }
 
     public function wantsFlushing(): bool
     {
-        return strlen($this->records) >= $this->threshold;
+        return strlen($this->buffer) >= $this->threshold;
     }
 
     /**
@@ -35,15 +38,15 @@ final class PayloadBuffer
      */
     public function flush(): string
     {
-        $payload = '{"records":['.$this->records.']}';
+        $payload = '['.$this->buffer.']';
 
-        $this->records = '';
+        $this->buffer = '';
 
         return $payload;
     }
 
     public function isNotEmpty(): bool
     {
-        return $this->records !== '';
+        return $this->buffer !== '';
     }
 }

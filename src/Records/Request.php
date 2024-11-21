@@ -11,6 +11,8 @@ final class Request
 {
     public int $v = 1;
 
+    public string $t = 'request';
+
     /**
      * @param  list<string>  $route_methods
      */

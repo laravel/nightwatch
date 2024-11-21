@@ -40,10 +40,11 @@ it('ingests outgoing requests', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests.0.outgoing_requests', 1);
-    $ingest->assertLatestWrite('outgoing_requests', [
+    $ingest->assertLatestWrite('request:0.outgoing_requests', 1);
+    $ingest->assertLatestWrite('outgoing-request:*', [
         [
             'v' => 1,
+            't' => 'outgoing-request',
             'timestamp' => 946688523.459289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
@@ -80,8 +81,8 @@ it('captures the request / response size bytes from the content-length header', 
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('outgoing_requests.0.request_size', 9876);
-    $ingest->assertLatestWrite('outgoing_requests.0.response_size', 5432);
+    $ingest->assertLatestWrite('outgoing-request:0.request_size', 9876);
+    $ingest->assertLatestWrite('outgoing-request:0.response_size', 5432);
 });
 
 it('captures the response size bytes from the stream if not present in the content-length header', function () {
@@ -100,8 +101,8 @@ it('captures the response size bytes from the stream if not present in the conte
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('outgoing_requests.0.request_size', 9876);
-    $ingest->assertLatestWrite('outgoing_requests.0.response_size', 5432);
+    $ingest->assertLatestWrite('outgoing-request:0.request_size', 9876);
+    $ingest->assertLatestWrite('outgoing-request:0.response_size', 5432);
 });
 
 it('does not read the stream into memory to determine the size of the response', function () {
@@ -120,8 +121,8 @@ it('does not read the stream into memory to determine the size of the response',
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('outgoing_requests.0.request_size', null);
-    $ingest->assertLatestWrite('outgoing_requests.0.response_size', null);
+    $ingest->assertLatestWrite('outgoing-request:0.request_size', null);
+    $ingest->assertLatestWrite('outgoing-request:0.response_size', null);
 });
 
 it('captures the port when specified', function () {
@@ -139,7 +140,7 @@ it('captures the port when specified', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('outgoing_requests.0.port', '4321');
+    $ingest->assertLatestWrite('outgoing-request:0.port', '4321');
 });
 
 it('captures the default port for insecure requests when not specified', function () {
@@ -157,7 +158,7 @@ it('captures the default port for insecure requests when not specified', functio
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('outgoing_requests.0.port', '80');
+    $ingest->assertLatestWrite('outgoing-request:0.port', '80');
 });
 
 it('captures the default port for secure requests when not specified', function () {
@@ -175,7 +176,7 @@ it('captures the default port for secure requests when not specified', function 
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('outgoing_requests.0.port', '443');
+    $ingest->assertLatestWrite('outgoing-request:0.port', '443');
 });
 
 final class NoReadStream implements StreamInterface

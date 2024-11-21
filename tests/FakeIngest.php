@@ -4,6 +4,7 @@ namespace Tests;
 
 use Closure;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 
 use function count;
@@ -30,19 +31,45 @@ final class FakeIngest implements LocalIngest
         return $this;
     }
 
-    public function assertLatestWrite(string|array $key, mixed $payload = null): self
+    public function assertLatestWrite(string|array $key, mixed $expected = null): self
     {
         expect(count($this->writes))->toBeGreaterThan(0, 'Expected to have writes. None found.');
 
-        [$key, $payload] = is_array($key)
-            ? [null, $key]
-            : [$key, $payload];
+        $latestWrite = $this->latestWrite();
 
-        if ($payload instanceof Closure) {
-            expect($payload($this->latestWrite($key)))->toBeTrue($key ? "Failed asserting [{$key}] was expected value." : '');
-        } else {
-            expect($this->latestWrite($key))->toBe($payload, $key ? "Failed asserting [{$key}] was expected value." : '');
+        if (is_array($key)) {
+            expect($latestWrite)->toBe($key, 'Failed asserting that the payload matched.');
+
+            return $this;
         }
+
+        if (str_contains($key, ':')) {
+            $type = Str::before($key, ':');
+
+            $latestWrite = collect($latestWrite)->where('t', $type)->values()->all();
+
+            expect(count($latestWrite ) > 0)->toBeTrue('The type was not found in the latest write.');
+
+            $key = Str::after($key, ':');
+        }
+
+        if ($key === '*') {
+            if ($expected instanceof Closure) {
+                expect($expected($latestWrite))->toBeTrue("The expected value was not found at [$key].");
+            } else {
+                expect($latestWrite)->toBe(value($expected, $latestWrite), "The expected value was not found at [$key].");
+            }
+        } else {
+            expect(Arr::has($latestWrite, $key))->toBeTrue("The key [$key] does not exist in the latest write.");
+            $actual = Arr::get($latestWrite, $key);
+
+            if ($expected instanceof Closure) {
+                expect($expected($actual))->toBeTrue("The expected value was not found at [$key].");
+            } else {
+                expect($actual)->toBe(value($expected, $actual), "The expected value was not found at [$key].");
+            }
+        }
+
 
         return $this;
     }
@@ -52,16 +79,8 @@ final class FakeIngest implements LocalIngest
         return Arr::last($this->writes);
     }
 
-    public function latestWrite(?string $key = null): mixed
+    private function latestWrite(): mixed
     {
-        $payload = json_decode(Arr::last($this->writes), true, flags: JSON_THROW_ON_ERROR);
-
-        if ($key) {
-            expect(Arr::has($payload, $key))->toBeTrue("The payload does not contain the key [{$key}].");
-
-            return Arr::get($payload, $key, null);
-        } else {
-            return $payload;
-        }
+        return json_decode(Arr::last($this->writes), true, flags: JSON_THROW_ON_ERROR);
     }
 }

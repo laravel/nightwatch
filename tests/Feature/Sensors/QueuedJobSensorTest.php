@@ -52,9 +52,10 @@ it('can ingest queued jobs', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('requests', [
+    $ingest->assertLatestWrite('request', [
         [
             'v' => 1,
+            't' => 'request',
             'timestamp' => 946684800,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
