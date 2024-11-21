@@ -11,7 +11,7 @@ final class CacheEvent
 {
     public int $v = 1;
 
-    public string $t = 'cache_event';
+    public string $t = 'cache-event';
 
     public function __construct(
         public int $timestamp,
