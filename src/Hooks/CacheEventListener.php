@@ -11,7 +11,7 @@ use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\SensorManager;
 
-class CacheEventListener
+final class CacheEventListener
 {
     public function __construct(private SensorManager $sensor)
     {
