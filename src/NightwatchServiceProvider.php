@@ -241,13 +241,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($sensor, $clock))(...));
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-         * @see \Laravel\Nightwatch\ExecutionStage::End
-         * @see \Laravel\Nightwatch\Contracts\LocalIngest
-         */
-        $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($sensor))(...));
-
-        /**
          * @see \Laravel\Nightwatch\Records\CacheEvent
          */
         $events->listen([
@@ -257,6 +250,13 @@ final class NightwatchServiceProvider extends ServiceProvider
             WritingKey::class,
             KeyWritten::class,
         ], (new CacheEventListener($sensor))(...));
+
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         * @see \Laravel\Nightwatch\ExecutionStage::End
+         * @see \Laravel\Nightwatch\Contracts\LocalIngest
+         */
+        $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($sensor))(...));
 
         //$events->listen(JobQueued::class, static function (JobQueued $event) use ($sensor) {
         //    try {
