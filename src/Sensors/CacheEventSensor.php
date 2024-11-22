@@ -29,7 +29,7 @@ final class CacheEventSensor
 {
     private ?float $startTime = null;
 
-    private const array START_EVENTS = [
+    private const START_EVENTS = [
         RetrievingKey::class,
         RetrievingManyKeys::class,
         WritingKey::class,
