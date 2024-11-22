@@ -30,8 +30,8 @@ final class OutgoingRequest
         public string $port,
         public string $path,
         public int $duration,
-        public ?int $request_size,
-        public ?int $response_size,
+        public int $request_size,
+        public int $response_size,
         public string $status_code,
     ) {
         //
