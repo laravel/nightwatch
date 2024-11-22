@@ -69,8 +69,6 @@ final class CacheEventSensor
         } elseif ($class === KeyWritten::class) {
             $type = 'write';
             $this->executionState->cache_writes++;
-        } else {
-            throw new RuntimeException("Unexpected event type [{$class}].");
         }
 
         $this->recordsBuffer->write(new CacheEvent(
