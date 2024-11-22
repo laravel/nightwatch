@@ -1,10 +1,7 @@
 <?php
 
-use Illuminate\Cache\Events\CacheHit;
-use Illuminate\Cache\Events\CacheMissed;
-use Illuminate\Cache\Events\KeyWritten;
+use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Cache\Events\RetrievingKey;
-use Illuminate\Cache\Events\WritingKey;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\SensorManager;
 
@@ -15,7 +12,7 @@ it('gracefully handles exceptions', function () {
 
         public function __construct() {}
 
-        public function cacheEvent(RetrievingKey|CacheHit|CacheMissed|WritingKey|KeyWritten $event): void
+        public function cacheEvent(CacheEvent $event): void
         {
             $this->thrown = true;
 
