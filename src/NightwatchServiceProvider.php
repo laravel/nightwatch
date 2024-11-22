@@ -6,9 +6,15 @@ use Exception;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Cache\Events\ForgettingKey;
+use Illuminate\Cache\Events\KeyForgetFailed;
+use Illuminate\Cache\Events\KeyForgotten;
+use Illuminate\Cache\Events\KeyWriteFailed;
 use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Cache\Events\RetrievingKey;
+use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
+use Illuminate\Cache\Events\WritingManyKeys;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -245,10 +251,16 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $events->listen([
             RetrievingKey::class,
-            CacheMissed::class,
+            RetrievingManyKeys::class,
             CacheHit::class,
+            CacheMissed::class,
             WritingKey::class,
+            WritingManyKeys::class,
             KeyWritten::class,
+            KeyWriteFailed::class,
+            ForgettingKey::class,
+            KeyForgotten::class,
+            KeyForgetFailed::class,
         ], (new CacheEventListener($sensor))(...));
 
         /**

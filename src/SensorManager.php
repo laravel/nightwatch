@@ -3,12 +3,7 @@
 namespace Laravel\Nightwatch;
 
 use Carbon\Carbon;
-use Illuminate\Cache\Events\CacheHit;
-use Illuminate\Cache\Events\CacheMissed;
-use Illuminate\Cache\Events\KeyWritten;
-use Illuminate\Cache\Events\RetrievingKey;
-use Illuminate\Cache\Events\WritingKey;
-use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobQueued;
@@ -22,7 +17,6 @@ use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\QueuedJobSensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
 use Laravel\Nightwatch\Sensors\StageSensor;
-use Laravel\Nightwatch\Types\Str;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Console\Input\InputInterface;
@@ -110,7 +104,7 @@ class SensorManager
         $sensor($event, $trace);
     }
 
-    public function cacheEvent(RetrievingKey|CacheHit|CacheMissed|WritingKey|KeyWritten $event): void
+    public function cacheEvent(CacheEvent $event): void
     {
         $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
             recordsBuffer: $this->recordsBuffer,

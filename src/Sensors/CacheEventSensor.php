@@ -2,14 +2,21 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Cache\Events\ForgettingKey;
+use Illuminate\Cache\Events\KeyForgetFailed;
+use Illuminate\Cache\Events\KeyForgotten;
+use Illuminate\Cache\Events\KeyWriteFailed;
 use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Cache\Events\RetrievingKey;
+use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
+use Illuminate\Cache\Events\WritingManyKeys;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\UserProvider;
 use RuntimeException;
@@ -22,15 +29,7 @@ use function round;
  */
 final class CacheEventSensor
 {
-    /**
-     * TODO potential memory leak in Octane / queue worker.
-     *
-     * @var array<'read'|'write', array<string, float>>
-     */
-    private array $startTimes = [
-        'read' => [],
-        'write' => [],
-    ];
+    private float $startTime;
 
     public function __construct(
         private Clock $clock,
@@ -41,30 +40,20 @@ final class CacheEventSensor
         //
     }
 
-    public function __invoke(RetrievingKey|CacheHit|CacheMissed|WritingKey|KeyWritten $event): void
+    public function __invoke(CacheEvent $event): void
     {
         $now = $this->clock->microtime();
         $class = $event::class;
 
-        $eventType = match ($class) {
-            RetrievingKey::class, CacheHit::class, CacheMissed::class => 'read',
-            WritingKey::class, KeyWritten::class => 'write',
-            default => throw new RuntimeException("Unexpected cache-event type [{$class}]."),
-        };
-
-        if ($class === RetrievingKey::class || $class === WritingKey::class) {
-            $this->startTimes[$eventType][$event->key] = $now;
+        if ($class === RetrievingKey::class || $class === WritingKey::class || $class === ForgettingKey::class) {
+            $this->startTime = $now;
 
             return;
         }
 
-        $startTime = $this->startTimes[$eventType][$event->key] ?? null;
-
-        if ($startTime === null) {
+        if ($this->startTime === null) {
             throw new RuntimeException("No start time found for [{$class}] event with key [{$event->key}].");
         }
-
-        unset($this->startTimes[$eventType][$event->key]);
 
         if ($class === CacheHit::class) {
             $type = 'hit';
@@ -75,12 +64,15 @@ final class CacheEventSensor
         } elseif ($class === KeyWritten::class) {
             $type = 'write';
             $this->executionState->cache_writes++;
+        } elseif ($class === KeyForgotten::class) {
+            $type = 'forget';
+            $this->executionState->cache_forgets++;
         } else {
             throw new RuntimeException("Unexpected event type [{$class}].");
         }
 
-        $this->recordsBuffer->write(new CacheEvent(
-            timestamp: $startTime,
+        $this->recordsBuffer->write(new CacheEventRecord(
+            timestamp: $this->startTime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', "{$event->storeName},{$event->key}"),
@@ -92,7 +84,7 @@ final class CacheEventSensor
             store: $event->storeName ?? '',
             key: $event->key,
             type: $type,
-            duration: (int) round(($now - $startTime) * 1_000_000),
+            duration: (int) round(($now - $this->startTime) * 1_000_000),
             ttl: $event instanceof KeyWritten ? ($event->seconds ?? 0) : 0,
         ));
     }

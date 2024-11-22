@@ -49,6 +49,7 @@ final class Command
         public int $cache_hits,
         public int $cache_misses,
         public int $cache_writes,
+        public int $cache_forgets,
         public int $hydrated_models,
         public int $peak_memory_usage,
     ) {
