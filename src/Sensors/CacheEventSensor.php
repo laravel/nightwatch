@@ -24,7 +24,7 @@ final class CacheEventSensor
     /**
      * @var array<string, float>
      */
-    protected array $startTimes = [];
+    private array $startTimes = [];
 
     public function __construct(
         private Clock $clock,
