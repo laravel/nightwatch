@@ -6,7 +6,9 @@ use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\ForgettingKey;
+use Illuminate\Cache\Events\KeyForgetFailed;
 use Illuminate\Cache\Events\KeyForgotten;
+use Illuminate\Cache\Events\KeyWriteFailed;
 use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\RetrievingManyKeys;
@@ -62,20 +64,33 @@ final class CacheEventSensor
             throw new RuntimeException("No start time found for [{$class}] event with key [{$event->key}].");
         }
 
-        if ($class === CacheHit::class) {
-            $type = 'hit';
-            $this->executionState->cache_hits++;
-        } elseif ($class === CacheMissed::class) {
-            $type = 'miss';
-            $this->executionState->cache_misses++;
-        } elseif ($class === KeyWritten::class) {
-            $type = 'write';
-            $this->executionState->cache_writes++;
-        } elseif ($class === KeyForgotten::class) {
-            $type = 'forget';
-            $this->executionState->cache_forgets++;
-        } else {
-            throw new RuntimeException("Unexpected event type [{$class}].");
+        switch ($class) {
+            case CacheHit::class:
+                $type = 'hit';
+                $this->executionState->cache_hits++;
+                break;
+            case CacheMissed::class:
+                $type = 'miss';
+                $this->executionState->cache_misses++;
+                break;
+            case KeyWritten::class:
+                $type = 'write';
+                $this->executionState->cache_writes++;
+                break;
+            // case KeyWriteFailed::class:
+            //     $type = 'write-failure';
+            //     // $this->executionState->cache_writes++;
+            //     break;
+            case KeyForgotten::class:
+                $type = 'forget';
+                $this->executionState->cache_forgets++;
+                break;
+            // case KeyForgetFailed::class:
+            //     $type = 'forget-failure';
+            //     // $this->executionState->cache_forgets++;
+            //     break;
+            default:
+                throw new RuntimeException("Unexpected event type [{$class}].");
         }
 
         $this->recordsBuffer->write(new CacheEventRecord(
