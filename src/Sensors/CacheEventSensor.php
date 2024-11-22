@@ -22,6 +22,8 @@ use function hash;
 final class CacheEventSensor
 {
     /**
+     * TODO potential memory leak in Octane / queue worker.
+     *
      * @var array<class-string<RetrievingKey|CacheHit|CacheMissed|WritingKey|KeyWritten>, array<string, float>>
      */
     private array $startTimes = [
