@@ -2,7 +2,10 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\ArrayStore;
+use Illuminate\Contracts\Cache\Store;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\post;
@@ -105,8 +108,6 @@ it('can ingest cache hits', function () {
     $ingest = fakeIngest();
     Cache::driver('array')->put('users:345', 'xxxx');
     Route::post('/users', function () {
-        travelTo(now()->addMicroseconds(2500));
-
         Cache::driver('array')->get('users:345');
     });
 
@@ -136,7 +137,7 @@ it('can ingest cache hits', function () {
         [
             'v' => 1,
             't' => 'cache-event',
-            'timestamp' => 946688523.459289,
+            'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('md5', 'array,users:345'),
@@ -173,13 +174,13 @@ it('can ingest cache hits', function () {
             'route_path' => '/users',
             'route_action' => 'Closure',
             'ip' => '127.0.0.1',
-            'duration' => 2500,
+            'duration' => 0,
             'status_code' => 200,
             'request_size' => 0,
             'response_size' => 0,
             'bootstrap' => 0,
             'before_middleware' => 0,
-            'action' => 2500,
+            'action' => 0,
             'render' => 0,
             'after_middleware' => 0,
             'sending' => 0,
@@ -207,8 +208,6 @@ it('can ingest cache hits', function () {
 it('can ingest cache writes', function () {
     $ingest = fakeIngest();
     Route::post('/users', function () {
-        travelTo(now()->addMicroseconds(2500));
-
         Cache::driver('array')->put('users:345', 'xxxx', 60);
     });
 
@@ -220,7 +219,7 @@ it('can ingest cache writes', function () {
         [
                 'v' => 1,
                 't' => 'cache-event',
-                'timestamp' => 946688523.459289,
+                'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
                 '_group' => hash('md5', 'array,users:345'),
@@ -257,13 +256,13 @@ it('can ingest cache writes', function () {
                 'route_path' => '/users',
                 'route_action' => 'Closure',
                 'ip' => '127.0.0.1',
-                'duration' => 2500,
+                'duration' => 0,
                 'status_code' => 200,
                 'request_size' => 0,
                 'response_size' => 0,
                 'bootstrap' => 0,
                 'before_middleware' => 0,
-                'action' => 2500,
+                'action' => 0,
                 'render' => 0,
                 'after_middleware' => 0,
                 'sending' => 0,
@@ -299,4 +298,50 @@ it('handles cache drivers with no store configured', function () {
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('cache-event:0.store', '');
+});
+
+it('captures duration in microseconds', function () {
+    $ingest = fakeIngest();
+    Config::set('cache.stores.custom', [
+        'driver' => 'custom',
+        'events' => true,
+    ]);
+    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore {
+        public function get($key)
+        {
+            travelTo(now()->addMicroseconds(2500));
+
+            return parent::get($key);
+        }
+    }, [
+        'events' => true,
+    ]));
+    Route::post('/users', function () {
+        Cache::driver('custom')->get('users:345');
+    });
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('cache-event:*', [
+        [
+            'v' => 1,
+            't' => 'cache-event',
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            '_group' => hash('md5', ',users:345'),
+            'trace_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_context' => 'request',
+            'execution_id' => '00000000-0000-0000-0000-000000000001',
+            'execution_stage' => 'action',
+            'user' => '',
+            'store' => '',
+            'key' => 'users:345',
+            'type' => 'miss',
+            'duration' => 2500,
+            'ttl' => 0,
+        ],
+    ]);
 });
