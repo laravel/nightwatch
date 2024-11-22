@@ -22,9 +22,15 @@ use function hash;
 final class CacheEventSensor
 {
     /**
-     * @var array<string, float>
+     * @var array<class-string<RetrievingKey|CacheHit|CacheMissed|WritingKey|KeyWritten>, array<string, float>>
      */
-    private array $startTimes = [];
+    private array $startTimes = [
+        RetrievingKey::class => [],
+        CacheHit::class => [],
+        CacheMissed::class => [],
+        WritingKey::class => [],
+        KeyWritten::class => [],
+    ];
 
     public function __construct(
         private Clock $clock,
@@ -47,18 +53,18 @@ final class CacheEventSensor
         };
 
         if ($class === RetrievingKey::class || $class === WritingKey::class) {
-            $this->startTimes["{$eventType}:{$event->key}"] = $now;
+            $this->startTimes[$eventType][$event->key] = $now;
 
             return;
         }
 
-        $startTime = $this->startTimes["{$eventType}:{$event->key}"] ?? null;
+        $startTime = $this->startTimes[$eventType][$event->key] ?? null;
 
         if ($startTime === null) {
             throw new RuntimeException("No start time found for [{$class}] event with key [{$event->key}].");
         }
 
-        unset($this->startTimes["{$eventType}:{$event->key}"]);
+        unset($this->startTimes[$eventType][$event->key]);
 
         if ($class === CacheHit::class) {
             $type = 'hit';
