@@ -63,16 +63,15 @@ final class CacheEventSensor
         if ($class === CacheHit::class) {
             $type = 'hit';
             $this->executionState->cache_hits++;
-        } else if ($class === CacheMissed::class) {
+        } elseif ($class === CacheMissed::class) {
             $type = 'hit';
             $this->executionState->cache_misses++;
-        } else if ($class === KeyWritten::class) {
+        } elseif ($class === KeyWritten::class) {
             $type = 'write';
             $this->executionState->cache_writes++;
         } else {
             throw new RuntimeException("Unexpected event type [{$class}].");
         }
-
 
         $this->recordsBuffer->write(new CacheEvent(
             timestamp: $startTime,
