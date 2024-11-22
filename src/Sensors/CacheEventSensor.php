@@ -78,6 +78,8 @@ final class CacheEventSensor
         } elseif ($class === KeyWritten::class) {
             $type = 'write';
             $this->executionState->cache_writes++;
+        } else {
+            $type = '';
         }
 
         $this->recordsBuffer->write(new CacheEvent(
