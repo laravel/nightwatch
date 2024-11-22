@@ -14,7 +14,8 @@ final class CacheEventListener
         //
     }
 
-    public function __invoke(CacheEvent $event): void {
+    public function __invoke(CacheEvent $event): void
+    {
         try {
             $this->sensor->cacheEvent($event);
         } catch (Exception $e) {
