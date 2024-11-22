@@ -92,7 +92,7 @@ final class CacheEventSensor
             key: $event->key,
             type: $type,
             duration: (int) round(($now - $this->startTime) * 1_000_000),
-            ttl: $event instanceof KeyWritten ? ($event->seconds ?? 0) : 0,
+            ttl: $class === KeyWritten::class ? ($event->seconds ?? 0) : 0,
         ));
     }
 }
