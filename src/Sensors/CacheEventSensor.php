@@ -22,8 +22,6 @@ use function hash;
 final class CacheEventSensor
 {
     /**
-     * Holds the start times for cache events.
-     *
      * @var array<string, float>
      */
     protected $startTimes = [];
