@@ -15,6 +15,7 @@ use Laravel\Nightwatch\UserProvider;
 use RuntimeException;
 
 use function hash;
+use function round;
 
 /**
  * @internal
@@ -72,7 +73,7 @@ final class CacheEventSensor
             $type = 'hit';
             $this->executionState->cache_hits++;
         } elseif ($class === CacheMissed::class) {
-            $type = 'hit';
+            $type = 'miss';
             $this->executionState->cache_misses++;
         } elseif ($class === KeyWritten::class) {
             $type = 'write';
