@@ -70,7 +70,7 @@ final class CacheEventSensor
 
         $this->executionState->{$counter}++;
 
-        $this->recordsBuffer->writeCacheEvent(new CacheEvent(
+        $this->recordsBuffer->write(new CacheEvent(
             timestamp: $startTime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
