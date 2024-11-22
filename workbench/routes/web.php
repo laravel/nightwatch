@@ -11,7 +11,8 @@ Route::get('/', function () {
 
     Cache::get('user:55');
     Cache::put('user:55', 'Taylor', 60);
-    Cache::get('user:55');
+    Cache::putMany(['user:56' => 'Jess', 'user:57' => 'Tim'], 60);
+    Cache::getMultiple(['user:56', 'user:57']);
     Cache::forget('user:55');
 
     return 'ok';
