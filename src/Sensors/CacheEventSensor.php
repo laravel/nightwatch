@@ -9,7 +9,9 @@ use Illuminate\Cache\Events\ForgettingKey;
 use Illuminate\Cache\Events\KeyForgotten;
 use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Cache\Events\RetrievingKey;
+use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
+use Illuminate\Cache\Events\WritingManyKeys;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
@@ -27,6 +29,14 @@ final class CacheEventSensor
 {
     private ?float $startTime = null;
 
+    private const array START_EVENTS = [
+        RetrievingKey::class,
+        RetrievingManyKeys::class,
+        WritingKey::class,
+        WritingManyKeys::class,
+        ForgettingKey::class,
+    ];
+
     public function __construct(
         private Clock $clock,
         private ExecutionState $executionState,
@@ -41,7 +51,7 @@ final class CacheEventSensor
         $now = $this->clock->microtime();
         $class = $event::class;
 
-        if ($class === RetrievingKey::class || $class === WritingKey::class || $class === ForgettingKey::class) {
+        if (in_array($class, self::START_EVENTS, strict: true)) {
             $this->startTime = $now;
 
             return;
