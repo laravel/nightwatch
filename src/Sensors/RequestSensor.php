@@ -10,10 +10,10 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\UserProvider;
-use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Exception\UnexpectedValueException;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 use function array_sum;
 use function hash;
@@ -131,7 +131,7 @@ final class RequestSensor
                 if (is_int($size = $response->getFile()->getSize())) {
                     return $size;
                 }
-            } catch (RuntimeException $e) {
+            } catch (Throwable $e) {
                 //
             }
         }

@@ -2,11 +2,11 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
+use Throwable;
 
 final class BootedHandler
 {
@@ -19,7 +19,7 @@ final class BootedHandler
     {
         try {
             $this->sensor->stage(ExecutionStage::BeforeMiddleware);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }
     }

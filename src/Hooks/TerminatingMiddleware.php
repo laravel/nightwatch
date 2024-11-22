@@ -3,13 +3,13 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Closure;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 final class TerminatingMiddleware
 {
@@ -31,7 +31,7 @@ final class TerminatingMiddleware
             if ($this->executionState->stage !== ExecutionStage::Terminating) {
                 $this->sensor->stage(ExecutionStage::Terminating);
             }
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }
     }

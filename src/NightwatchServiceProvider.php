@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch;
 
-use Exception;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
@@ -43,6 +42,7 @@ use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Symfony\Component\Console\Input\InputInterface;
+use Throwable;
 
 use function class_exists;
 use function defined;
@@ -246,7 +246,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         //$events->listen([CacheMissed::class, CacheHit::class], static function (CacheMissed|CacheHit $event) use ($sensor) {
         //    try {
         //        $sensor->cacheEvent($event);
-        //    } catch (Exception $e) {
+        //    } catch (Throwable $e) {
         //        //
         //    }
         //});
@@ -254,7 +254,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         //$events->listen(JobQueued::class, static function (JobQueued $event) use ($sensor) {
         //    try {
         //        $sensor->queuedJob($sensor);
-        //    } catch (Exception $e) {
+        //    } catch (Throwable $e) {
         //        //
         //    }
         //});
@@ -276,11 +276,11 @@ final class NightwatchServiceProvider extends ServiceProvider
         //                $ingest = $app->make(LocalIngest::class);
 
         //                $ingest->write($sensor->flush());
-        //            } catch (Exception $e) {
+        //            } catch (Throwable $e) {
         //                //
         //            }
         //        });
-        //    } catch (Exception $e) {
+        //    } catch (Throwable $e) {
         //        //
         //    }
         //});
