@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Exception;
+use RuntimeException;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\KeyWritten;
@@ -44,7 +44,7 @@ final class CacheEventSensor
         $eventType = match ($event::class) {
             RetrievingKey::class, CacheHit::class, CacheMissed::class => 'read',
             WritingKey::class, KeyWritten::class => 'write',
-            default => throw new Exception('Unexpected event type: '.$event::class),
+            default => throw new RuntimeException('Unexpected event type: '.$event::class),
         };
 
         if ($event instanceof RetrievingKey || $event instanceof WritingKey) {
@@ -56,7 +56,7 @@ final class CacheEventSensor
         $startTime = $this->startTimes["{$eventType}:{$event->key}"] ?? null;
 
         if ($startTime === null) {
-            throw new Exception('No start time found for '.$event::class." event with key {$event->key}.");
+            throw new RuntimeException('No start time found for '.$event::class." event with key {$event->key}.");
         }
 
         unset($this->startTimes["{$eventType}:{$event->key}"]);
@@ -65,7 +65,7 @@ final class CacheEventSensor
             CacheHit::class => ['hit', 'cache_hits'],
             CacheMissed::class => ['miss', 'cache_misses'],
             KeyWritten::class => ['write', 'cache_writes'],
-            default => throw new Exception('Unexpected event type: '.$event::class),
+            default => throw new RuntimeException('Unexpected event type: '.$event::class),
         };
 
         $this->executionState->{$counter}++;
