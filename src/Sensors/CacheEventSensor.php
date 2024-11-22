@@ -77,18 +77,18 @@ final class CacheEventSensor
                 $type = 'write';
                 $this->executionState->cache_writes++;
                 break;
-            // case KeyWriteFailed::class:
-            //     $type = 'write-failure';
-            //     // $this->executionState->cache_writes++;
-            //     break;
+                // case KeyWriteFailed::class:
+                //     $type = 'write-failure';
+                //     // $this->executionState->cache_writes++;
+                //     break;
             case KeyForgotten::class:
                 $type = 'forget';
                 $this->executionState->cache_forgets++;
                 break;
-            // case KeyForgetFailed::class:
-            //     $type = 'forget-failure';
-            //     // $this->executionState->cache_forgets++;
-            //     break;
+                // case KeyForgetFailed::class:
+                //     $type = 'forget-failure';
+                //     // $this->executionState->cache_forgets++;
+                //     break;
             default:
                 throw new RuntimeException("Unexpected event type [{$class}].");
         }
