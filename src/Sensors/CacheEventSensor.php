@@ -25,7 +25,7 @@ use function round;
  */
 final class CacheEventSensor
 {
-    private float $startTime;
+    private ?float $startTime = null;
 
     public function __construct(
         private Clock $clock,
