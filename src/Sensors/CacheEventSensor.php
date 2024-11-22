@@ -46,7 +46,7 @@ final class CacheEventSensor
             default => throw new RuntimeException("Unexpected cache-event type [{$class}]."),
         };
 
-        if ($event instanceof RetrievingKey || $event instanceof WritingKey) {
+        if ($class === RetrievingKey::class || $class === WritingKey::class) {
             $this->startTimes["{$eventType}:{$event->key}"] = $now;
 
             return;
