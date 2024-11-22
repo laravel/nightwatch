@@ -25,14 +25,11 @@ final class CacheEventSensor
     /**
      * TODO potential memory leak in Octane / queue worker.
      *
-     * @var array<class-string<RetrievingKey|CacheHit|CacheMissed|WritingKey|KeyWritten>, array<string, float>>
+     * @var array<'read'|'write', array<string, float>>
      */
     private array $startTimes = [
-        RetrievingKey::class => [],
-        CacheHit::class => [],
-        CacheMissed::class => [],
-        WritingKey::class => [],
-        KeyWritten::class => [],
+        'read' => [],
+        'write' => [],
     ];
 
     public function __construct(
