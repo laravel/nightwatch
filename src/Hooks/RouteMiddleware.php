@@ -3,11 +3,11 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Closure;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
+use Throwable;
 
 final class RouteMiddleware
 {
@@ -20,7 +20,7 @@ final class RouteMiddleware
     {
         try {
             $this->sensor->stage(ExecutionStage::Action);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }
 

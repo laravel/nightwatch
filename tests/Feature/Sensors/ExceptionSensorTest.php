@@ -444,7 +444,7 @@ it('handles named arguments for variadic functions', function () {
     $args = [];
     try {
         (fn (...$args) => throw new Exception('Whoops!'))(foo: 1, bar: 2);
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         $args = $e->getTrace()[0]['args'];
     }
     $ingest = fakeIngest();
