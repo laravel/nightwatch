@@ -38,11 +38,12 @@ final class CacheEventSensor
     public function __invoke(RetrievingKey|CacheHit|CacheMissed|WritingKey|KeyWritten $event): void
     {
         $now = $this->clock->microtime();
+        $class = $event::class;
 
-        $eventType = match ($event::class) {
+        $eventType = match ($class) {
             RetrievingKey::class, CacheHit::class, CacheMissed::class => 'read',
             WritingKey::class, KeyWritten::class => 'write',
-            default => throw new RuntimeException('Unexpected event type: '.$event::class),
+            default => throw new RuntimeException("Unexpected cache-event type [{$class}]."),
         };
 
         if ($event instanceof RetrievingKey || $event instanceof WritingKey) {
@@ -54,19 +55,24 @@ final class CacheEventSensor
         $startTime = $this->startTimes["{$eventType}:{$event->key}"] ?? null;
 
         if ($startTime === null) {
-            throw new RuntimeException('No start time found for '.$event::class." event with key {$event->key}.");
+            throw new RuntimeException("No start time found for [{$class}] event with key [{$event->key}].");
         }
 
         unset($this->startTimes["{$eventType}:{$event->key}"]);
 
-        [$type, $counter] = match ($event::class) {
-            CacheHit::class => ['hit', 'cache_hits'],
-            CacheMissed::class => ['miss', 'cache_misses'],
-            KeyWritten::class => ['write', 'cache_writes'],
-            default => throw new RuntimeException('Unexpected event type: '.$event::class),
-        };
+        if ($class === CacheHit::class) {
+            $type = 'hit';
+            $this->executionState->cache_hits++;
+        } else if ($class === CacheMissed::class) {
+            $type = 'hit';
+            $this->executionState->cache_misses++;
+        } else if ($class === KeyWritten::class) {
+            $type = 'write';
+            $this->executionState->cache_writes++;
+        } else {
+            throw new RuntimeException("Unexpected event type [{$class}].");
+        }
 
-        $this->executionState->{$counter}++;
 
         $this->recordsBuffer->write(new CacheEvent(
             timestamp: $startTime,
