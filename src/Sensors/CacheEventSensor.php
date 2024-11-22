@@ -20,6 +20,7 @@ use Laravel\Nightwatch\UserProvider;
 use RuntimeException;
 
 use function hash;
+use function in_array;
 use function round;
 
 /**
