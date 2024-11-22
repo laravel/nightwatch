@@ -131,7 +131,7 @@ it('can ingest cache hits', function () {
             'key' => 'users:345',
             'type' => 'write',
             'duration' => 0,
-            'ttl' => null,
+            'ttl' => 0,
         ],
         [
             'v' => 1,

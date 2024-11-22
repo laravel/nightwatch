@@ -82,7 +82,7 @@ final class CacheEventSensor
             key: $event->key,
             type: $type,
             duration: (int) $now - $startTime, /** @phpstan-ignore argument.type */
-            ttl: $event instanceof KeyWritten ? $event->seconds : 0,
+            ttl: $event instanceof KeyWritten ? ($event->seconds ?? 0) : 0,
         ));
     }
 }

@@ -32,7 +32,7 @@ final class CacheEvent
         public string $key,
         public string $type,
         public int $duration,
-        public ?int $ttl = 0,
+        public int $ttl = 0,
     ) {
         $this->store = Str::tinyText($this->store);
         $this->key = Str::tinyText($this->key);
