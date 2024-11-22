@@ -53,6 +53,9 @@
             "@php vendor/bin/testbench workbench:build --ansi",
             "@php vendor/bin/testbench serve"
         ],
+        "agent": [
+            "@php vendor/bin/testbench nightwatch:agent"
+        ],
         "lint": [
             "@php vendor/bin/phpstan analyse"
         ],
