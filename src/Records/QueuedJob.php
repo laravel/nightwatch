@@ -14,14 +14,13 @@ final class QueuedJob
     public string $t = 'queued-job';
 
     public function __construct(
-        public int $timestamp,
+        public float $timestamp,
         public string $deploy,
         public string $server,
         public string $group,
         public string $trace_id,
         public string $execution_context,
         public string $execution_id,
-        public int $execution_offset,
         public string $user,
         // --- /
         public string $job_id,

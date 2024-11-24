@@ -25,10 +25,11 @@ beforeEach(function () {
     setServerName('web-01');
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    setExecutionStart(CarbonImmutable::parse('2000-01-01 00:00:00'));
+    setExecutionId('00000000-0000-0000-0000-000000000001');
+    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 
     Config::set('queue.default', 'database');
-})->skip();
+});
 
 it('can ingest queued jobs', function () {
     $ingest = fakeIngest();
@@ -42,7 +43,6 @@ it('can ingest queued jobs', function () {
         travelTo(now()->addMilliseconds(5.2));
     });
     Route::post('/users', function () {
-        travelTo(now()->addMilliseconds(2.5));
         Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
         MyJob::dispatch();
         Str::createUuidsNormally();
@@ -52,68 +52,18 @@ it('can ingest queued jobs', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request', [
+    $ingest->assertLatestWrite('request:0.jobs_queued', 1);
+    $ingest->assertLatestWrite('queued-job:*', [
         [
             'v' => 1,
-            't' => 'request',
-            'timestamp' => 946684800,
-            'deploy' => 'v1.2.3',
-            'server' => 'web-01',
-            'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'user' => '',
-            'method' => 'POST',
-            // 'route' => '/users',
-            'scheme' => 'http',
-            'url_user' => '',
-            'host' => 'localhost',
-            'port' => '80',
-            'path' => '/users',
-            'query' => '',
-            'route_name' => '',
-            'route_methods' => ['POST'],
-            'route_domain' => '',
-            'route_path' => '/users',
-            'route_action' => 'Closure',
-            'ip' => '127.0.0.1',
-            'duration' => 8,
-            'status_code' => '200',
-            'request_size_kilobytes' => 0,
-            'response_size_kilobytes' => 0,
-            'queries' => 1,
-            'queries_duration' => 5200,
-            'lazy_loads' => 0,
-            'lazy_loads_duration' => 0,
-            'jobs_queued' => 1,
-            'mail_queued' => 0,
-            'mail_sent' => 0,
-            'mail_duration' => 0,
-            'notifications_queued' => 0,
-            'notifications_sent' => 0,
-            'notifications_duration' => 0,
-            'outgoing_requests' => 0,
-            'outgoing_requests_duration' => 0,
-            'files_read' => 0,
-            'files_read_duration' => 0,
-            'files_written' => 0,
-            'files_written_duration' => 0,
-            'cache_hits' => 0,
-            'cache_misses' => 0,
-            'hydrated_models' => 0,
-            'peak_memory_usage_kilobytes' => 1234,
-        ],
-    ]);
-    $ingest->assertLatestWrite('queued_jobs', [
-        [
-            'v' => 1,
-            'timestamp' => 946684800,
+            't' => 'queued-job',
+            'timestamp' => 946688523.461989,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
-            'execution_offset' => 7700,
             'user' => '',
             'job_id' => '00000000-0000-0000-0000-000000000000',
             'name' => 'MyJob',
@@ -134,7 +84,7 @@ it('falls back to the connections default queue', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('queued_jobs.0.queue', 'connection-default');
+    $ingest->assertLatestWrite('queued-job:0.queue', 'connection-default');
 });
 
 it('does not ingest jobs dispatched on the sync queue', function () {
@@ -175,9 +125,9 @@ it('captures queued event queue name', function () {
     $response = post('/users');
 
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('queued_jobs.0.queue', 'custom_queue');
-    $ingest->assertLatestWrite('queued_jobs.1.queue', 'custom_queue');
-    $ingest->assertLatestWrite('queued_jobs.2.queue', 'custom_queue');
+    $ingest->assertLatestWrite('queued-job:0.queue', 'custom_queue');
+    $ingest->assertLatestWrite('queued-job:1.queue', 'custom_queue');
+    $ingest->assertLatestWrite('queued-job:2.queue', 'custom_queue');
 });
 
 it('normalizes sqs queue names', function () {
@@ -201,7 +151,7 @@ it('normalizes sqs queue names', function () {
     $ingest->write($sensor->flush());
 
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('queued_jobs.0.queue', 'queue-name');
+    $ingest->assertLatestWrite('queued-job:0.queue', 'queue-name');
 });
 
 it('handles missing queue value', function () {
@@ -221,8 +171,8 @@ it('handles missing queue value', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('queued_jobs.0.queue', 'default');
-    $ingest->assertLatestWrite('queued_jobs.1.queue', 'foobar');
+    $ingest->assertLatestWrite('queued-job:0.queue', 'default');
+    $ingest->assertLatestWrite('queued-job:1.queue', 'foobar');
 });
 
 final class MyJob implements ShouldQueue
