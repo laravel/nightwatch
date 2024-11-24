@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Carbon\Carbon;
-use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -11,6 +10,7 @@ use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 final class RequestLifecycleIsLongerThanHandler
 {
@@ -25,13 +25,13 @@ final class RequestLifecycleIsLongerThanHandler
     {
         try {
             $this->sensor->stage(ExecutionStage::End);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }
 
         try {
             $this->sensor->request($request, $response);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }
 
@@ -42,7 +42,7 @@ final class RequestLifecycleIsLongerThanHandler
             $ingest = $this->app->make(LocalIngest::class);
 
             $ingest->write($this->sensor->flush());
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }
     }
