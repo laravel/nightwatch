@@ -39,7 +39,8 @@ final class AgentFactory
             ->withHeader('User-Agent', 'NightwatchAgent/1')
             ->withHeader('Content-Type', 'application/octet-stream')
             ->withHeader('Content-Encoding', 'gzip')
-            ->withHeader('Nightwatch-Env-Id', $this->config->envId)
+            // TODO this should be "env" id
+            ->withHeader('Nightwatch-App-Id', $this->config->envId)
             ->withBase($this->config->httpIngest->uri));
 
         /** @var Clock */
