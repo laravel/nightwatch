@@ -146,7 +146,7 @@ it('captures queued mail', function () {
         Str::createUuidsUsingSequence([
             Uuid::fromString('00000000-0000-0000-0000-000000000002'),
         ]);
-        Mail::to('tim@laravel.com')->queue(new MyMail);
+        Mail::to('tim@laravel.com')->queue(new MyQueuedMail);
     });
 
     $response = post('/users');
@@ -164,7 +164,7 @@ it('captures queued mail', function () {
         'execution_id' => '00000000-0000-0000-0000-000000000001',
         'user' => '',
         'job_id' => '00000000-0000-0000-0000-000000000002',
-        'name' => 'MyMail',
+        'name' => 'MyQueuedMail',
         'connection' => 'database',
         'queue' => 'default',
     ]);
@@ -257,7 +257,7 @@ final class MyEvent
     use Dispatchable;
 }
 
-class MyMail extends Mailable implements ShouldQueue
+class MyQueuedMail extends Mailable implements ShouldQueue
 {
     //
 }

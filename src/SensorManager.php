@@ -9,12 +9,14 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
+use Laravel\Nightwatch\Sensors\NotificationSensor;
 use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
 use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\QueuedJobSensor;
@@ -42,6 +44,8 @@ class SensorManager
     private ?QuerySensor $querySensor;
 
     private ?QueuedJobSensor $queuedJobSensor;
+
+    private ?NotificationSensor $notificationSensor;
 
     private ?StageSensor $stageSensor;
 
@@ -119,6 +123,18 @@ class SensorManager
         // );
 
         // $sensor($event);
+    }
+
+    public function notification(NotificationSent $event): void
+    {
+        $sensor = $this->notificationSensor ??= new NotificationSensor(
+            recordsBuffer: $this->recordsBuffer,
+            executionState: $this->executionState,
+            user: $this->user,
+            clock: $this->clock,
+        );
+
+        $sensor($event);
     }
 
     public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
