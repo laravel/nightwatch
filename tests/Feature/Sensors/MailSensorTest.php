@@ -23,8 +23,6 @@ beforeEach(function () {
 it('ingests outgoing requests', function () {
     $ingest = fakeIngest();
     Route::post('/users', function () {
-        travelTo(now()->addMilliseconds(2.5));
-
         Mail::to([
             'ryuta@laravel.com',
             'jess@laravel.com',
