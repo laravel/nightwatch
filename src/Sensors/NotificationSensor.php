@@ -9,8 +9,6 @@ use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\UserProvider;
 
-use function count;
-
 /**
  * @internal
  */
