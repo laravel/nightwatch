@@ -97,7 +97,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerCommands();
         }
 
-        if ($this->config['disabled'] ?? false) {
+        if ($this->nightwatchConfig['disabled'] ?? false) {
             return;
         }
 
@@ -110,7 +110,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $this->config = $this->app->make(Repository::class); // @phpstan-ignore assign.propertyType
 
-        $this->nightwatchConfig = $config->all()['nightwatch'] ?? [];
+        $this->nightwatchConfig = $this->config->all()['nightwatch'] ?? []; // @phpstan-ignore method.nonObject
     }
 
     private function registerBindings(): void
@@ -180,8 +180,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             id: $traceId,
             context: 'request', // TODO
             currentExecutionStageStartedAtMicrotime: $this->timestamp,
-            deploy: $this->config['deployment'] ?? '',
-            server: $this->config['server'] ?? '',
+            deploy: $this->nightwatchConfig['deployment'] ?? '',
+            server: $this->nightwatchConfig['server'] ?? '',
         ));
 
         /** @var Location */
