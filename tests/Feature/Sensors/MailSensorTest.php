@@ -18,8 +18,6 @@ beforeEach(function () {
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 
     Config::set('mail.default', 'array');
-    // Mail::fake();
-    Log::listen(dump(...));
 });
 
 it('ingests outgoing requests', function () {

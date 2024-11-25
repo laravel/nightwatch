@@ -21,7 +21,6 @@ beforeEach(function () {
 });
 
 it('ingests outgoing requests', function () {
-    Log::listen(dd(...));
     $ingest = fakeIngest();
     Route::post('/users', function () {
         travelTo(now()->addMilliseconds(2.5));
