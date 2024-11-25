@@ -32,6 +32,8 @@ final class CacheEventSensor
 {
     private ?float $startTime = null;
 
+    private ?int $duration = null;
+
     private const START_EVENTS = [
         RetrievingKey::class,
         RetrievingManyKeys::class,
@@ -56,6 +58,7 @@ final class CacheEventSensor
 
         if (in_array($class, self::START_EVENTS, strict: true)) {
             $this->startTime = $now;
+            $this->duration = null;
 
             return;
         }
@@ -63,6 +66,8 @@ final class CacheEventSensor
         if ($this->startTime === null) {
             throw new RuntimeException("No start time found for [{$class}] event with key [{$event->key}].");
         }
+
+        $this->duration ??= (int) round(($now - $this->startTime) * 1_000_000);
 
         switch ($class) {
             case CacheHit::class:
@@ -104,7 +109,7 @@ final class CacheEventSensor
             store: $event->storeName ?? '',
             key: $event->key,
             type: $type,
-            duration: (int) round(($now - $this->startTime) * 1_000_000),
+            duration: $this->duration,
             ttl: $class === KeyWritten::class ? ($event->seconds ?? 0) : 0,
         ));
     }
