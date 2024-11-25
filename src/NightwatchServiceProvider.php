@@ -31,6 +31,7 @@ use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
+use Laravel\Nightwatch\Hooks\JobQueuedListener;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
 use Laravel\Nightwatch\Hooks\RequestHandledListener;
@@ -72,7 +73,9 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     }
      *     }
      */
-    private array $config;
+    private array $nightwatchConfig;
+
+    private Repository $config;
 
     public function register(): void
     {
@@ -94,7 +97,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerCommands();
         }
 
-        if ($this->config['disabled'] ?? false) {
+        if ($this->nightwatchConfig['disabled'] ?? false) {
             return;
         }
 
@@ -105,10 +108,9 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
 
-        /** @var Repository */
-        $config = $this->app->make(Repository::class);
+        $this->config = $this->app->make(Repository::class); // @phpstan-ignore assign.propertyType
 
-        $this->config = $config->all()['nightwatch'] ?? [];
+        $this->nightwatchConfig = $this->config->all()['nightwatch'] ?? []; // @phpstan-ignore method.nonObject
     }
 
     private function registerBindings(): void
@@ -129,12 +131,12 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerAgent(): void
     {
-        $this->app->singleton(Agent::class, (new AgentFactory($this->config))(...));
+        $this->app->singleton(Agent::class, (new AgentFactory($this->nightwatchConfig))(...));
     }
 
     private function registerLocalIngest(): void
     {
-        $this->app->singleton(LocalIngest::class, (new LocalIngestFactory($this->config))(...));
+        $this->app->singleton(LocalIngest::class, (new LocalIngestFactory($this->nightwatchConfig))(...));
     }
 
     private function registerPublications(): void
@@ -178,8 +180,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             id: $traceId,
             context: 'request', // TODO
             currentExecutionStageStartedAtMicrotime: $this->timestamp,
-            deploy: $this->config['deployment'] ?? '',
-            server: $this->config['server'] ?? '',
+            deploy: $this->nightwatchConfig['deployment'] ?? '',
+            server: $this->nightwatchConfig['server'] ?? '',
         ));
 
         /** @var Location */
@@ -191,7 +193,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
-            $state, $clock, $location, $userProvider
+            $state, $clock, $location, $userProvider, $this->config
         ));
 
         //
@@ -249,6 +251,11 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->callAfterResolving(ExceptionHandler::class, (new ExceptionHandlerResolvedHandler($sensor))(...));
 
         /**
+         * @see \Laravel\Nightwatch\Records\QueuedJob
+         */
+        $events->listen(JobQueued::class, (new JobQueuedListener($sensor))(...));
+
+        /**
          * @see \Laravel\Nightwatch\Records\OutgoingRequest
          */
         $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($sensor, $clock))(...));
@@ -263,14 +270,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         //$events->listen([CacheMissed::class, CacheHit::class], static function (CacheMissed|CacheHit $event) use ($sensor) {
         //    try {
         //        $sensor->cacheEvent($event);
-        //    } catch (Throwable $e) {
-        //        //
-        //    }
-        //});
-
-        //$events->listen(JobQueued::class, static function (JobQueued $event) use ($sensor) {
-        //    try {
-        //        $sensor->queuedJob($sensor);
         //    } catch (Throwable $e) {
         //        //
         //    }

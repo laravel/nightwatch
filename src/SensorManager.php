@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch;
 use Carbon\Carbon;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
@@ -40,14 +41,16 @@ class SensorManager
 
     private ?QuerySensor $querySensor;
 
-    // private ?QueuedJobSensor $queuedJobSensor;
+    private ?QueuedJobSensor $queuedJobSensor;
+
     private ?StageSensor $stageSensor;
 
     public function __construct(
-        private ExecutionState $state,
+        private ExecutionState $executionState,
         private Clock $clock,
         private Location $location,
         private UserProvider $user,
+        private Repository $config,
         private RecordsBuffer $recordsBuffer = new RecordsBuffer,
     ) {
         //
@@ -57,7 +60,7 @@ class SensorManager
     {
         $sensor = $this->stageSensor ??= new StageSensor(
             clock: $this->clock,
-            executionState: $this->state,
+            executionState: $this->executionState,
         );
 
         $sensor($executionStage);
@@ -66,7 +69,7 @@ class SensorManager
     public function request(Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
-            executionState: $this->state,
+            executionState: $this->executionState,
             recordsBuffer: $this->recordsBuffer,
             user: $this->user,
         );
@@ -97,7 +100,7 @@ class SensorManager
     {
         $sensor = $this->querySensor ??= new QuerySensor(
             clock: $this->clock,
-            executionState: $this->state,
+            executionState: $this->executionState,
             location: $this->location,
             recordsBuffer: $this->recordsBuffer,
             user: $this->user,
@@ -122,7 +125,7 @@ class SensorManager
     {
         $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
             recordsBuffer: $this->recordsBuffer,
-            executionState: $this->state,
+            executionState: $this->executionState,
             user: $this->user,
         );
 
@@ -133,7 +136,7 @@ class SensorManager
     {
         $sensor = $this->exceptionSensor ??= new ExceptionSensor(
             clock: $this->clock,
-            executionState: $this->state,
+            executionState: $this->executionState,
             location: $this->location,
             recordsBuffer: $this->recordsBuffer,
             user: $this->user,
@@ -144,14 +147,15 @@ class SensorManager
 
     public function queuedJob(JobQueued $event): void
     {
-        // $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
-        //     recordsBuffer: $this->recordsBuffer,
-        //     executionState: $this->state,
-        //     user: $this->user,
-        //     clock: $this->clock,
-        // );
+        $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
+            recordsBuffer: $this->recordsBuffer,
+            executionState: $this->executionState,
+            user: $this->user,
+            clock: $this->clock,
+            connectionConfig: $this->config->all()['queue']['connections'] ?? [],
+        );
 
-        // $sensor($event);
+        $sensor($event);
     }
 
     public function flush(): string
