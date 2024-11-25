@@ -20,7 +20,7 @@ beforeEach(function () {
 it('ingests on-demand notifications', function () {
     $ingest = fakeIngest();
     Route::post('/users', function () {
-        NotificationFacade::route('broadcast', 'phillip@laravel.com')->notify(new MyTerribleNotification);
+        NotificationFacade::route('broadcast', 'phillip@laravel.com')->notify(new MyNotification);
     });
 
     $response = post('/users');
@@ -50,7 +50,7 @@ it('ingests on-demand notifications', function () {
 });
 
 
-class MyTerribleNotification extends Notification
+class MyNotification extends Notification
 {
 
     public function via(object $notifiable)
