@@ -6,15 +6,18 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Mail\Mailable;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\SensorManager;
+use Ramsey\Uuid\Uuid;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
@@ -130,6 +133,43 @@ it('captures queued event queue name', function () {
     $ingest->assertLatestWrite('queued-job:2.queue', 'custom_queue');
 });
 
+it('captures queued mail', function () {
+    $ingest = fakeIngest();
+    prependListener(QueryExecuted::class, function (QueryExecuted $event) {
+        if (! RefreshDatabaseState::$migrated) {
+            return false;
+        }
+    });
+    Config::set('queue.default', 'database');
+
+    Route::post('/users', function () {
+        Str::createUuidsUsingSequence([
+            Uuid::fromString('00000000-0000-0000-0000-000000000002'),
+        ]);
+        Mail::to('tim@laravel.com')->queue(new MyMail);
+    });
+
+    $response = post('/users');
+
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('queued-job:0', [
+        'v' => 1,
+        't' => 'queued-job',
+        'timestamp' => 946688523.456789,
+        'deploy' => 'v1.2.3',
+        'server' => 'web-01',
+        'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        'trace_id' => '00000000-0000-0000-0000-000000000000',
+        'execution_context' => 'request',
+        'execution_id' => '00000000-0000-0000-0000-000000000001',
+        'user' => '',
+        'job_id' => '00000000-0000-0000-0000-000000000002',
+        'name' => 'MyMail',
+        'connection' => 'database',
+        'queue' => 'default',
+    ]);
+});
+
 it('normalizes sqs queue names', function () {
     $ingest = fakeIngest();
     $sensor = app(SensorManager::class);
@@ -215,4 +255,9 @@ final class MyListenerWithViaQueue implements ShouldQueue
 final class MyEvent
 {
     use Dispatchable;
+}
+
+class MyMail extends Mailable implements ShouldQueue
+{
+    //
 }
