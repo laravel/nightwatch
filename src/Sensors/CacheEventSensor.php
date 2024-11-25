@@ -54,9 +54,8 @@ final class CacheEventSensor
     public function __invoke(CacheEvent $event): void
     {
         $now = $this->clock->microtime();
-        $class = $event::class;
 
-        if (in_array($class, self::START_EVENTS, strict: true)) {
+        if (in_array($event::class, self::START_EVENTS, strict: true)) {
             $this->startTime = $now;
             $this->duration = null;
 
@@ -64,12 +63,12 @@ final class CacheEventSensor
         }
 
         if ($this->startTime === null) {
-            throw new RuntimeException("No start time found for [{$class}] event with key [{$event->key}].");
+            throw new RuntimeException('No start time found for ['.$event::class."] event with key [{$event->key}].");
         }
 
         $this->duration ??= (int) round(($now - $this->startTime) * 1_000_000);
 
-        switch ($class) {
+        switch ($event::class) {
             case CacheHit::class:
                 $type = 'hit';
                 $this->executionState->cache_hits++;
@@ -93,7 +92,7 @@ final class CacheEventSensor
                 $type = 'forget-failure';
                 break;
             default:
-                throw new RuntimeException("Unexpected event type [{$class}].");
+                throw new RuntimeException('Unexpected event type ['.$event::class.']');
         }
 
         $this->recordsBuffer->write(new CacheEventRecord(
@@ -110,7 +109,7 @@ final class CacheEventSensor
             key: $event->key,
             type: $type,
             duration: $this->duration,
-            ttl: $class === KeyWritten::class ? ($event->seconds ?? 0) : 0,
+            ttl: $event::class === KeyWritten::class ? ($event->seconds ?? 0) : 0,
         ));
     }
 }
