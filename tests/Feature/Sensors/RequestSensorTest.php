@@ -83,7 +83,7 @@ it('can ingest requests', function () {
             'cache_hits' => 0,
             'cache_misses' => 0,
             'cache_writes' => 0,
-            'cache_forgets' => 0,
+            'cache_deletes' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
         ],
