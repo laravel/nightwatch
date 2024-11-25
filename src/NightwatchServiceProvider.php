@@ -23,7 +23,6 @@ use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\Config\Config;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
@@ -55,7 +54,25 @@ final class NightwatchServiceProvider extends ServiceProvider
 {
     private float $timestamp;
 
-    private Config $config;
+    /**
+     * @var array{
+     *     disabled?: bool,
+     *     env_id?: string,
+     *     env_secret?: string,
+     *     deployment?: string,
+     *     server?: string,
+     *     local_ingest?: string,
+     *     remote_ingest?: string,
+     *     buffer_threshold?: int,
+     *     error_log_channel?: string,
+     *     ingests: array{
+     *     socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *     http?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *     log?: array{ channel?: string },
+     *     }
+     *     }
+     */
+    private array $config;
 
     public function register(): void
     {
@@ -77,7 +94,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerCommands();
         }
 
-        if ($this->config->disabled) {
+        if ($this->config['disabled'] ?? false) {
             return;
         }
 
@@ -91,7 +108,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Repository */
         $config = $this->app->make(Repository::class);
 
-        $this->config = new Config($config->all()['nightwatch'] ?? []);
+        $this->config = $config->all()['nightwatch'] ?? [];
     }
 
     private function registerBindings(): void
@@ -161,8 +178,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             id: $traceId,
             context: 'request', // TODO
             currentExecutionStageStartedAtMicrotime: $this->timestamp,
-            deploy: $this->config->deployment,
-            server: $this->config->server,
+            deploy: $this->config['deployment'] ?? '',
+            server: $this->config['server'] ?? '',
         ));
 
         /** @var Location */
