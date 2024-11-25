@@ -67,33 +67,17 @@ final class CacheEventSensor
         }
 
         $this->duration ??= (int) round(($now - $this->startTime) * 1_000_000);
+        $this->executionState->cache_events++;
 
-        switch ($event::class) {
-            case CacheHit::class:
-                $type = 'hit';
-                $this->executionState->cache_hits++;
-                break;
-            case CacheMissed::class:
-                $type = 'miss';
-                $this->executionState->cache_misses++;
-                break;
-            case KeyWritten::class:
-                $type = 'write';
-                $this->executionState->cache_writes++;
-                break;
-            case KeyWriteFailed::class:
-                $type = 'write-failure';
-                break;
-            case KeyForgotten::class:
-                $type = 'forget';
-                $this->executionState->cache_deletes++;
-                break;
-            case KeyForgetFailed::class:
-                $type = 'forget-failure';
-                break;
-            default:
-                throw new RuntimeException('Unexpected event type ['.$event::class.']');
-        }
+        $type = match ($event::class) {
+            CacheHit::class => 'hit',
+            CacheMissed::class => 'miss',
+            KeyWritten::class => 'write',
+            KeyWriteFailed::class => 'write-failure',
+            KeyForgotten::class => 'forget',
+            KeyForgetFailed::class => 'forget-failure',
+            default => throw new RuntimeException('Unexpected event type ['.$event::class.']'),
+        };
 
         $this->recordsBuffer->write(new CacheEventRecord(
             timestamp: $this->startTime,

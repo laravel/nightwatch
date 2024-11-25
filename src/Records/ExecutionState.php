@@ -54,10 +54,7 @@ final class ExecutionState
         public int $outgoing_requests = 0,
         public int $files_read = 0,
         public int $files_written = 0,
-        public int $cache_hits = 0,
-        public int $cache_misses = 0,
-        public int $cache_writes = 0,
-        public int $cache_deletes = 0,
+        public int $cache_events = 0,
         public int $hydrated_models = 0,
         public int $peak_memory_usage = 0,
     ) {
