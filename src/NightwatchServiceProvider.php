@@ -33,7 +33,7 @@ use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
 use Laravel\Nightwatch\Hooks\JobQueuedListener;
-use Laravel\Nightwatch\Hooks\NotificationsentListener;
+use Laravel\Nightwatch\Hooks\NotificationSentListener;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
 use Laravel\Nightwatch\Hooks\RequestHandledListener;
