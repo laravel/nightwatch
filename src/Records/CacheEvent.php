@@ -15,7 +15,7 @@ final class CacheEvent
     public string $t = 'cache-event';
 
     /**
-     * @param  'hit'|'miss'|'write'|'forget'  $type
+     * @param  'hit'|'miss'|'write'|'write-failure'|'forget'|'forget-failure'  $type
      */
     public function __construct(
         public float $timestamp,
