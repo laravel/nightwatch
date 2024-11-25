@@ -44,7 +44,7 @@ it('ingests outgoing requests', function () {
         [
             'v' => 1,
             't' => 'mail',
-            'timestamp' => 946688523.459289,
+            'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             'group' => '',
