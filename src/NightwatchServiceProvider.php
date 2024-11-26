@@ -25,6 +25,7 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Client\Factory as Http;
+use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
@@ -32,7 +33,6 @@ use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\Config\Config;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
@@ -42,6 +42,8 @@ use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
+use Laravel\Nightwatch\Hooks\JobQueuedListener;
+use Laravel\Nightwatch\Hooks\MessageSentListener;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
 use Laravel\Nightwatch\Hooks\RequestHandledListener;
@@ -65,7 +67,27 @@ final class NightwatchServiceProvider extends ServiceProvider
 {
     private float $timestamp;
 
-    private Config $config;
+    /**
+     * @var array{
+     *     disabled?: bool,
+     *     env_id?: string,
+     *     env_secret?: string,
+     *     deployment?: string,
+     *     server?: string,
+     *     local_ingest?: string,
+     *     remote_ingest?: string,
+     *     buffer_threshold?: int,
+     *     error_log_channel?: string,
+     *     ingests: array{
+     *     socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *     http?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *     log?: array{ channel?: string },
+     *     }
+     *     }
+     */
+    private array $nightwatchConfig;
+
+    private Repository $config;
 
     public function register(): void
     {
@@ -87,7 +109,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerCommands();
         }
 
-        if ($this->config->disabled) {
+        if ($this->nightwatchConfig['disabled'] ?? false) {
             return;
         }
 
@@ -98,10 +120,9 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
 
-        /** @var Repository */
-        $config = $this->app->make(Repository::class);
+        $this->config = $this->app->make(Repository::class); // @phpstan-ignore assign.propertyType
 
-        $this->config = new Config($config->all()['nightwatch'] ?? []);
+        $this->nightwatchConfig = $this->config->all()['nightwatch'] ?? []; // @phpstan-ignore method.nonObject
     }
 
     private function registerBindings(): void
@@ -122,12 +143,12 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerAgent(): void
     {
-        $this->app->singleton(Agent::class, (new AgentFactory($this->config))(...));
+        $this->app->singleton(Agent::class, (new AgentFactory($this->nightwatchConfig))(...));
     }
 
     private function registerLocalIngest(): void
     {
-        $this->app->singleton(LocalIngest::class, (new LocalIngestFactory($this->config))(...));
+        $this->app->singleton(LocalIngest::class, (new LocalIngestFactory($this->nightwatchConfig))(...));
     }
 
     private function registerPublications(): void
@@ -171,8 +192,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             id: $traceId,
             context: 'request', // TODO
             currentExecutionStageStartedAtMicrotime: $this->timestamp,
-            deploy: $this->config->deployment,
-            server: $this->config->server,
+            deploy: $this->nightwatchConfig['deployment'] ?? '',
+            server: $this->nightwatchConfig['server'] ?? '',
         ));
 
         /** @var Location */
@@ -184,7 +205,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
-            $state, $clock, $location, $userProvider
+            $state, $clock, $location, $userProvider, $this->config
         ));
 
         //
@@ -242,6 +263,11 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->callAfterResolving(ExceptionHandler::class, (new ExceptionHandlerResolvedHandler($sensor))(...));
 
         /**
+         * @see \Laravel\Nightwatch\Records\QueuedJob
+         */
+        $events->listen(JobQueued::class, (new JobQueuedListener($sensor))(...));
+
+        /**
          * @see \Laravel\Nightwatch\Records\OutgoingRequest
          */
         $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($sensor, $clock))(...));
@@ -264,19 +290,16 @@ final class NightwatchServiceProvider extends ServiceProvider
         ], (new CacheEventListener($sensor))(...));
 
         /**
+         * @see \Laravel\Nightwatch\Records\Mail
+         */
+        $events->listen(MessageSent::class, (new MessageSentListener($sensor))(...));
+
+        /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Contracts\LocalIngest
          */
-        $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($sensor))(...));
-
-        //$events->listen(JobQueued::class, static function (JobQueued $event) use ($sensor) {
-        //    try {
-        //        $sensor->queuedJob($sensor);
-        //    } catch (Throwable $e) {
-        //        //
-        //    }
-        //});
+        $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($sensor, $state))(...));
 
         //$this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor) {
         //    try {

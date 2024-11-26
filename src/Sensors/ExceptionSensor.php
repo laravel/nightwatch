@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\View\ViewException;
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Exception;
@@ -34,7 +33,6 @@ final class ExceptionSensor
         private Clock $clock,
         private ExecutionState $executionState,
         private Location $location,
-        private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
     ) {
         //
@@ -55,7 +53,7 @@ final class ExceptionSensor
 
         $this->executionState->exceptions++;
 
-        $this->recordsBuffer->write(new Exception(
+        $this->executionState->records->write(new Exception(
             timestamp: $nowMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

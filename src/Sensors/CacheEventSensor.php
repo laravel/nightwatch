@@ -45,7 +45,6 @@ final class CacheEventSensor
     public function __construct(
         private Clock $clock,
         private ExecutionState $executionState,
-        private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
     ) {
         //
@@ -79,7 +78,7 @@ final class CacheEventSensor
             default => throw new RuntimeException('Unexpected event type ['.$event::class.']'),
         };
 
-        $this->recordsBuffer->write(new CacheEventRecord(
+        $this->executionState->records->write(new CacheEventRecord(
             timestamp: $this->startTime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

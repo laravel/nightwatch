@@ -20,7 +20,6 @@ use function round;
 final class CommandSensor
 {
     public function __construct(
-        // private RecordsBuffer $recordsBuffer,
         // private ExecutionState $executionState,
         // private UserProvider $user,
         // private string $traceId,

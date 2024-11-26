@@ -6,13 +6,14 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Kernel;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
 
 use function class_exists;
 
 final class HttpKernelResolvedHandler
 {
-    public function __construct(private SensorManager $sensor)
+    public function __construct(private SensorManager $sensor, private ExecutionState $executionState)
     {
         //
     }
@@ -33,6 +34,6 @@ final class HttpKernelResolvedHandler
         // TODO Check this isn't a memory leak in Octane.
         // TODO Check if we can cache this handler between requests on Octane. Same goes for other
         // sub-handlers.
-        $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->sensor, $app));
+        $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->sensor, $this->executionState, $app));
     }
 }

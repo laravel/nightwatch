@@ -38,7 +38,7 @@ final class StreamBuffer
      */
     public function flush(): string
     {
-        $payload = '['.$this->buffer.']';
+        $payload = '{"records":['.$this->buffer.']}';
 
         $this->buffer = '';
 

@@ -32,8 +32,8 @@ return [
             'uri' => env('NIGHTWATCH_HTTP_INGEST_URI', 'https://khq5ni773stuucqrxebn3a5zbi0ypexu.lambda-url.us-east-1.on.aws'),
             // TODO should remote http ingest connnection limit be configurable? Probably not.
             'connection_limit' => env('NIGHTWATCH_HTTP_INGEST_CONNECTION_LIMIT', 2),
-            'connection_timeout' => env('NIGHTWATCH_HTTP_INGEST_CONNECTION_TIMEOUT', 1),
-            'timeout' => env('NIGHTWATCH_HTTP_INGEST_TIMEOUT', 3),
+            'connection_timeout' => env('NIGHTWATCH_HTTP_INGEST_CONNECTION_TIMEOUT', 1.0),
+            'timeout' => env('NIGHTWATCH_HTTP_INGEST_TIMEOUT', 3.0),
         ],
 
         'log' => [

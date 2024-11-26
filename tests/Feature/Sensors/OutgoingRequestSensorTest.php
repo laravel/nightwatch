@@ -17,11 +17,10 @@ beforeEach(function () {
     setExecutionId('00000000-0000-0000-0000-000000000001');
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 
-    Http::resolved(fn () => Http::preventStrayRequests());
+    Http::preventStrayRequests();
 });
 
 it('ingests outgoing requests', function () {
-    Log::listen(dd(...));
     $ingest = fakeIngest();
     Route::post('/users', function () {
         travelTo(now()->addMilliseconds(2.5));

@@ -5,7 +5,7 @@ use Laravel\Nightwatch\Buffers\StreamBuffer;
 it('can flush an empty buffer', function () {
     $buffer = new StreamBuffer(100);
 
-    expect($buffer->flush())->toBe('[]');
+    expect($buffer->flush())->toBe('{"records":[]}');
 });
 
 it('can write and flush a single record', function () {
@@ -13,7 +13,7 @@ it('can write and flush a single record', function () {
 
     $buffer->write('[{"id":1}]');
 
-    expect($buffer->flush())->toBe('[{"id":1}]');
+    expect($buffer->flush())->toBe('{"records":[{"id":1}]}');
 });
 
 it('can write and flush two records', function () {
@@ -22,7 +22,7 @@ it('can write and flush two records', function () {
     $buffer->write('[{"id":1}]');
     $buffer->write('[{"id":2}]');
 
-    expect($buffer->flush())->toBe('[{"id":1},{"id":2}]');
+    expect($buffer->flush())->toBe('{"records":[{"id":1},{"id":2}]}');
 });
 
 it('can write and flush many records', function () {
@@ -33,7 +33,7 @@ it('can write and flush many records', function () {
     $buffer->write('[{"id":3}]');
     $buffer->write('[{"id":4}]');
 
-    expect($buffer->flush())->toBe('[{"id":1},{"id":2},{"id":3},{"id":4}]');
+    expect($buffer->flush())->toBe('{"records":[{"id":1},{"id":2},{"id":3},{"id":4}]}');
 });
 
 it('does does not want flushing without writes', function () {
@@ -80,6 +80,6 @@ it('empties the buffer while flushing', function () {
 
     $buffer->write('[{"id":1}]');
 
-    expect($buffer->flush())->toBe('[{"id":1}]');
-    expect($buffer->flush())->toBe('[]');
+    expect($buffer->flush())->toBe('{"records":[{"id":1}]}');
+    expect($buffer->flush())->toBe('{"records":[]}');
 });
