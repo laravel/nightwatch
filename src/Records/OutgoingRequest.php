@@ -24,11 +24,9 @@ final class OutgoingRequest
         public string $execution_id,
         public string $user,
         // --- /
-        public string $method,
-        public string $scheme,
         public string $host,
-        public string $port,
-        public string $path,
+        public string $method,
+        public string $url,
         public int $duration,
         public int $request_size,
         public int $response_size,

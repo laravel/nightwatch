@@ -32,14 +32,6 @@ final class OutgoingRequestSensor
     {
         $duration = (int) round(($endMicrotime - $startMicrotime) * 1_000_000);
 
-        /** @var 'http'|'https' */
-        $scheme = $request->getUri()->getScheme();
-
-        $port = (string) ($request->getUri()->getPort() ?? match ($scheme) {
-            'http' => 80,
-            'https' => 443,
-        });
-
         $this->executionState->outgoing_requests++;
 
         $this->executionState->records->write(new OutgoingRequest(
@@ -52,10 +44,8 @@ final class OutgoingRequestSensor
             execution_id: $this->executionState->id,
             user: $this->user->id(),
             method: $request->getMethod(),
-            scheme: $scheme,
             host: $request->getUri()->getHost(),
-            port: $port,
-            path: $request->getUri()->getPath(),
+            url: (string) $request->getUri(),
             duration: $duration,
             request_size: $this->resolveMessageSize($request) ?? 0,
             response_size: $this->resolveMessageSize($response) ?? 0,
