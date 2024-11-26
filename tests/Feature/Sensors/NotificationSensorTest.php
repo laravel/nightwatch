@@ -40,7 +40,7 @@ it('ingests on-demand notifications', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            'group' => '',
+            'group' => hash('md5', 'MyNotification'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
@@ -57,7 +57,7 @@ it('ingests on-demand notifications', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            'group' => '',
+            'group' => hash('md5', 'MyNotification'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
@@ -98,7 +98,7 @@ it('ingests notifications for notifiables', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            'group' => '',
+            'group' => hash('md5', 'MyNotification@anonymous'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
@@ -115,7 +115,7 @@ it('ingests notifications for notifiables', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            'group' => '',
+            'group' => hash('md5', 'MyNotification@anonymous'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
@@ -132,7 +132,7 @@ it('ingests notifications for notifiables', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            'group' => '',
+            'group' => hash('md5', 'MyNotification@anonymous'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
@@ -146,7 +146,6 @@ it('ingests notifications for notifiables', function () {
     ]);
 
 });
-
 
 class MyNotification extends Notification
 {
