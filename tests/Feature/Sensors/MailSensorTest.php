@@ -20,7 +20,7 @@ beforeEach(function () {
     Config::set('mail.default', 'array');
 });
 
-it('ingests outgoing requests', function () {
+it('ingests mails', function () {
     $ingest = fakeIngest();
     Route::post('/users', function () {
         Mail::to([
