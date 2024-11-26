@@ -10,6 +10,9 @@ use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
 
+use function get_class;
+use function str_contains;
+
 /**
  * @internal
  */
@@ -28,7 +31,7 @@ final class NotificationSensor
     {
         $notificationClass = get_class($event->notification);
 
-        if (str_contains($notificationClass, '@anonymous')){
+        if (str_contains($notificationClass, '@anonymous')) {
             $notificationClass = Str::before($notificationClass, "\0");
         }
 
