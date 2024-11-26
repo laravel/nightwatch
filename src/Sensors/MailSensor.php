@@ -10,6 +10,7 @@ use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\UserProvider;
 
 use function count;
+use function hash;
 
 /**
  * @internal
