@@ -11,6 +11,7 @@ use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
 
 use function get_class;
+use function hash;
 use function str_contains;
 
 /**
