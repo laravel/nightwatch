@@ -93,7 +93,7 @@ final class CacheEventSensor
             key: $event->key,
             type: $type,
             duration: $this->duration,
-            ttl: $event::class === KeyWritten::class ? ($event->seconds ?? 0) : 0,
+            ttl: in_array($event::class, [KeyWritten::class, KeyWriteFailed::class]) ? ($event->seconds ?? 0) : 0,
         ));
     }
 }
