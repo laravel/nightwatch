@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -16,6 +17,7 @@ final class RequestLifecycleIsLongerThanHandler
 {
     public function __construct(
         private SensorManager $sensor,
+        private ExecutionState $executionState,
         private Application $app,
     ) {
         //
@@ -41,7 +43,7 @@ final class RequestLifecycleIsLongerThanHandler
             /** @var LocalIngest */
             $ingest = $this->app->make(LocalIngest::class);
 
-            $ingest->write($this->sensor->flush());
+            $ingest->write($this->executionState->records->flush());
         } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }

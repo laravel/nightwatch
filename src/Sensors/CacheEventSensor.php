@@ -18,7 +18,6 @@ use function hash;
 final class CacheEventSensor
 {
     public function __construct(
-        // private RecordsBuffer $recordsBuffer,
         // private ExecutionState $executionState,
         // private UserProvider $user,
         // private Clock $clock,

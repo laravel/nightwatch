@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Mail\Events\MessageSent;
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Mail;
@@ -18,7 +17,6 @@ use function hash;
 final class MailSensor
 {
     public function __construct(
-        private RecordsBuffer $recordsBuffer,
         private ExecutionState $executionState,
         private UserProvider $user,
         private Clock $clock,
@@ -33,7 +31,7 @@ final class MailSensor
 
         $this->executionState->mail_sent++;
 
-        $this->recordsBuffer->write(new Mail(
+        $this->executionState->records->write(new Mail(
             timestamp: $now,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

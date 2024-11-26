@@ -17,7 +17,7 @@ use function json_encode;
 /**
  * @internal
  */
-final class RecordsBuffer
+class RecordsBuffer
 {
     /**
      * @var list<Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|Mail>
