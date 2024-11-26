@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
 use Ramsey\Uuid\Uuid;
 
@@ -173,6 +174,7 @@ it('captures queued mail', function () {
 it('normalizes sqs queue names', function () {
     $ingest = fakeIngest();
     $sensor = app(SensorManager::class);
+    $state = app(ExecutionState::class);
     Config::set('queue.connections.my-sqs-queue', [
         'driver' => 'sqs',
         'prefix' => 'https://sqs.us-east-1.amazonaws.com/your-account-id',
@@ -188,7 +190,7 @@ it('normalizes sqs queue names', function () {
         payload: '{"uuid":"00000000-0000-0000-0000-000000000000"}',
         delay: 0,
     ));
-    $ingest->write($sensor->flush());
+    $ingest->write($state->records->flush());
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('queued-job:0.queue', 'queue-name');

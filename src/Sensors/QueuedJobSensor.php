@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Events\CallQueuedListener;
 use Illuminate\Queue\Events\JobQueued;
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\QueuedJob;
@@ -35,7 +34,6 @@ final class QueuedJobSensor
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
      */
     public function __construct(
-        private RecordsBuffer $recordsBuffer,
         private ExecutionState $executionState,
         private UserProvider $user,
         private Clock $clock,
@@ -50,7 +48,7 @@ final class QueuedJobSensor
 
         $this->executionState->jobs_queued++;
 
-        $this->recordsBuffer->write(new QueuedJob(
+        $this->executionState->records->write(new QueuedJob(
             timestamp: $nowMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

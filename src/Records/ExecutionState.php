@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Records;
 
 use Closure;
+use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Types\Str;
 
@@ -58,6 +59,7 @@ final class ExecutionState
         public int $cache_misses = 0,
         public int $hydrated_models = 0,
         public int $peak_memory_usage = 0,
+        public RecordsBuffer $records = new RecordsBuffer
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);

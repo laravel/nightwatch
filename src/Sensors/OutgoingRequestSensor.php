@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\UserProvider;
@@ -20,7 +19,6 @@ use function round;
 final class OutgoingRequestSensor
 {
     public function __construct(
-        private RecordsBuffer $recordsBuffer,
         private ExecutionState $executionState,
         private UserProvider $user,
     ) {
@@ -44,7 +42,7 @@ final class OutgoingRequestSensor
 
         $this->executionState->outgoing_requests++;
 
-        $this->recordsBuffer->write(new OutgoingRequest(
+        $this->executionState->records->write(new OutgoingRequest(
             timestamp: $startMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
