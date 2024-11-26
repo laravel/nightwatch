@@ -201,9 +201,24 @@ it('can ingest cache hits', function () {
 
 it('can ingest cache hits and misses with multiple keys', function () {
     $ingest = fakeIngest();
-    Cache::driver('array')->put('users:345', 'xxxx');
+    Config::set('cache.stores.custom', [
+        'driver' => 'custom',
+        'events' => true,
+    ]);
+    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore {
+        public function many($key)
+        {
+            travelTo(now()->addMicroseconds(2500));
+
+            return parent::many($key);
+        }
+    }, [
+        'events' => true,
+    ]));
+
+    Cache::driver('custom')->put('users:345', 'xxxx');
     Route::post('/users', function () {
-        Cache::driver('array')->getMultiple(['users:345', 'users:678']);
+        Cache::driver('custom')->getMultiple(['users:345', 'users:678']);
     });
 
     $response = post('/users');
@@ -217,13 +232,13 @@ it('can ingest cache hits and misses with multiple keys', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('md5', 'array,users:345'),
+            '_group' => hash('md5', ',users:345'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'before_middleware',
             'user' => '',
-            'store' => 'array',
+            'store' => '',
             'key' => 'users:345',
             'type' => 'write',
             'duration' => 0,
@@ -235,16 +250,16 @@ it('can ingest cache hits and misses with multiple keys', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('md5', 'array,users:345'),
+            '_group' => hash('md5', ',users:345'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
-            'store' => 'array',
+            'store' => '',
             'key' => 'users:345',
             'type' => 'hit',
-            'duration' => 0,
+            'duration' => 2500,
             'ttl' => 0,
         ],
         [
@@ -253,16 +268,16 @@ it('can ingest cache hits and misses with multiple keys', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('md5', 'array,users:678'),
+            '_group' => hash('md5', ',users:678'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
-            'store' => 'array',
+            'store' => '',
             'key' => 'users:678',
             'type' => 'miss',
-            'duration' => 0,
+            'duration' => 2500,
             'ttl' => 0,
         ],
         [
@@ -287,13 +302,13 @@ it('can ingest cache hits and misses with multiple keys', function () {
             'route_path' => '/users',
             'route_action' => 'Closure',
             'ip' => '127.0.0.1',
-            'duration' => 0,
+            'duration' => 2500,
             'status_code' => 200,
             'request_size' => 0,
             'response_size' => 0,
             'bootstrap' => 0,
             'before_middleware' => 0,
-            'action' => 0,
+            'action' => 2500,
             'render' => 0,
             'after_middleware' => 0,
             'sending' => 0,
@@ -490,8 +505,23 @@ it('can ingest cache write failures', function () {
 
 it('can ingest cache writes with multiple keys', function () {
     $ingest = fakeIngest();
+    Config::set('cache.stores.custom', [
+        'driver' => 'custom',
+        'events' => true,
+    ]);
+    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore {
+        public function putMany(array $values, $seconds)
+        {
+            travelTo(now()->addMicroseconds(2500));
+
+            return parent::putMany($values, $seconds);
+        }
+    }, [
+        'events' => true,
+    ]));
+
     Route::post('/users', function () {
-        Cache::driver('array')->putMany(['users:345' => 'abc', 'users:678' => 'def'], 60);
+        Cache::driver('custom')->putMany(['users:345' => 'abc', 'users:678' => 'def'], 60);
     });
 
     $response = post('/users');
@@ -505,16 +535,16 @@ it('can ingest cache writes with multiple keys', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('md5', 'array,users:345'),
+            '_group' => hash('md5', ',users:345'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
-            'store' => 'array',
+            'store' => '',
             'key' => 'users:345',
             'type' => 'write',
-            'duration' => 0,
+            'duration' => 2500,
             'ttl' => 60,
         ],
         [
@@ -523,16 +553,16 @@ it('can ingest cache writes with multiple keys', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('md5', 'array,users:678'),
+            '_group' => hash('md5', ',users:678'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
-            'store' => 'array',
+            'store' => '',
             'key' => 'users:678',
             'type' => 'write',
-            'duration' => 0,
+            'duration' => 2500,
             'ttl' => 60,
         ],
         [
@@ -557,13 +587,13 @@ it('can ingest cache writes with multiple keys', function () {
             'route_path' => '/users',
             'route_action' => 'Closure',
             'ip' => '127.0.0.1',
-            'duration' => 0,
+            'duration' => 2500,
             'status_code' => 200,
             'request_size' => 0,
             'response_size' => 0,
             'bootstrap' => 0,
             'before_middleware' => 0,
-            'action' => 0,
+            'action' => 2500,
             'render' => 0,
             'after_middleware' => 0,
             'sending' => 0,
