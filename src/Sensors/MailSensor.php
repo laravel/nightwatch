@@ -28,6 +28,7 @@ final class MailSensor
     public function __invoke(MessageSent $event): void
     {
         $now = $this->clock->microtime();
+        $class = $event->data['__laravel_mailable'] ?? '';
 
         $this->executionState->mail_sent++;
 
@@ -35,14 +36,14 @@ final class MailSensor
             timestamp: $now,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            group: '',
+            group: hash('md5', $class),
             trace_id: $this->executionState->trace,
             execution_context: $this->executionState->context,
             execution_id: $this->executionState->id,
             execution_stage: $this->executionState->stage,
             user: $this->user->id(),
             mailer: $event->data['mailer'] ?? '',
-            class: $event->data['__laravel_mailable'] ?? '',
+            class: $class,
             subject: $event->message->getSubject() ?? '',
             to: count($event->message->getTo()),
             cc: count($event->message->getCc()),

@@ -47,7 +47,7 @@ it('ingests mails', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            'group' => '',
+            'group' => md5('MyMail'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
