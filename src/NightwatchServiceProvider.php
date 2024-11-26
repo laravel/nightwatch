@@ -69,7 +69,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     /**
      * @var array{
-     *     disabled?: bool,
+     *     enabled?: bool,
      *     env_id?: string,
      *     env_secret?: string,
      *     deployment?: string,
@@ -109,7 +109,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerCommands();
         }
 
-        if ($this->nightwatchConfig['disabled'] ?? false) {
+        if (! ($this->nightwatchConfig['enabled'] ?? true)) {
             return;
         }
 

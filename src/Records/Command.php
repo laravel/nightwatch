@@ -20,7 +20,7 @@ final class Command
         public int $timestamp,
         public string $deploy,
         public string $server,
-        public string $group,
+        public string $_group,
         public string $trace_id,
         public string $user,
         // --- //
