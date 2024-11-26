@@ -20,56 +20,56 @@ beforeEach(function () {
     Log::listen(dump(...));
 });
 
-// it('ingests on-demand notifications', function () {
-//     $ingest = fakeIngest();
-//     Route::post('/users', function () {
-//         NotificationFacade::route('broadcast', [new Channel('test-channel')])
-//             ->route('mail', 'phillip@laravel.com')
-//             ->notify(new MyNotification);
-//     });
+it('ingests on-demand notifications', function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        NotificationFacade::route('broadcast', [new Channel('test-channel')])
+            ->route('mail', 'phillip@laravel.com')
+            ->notify(new MyNotification);
+    });
 
-//     $response = post('/users');
+    $response = post('/users');
 
-//     $response->assertOk();
-//     $ingest->assertWrittenTimes(1);
-//     $ingest->assertLatestWrite('request:0.notifications_sent', 2);
-//     $ingest->assertLatestWrite('notification:*', [
-//         [
-//             'v' => 1,
-//             't' => 'notification',
-//             'timestamp' => 946688523.456789,
-//             'deploy' => 'v1.2.3',
-//             'server' => 'web-01',
-//             'group' => '',
-//             'trace_id' => '00000000-0000-0000-0000-000000000000',
-//             'execution_context' => 'request',
-//             'execution_id' => '00000000-0000-0000-0000-000000000001',
-//             'execution_stage' => 'action',
-//             'user' => '',
-//             'channel' => 'broadcast',
-//             'class' => 'MyNotification',
-//             'duration' => 0,
-//             'failed' => false,
-//         ],
-//         [
-//             'v' => 1,
-//             't' => 'notification',
-//             'timestamp' => 946688523.456789,
-//             'deploy' => 'v1.2.3',
-//             'server' => 'web-01',
-//             'group' => '',
-//             'trace_id' => '00000000-0000-0000-0000-000000000000',
-//             'execution_context' => 'request',
-//             'execution_id' => '00000000-0000-0000-0000-000000000001',
-//             'execution_stage' => 'action',
-//             'user' => '',
-//             'channel' => 'mail',
-//             'class' => 'MyNotification',
-//             'duration' => 0,
-//             'failed' => false,
-//         ],
-//     ]);
-// });
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('request:0.notifications_sent', 2);
+    $ingest->assertLatestWrite('notification:*', [
+        [
+            'v' => 1,
+            't' => 'notification',
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            'group' => '',
+            'trace_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_context' => 'request',
+            'execution_id' => '00000000-0000-0000-0000-000000000001',
+            'execution_stage' => 'action',
+            'user' => '',
+            'channel' => 'broadcast',
+            'class' => 'MyNotification',
+            'duration' => 0,
+            'failed' => false,
+        ],
+        [
+            'v' => 1,
+            't' => 'notification',
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            'group' => '',
+            'trace_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_context' => 'request',
+            'execution_id' => '00000000-0000-0000-0000-000000000001',
+            'execution_stage' => 'action',
+            'user' => '',
+            'channel' => 'mail',
+            'class' => 'MyNotification',
+            'duration' => 0,
+            'failed' => false,
+        ],
+    ]);
+});
 
 it('ingests notifications for notifiables', function () {
     $ingest = fakeIngest();
