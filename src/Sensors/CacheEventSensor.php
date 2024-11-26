@@ -74,8 +74,8 @@ final class CacheEventSensor
             CacheMissed::class => 'miss',
             KeyWritten::class => 'write',
             KeyWriteFailed::class => 'write-failure',
-            KeyForgotten::class => 'forget',
-            KeyForgetFailed::class => 'forget-failure',
+            KeyForgotten::class => 'delete',
+            KeyForgetFailed::class => 'delete-failure',
             default => throw new RuntimeException('Unexpected event type ['.$event::class.']'),
         };
 
