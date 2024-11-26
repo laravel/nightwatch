@@ -398,8 +398,20 @@ it('can ingest cache writes', function () {
 
 it('can ingest cache write failures', function () {
     $ingest = fakeIngest();
+    Config::set('cache.stores.custom', [
+        'driver' => 'custom',
+        'events' => true,
+    ]);
+    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore {
+        public function put($key, $value, $seconds)
+        {
+            return false;
+        }
+    }, [
+        'events' => true,
+    ]));
     Route::post('/users', function () {
-        Cache::driver('redis')->put('users:345', 'xxxx', 60);
+        Cache::driver('custom')->put('users:345', 'xxxx', 60);
     });
 
     $response = post('/users');
@@ -413,13 +425,13 @@ it('can ingest cache write failures', function () {
                 'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
-                '_group' => hash('md5', 'redis,users:345'),
+                '_group' => hash('md5', ',users:345'),
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_context' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000001',
                 'execution_stage' => 'action',
                 'user' => '',
-                'store' => 'redis',
+                'store' => '',
                 'key' => 'users:345',
                 'type' => 'write-failure',
                 'duration' => 0,
@@ -474,7 +486,7 @@ it('can ingest cache write failures', function () {
                 'peak_memory_usage' => 1234,
             ],
     ]);
-})->skip();
+});
 
 it('can ingest cache writes with multiple keys', function () {
     $ingest = fakeIngest();
@@ -675,8 +687,20 @@ it('can ingest cache deletes', function () {
 
 it('can ingest cache delete failures', function () {
     $ingest = fakeIngest();
+    Config::set('cache.stores.custom', [
+        'driver' => 'custom',
+        'events' => true,
+    ]);
+    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore {
+        public function forget($key)
+        {
+            return false;
+        }
+    }, [
+        'events' => true,
+    ]));
     Route::post('/users', function () {
-        Cache::driver('redis')->forget('users:345');
+        Cache::driver('custom')->forget('users:345');
     });
 
     $response = post('/users');
@@ -690,13 +714,13 @@ it('can ingest cache delete failures', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('md5', 'redis,users:345'),
+            '_group' => hash('md5', ',users:345'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
-            'store' => 'redis',
+            'store' => '',
             'key' => 'users:345',
             'type' => 'delete-failure',
             'duration' => 0,
@@ -751,7 +775,7 @@ it('can ingest cache delete failures', function () {
             'peak_memory_usage' => 1234,
         ],
     ]);
-})->skip();
+});
 
 it('handles cache drivers with no store configured', function () {
     $ingest = fakeIngest();
