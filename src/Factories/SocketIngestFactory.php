@@ -11,7 +11,7 @@ final class SocketIngestFactory
 {
     /**
      * @param  array{
-     *      disabled?: bool,
+     *      enabled?: bool,
      *      env_id?: string,
      *      env_secret?: string,
      *      deployment?: string,
