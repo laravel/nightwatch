@@ -7,6 +7,7 @@ use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Notification;
+use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
 
 /**
@@ -25,6 +26,12 @@ final class NotificationSensor
 
     public function __invoke(NotificationSent $event): void
     {
+        $notificationClass = get_class($event->notification);
+
+        if (str_contains($notificationClass, '@anonymous')){
+            $notificationClass = Str::before($notificationClass, "\0");
+        }
+
         $now = $this->clock->microtime();
 
         $this->executionState->notifications_sent++;
@@ -40,7 +47,7 @@ final class NotificationSensor
             execution_stage: $this->executionState->stage,
             user: $this->user->id(),
             channel: $event->channel,
-            class: $event->notification::class,
+            class: $notificationClass,
             duration: 0, // TODO
             failed: false, // TODO
         ));
