@@ -15,17 +15,11 @@ use function gzencode;
  */
 class Client
 {
-    private string $path;
-
     public function __construct(
         private Browser $browser,
-        bool $debug,
+        private string $path,
     ) {
-        if ($debug) {
-            $this->path = '/?debug=1';
-        } else {
-            $this->path = '/';
-        }
+        //
     }
 
     /**

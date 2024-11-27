@@ -59,7 +59,7 @@ final class AgentFactory
             ->withHeader('Content-Encoding', 'gzip')
             // TODO this should be "env" id
             ->withHeader('Nightwatch-App-Id', $this->config['env_id'] ?? '')
-            ->withBase($this->config['ingests']['http']['uri'] ?? ''), (bool) Env::get('NIGHTWATCH_DEBUG'));
+            ->withBase($this->config['ingests']['http']['uri'] ?? ''), (bool) Env::get('NIGHTWATCH_DEBUG') ? '/?debug=1' : '/');
 
         /** @var Clock */
         $clock = $app->make(Clock::class);
