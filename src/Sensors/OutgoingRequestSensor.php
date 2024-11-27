@@ -25,9 +25,6 @@ final class OutgoingRequestSensor
         //
     }
 
-    /**
-     * TODO group, execution_source, execution_id, route
-     */
     public function __invoke(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
         $duration = (int) round(($endMicrotime - $startMicrotime) * 1_000_000);
