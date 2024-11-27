@@ -6,6 +6,7 @@ use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\Records\Mail;
+use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
@@ -20,11 +21,11 @@ use function json_encode;
 class RecordsBuffer
 {
     /**
-     * @var list<Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|Mail>
+     * @var list<Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|Mail|Notification>
      */
     private array $records = [];
 
-    public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|Mail $record): void
+    public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|Mail|Notification $record): void
     {
         $this->records[] = $record;
     }

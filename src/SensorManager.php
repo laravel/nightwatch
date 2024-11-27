@@ -8,12 +8,14 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
+use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
 use Laravel\Nightwatch\Sensors\MailSensor;
+use Laravel\Nightwatch\Sensors\NotificationSensor;
 use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
 use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\QueuedJobSensor;
@@ -41,6 +43,8 @@ class SensorManager
     private ?QuerySensor $querySensor;
 
     private ?QueuedJobSensor $queuedJobSensor;
+
+    private ?NotificationSensor $notificationSensor;
 
     private ?MailSensor $mailSensor;
 
@@ -120,6 +124,17 @@ class SensorManager
     public function mail(MessageSent $event): void
     {
         $sensor = $this->mailSensor ??= new MailSensor(
+            executionState: $this->executionState,
+            user: $this->user,
+            clock: $this->clock,
+        );
+
+        $sensor($event);
+    }
+
+    public function notification(NotificationSent $event): void
+    {
+        $sensor = $this->notificationSensor ??= new NotificationSensor(
             executionState: $this->executionState,
             user: $this->user,
             clock: $this->clock,
