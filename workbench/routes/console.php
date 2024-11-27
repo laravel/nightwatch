@@ -46,7 +46,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
                 'user' => rand(0, 1) ? '123' : '', // not shared.
                 'ip' => '127.0.0.1',
                 'duration' => 0,
-                'status_code' => '200',
+                'status_code' => 200,
                 'request_size_bytes' => 0,
                 'response_size_bytes' => 0,
                 'queries' => 0,
@@ -124,7 +124,7 @@ Artisan::command('nightwatch:client {--times=} {--fast}', function () {
                 'duration' => 0,
                 'request_size_bytes' => 0,
                 'response_size_bytes' => 0,
-                'status_code' => '200',
+                'status_code' => 200,
             ],
         ],
 

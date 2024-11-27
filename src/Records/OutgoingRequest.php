@@ -2,6 +2,8 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\ExecutionStage;
+
 /**
  * @internal
  */
@@ -22,6 +24,7 @@ final class OutgoingRequest
         public string $trace_id,
         public string $execution_source,
         public string $execution_id,
+        public ExecutionStage $execution_stage,
         public string $user,
         // --- /
         public string $host,
@@ -30,7 +33,7 @@ final class OutgoingRequest
         public int $duration,
         public int $request_size,
         public int $response_size,
-        public string $status_code,
+        public int $status_code,
     ) {
         //
     }

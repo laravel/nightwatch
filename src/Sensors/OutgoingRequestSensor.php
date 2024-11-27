@@ -40,6 +40,7 @@ final class OutgoingRequestSensor
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
+            execution_stage: $this->executionState->stage,
             user: $this->user->id(),
             method: $request->getMethod(),
             host: $uri->getHost(),
@@ -47,7 +48,7 @@ final class OutgoingRequestSensor
             duration: $duration,
             request_size: $this->resolveMessageSize($request) ?? 0,
             response_size: $this->resolveMessageSize($response) ?? 0,
-            status_code: (string) $response->getStatusCode(),
+            status_code: $response->getStatusCode(),
         ));
     }
 
