@@ -26,7 +26,7 @@ final class FakeIngest implements LocalIngest
 
     public function assertWrittenTimes(int $expected): self
     {
-        expect($actual = count($this->writes))->toBe($expected, "Expected to have written [{$expected}]. Instead, was written [{$expected}].");
+        expect($actual = count($this->writes))->toBe($expected, "Expected to have written [{$expected}]. Instead, was written [{$actual}].");
 
         return $this;
     }
