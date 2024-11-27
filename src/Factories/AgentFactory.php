@@ -41,6 +41,7 @@ final class AgentFactory
 
     public function __invoke(Application $app): Agent
     {
+        $debug = (bool) Env::get('NIGHTWATCH_DEBUG');
         $loop = new StreamSelectLoop;
         $connector = new Connector(['timeout' => $this->config['ingests']['http']['connection_timeout'] ?? 1.0], $loop);
 
@@ -58,14 +59,14 @@ final class AgentFactory
             ->withHeader('Content-Type', 'application/octet-stream')
             ->withHeader('Content-Encoding', 'gzip')
             // TODO this should be "env" id
-            ->withHeader('Nightwatch-App-Id', $this->config['env_id'] ?? '')
-            ->withBase($this->config['ingests']['http']['uri'] ?? ''), (bool) Env::get('NIGHTWATCH_DEBUG') ? '/?debug=1' : '/');
+            ->withHeader('nightwatch-app-id', $this->config['env_id'] ?? '')
+            ->withBase($this->config['ingests']['http']['uri'] ?? ''), $debug ? '?debug=1' : '');
 
         /** @var Clock */
         $clock = $app->make(Clock::class);
         $buffer = new StreamBuffer;
         $ingest = new HttpIngest($client, $clock, $this->config['ingests']['http']['connection_limit'] ?? 2);
 
-        return new Agent($buffer, $ingest, $loop, $this->config['ingests']['socket']['timeout'] ?? 0.5);
+        return new Agent($buffer, $ingest, $loop, $this->config['ingests']['socket']['timeout'] ?? 0.5, $debug ? 1 : 10);
     }
 }

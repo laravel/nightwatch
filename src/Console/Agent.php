@@ -46,6 +46,7 @@ final class Agent extends Command
         private HttpIngest|NullIngest $ingest,
         private LoopInterface $loop,
         private int|float $timeout,
+        private int $delay,
     ) {
         parent::__construct();
 
@@ -145,7 +146,7 @@ final class Agent extends Command
 
             $after($this->ingest->write($records));
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(10, function () use ($after) {
+            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer($this->delay, function () use ($after) {
                 $records = $this->buffer->flush();
 
                 $this->flushBufferAfterDelayTimer = null;
