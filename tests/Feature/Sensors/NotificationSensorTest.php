@@ -30,7 +30,7 @@ it('ingests on-demand notifications', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request:0.notifications_sent', 2);
+    $ingest->assertLatestWrite('request:0.notifications', 2);
     $ingest->assertLatestWrite('notification:*', [
         [
             'v' => 1,
@@ -88,7 +88,7 @@ it('ingests notifications for notifiables', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request:0.notifications_sent', 3);
+    $ingest->assertLatestWrite('request:0.notifications', 3);
     $ingest->assertLatestWrite('notification:*', [
         [
             'v' => 1,

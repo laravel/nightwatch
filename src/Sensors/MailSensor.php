@@ -29,7 +29,7 @@ final class MailSensor
         $now = $this->clock->microtime();
         $class = $event->data['__laravel_mailable'] ?? '';
 
-        $this->executionState->mail_sent++;
+        $this->executionState->mail++;
 
         $this->executionState->records->write(new Mail(
             timestamp: $now,

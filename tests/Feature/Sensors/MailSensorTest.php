@@ -39,7 +39,7 @@ it('ingests mails', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request:0.mail_sent', 1);
+    $ingest->assertLatestWrite('request:0.mail', 1);
     $ingest->assertLatestWrite('mail:*', [
         [
             'v' => 1,

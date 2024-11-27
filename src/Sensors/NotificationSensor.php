@@ -35,7 +35,7 @@ final class NotificationSensor
             $class = $event->notification::class;
         }
 
-        $this->executionState->notifications_sent++;
+        $this->executionState->notifications++;
 
         $this->executionState->records->write(new Notification(
             timestamp: $now,
