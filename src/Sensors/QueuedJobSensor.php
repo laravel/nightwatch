@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Events\CallQueuedListener;
 use Illuminate\Queue\Events\JobQueued;
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\QueuedJob;
@@ -35,7 +34,6 @@ final class QueuedJobSensor
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
      */
     public function __construct(
-        private RecordsBuffer $recordsBuffer,
         private ExecutionState $executionState,
         private UserProvider $user,
         private Clock $clock,
@@ -47,24 +45,25 @@ final class QueuedJobSensor
     public function __invoke(JobQueued $event): void
     {
         $nowMicrotime = $this->clock->microtime();
+        $name = match (true) {
+            is_string($event->job) => $event->job,
+            method_exists($event->job, 'displayName') => $event->job->displayName(),
+            default => $event->job::class,
+        };
 
         $this->executionState->jobs_queued++;
 
-        $this->recordsBuffer->write(new QueuedJob(
+        $this->executionState->records->write(new QueuedJob(
             timestamp: $nowMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            group: hash('sha256', ''), // TODO
+            _group: hash('md5', $name),
             trace_id: $this->executionState->trace,
             execution_context: $this->executionState->context,
             execution_id: $this->executionState->id,
             user: $this->user->id(),
             job_id: $event->payload()['uuid'],
-            name: match (true) {
-                is_string($event->job) => $event->job,
-                method_exists($event->job, 'displayName') => $event->job->displayName(),
-                default => $event->job::class,
-            },
+            name: $name,
             connection: $event->connectionName,
             queue: $this->normalizeSqsQueue($event->connectionName, $this->resolveQueue($event)),
         ));

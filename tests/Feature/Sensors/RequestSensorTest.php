@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
 
 use function Pest\Laravel\actingAs;
@@ -80,8 +81,7 @@ it('can ingest requests', function () {
             'outgoing_requests' => 0,
             'files_read' => 0,
             'files_written' => 0,
-            'cache_hits' => 0,
-            'cache_misses' => 0,
+            'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
         ],
@@ -114,6 +114,7 @@ it('gracefully handles response size for a streamed file that is deleted after s
     $ingest = fakeIngest();
     /** @var SensorManager */
     $sensor = app(SensorManager::class);
+    $state = app(ExecutionState::class);
     $request = Request::create('http://localhost/users');
 
     $file = tmpfile();
@@ -125,7 +126,7 @@ it('gracefully handles response size for a streamed file that is deleted after s
     ob_end_clean();
 
     $sensor->request($request, $response);
-    $ingest->write($sensor->flush());
+    $ingest->write($state->records->flush());
 
     $ingest->assertLatestWrite('request:0.response_size', 0);
 });
@@ -156,6 +157,7 @@ it('uses the content-length header as the response size when present on a stream
     $ingest = fakeIngest();
     /** @var SensorManager */
     $sensor = app(SensorManager::class);
+    $state = app(ExecutionState::class);
     $request = Request::create('http://localhost/users');
 
     $file = tmpfile();
@@ -167,7 +169,7 @@ it('uses the content-length header as the response size when present on a stream
     ob_end_clean();
 
     $sensor->request($request, $response);
-    $ingest->write($sensor->flush());
+    $ingest->write($state->records->flush());
 
     $ingest->assertLatestWrite('request:0.response_size', 17);
 });
@@ -199,6 +201,8 @@ it('uses the default port for the scheme when not port is available to the reque
     $ingest = fakeIngest();
     /** @var SensorManager */
     $sensor = app(SensorManager::class);
+    $state = app(ExecutionState::class);
+
 
     $request = (new class extends Request
     {
@@ -208,7 +212,7 @@ it('uses the default port for the scheme when not port is available to the reque
         }
     })::create('https://laravel.com/users');
     $sensor->request($request, response(''));
-    $ingest->write($sensor->flush());
+    $ingest->write($state->records->flush());
 
     expect($request->getPort())->toBeNull();
     expect($request->getScheme())->toBe('https');
@@ -223,7 +227,7 @@ it('uses the default port for the scheme when not port is available to the reque
         }
     })::create('http://laravel.com/users');
     $sensor->request($request, response(''));
-    $ingest->write($sensor->flush());
+    $ingest->write($state->records->flush());
 
     expect($request->getPort())->toBeNull();
     expect($request->getScheme())->toBe('http');

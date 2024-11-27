@@ -5,7 +5,6 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Log;
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
@@ -31,7 +30,6 @@ final class RequestSensor
 {
     public function __construct(
         private ExecutionState $executionState,
-        private RecordsBuffer $recordsBuffer,
         private UserProvider $user,
     ) {
         //
@@ -71,7 +69,7 @@ final class RequestSensor
             Log::critical('[nightwatch] '.$e->getMessage());
         }
 
-        $this->recordsBuffer->write(new RequestRecord(
+        $this->executionState->records->write(new RequestRecord(
             timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
@@ -113,8 +111,7 @@ final class RequestSensor
             outgoing_requests: $this->executionState->outgoing_requests,
             files_read: $this->executionState->files_read,
             files_written: $this->executionState->files_written,
-            cache_hits: $this->executionState->cache_hits,
-            cache_misses: $this->executionState->cache_misses,
+            cache_events: $this->executionState->cache_events,
             hydrated_models: $this->executionState->hydrated_models,
             peak_memory_usage: $this->executionState->peakMemory(),
         ));

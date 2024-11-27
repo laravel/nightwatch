@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'disabled' => env('NIGHTWATCH_DISABLED', false),
+    'enabled' => env('NIGHTWATCH_ENABLED', true),
 
     'env_id' => env('NIGHTWATCH_ENV_ID'),
     'env_secret' => env('NIGHTWATCH_ENV_SECRET'),

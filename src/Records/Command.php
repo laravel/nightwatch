@@ -20,7 +20,7 @@ final class Command
         public int $timestamp,
         public string $deploy,
         public string $server,
-        public string $group,
+        public string $_group,
         public string $trace_id,
         public string $user,
         // --- //
@@ -46,8 +46,7 @@ final class Command
         public int $files_read_duration,
         public int $files_written,
         public int $files_written_duration,
-        public int $cache_hits,
-        public int $cache_misses,
+        public int $cache_events,
         public int $hydrated_models,
         public int $peak_memory_usage,
     ) {

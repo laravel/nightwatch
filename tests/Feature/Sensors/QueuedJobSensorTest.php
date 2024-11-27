@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
 use Ramsey\Uuid\Uuid;
 
@@ -63,7 +64,7 @@ it('can ingest queued jobs', function () {
             'timestamp' => 946688523.461989,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            '_group' => md5('MyJob'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
@@ -146,7 +147,7 @@ it('captures queued mail', function () {
         Str::createUuidsUsingSequence([
             Uuid::fromString('00000000-0000-0000-0000-000000000002'),
         ]);
-        Mail::to('tim@laravel.com')->queue(new MyMail);
+        Mail::to('tim@laravel.com')->queue(new MyQueuedMail);
     });
 
     $response = post('/users');
@@ -158,13 +159,13 @@ it('captures queued mail', function () {
         'timestamp' => 946688523.456789,
         'deploy' => 'v1.2.3',
         'server' => 'web-01',
-        'group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        '_group' => md5('MyQueuedMail'),
         'trace_id' => '00000000-0000-0000-0000-000000000000',
         'execution_context' => 'request',
         'execution_id' => '00000000-0000-0000-0000-000000000001',
         'user' => '',
         'job_id' => '00000000-0000-0000-0000-000000000002',
-        'name' => 'MyMail',
+        'name' => 'MyQueuedMail',
         'connection' => 'database',
         'queue' => 'default',
     ]);
@@ -173,6 +174,7 @@ it('captures queued mail', function () {
 it('normalizes sqs queue names', function () {
     $ingest = fakeIngest();
     $sensor = app(SensorManager::class);
+    $state = app(ExecutionState::class);
     Config::set('queue.connections.my-sqs-queue', [
         'driver' => 'sqs',
         'prefix' => 'https://sqs.us-east-1.amazonaws.com/your-account-id',
@@ -188,7 +190,7 @@ it('normalizes sqs queue names', function () {
         payload: '{"uuid":"00000000-0000-0000-0000-000000000000"}',
         delay: 0,
     ));
-    $ingest->write($sensor->flush());
+    $ingest->write($state->records->flush());
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('queued-job:0.queue', 'queue-name');
@@ -257,7 +259,7 @@ final class MyEvent
     use Dispatchable;
 }
 
-class MyMail extends Mailable implements ShouldQueue
+class MyQueuedMail extends Mailable implements ShouldQueue
 {
     //
 }
