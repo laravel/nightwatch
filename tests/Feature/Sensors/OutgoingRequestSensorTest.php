@@ -158,6 +158,30 @@ it('gracefully handles request / response sizes that are streams', function () {
     $ingest->assertLatestWrite('outgoing-request:0.response_size', 0);
 });
 
+ it("doesn't capture the outgoing request URL authentication details", function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        Http::withBasicAuth('ryuta', 'secret')->get('https://laravel.com');
+        Http::withDigestAuth('ryuta', 'secret')->get('https://laravel.com');
+        Http::get('https://ryuta:secret@laravel.com');
+    });
+    Http::fake([
+        'https://*laravel.com' => function () {
+            return Http::response('ok');
+        },
+    ]);
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('outgoing-request:0.url', 'https://laravel.com');
+    $ingest->assertLatestWrite('outgoing-request:1.url', 'https://laravel.com');
+    $ingest->assertLatestWrite('outgoing-request:2.url', 'https://laravel.com');
+    expect($ingest->latestWriteAsString())->not->toContain('ryuta');
+    expect($ingest->latestWriteAsString())->not->toContain('secret');
+ });
+
 final class NoReadStream implements StreamInterface
 {
     use StreamDecoratorTrait {

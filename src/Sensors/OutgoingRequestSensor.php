@@ -31,6 +31,7 @@ final class OutgoingRequestSensor
     public function __invoke(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
         $duration = (int) round(($endMicrotime - $startMicrotime) * 1_000_000);
+        $uri = $request->getUri()->withUserInfo('', null);
 
         $this->executionState->outgoing_requests++;
 
@@ -38,14 +39,14 @@ final class OutgoingRequestSensor
             timestamp: $startMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', $request->getUri()->getHost()),
+            _group: hash('md5', $uri->getHost()),
             trace_id: $this->executionState->trace,
             execution_context: $this->executionState->context,
             execution_id: $this->executionState->id,
             user: $this->user->id(),
             method: $request->getMethod(),
-            host: $request->getUri()->getHost(),
-            url: (string) $request->getUri(),
+            host: $uri->getHost(),
+            url: (string) $uri,
             duration: $duration,
             request_size: $this->resolveMessageSize($request) ?? 0,
             response_size: $this->resolveMessageSize($response) ?? 0,
