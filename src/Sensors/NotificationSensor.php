@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Notifications\Events\NotificationSent;
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Notification;
