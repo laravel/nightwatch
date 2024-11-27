@@ -55,6 +55,7 @@
         ],
         "agent": [
             "Composer\\Config::disableProcessTimeout",
+            "@putenv NIGHTWATCH_DEBUG=1",
             "@php vendor/bin/testbench nightwatch:agent"
         ],
         "lint": [
