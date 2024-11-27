@@ -51,7 +51,7 @@ final class QueuedJobSensor
             default => $event->job::class,
         };
 
-        $this->executionState->jobs_queued++;
+        $this->executionState->jobsQueued++;
 
         $this->executionState->records->write(new QueuedJob(
             timestamp: $nowMicrotime,

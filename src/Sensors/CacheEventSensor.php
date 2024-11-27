@@ -65,7 +65,7 @@ final class CacheEventSensor
         }
 
         $this->duration ??= (int) round(($now - $this->startTime) * 1_000_000);
-        $this->executionState->cache_events++;
+        $this->executionState->cacheEvents++;
 
         $type = match ($event::class) {
             CacheHit::class => 'hit',

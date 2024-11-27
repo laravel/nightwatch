@@ -70,6 +70,8 @@ final class ExceptionSensor
             code: $normalizedException->getCode(),
             trace: $this->serializeTrace($normalizedException),
             handled: $this->wasManuallyReported($normalizedException),
+            php_version: $this->executionState->phpVersion,
+            laravel_version: $this->executionState->laravelVersion,
         ));
     }
 

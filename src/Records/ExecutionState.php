@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Records;
 
 use Closure;
+use Illuminate\Foundation\Application;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Types\Str;
@@ -47,17 +48,19 @@ final class ExecutionState
         public int $exceptions = 0,
         public int $logs = 0,
         public int $queries = 0,
-        public int $lazy_loads = 0,
-        public int $jobs_queued = 0,
+        public int $lazyLoads = 0,
+        public int $jobsQueued = 0,
         public int $mail = 0,
         public int $notifications = 0,
-        public int $outgoing_requests = 0,
-        public int $files_read = 0,
-        public int $files_written = 0,
-        public int $cache_events = 0,
-        public int $hydrated_models = 0,
-        public int $peak_memory_usage = 0,
-        public RecordsBuffer $records = new RecordsBuffer
+        public int $outgoingRequests = 0,
+        public int $filesRead = 0,
+        public int $filesWritten = 0,
+        public int $cacheEvents = 0,
+        public int $hydratedModels = 0,
+        public int $peakMemoryUsage = 0,
+        public RecordsBuffer $records = new RecordsBuffer,
+        public string $phpVersion = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION.'.'.PHP_RELEASE_VERSION,
+        public string $laravelVersion = Application::VERSION,
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);

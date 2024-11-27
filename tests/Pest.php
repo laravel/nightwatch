@@ -62,6 +62,16 @@ function setPeakMemory(int $value): void
     app(ExecutionState::class)->peakMemoryResolver = fn () => $value;
 }
 
+function setLaravelVersion(string $version): void
+{
+    app(ExecutionState::class)->laravelVersion = $version;
+}
+
+function setPhpVersion(string $version): void
+{
+    app(ExecutionState::class)->phpVersion = $version;
+}
+
 function fakeIngest(): FakeIngest
 {
     return App::instance(LocalIngest::class, new FakeIngest);

@@ -17,6 +17,8 @@ beforeEach(function () {
     setExecutionId('00000000-0000-0000-0000-000000000001');
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 
+    setPhpVersion('8.4.1');
+    setLaravelVersion('11.33.0');
     Config::set('app.debug', false);
     ini_set('zend.exception_ignore_args', '0');
 });
@@ -65,6 +67,8 @@ it('can ingest thrown exceptions', function () {
                 }, $frame['args'])).')',
             ], $trace)),
             'handled' => false,
+            'php_version' => '8.4.1',
+            'laravel_version' => '11.33.0',
         ],
     ]);
 });
@@ -129,6 +133,8 @@ it('can ingest reported exceptions', function () {
                 }, $frame['args'])).')',
             ], $trace)),
             'handled' => true,
+            'php_version' => '8.4.1',
+            'laravel_version' => '11.33.0',
         ],
     ]);
 });
