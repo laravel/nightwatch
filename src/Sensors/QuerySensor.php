@@ -42,7 +42,7 @@ final class QuerySensor
             server: $this->executionState->server,
             _group: hash('md5', "{$event->connectionName},{$event->sql}"),
             trace_id: $this->executionState->trace,
-            execution_context: $this->executionState->context,
+            execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
             execution_stage: $this->executionState->stage,
             user: $this->user->id(),

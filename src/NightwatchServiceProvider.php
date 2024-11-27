@@ -192,7 +192,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             timestamp: $this->timestamp,
             trace: $traceId = (string) Str::uuid(),
             id: $traceId,
-            context: 'request', // TODO
+            source: 'request', // TODO
             currentExecutionStageStartedAtMicrotime: $this->timestamp,
             deploy: $this->nightwatchConfig['deployment'] ?? '',
             server: $this->nightwatchConfig['server'] ?? '',

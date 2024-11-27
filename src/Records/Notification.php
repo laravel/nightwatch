@@ -19,7 +19,7 @@ final class Notification
         public string $server,
         public string $group,
         public string $trace_id,
-        public string $execution_context,
+        public string $execution_source,
         public string $execution_id,
         public ExecutionStage $execution_stage,
         public string $user,
