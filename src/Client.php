@@ -15,8 +15,10 @@ use function gzencode;
  */
 class Client
 {
-    public function __construct(private Browser $browser)
-    {
+    public function __construct(
+        private Browser $browser,
+        private string $path,
+    ) {
         //
     }
 
@@ -32,6 +34,6 @@ class Client
             return new RejectedPromise(new RuntimeException('Unable to compress payload.'));
         }
 
-        return $this->browser->post('/', body: $payload);
+        return $this->browser->post($this->path, body: $payload);
     }
 }

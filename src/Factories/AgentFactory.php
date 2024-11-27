@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Env;
 use Laravel\Nightwatch\Buffers\StreamBuffer;
 use Laravel\Nightwatch\Client;
 use Laravel\Nightwatch\Clock;
@@ -58,7 +59,7 @@ final class AgentFactory
             ->withHeader('Content-Encoding', 'gzip')
             // TODO this should be "env" id
             ->withHeader('Nightwatch-App-Id', $this->config['env_id'] ?? '')
-            ->withBase($this->config['ingests']['http']['uri'] ?? ''));
+            ->withBase($this->config['ingests']['http']['uri'] ?? ''), (bool) Env::get('NIGHTWATCH_DEBUG') ? '/?debug=1' : '/');
 
         /** @var Clock */
         $clock = $app->make(Clock::class);
