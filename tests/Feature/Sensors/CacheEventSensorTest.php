@@ -21,8 +21,6 @@ beforeEach(function () {
 it('can ingest cache misses', function () {
     $ingest = fakeIngest();
     Route::post('/users', function () {
-        travelTo(now()->addMicroseconds(2500));
-
         Cache::driver('array')->get('users:345');
     });
 
@@ -30,11 +28,12 @@ it('can ingest cache misses', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite([
+    $ingest->assertLatestWrite('request:0.cache_events', 1);
+    $ingest->assertLatestWrite('cache-event:*', [
         [
             'v' => 1,
             't' => 'cache-event',
-            'timestamp' => 946688523.459289,
+            'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('md5', 'array,users:345'),
@@ -49,61 +48,13 @@ it('can ingest cache misses', function () {
             'duration' => 0,
             'ttl' => 0,
         ],
-        [
-            'v' => 1,
-            't' => 'request',
-            'timestamp' => 946688523.456789,
-            'deploy' => 'v1.2.3',
-            'server' => 'web-01',
-            '_group' => hash('md5', 'POST,,/users'),
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'user' => '',
-            'method' => 'POST',
-            'scheme' => 'http',
-            'url_user' => '',
-            'host' => 'localhost',
-            'port' => 80,
-            'path' => '/users',
-            'query' => '',
-            'route_name' => '',
-            'route_methods' => ['POST'],
-            'route_domain' => '',
-            'route_path' => '/users',
-            'route_action' => 'Closure',
-            'ip' => '127.0.0.1',
-            'duration' => 2500,
-            'status_code' => 200,
-            'request_size' => 0,
-            'response_size' => 0,
-            'bootstrap' => 0,
-            'before_middleware' => 0,
-            'action' => 2500,
-            'render' => 0,
-            'after_middleware' => 0,
-            'sending' => 0,
-            'terminating' => 0,
-            'exceptions' => 0,
-            'queries' => 0,
-            'lazy_loads' => 0,
-            'jobs_queued' => 0,
-            'mail_queued' => 0,
-            'mail_sent' => 0,
-            'notifications_queued' => 0,
-            'notifications_sent' => 0,
-            'outgoing_requests' => 0,
-            'files_read' => 0,
-            'files_written' => 0,
-            'cache_events' => 1,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 1234,
-        ],
     ]);
 });
 
 it('can ingest cache hits', function () {
     $ingest = fakeIngest();
     Cache::driver('array')->put('users:345', 'xxxx');
-    Route::post('/users', function () {
+        Route::post('/users', function () {
         Cache::driver('array')->get('users:345');
     });
 
@@ -111,7 +62,8 @@ it('can ingest cache hits', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite([
+    $ingest->assertLatestWrite('request:0.cache_events', 2);
+    $ingest->assertLatestWrite('cache-event:*', [
         [
             'v' => 1,
             't' => 'cache-event',
@@ -148,54 +100,6 @@ it('can ingest cache hits', function () {
             'duration' => 0,
             'ttl' => 0,
         ],
-        [
-            'v' => 1,
-            't' => 'request',
-            'timestamp' => 946688523.456789,
-            'deploy' => 'v1.2.3',
-            'server' => 'web-01',
-            '_group' => hash('md5', 'POST,,/users'),
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'user' => '',
-            'method' => 'POST',
-            'scheme' => 'http',
-            'url_user' => '',
-            'host' => 'localhost',
-            'port' => 80,
-            'path' => '/users',
-            'query' => '',
-            'route_name' => '',
-            'route_methods' => ['POST'],
-            'route_domain' => '',
-            'route_path' => '/users',
-            'route_action' => 'Closure',
-            'ip' => '127.0.0.1',
-            'duration' => 0,
-            'status_code' => 200,
-            'request_size' => 0,
-            'response_size' => 0,
-            'bootstrap' => 0,
-            'before_middleware' => 0,
-            'action' => 0,
-            'render' => 0,
-            'after_middleware' => 0,
-            'sending' => 0,
-            'terminating' => 0,
-            'exceptions' => 0,
-            'queries' => 0,
-            'lazy_loads' => 0,
-            'jobs_queued' => 0,
-            'mail_queued' => 0,
-            'mail_sent' => 0,
-            'notifications_queued' => 0,
-            'notifications_sent' => 0,
-            'outgoing_requests' => 0,
-            'files_read' => 0,
-            'files_written' => 0,
-            'cache_events' => 2,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 1234,
-        ],
     ]);
 });
 
@@ -216,8 +120,8 @@ it('can ingest cache hits and misses with multiple keys', function () {
         'events' => true,
     ]));
 
-    Cache::driver('custom')->put('users:345', 'xxxx');
     Route::post('/users', function () {
+        Cache::driver('custom')->put('users:345', 'xxxx');
         Cache::driver('custom')->getMultiple(['users:345', 'users:678']);
     });
 
@@ -225,7 +129,8 @@ it('can ingest cache hits and misses with multiple keys', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite([
+    $ingest->assertLatestWrite('request:0.cache_events', 3);
+    $ingest->assertLatestWrite('cache-event:*', [
         [
             'v' => 1,
             't' => 'cache-event',
@@ -236,7 +141,7 @@ it('can ingest cache hits and misses with multiple keys', function () {
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
-            'execution_stage' => 'before_middleware',
+            'execution_stage' => 'action',
             'user' => '',
             'store' => '',
             'key' => 'users:345',
@@ -280,54 +185,6 @@ it('can ingest cache hits and misses with multiple keys', function () {
             'duration' => 2500,
             'ttl' => 0,
         ],
-        [
-            'v' => 1,
-            't' => 'request',
-            'timestamp' => 946688523.456789,
-            'deploy' => 'v1.2.3',
-            'server' => 'web-01',
-            '_group' => hash('md5', 'POST,,/users'),
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'user' => '',
-            'method' => 'POST',
-            'scheme' => 'http',
-            'url_user' => '',
-            'host' => 'localhost',
-            'port' => 80,
-            'path' => '/users',
-            'query' => '',
-            'route_name' => '',
-            'route_methods' => ['POST'],
-            'route_domain' => '',
-            'route_path' => '/users',
-            'route_action' => 'Closure',
-            'ip' => '127.0.0.1',
-            'duration' => 2500,
-            'status_code' => 200,
-            'request_size' => 0,
-            'response_size' => 0,
-            'bootstrap' => 0,
-            'before_middleware' => 0,
-            'action' => 2500,
-            'render' => 0,
-            'after_middleware' => 0,
-            'sending' => 0,
-            'terminating' => 0,
-            'exceptions' => 0,
-            'queries' => 0,
-            'lazy_loads' => 0,
-            'jobs_queued' => 0,
-            'mail_queued' => 0,
-            'mail_sent' => 0,
-            'notifications_queued' => 0,
-            'notifications_sent' => 0,
-            'outgoing_requests' => 0,
-            'files_read' => 0,
-            'files_written' => 0,
-            'cache_events' => 3,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 1234,
-        ],
     ]);
 });
 
@@ -340,8 +197,8 @@ it('can ingest cache writes', function () {
     $response = post('/users');
 
     $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite([
+    $ingest->assertLatestWrite('request:0.cache_events', 1);
+    $ingest->assertLatestWrite('cache-event:*', [
         [
                 'v' => 1,
                 't' => 'cache-event',
@@ -359,54 +216,6 @@ it('can ingest cache writes', function () {
                 'type' => 'write',
                 'duration' => 0,
                 'ttl' => 60,
-            ],
-        [
-                'v' => 1,
-                't' => 'request',
-                'timestamp' => 946688523.456789,
-                'deploy' => 'v1.2.3',
-                'server' => 'web-01',
-                '_group' => hash('md5', 'POST,,/users'),
-                'trace_id' => '00000000-0000-0000-0000-000000000000',
-                'user' => '',
-                'method' => 'POST',
-                'scheme' => 'http',
-                'url_user' => '',
-                'host' => 'localhost',
-                'port' => 80,
-                'path' => '/users',
-                'query' => '',
-                'route_name' => '',
-                'route_methods' => ['POST'],
-                'route_domain' => '',
-                'route_path' => '/users',
-                'route_action' => 'Closure',
-                'ip' => '127.0.0.1',
-                'duration' => 0,
-                'status_code' => 200,
-                'request_size' => 0,
-                'response_size' => 0,
-                'bootstrap' => 0,
-                'before_middleware' => 0,
-                'action' => 0,
-                'render' => 0,
-                'after_middleware' => 0,
-                'sending' => 0,
-                'terminating' => 0,
-                'exceptions' => 0,
-                'queries' => 0,
-                'lazy_loads' => 0,
-                'jobs_queued' => 0,
-                'mail_queued' => 0,
-                'mail_sent' => 0,
-                'notifications_queued' => 0,
-                'notifications_sent' => 0,
-                'outgoing_requests' => 0,
-                'files_read' => 0,
-                'files_written' => 0,
-                'cache_events' => 1,
-                'hydrated_models' => 0,
-                'peak_memory_usage' => 1234,
             ],
     ]);
 });
@@ -433,7 +242,8 @@ it('can ingest cache write failures', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite([
+    $ingest->assertLatestWrite('request:0.cache_events', 1);
+    $ingest->assertLatestWrite('cache-event:*', [
         [
                 'v' => 1,
                 't' => 'cache-event',
@@ -451,54 +261,6 @@ it('can ingest cache write failures', function () {
                 'type' => 'write-failure',
                 'duration' => 0,
                 'ttl' => 60,
-            ],
-        [
-                'v' => 1,
-                't' => 'request',
-                'timestamp' => 946688523.456789,
-                'deploy' => 'v1.2.3',
-                'server' => 'web-01',
-                '_group' => hash('md5', 'POST,,/users'),
-                'trace_id' => '00000000-0000-0000-0000-000000000000',
-                'user' => '',
-                'method' => 'POST',
-                'scheme' => 'http',
-                'url_user' => '',
-                'host' => 'localhost',
-                'port' => 80,
-                'path' => '/users',
-                'query' => '',
-                'route_name' => '',
-                'route_methods' => ['POST'],
-                'route_domain' => '',
-                'route_path' => '/users',
-                'route_action' => 'Closure',
-                'ip' => '127.0.0.1',
-                'duration' => 0,
-                'status_code' => 200,
-                'request_size' => 0,
-                'response_size' => 0,
-                'bootstrap' => 0,
-                'before_middleware' => 0,
-                'action' => 0,
-                'render' => 0,
-                'after_middleware' => 0,
-                'sending' => 0,
-                'terminating' => 0,
-                'exceptions' => 0,
-                'queries' => 0,
-                'lazy_loads' => 0,
-                'jobs_queued' => 0,
-                'mail_queued' => 0,
-                'mail_sent' => 0,
-                'notifications_queued' => 0,
-                'notifications_sent' => 0,
-                'outgoing_requests' => 0,
-                'files_read' => 0,
-                'files_written' => 0,
-                'cache_events' => 1,
-                'hydrated_models' => 0,
-                'peak_memory_usage' => 1234,
             ],
     ]);
 });
@@ -528,7 +290,8 @@ it('can ingest cache writes with multiple keys', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite([
+    $ingest->assertLatestWrite('request:0.cache_events', 2);
+    $ingest->assertLatestWrite('cache-event:*', [
         [
             'v' => 1,
             't' => 'cache-event',
@@ -565,61 +328,13 @@ it('can ingest cache writes with multiple keys', function () {
             'duration' => 2500,
             'ttl' => 60,
         ],
-        [
-            'v' => 1,
-            't' => 'request',
-            'timestamp' => 946688523.456789,
-            'deploy' => 'v1.2.3',
-            'server' => 'web-01',
-            '_group' => hash('md5', 'POST,,/users'),
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'user' => '',
-            'method' => 'POST',
-            'scheme' => 'http',
-            'url_user' => '',
-            'host' => 'localhost',
-            'port' => 80,
-            'path' => '/users',
-            'query' => '',
-            'route_name' => '',
-            'route_methods' => ['POST'],
-            'route_domain' => '',
-            'route_path' => '/users',
-            'route_action' => 'Closure',
-            'ip' => '127.0.0.1',
-            'duration' => 2500,
-            'status_code' => 200,
-            'request_size' => 0,
-            'response_size' => 0,
-            'bootstrap' => 0,
-            'before_middleware' => 0,
-            'action' => 2500,
-            'render' => 0,
-            'after_middleware' => 0,
-            'sending' => 0,
-            'terminating' => 0,
-            'exceptions' => 0,
-            'queries' => 0,
-            'lazy_loads' => 0,
-            'jobs_queued' => 0,
-            'mail_queued' => 0,
-            'mail_sent' => 0,
-            'notifications_queued' => 0,
-            'notifications_sent' => 0,
-            'outgoing_requests' => 0,
-            'files_read' => 0,
-            'files_written' => 0,
-            'cache_events' => 2,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 1234,
-        ],
     ]);
 });
 
 it('can ingest cache deletes', function () {
     $ingest = fakeIngest();
-    Cache::driver('array')->put('users:345', 'xxxx');
     Route::post('/users', function () {
+        Cache::driver('array')->put('users:345', 'xxxx');
         Cache::driver('array')->forget('users:345');
     });
 
@@ -627,7 +342,8 @@ it('can ingest cache deletes', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite([
+    $ingest->assertLatestWrite('request:0.cache_events', 2);
+    $ingest->assertLatestWrite('cache-event:*', [
         [
             'v' => 1,
             't' => 'cache-event',
@@ -638,7 +354,7 @@ it('can ingest cache deletes', function () {
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
-            'execution_stage' => 'before_middleware',
+            'execution_stage' => 'action',
             'user' => '',
             'store' => 'array',
             'key' => 'users:345',
@@ -663,54 +379,6 @@ it('can ingest cache deletes', function () {
             'type' => 'delete',
             'duration' => 0,
             'ttl' => 0,
-        ],
-        [
-            'v' => 1,
-            't' => 'request',
-            'timestamp' => 946688523.456789,
-            'deploy' => 'v1.2.3',
-            'server' => 'web-01',
-            '_group' => hash('md5', 'POST,,/users'),
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'user' => '',
-            'method' => 'POST',
-            'scheme' => 'http',
-            'url_user' => '',
-            'host' => 'localhost',
-            'port' => 80,
-            'path' => '/users',
-            'query' => '',
-            'route_name' => '',
-            'route_methods' => ['POST'],
-            'route_domain' => '',
-            'route_path' => '/users',
-            'route_action' => 'Closure',
-            'ip' => '127.0.0.1',
-            'duration' => 0,
-            'status_code' => 200,
-            'request_size' => 0,
-            'response_size' => 0,
-            'bootstrap' => 0,
-            'before_middleware' => 0,
-            'action' => 0,
-            'render' => 0,
-            'after_middleware' => 0,
-            'sending' => 0,
-            'terminating' => 0,
-            'exceptions' => 0,
-            'queries' => 0,
-            'lazy_loads' => 0,
-            'jobs_queued' => 0,
-            'mail_queued' => 0,
-            'mail_sent' => 0,
-            'notifications_queued' => 0,
-            'notifications_sent' => 0,
-            'outgoing_requests' => 0,
-            'files_read' => 0,
-            'files_written' => 0,
-            'cache_events' => 2,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 1234,
         ],
     ]);
 });
@@ -737,7 +405,8 @@ it('can ingest cache delete failures', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite([
+    $ingest->assertLatestWrite('request:0.cache_events', 1);
+    $ingest->assertLatestWrite('cache-event:*', [
         [
             'v' => 1,
             't' => 'cache-event',
@@ -755,54 +424,6 @@ it('can ingest cache delete failures', function () {
             'type' => 'delete-failure',
             'duration' => 0,
             'ttl' => 0,
-        ],
-        [
-            'v' => 1,
-            't' => 'request',
-            'timestamp' => 946688523.456789,
-            'deploy' => 'v1.2.3',
-            'server' => 'web-01',
-            '_group' => hash('md5', 'POST,,/users'),
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'user' => '',
-            'method' => 'POST',
-            'scheme' => 'http',
-            'url_user' => '',
-            'host' => 'localhost',
-            'port' => 80,
-            'path' => '/users',
-            'query' => '',
-            'route_name' => '',
-            'route_methods' => ['POST'],
-            'route_domain' => '',
-            'route_path' => '/users',
-            'route_action' => 'Closure',
-            'ip' => '127.0.0.1',
-            'duration' => 0,
-            'status_code' => 200,
-            'request_size' => 0,
-            'response_size' => 0,
-            'bootstrap' => 0,
-            'before_middleware' => 0,
-            'action' => 0,
-            'render' => 0,
-            'after_middleware' => 0,
-            'sending' => 0,
-            'terminating' => 0,
-            'exceptions' => 0,
-            'queries' => 0,
-            'lazy_loads' => 0,
-            'jobs_queued' => 0,
-            'mail_queued' => 0,
-            'mail_sent' => 0,
-            'notifications_queued' => 0,
-            'notifications_sent' => 0,
-            'outgoing_requests' => 0,
-            'files_read' => 0,
-            'files_written' => 0,
-            'cache_events' => 1,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 1234,
         ],
     ]);
 });
