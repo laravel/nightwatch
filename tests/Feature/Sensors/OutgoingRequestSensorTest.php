@@ -50,6 +50,7 @@ it('ingests outgoing requests', function () {
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
+            'execution_stage' => 'action',
             'user' => '',
             'host' => 'laravel.com',
             'method' => 'POST',
@@ -57,7 +58,7 @@ it('ingests outgoing requests', function () {
             'duration' => 1234000,
             'request_size' => 2000,
             'response_size' => 3000,
-            'status_code' => '200',
+            'status_code' => 200,
         ],
     ]);
 });
