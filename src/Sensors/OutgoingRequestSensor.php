@@ -26,7 +26,7 @@ final class OutgoingRequestSensor
     }
 
     /**
-     * TODO group, execution_context, execution_id, route
+     * TODO group, execution_source, execution_id, route
      */
     public function __invoke(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
@@ -41,7 +41,7 @@ final class OutgoingRequestSensor
             server: $this->executionState->server,
             _group: hash('md5', $uri->getHost()),
             trace_id: $this->executionState->trace,
-            execution_context: $this->executionState->context,
+            execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
             user: $this->user->id(),
             method: $request->getMethod(),

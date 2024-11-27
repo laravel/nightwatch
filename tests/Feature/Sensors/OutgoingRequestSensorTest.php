@@ -48,7 +48,7 @@ it('ingests outgoing requests', function () {
             'server' => 'web-01',
             '_group' => md5('laravel.com'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'execution_context' => 'request',
+            'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'user' => '',
             'host' => 'laravel.com',

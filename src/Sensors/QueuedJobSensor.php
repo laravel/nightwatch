@@ -59,7 +59,7 @@ final class QueuedJobSensor
             server: $this->executionState->server,
             _group: hash('md5', $name),
             trace_id: $this->executionState->trace,
-            execution_context: $this->executionState->context,
+            execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
             user: $this->user->id(),
             job_id: $event->payload()['uuid'],

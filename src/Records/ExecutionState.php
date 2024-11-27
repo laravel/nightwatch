@@ -29,7 +29,7 @@ final class ExecutionState
         public float $timestamp,
         public string $trace,
         public string $id,
-        public string $context,
+        public string $source,
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
