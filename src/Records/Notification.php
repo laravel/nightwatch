@@ -2,35 +2,32 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\ExecutionStage;
+
 /**
  * @internal
  */
-final class OutgoingRequest
+final class Notification
 {
     public int $v = 1;
 
-    public string $t = 'outgoing-request';
+    public string $t = 'notification';
 
-    /**
-     * TODO limit string length
-     */
     public function __construct(
         public float $timestamp,
         public string $deploy,
         public string $server,
-        public string $_group,
+        public string $group,
         public string $trace_id,
         public string $execution_context,
         public string $execution_id,
+        public ExecutionStage $execution_stage,
         public string $user,
-        // --- /
-        public string $host,
-        public string $method,
-        public string $url,
+        // --- //
+        public string $channel,
+        public string $class,
         public int $duration,
-        public int $request_size,
-        public int $response_size,
-        public string $status_code,
+        public bool $failed,
     ) {
         //
     }

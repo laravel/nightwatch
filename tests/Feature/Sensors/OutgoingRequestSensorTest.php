@@ -3,7 +3,6 @@
 use Carbon\CarbonImmutable;
 use GuzzleHttp\Psr7\StreamDecoratorTrait;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Psr\Http\Message\StreamInterface;
 
 use function Pest\Laravel\post;
@@ -52,11 +51,9 @@ it('ingests outgoing requests', function () {
             'execution_context' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'user' => '',
-            'method' => 'POST',
-            'scheme' => 'https',
             'host' => 'laravel.com',
-            'port' => '443',
-            'path' => '',
+            'method' => 'POST',
+            'url' => 'https://laravel.com',
             'duration' => 1234000,
             'request_size' => 2000,
             'response_size' => 3000,
@@ -139,43 +136,7 @@ it('captures the port when specified', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('outgoing-request:0.port', '4321');
-});
-
-it('captures the default port for insecure requests when not specified', function () {
-    $ingest = fakeIngest();
-    Route::post('/users', function () {
-        Http::post('http://laravel.com');
-    });
-    Http::fake([
-        'http://laravel.com' => function () {
-            return Http::response();
-        },
-    ]);
-
-    $response = post('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('outgoing-request:0.port', '80');
-});
-
-it('captures the default port for secure requests when not specified', function () {
-    $ingest = fakeIngest();
-    Route::post('/users', function () {
-        Http::post('https://laravel.com');
-    });
-    Http::fake([
-        'https://laravel.com' => function () {
-            return Http::response();
-        },
-    ]);
-
-    $response = post('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('outgoing-request:0.port', '443');
+    $ingest->assertLatestWrite('outgoing-request:0.url', 'https://laravel.com:4321');
 });
 
 it('gracefully handles request / response sizes that are streams', function () {
@@ -196,6 +157,30 @@ it('gracefully handles request / response sizes that are streams', function () {
     $ingest->assertLatestWrite('outgoing-request:0.request_size', 0);
     $ingest->assertLatestWrite('outgoing-request:0.response_size', 0);
 });
+
+ it("doesn't capture the outgoing request URL authentication details", function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        Http::withBasicAuth('ryuta', 'secret')->get('https://laravel.com');
+        Http::withDigestAuth('ryuta', 'secret')->get('https://laravel.com');
+        Http::get('https://ryuta:secret@laravel.com');
+    });
+    Http::fake([
+        'https://*laravel.com' => function () {
+            return Http::response('ok');
+        },
+    ]);
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('outgoing-request:0.url', 'https://laravel.com');
+    $ingest->assertLatestWrite('outgoing-request:1.url', 'https://laravel.com');
+    $ingest->assertLatestWrite('outgoing-request:2.url', 'https://laravel.com');
+    expect($ingest->latestWriteAsString())->not->toContain('ryuta');
+    expect($ingest->latestWriteAsString())->not->toContain('secret');
+ });
 
 final class NoReadStream implements StreamInterface
 {
