@@ -17,7 +17,7 @@ final class Notification
         public float $timestamp,
         public string $deploy,
         public string $server,
-        public string $group,
+        public string $_group,
         public string $trace_id,
         public string $execution_source,
         public string $execution_id,

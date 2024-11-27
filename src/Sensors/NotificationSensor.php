@@ -41,7 +41,7 @@ final class NotificationSensor
             timestamp: $now,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            group: hash('md5', $class),
+            _group: hash('md5', $class),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
