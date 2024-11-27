@@ -3,38 +3,32 @@
 namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Types\Str;
 
 /**
  * @internal
  */
-final class CacheEvent
+final class Notification
 {
     public int $v = 1;
 
-    public string $t = 'cache-event';
+    public string $t = 'notification';
 
-    /**
-     * @param  'hit'|'miss'|'write'|'write-failure'|'delete'|'delete-failure'  $type
-     */
     public function __construct(
         public float $timestamp,
         public string $deploy,
         public string $server,
-        public string $_group,
+        public string $group,
         public string $trace_id,
         public string $execution_context,
         public string $execution_id,
         public ExecutionStage $execution_stage,
         public string $user,
         // --- //
-        public string $store,
-        public string $key,
-        public string $type,
+        public string $channel,
+        public string $class,
         public int $duration,
-        public int $ttl,
+        public bool $failed,
     ) {
-        $this->store = Str::tinyText($this->store);
-        $this->key = Str::tinyText($this->key);
+        //
     }
 }

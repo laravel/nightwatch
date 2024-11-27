@@ -10,6 +10,7 @@
         "method_chaining_indentation": true,
         "no_binary_string": false,
         "strict_comparison": true,
+        "strict_param": true,
         "ternary_to_null_coalescing": true
     },
     "exclude": [

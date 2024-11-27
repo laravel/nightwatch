@@ -2,59 +2,96 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
+use Illuminate\Cache\Events\ForgettingKey;
+use Illuminate\Cache\Events\KeyForgetFailed;
+use Illuminate\Cache\Events\KeyForgotten;
+use Illuminate\Cache\Events\KeyWriteFailed;
+use Illuminate\Cache\Events\KeyWritten;
+use Illuminate\Cache\Events\RetrievingKey;
+use Illuminate\Cache\Events\RetrievingManyKeys;
+use Illuminate\Cache\Events\WritingKey;
+use Illuminate\Cache\Events\WritingManyKeys;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\UserProvider;
+use RuntimeException;
 
 use function hash;
+use function in_array;
+use function round;
 
 /**
  * @internal
  */
 final class CacheEventSensor
 {
+    private ?float $startTime = null;
+
+    private ?int $duration = null;
+
+    private const START_EVENTS = [
+        RetrievingKey::class,
+        RetrievingManyKeys::class,
+        WritingKey::class,
+        WritingManyKeys::class,
+        ForgettingKey::class,
+    ];
+
     public function __construct(
-        // private ExecutionState $executionState,
-        // private UserProvider $user,
-        // private Clock $clock,
-        // private string $server,
-        // private string $traceId,
+        private Clock $clock,
+        private ExecutionState $executionState,
+        private UserProvider $user,
     ) {
         //
     }
 
-    /**
-     * TODO grouping, execution_context, execution_id
-     */
-    public function __invoke(CacheMissed|CacheHit $event): void
+    public function __invoke(CacheEvent $event): void
     {
-        // $nowMicrotime = $this->clock->microtime();
+        $now = $this->clock->microtime();
 
-        // if ($event::class === CacheHit::class) {
-        //     $type = 'hit';
-        //     $this->executionState->cache_hits++;
-        // } else {
-        //     $type = 'miss';
-        //     $this->executionState->cache_misses++;
-        // }
+        if (in_array($event::class, self::START_EVENTS, strict: true)) {
+            $this->startTime = $now;
+            $this->duration = null;
 
-        // $this->recordsBuffer->write(new CacheEvent(
-        //     timestamp: (int) $nowMicrotime,
-        //     deploy: $this->executionState->deploy,
-        //     server: $this->server,
-        //     group: hash('sha256', ''),
-        //     trace_id: $this->traceId,
-        //     execution_context: 'request',
-        //     execution_id: '00000000-0000-0000-0000-000000000000',
-        //     execution_offset: $this->clock->executionOffset($nowMicrotime),
-        //     user: $this->user->id(),
-        //     store: $event->storeName ?? '',
-        //     key: $event->key,
-        //     type: $type,
-        // ));
+            return;
+        }
+
+        if ($this->startTime === null) {
+            throw new RuntimeException('No start time found for ['.$event::class."] event with key [{$event->key}].");
+        }
+
+        $this->duration ??= (int) round(($now - $this->startTime) * 1_000_000);
+        $this->executionState->cache_events++;
+
+        $type = match ($event::class) {
+            CacheHit::class => 'hit',
+            CacheMissed::class => 'miss',
+            KeyWritten::class => 'write',
+            KeyWriteFailed::class => 'write-failure',
+            KeyForgotten::class => 'delete',
+            KeyForgetFailed::class => 'delete-failure',
+            default => throw new RuntimeException('Unexpected event type ['.$event::class.']'),
+        };
+
+        $this->executionState->records->write(new CacheEventRecord(
+            timestamp: $this->startTime,
+            deploy: $this->executionState->deploy,
+            server: $this->executionState->server,
+            _group: hash('md5', "{$event->storeName},{$event->key}"),
+            trace_id: $this->executionState->trace,
+            execution_context: $this->executionState->context,
+            execution_id: $this->executionState->id,
+            execution_stage: $this->executionState->stage,
+            user: $this->user->id(),
+            store: $event->storeName ?? '',
+            key: $event->key,
+            type: $type,
+            duration: $this->duration,
+            ttl: in_array($event::class, [KeyWritten::class, KeyWriteFailed::class], true) ? ($event->seconds ?? 0) : 0,
+        ));
     }
 }
