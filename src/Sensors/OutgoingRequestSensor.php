@@ -30,7 +30,7 @@ final class OutgoingRequestSensor
         $duration = (int) round(($endMicrotime - $startMicrotime) * 1_000_000);
         $uri = $request->getUri()->withUserInfo('', null);
 
-        $this->executionState->outgoing_requests++;
+        $this->executionState->outgoingRequests++;
 
         $this->executionState->records->write(new OutgoingRequest(
             timestamp: $startMicrotime,

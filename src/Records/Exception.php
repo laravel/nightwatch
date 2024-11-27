@@ -32,6 +32,8 @@ final class Exception
         public int $code,
         public string $trace,
         public bool $handled,
+        public string $php_version,
+        public string $laravel_version,
     ) {
         $this->class = Str::tinyText($this->class);
         $this->file = Str::tinyText($this->file);
