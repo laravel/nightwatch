@@ -3,10 +3,8 @@
 namespace Laravel\Nightwatch;
 
 use Carbon\Carbon;
-use Illuminate\Cache\Events\CacheHit;
-use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Contracts\Config\Repository;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
@@ -21,7 +19,6 @@ use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\QueuedJobSensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
 use Laravel\Nightwatch\Sensors\StageSensor;
-use Laravel\Nightwatch\Types\Str;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Console\Input\InputInterface;
@@ -35,7 +32,8 @@ use Throwable;
  */
 class SensorManager
 {
-    // private ?CacheEventSensor $cacheEventSensor;
+    private ?CacheEventSensor $cacheEventSensor;
+
     private ?ExceptionSensor $exceptionSensor;
 
     private ?OutgoingRequestSensor $outgoingRequestSensor;
@@ -108,15 +106,15 @@ class SensorManager
         $sensor($event, $trace);
     }
 
-    public function cacheEvent(CacheMissed|CacheHit $event): void
+    public function cacheEvent(CacheEvent $event): void
     {
-        // $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
-        //     executionState: $this->state,
-        //     clock: $this->clock,
-        //     user: $this->user,
-        // );
+        $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
+            clock: $this->clock,
+            executionState: $this->executionState,
+            user: $this->user,
+        );
 
-        // $sensor($event);
+        $sensor($event);
     }
 
     public function mail(MessageSent $event): void

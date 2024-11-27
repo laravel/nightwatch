@@ -5,6 +5,15 @@ namespace Laravel\Nightwatch;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Cache\Events\ForgettingKey;
+use Illuminate\Cache\Events\KeyForgetFailed;
+use Illuminate\Cache\Events\KeyForgotten;
+use Illuminate\Cache\Events\KeyWriteFailed;
+use Illuminate\Cache\Events\KeyWritten;
+use Illuminate\Cache\Events\RetrievingKey;
+use Illuminate\Cache\Events\RetrievingManyKeys;
+use Illuminate\Cache\Events\WritingKey;
+use Illuminate\Cache\Events\WritingManyKeys;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -29,6 +38,7 @@ use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
 use Laravel\Nightwatch\Factories\LocalIngestFactory;
 use Laravel\Nightwatch\Hooks\BootedHandler;
+use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
@@ -263,6 +273,23 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($sensor, $clock))(...));
 
         /**
+         * @see \Laravel\Nightwatch\Records\CacheEvent
+         */
+        $events->listen([
+            RetrievingKey::class,
+            RetrievingManyKeys::class,
+            CacheHit::class,
+            CacheMissed::class,
+            WritingKey::class,
+            WritingManyKeys::class,
+            KeyWritten::class,
+            KeyWriteFailed::class,
+            ForgettingKey::class,
+            KeyForgotten::class,
+            KeyForgetFailed::class,
+        ], (new CacheEventListener($sensor))(...));
+
+        /**
          * @see \Laravel\Nightwatch\Records\Mail
          */
         $events->listen(MessageSent::class, (new MessageSentListener($sensor))(...));
@@ -273,14 +300,6 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\Contracts\LocalIngest
          */
         $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($sensor, $state))(...));
-
-        //$events->listen([CacheMissed::class, CacheHit::class], static function (CacheMissed|CacheHit $event) use ($sensor) {
-        //    try {
-        //        $sensor->cacheEvent($event);
-        //    } catch (Throwable $e) {
-        //        //
-        //    }
-        //});
 
         //$this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor) {
         //    try {
