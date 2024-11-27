@@ -2,8 +2,9 @@
 
 namespace Laravel\Nightwatch;
 
-use Carbon\Carbon;
 use Illuminate\Cache\Events\CacheEvent;
+use Illuminate\Console\Events\CommandFinished;
+use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
@@ -23,7 +24,6 @@ use Laravel\Nightwatch\Sensors\RequestSensor;
 use Laravel\Nightwatch\Sensors\StageSensor;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -35,6 +35,8 @@ use Throwable;
 class SensorManager
 {
     private ?CacheEventSensor $cacheEventSensor;
+
+    private ?CommandSensor $commandSensor;
 
     private ?ExceptionSensor $exceptionSensor;
 
@@ -85,14 +87,14 @@ class SensorManager
      * TODO if they do trigger, should we not listen to any commands in a request
      * lifecycle? Push that out to the service provider not here.
      */
-    public function command(Carbon $startedAt, InputInterface $input, int $status): void
+    public function command(CommandStarting|CommandFinished $event): void
     {
-        // $sensor = new CommandSensor(
-        //     executionState: $this->state,
-        //     user: $this->user,
-        // );
+        $sensor = $this->commandSensor ??= new CommandSensor(
+            clock: $this->clock,
+            executionState: $this->executionState,
+        );
 
-        // $sensor($startedAt, $input, $status);
+        $sensor($event);
     }
 
     /**

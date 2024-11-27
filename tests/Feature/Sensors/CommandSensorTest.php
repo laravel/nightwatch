@@ -3,21 +3,24 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Console\Input\StringInput;
+use Illuminate\Foundation\Testing\WithConsoleEvents;
 
 use function Pest\Laravel\travelTo;
+
+uses(WithConsoleEvents::class);
 
 beforeEach(function () {
     setDeploy('v1.2.3');
     setServerName('web-01');
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    setExecutionStart(CarbonImmutable::parse('2000-01-01 00:00:00'));
-})->skip();
+    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+});
 
-it('can ingest requests', function () {
+it('can ingest commands', function () {
     $ingest = fakeIngest();
     Artisan::command('app:build {destination} {--force} {--compress}', function () {
-        travelTo(now()->addMilliseconds(1234));
+        travelTo(now()->addMicroseconds(1234567));
 
         return 3;
     });
@@ -28,53 +31,33 @@ it('can ingest requests', function () {
     expect($status)->toBe(3);
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite([
-        'requests' => [],
-        'cache_events' => [],
-        'commands' => [
-            [
-                'v' => 1,
-                'timestamp' => 946684800,
-                'deploy' => 'v1.2.3',
-                'server' => 'web-01',
-                '_group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-                'trace_id' => '00000000-0000-0000-0000-000000000000',
-                'user' => '',
-                'name' => 'app:build',
-                'command' => 'app:build path/to/output --force',
-                'exit_code' => 3,
-                'duration' => 1234,
-                'queries' => 0,
-                'queries_duration' => 0,
-                'lazy_loads' => 0,
-                'lazy_loads_duration' => 0,
-                'jobs_queued' => 0,
-                'mail_queued' => 0,
-                'mail_sent' => 0,
-                'mail_duration' => 0,
-                'notifications_queued' => 0,
-                'notifications_sent' => 0,
-                'notifications_duration' => 0,
-                'outgoing_requests' => 0,
-                'outgoing_requests_duration' => 0,
-                'files_read' => 0,
-                'files_read_duration' => 0,
-                'files_written' => 0,
-                'files_written_duration' => 0,
-                'cache_hits' => 0,
-                'cache_misses' => 0,
-                'hydrated_models' => 0,
-                'peak_memory_usage_kilobytes' => 1234,
-            ],
+        [
+            'v' => 1,
+            't' => 'command',
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            '_group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            'trace_id' => '00000000-0000-0000-0000-000000000000',
+            'class' => '',
+            'name' => 'app:build',
+            'command' => 'app:build path/to/output --force',
+            'exit_code' => 3,
+            'duration' => 1234567,
+            'exceptions' => 0,
+            'logs' => 0,
+            'queries' => 0,
+            'lazy_loads' => 0,
+            'jobs_queued' => 0,
+            'mail' => 0,
+            'notifications' => 0,
+            'outgoing_requests' => 0,
+            'files_read' => 0,
+            'files_written' => 0,
+            'cache_events' => 0,
+            'hydrated_models' => 0,
+            'peak_memory_usage' => 1234,
         ],
-        'exceptions' => [],
-        'job_attempts' => [],
-        'lazy_loads' => [],
-        'logs' => [],
-        'mail' => [],
-        'notifications' => [],
-        'outgoing_requests' => [],
-        'queries' => [],
-        'queued_jobs' => [],
     ]);
 });
 

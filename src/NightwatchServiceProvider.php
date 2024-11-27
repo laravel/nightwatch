@@ -14,6 +14,8 @@ use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
+use Illuminate\Console\Events\CommandFinished;
+use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -40,6 +42,7 @@ use Laravel\Nightwatch\Factories\AgentFactory;
 use Laravel\Nightwatch\Factories\LocalIngestFactory;
 use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
+use Laravel\Nightwatch\Hooks\CommandListener;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
@@ -307,6 +310,14 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\Contracts\LocalIngest
          */
         $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($sensor, $state))(...));
+
+        // TODO: Listen for ArtisanStarting event to capture bootstrapping?
+        $events->listen([
+            CommandStarting::class, // TODO: Should this change the execution stage?
+            CommandFinished::class,
+        ], (new CommandListener($sensor, $clock))(...));
+
+        $events->listen(CommandFinished::class, fn () => $this->app->make(LocalIngest::class)->write($state->records->flush()));
 
         //$this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor) {
         //    try {
