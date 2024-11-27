@@ -121,13 +121,6 @@ final class QueuedJobSensor
 
     private function resolveQueuedListenerQueue(CallQueuedListener $listener): ?string
     {
-        /**
-         * We can remove this once we have better types in the framework.
-         *
-         * @see https://github.com/laravel/framework/pull/53657
-         *
-         * @phpstan-ignore-next-line argument.type
-         */
         $reflectionJob = (new ReflectionClass($listener->class))->newInstanceWithoutConstructor();
 
         if (method_exists($reflectionJob, 'viaQueue')) {
