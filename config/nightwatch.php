@@ -28,8 +28,7 @@ return [
 
         // TODO should this be "remote:http" || "local:http" etc. Will Vapor send directly via HTTP? What about local:log and remote:log?
         'http' => [
-            // TODO remove the fallback here.
-            'uri' => env('NIGHTWATCH_HTTP_INGEST_URI', 'https://khq5ni773stuucqrxebn3a5zbi0ypexu.lambda-url.us-east-1.on.aws'),
+            'uri' => env('NIGHTWATCH_HTTP_INGEST_URI'),
             // TODO should remote http ingest connnection limit be configurable? Probably not.
             'connection_limit' => env('NIGHTWATCH_HTTP_INGEST_CONNECTION_LIMIT', 2),
             'connection_timeout' => env('NIGHTWATCH_HTTP_INGEST_CONNECTION_TIMEOUT', 1.0),
