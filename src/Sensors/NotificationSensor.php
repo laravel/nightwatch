@@ -29,9 +29,10 @@ final class NotificationSensor
     {
         $now = $this->clock->microtime();
 
-        $notificationClass = $event->notification::class;
-        if (str_contains($notificationClass, "@anonymous\0")) {
-            $notificationClass = Str::before($notificationClass, "\0");
+        if (str_contains($event->notification::class, "@anonymous\0")) {
+            $class = Str::before($event->notification::class, "\0");
+        } else {
+            $class = $event->notification::class;
         }
 
         $this->executionState->notifications_sent++;
@@ -40,14 +41,14 @@ final class NotificationSensor
             timestamp: $now,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            group: hash('md5', $notificationClass),
+            group: hash('md5', $class),
             trace_id: $this->executionState->trace,
             execution_context: $this->executionState->context,
             execution_id: $this->executionState->id,
             execution_stage: $this->executionState->stage,
             user: $this->user->id(),
             channel: $event->channel,
-            class: $notificationClass,
+            class: $class,
             duration: 0, // TODO
             failed: false, // TODO
         ));
