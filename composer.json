@@ -54,6 +54,7 @@
             "@php vendor/bin/testbench serve"
         ],
         "agent": [
+            "Composer\\Config::disableProcessTimeout",
             "@php vendor/bin/testbench nightwatch:agent"
         ],
         "lint": [
