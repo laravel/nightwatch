@@ -25,12 +25,7 @@ final class Request
         public string $user,
         // --- //
         public string $method,
-        public string $scheme,
-        public string $url_user,
-        public string $host,
-        public int $port,
-        public string $path,
-        public string $query,
+        public string $url,
         public string $route_name,
         public array $route_methods,
         public string $route_domain,
@@ -63,10 +58,7 @@ final class Request
         public int $hydrated_models,
         public int $peak_memory_usage,
     ) {
-        $this->host = Str::tinyText($this->host);
-        $this->path = Str::text($this->path);
-        $this->query = Str::text($this->query);
-        $this->url_user = Str::tinyText($this->url_user);
+        $this->url = Str::text($this->url);
         $this->route_name = Str::tinyText($this->route_name);
         $this->route_domain = Str::tinyText($this->route_domain);
         $this->route_path = Str::text($this->route_path);

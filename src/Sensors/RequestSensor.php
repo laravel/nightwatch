@@ -40,9 +40,6 @@ final class RequestSensor
         /** @var Route|null */
         $route = $request->route();
 
-        /** @var 'http'|'https' */
-        $scheme = $request->getScheme();
-
         /** @var list<string> */
         $routeMethods = $route?->methods() ?? [];
 
@@ -55,11 +52,6 @@ final class RequestSensor
             '/' => '/',
             default => "/{$routeUri}",
         };
-
-        $port = (int) ($request->getPort() ?? match ($scheme) {
-            'http' => 80,
-            'https' => 443,
-        });
 
         $query = '';
 
@@ -77,12 +69,7 @@ final class RequestSensor
             trace_id: $this->executionState->trace,
             user: $this->user->id(),
             method: $request->getMethod(),
-            scheme: $scheme,
-            url_user: $request->getUser() ?? '',
-            host: $request->getHost(),
-            port: $port,
-            path: $request->getPathInfo(),
-            query: $query,
+            url: $request->getSchemeAndHttpHost().$request->getBaseUrl().$request->getPathInfo().(strlen($query) > 0 ? "?{$query}" : ''),
             route_name: $route?->getName() ?? '',
             route_methods: $routeMethods,
             route_domain: $routeDomain,

@@ -47,12 +47,7 @@ it('can ingest requests', function () {
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'user' => '',
             'method' => 'GET',
-            'scheme' => 'http',
-            'url_user' => '',
-            'host' => 'localhost',
-            'port' => 80,
-            'path' => '/users',
-            'query' => '',
+            'url' => 'http://localhost/users',
             'route_name' => '',
             'route_methods' => ['GET', 'HEAD'],
             'route_domain' => '',
@@ -197,44 +192,6 @@ it('captures the authenticated user', function () {
     $ingest->assertLatestWrite('request:0.user', 'abc-123');
 });
 
-it('uses the default port for the scheme when not port is available to the request', function () {
-    $ingest = fakeIngest();
-    /** @var SensorManager */
-    $sensor = app(SensorManager::class);
-    $state = app(ExecutionState::class);
-
-
-    $request = (new class extends Request
-    {
-        public function getPort(): int|string|null
-        {
-            return null;
-        }
-    })::create('https://laravel.com/users');
-    $sensor->request($request, response(''));
-    $ingest->write($state->records->flush());
-
-    expect($request->getPort())->toBeNull();
-    expect($request->getScheme())->toBe('https');
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request:0.port', 443);
-
-    $request = (new class extends Request
-    {
-        public function getPort(): int|string|null
-        {
-            return null;
-        }
-    })::create('http://laravel.com/users');
-    $sensor->request($request, response(''));
-    $ingest->write($state->records->flush());
-
-    expect($request->getPort())->toBeNull();
-    expect($request->getScheme())->toBe('http');
-    $ingest->assertWrittenTimes(2);
-    $ingest->assertLatestWrite('request:0.port', 80);
-});
-
 it('captures query parameters', function () {
     $ingest = fakeIngest();
     Route::get('/users', fn () => []);
@@ -243,7 +200,7 @@ it('captures query parameters', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request:0.query', 'key_1=value&key_2[sub_field]=value&key_3[]=value&key_4[9]=value&key_5[][][foo][9]=bar&flag_value');
+    $ingest->assertLatestWrite('request:0.url', 'http://localhost/users?key_1=value&key_2[sub_field]=value&key_3[]=value&key_4[9]=value&key_5[][][foo][9]=bar&flag_value');
 });
 
 it('captures the route name', function () {
@@ -298,7 +255,7 @@ it('captures real path and route path', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request:0.path', '/users/123');
+    $ingest->assertLatestWrite('request:0.url', 'http://localhost/users/123');
     $ingest->assertLatestWrite('request:0.route_path', '/users/{user}');
 });
 
@@ -310,32 +267,21 @@ it('captures subdomain and route domain', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request:0.host', 'forge.laravel.com');
+    $ingest->assertLatestWrite('request:0.url', 'http://forge.laravel.com/users/123');
     $ingest->assertLatestWrite('request:0.route_domain', '{product}.laravel.com');
 });
 
-it('captures the request URL user', function () {
+it('doesn\'t capture the request URL user', function () {
     $ingest = fakeIngest();
     Route::get('/users', fn () => []);
 
-    $response = get('http://tim:secret@localhost/users');
+    $response = get('http://ryuta:secret@localhost/users');
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request:0.url_user', 'tim');
+    $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    expect($ingest->latestWriteAsString())->not->toContain('ryuta');
     expect($ingest->latestWriteAsString())->not->toContain('secret');
-});
-
-it('records the requests user whilst ommiting the password', function () {
-    $ingest = fakeIngest();
-    Route::domain('{product}.laravel.com')->get('/users/{user}', fn () => ['name' => 'Tim']);
-
-    $response = get('http://forge.laravel.com/users/123');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request:0.host', 'forge.laravel.com');
-    $ingest->assertLatestWrite('request:0.route_domain', '{product}.laravel.com');
 });
 
 it('captures the duration in microseconds', function () {
@@ -411,7 +357,7 @@ it('handles the root path', function () {
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('request:0.route_path', '/');
-    $ingest->assertLatestWrite('request:0.path', '/');
+    $ingest->assertLatestWrite('request:0.url', 'http://localhost/');
 });
 
 it('gracefully handles non-string query string', function () {
@@ -424,7 +370,7 @@ it('gracefully handles non-string query string', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request:0.query', '');
+    $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
 });
 
 it('captures bootstrap execution stage', function () {
