@@ -19,6 +19,10 @@ final class CommandState
 {
     public int $v = 1;
 
+    public string $id;
+
+    public string $source = 'command';
+
     /**
      * @var (Closure(): int)|null
      */
@@ -30,19 +34,13 @@ final class CommandState
     public function __construct(
         public float $timestamp,
         public string $trace,
-        public string $id,
-        public string $source,
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
         public ExecutionStage $stage = ExecutionStage::Bootstrap,
         public array $stageDurations = [
             ExecutionStage::Bootstrap->value => 0,
-            ExecutionStage::BeforeMiddleware->value => 0,
             ExecutionStage::Action->value => 0,
-            ExecutionStage::Render->value => 0,
-            ExecutionStage::AfterMiddleware->value => 0,
-            ExecutionStage::Sending->value => 0,
             ExecutionStage::Terminating->value => 0,
             ExecutionStage::End->value => 0,
         ],
@@ -64,10 +62,10 @@ final class CommandState
         public string $laravelVersion = Application::VERSION,
         public ?Artisan $artisan = null,
         public ?string $name = null,
-        public ?int $exitCode = null,
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
+        $this->id = $trace;
     }
 
     public function peakMemory(): int

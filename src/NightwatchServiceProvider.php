@@ -203,9 +203,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             /** @var RequestState */
             $state = $this->app->instance(RequestState::class, new RequestState(
                 timestamp: $this->timestamp,
-                trace: $traceId = (string) Str::uuid(),
-                id: $traceId,
-                source: 'request', // TODO
+                trace: (string) Str::uuid(),
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
                 server: $this->nightwatchConfig['server'] ?? '',
@@ -214,9 +212,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             /** @var CommandState */
             $state = $this->app->instance(CommandState::class, new CommandState(
                 timestamp: $this->timestamp,
-                trace: $traceId = (string) Str::uuid(),
-                id: $traceId,
-                source: 'request', // TODO
+                trace: (string) Str::uuid(),
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
                 server: $this->nightwatchConfig['server'] ?? '',

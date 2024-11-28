@@ -18,6 +18,10 @@ final class RequestState
 {
     public int $v = 1;
 
+    public string $id;
+
+    public string $source = 'request';
+
     /**
      * @var (Closure(): int)|null
      */
@@ -29,8 +33,6 @@ final class RequestState
     public function __construct(
         public float $timestamp,
         public string $trace,
-        public string $id,
-        public string $source,
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
@@ -64,6 +66,7 @@ final class RequestState
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
+        $this->id = $trace;
     }
 
     public function peakMemory(): int
