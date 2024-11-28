@@ -59,7 +59,6 @@ final class RequestState
         public int $filesWritten = 0,
         public int $cacheEvents = 0,
         public int $hydratedModels = 0,
-        public int $peakMemoryUsage = 0,
         public RecordsBuffer $records = new RecordsBuffer,
         public string $phpVersion = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION.'.'.PHP_RELEASE_VERSION,
         public string $laravelVersion = Application::VERSION,
