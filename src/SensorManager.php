@@ -8,10 +8,15 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSent;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Queue\Events\JobReleasedAfterException;
+use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
+use Laravel\Nightwatch\Sensors\JobAttemptSensor;
 use Laravel\Nightwatch\Sensors\MailSensor;
 use Laravel\Nightwatch\Sensors\NotificationSensor;
 use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
@@ -43,6 +48,8 @@ class SensorManager
     private ?QuerySensor $querySensor;
 
     private ?QueuedJobSensor $queuedJobSensor;
+
+    private ?JobAttemptSensor $jobAttemptSensor;
 
     private ?NotificationSensor $notificationSensor;
 
@@ -162,6 +169,18 @@ class SensorManager
     public function queuedJob(JobQueued $event): void
     {
         $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
+            executionState: $this->executionState,
+            user: $this->user,
+            clock: $this->clock,
+            connectionConfig: $this->config->all()['queue']['connections'] ?? [],
+        );
+
+        $sensor($event);
+    }
+
+    public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
+    {
+        $sensor = $this->jobAttemptSensor ??= new JobAttemptSensor(
             executionState: $this->executionState,
             user: $this->user,
             clock: $this->clock,

@@ -29,7 +29,10 @@ use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSent;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
@@ -46,6 +49,7 @@ use Laravel\Nightwatch\Hooks\CommandBootedHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
+use Laravel\Nightwatch\Hooks\JobAttemptListener;
 use Laravel\Nightwatch\Hooks\JobQueuedListener;
 use Laravel\Nightwatch\Hooks\MessageSentListener;
 use Laravel\Nightwatch\Hooks\NotificationSentListener;
@@ -261,6 +265,11 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\Records\QueuedJob
          */
         $events->listen(JobQueued::class, (new JobQueuedListener($sensor))(...));
+
+        /**
+         * @see \Laravel\Nightwatch\Records\JobAttempt
+         */
+        $events->listen([JobProcessed::class, JobReleasedAfterException::class, JobFailed::class], (new JobAttemptListener($sensor))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\Notification
