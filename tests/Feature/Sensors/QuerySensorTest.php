@@ -27,7 +27,6 @@ it('can ingest queries', function () {
 
         travelTo(now()->addMicroseconds(4321));
     }));
-    afterMigrations(fn () => app(SensorManager::class)->prepareForNextInvocation());
 
     $line = null;
     Route::get('/users', function () use (&$line) {
@@ -59,13 +58,34 @@ it('can ingest queries', function () {
             'execution_stage' => 'action',
             'user' => '',
             'sql' => 'select * from "users"',
-            'file' => 'tests/Feature/Sensors/QuerySensorTest.php',
-            'line' => $line,
+            // We have temporarily disabled debug_backtrace to reduce the memory impact
+            // 'file' => 'tests/Feature/Sensors/QuerySensorTest.php',
+            // 'line' => $line,
+            'file' => '',
+            'line' => 0,
             'duration' => 4321,
             'connection' => $connection,
         ],
     ]);
 });
+
+it('can captures the line and file', function () {
+    $ingest = fakeIngest();
+
+    $line = null;
+    Route::get('/users', function () use (&$line) {
+        $line = __LINE__ + 2;
+
+        return DB::table('users')->get();
+    });
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('query:0.file', 'tests/Feature/Sensors/QuerySensorTest.php');
+    $ingest->assertLatestWrite('query:0.line', $line);
+})->skip('We have temporarily disabled debug_backtrace to reduce the memory impact');
 
 it('captures aggregate query data on the request', function () {
     $ingest = fakeIngest();
