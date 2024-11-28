@@ -6,11 +6,12 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Location;
-use Laravel\Nightwatch\State\ExecutionState;
+use Laravel\Nightwatch\State\RequestState;
 use Tests\FakeIngest;
 
 use function Illuminate\Filesystem\join_paths;
@@ -22,54 +23,53 @@ pest()->extends(Tests\TestCase::class)->beforeEach(function () {
     app(Location::class)->setBasePath($path)->setPublicPath("{$path}/public");
 });
 
-function setExecutionStart(CarbonImmutable $timestamp): void
+function setRequestStart(CarbonImmutable $timestamp): void
 {
     syncClock($timestamp);
-    app(ExecutionState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
-    app(ExecutionState::class)->stage = ExecutionStage::BeforeMiddleware;
-    app(ExecutionState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
-    app(ExecutionState::class)->stageDurations[ExecutionStage::Bootstrap->value] = 0;
+    app(RequestState::class)->stageDurations[ExecutionStage::Bootstrap->value] = 0;
+    app(RequestState::class)->stage = ExecutionStage::BeforeMiddleware;
+    app(RequestState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
 }
 
 function syncClock(DateTimeInterface $timestamp): void
 {
-    app(ExecutionState::class)->timestamp = (float) $timestamp->format('U.u');
+    app(RequestState::class)->timestamp = (float) $timestamp->format('U.u');
     travelTo($timestamp);
 }
 
 function setDeploy(string $deploy): void
 {
-    app(ExecutionState::class)->deploy = $deploy;
+    app(RequestState::class)->deploy = $deploy;
 }
 
 function setServerName(string $server): void
 {
-    app(ExecutionState::class)->server = $server;
+    app(RequestState::class)->server = $server;
 }
 
 function setTraceId(string $traceId): void
 {
-    app(ExecutionState::class)->trace = $traceId;
+    app(RequestState::class)->trace = $traceId;
 }
 
 function setExecutionId(string $executionId): void
 {
-    app(ExecutionState::class)->id = $executionId;
+    app(RequestState::class)->id = $executionId;
 }
 
 function setPeakMemory(int $value): void
 {
-    app(ExecutionState::class)->peakMemoryResolver = fn () => $value;
+    app(RequestState::class)->peakMemoryResolver = fn () => $value;
 }
 
 function setLaravelVersion(string $version): void
 {
-    app(ExecutionState::class)->laravelVersion = $version;
+    app(RequestState::class)->laravelVersion = $version;
 }
 
 function setPhpVersion(string $version): void
 {
-    app(ExecutionState::class)->phpVersion = $version;
+    app(RequestState::class)->phpVersion = $version;
 }
 
 function fakeIngest(): FakeIngest

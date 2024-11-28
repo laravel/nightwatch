@@ -4,11 +4,12 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
-use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Command;
-use Laravel\Nightwatch\State\ExecutionState;
+use Laravel\Nightwatch\State\CommandState;
 use RuntimeException;
 use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputInterface;
 
 use function hash;
 use function implode;
@@ -19,11 +20,8 @@ use function round;
  */
 final class CommandSensor
 {
-    private ?float $startTime = null;
-
     public function __construct(
-        private Clock $clock,
-        private ExecutionState $executionState,
+        private CommandState $executionState,
     ) {
         //
     }
@@ -34,40 +32,32 @@ final class CommandSensor
      * the `list` command.
      * TODO group
      */
-    public function __invoke(CommandStarting|CommandFinished $event): void
+    public function __invoke(InputInterface $input, int $exitCode): void
     {
-        $now = $this->clock->microtime();
-
-        if ($event instanceof CommandStarting) {
-            $this->startTime = $now;
-
-            return;
-        }
-
-        if ($this->startTime === null) {
-            throw new RuntimeException('No start time found for ['.$event::class."] event for command [{$event->command}].");
+        if ($this->executionState->artisan && $this->executionState->name) {
+            $class = $this->executionState->artisan->get($this->executionState->name)::class;
         }
 
         $this->executionState->records->write(new Command(
-            timestamp: $this->startTime,
+            timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('sha256', ''),
             trace_id: $this->executionState->trace,
-            class: '',
-            name: $event->command,
-            command: $event->input instanceof ArgvInput
-                ? implode(' ', $event->input->getRawTokens())
-                : (string) $event->input,
+            class: $class ?? '',
+            name: $this->executionState->name ?? '',
+            command: $input instanceof ArgvInput
+                ? implode(' ', $input->getRawTokens())
+                : (string) $input,
             // If this value is over 255 or under zero we should run modules 256 on it, e.g.,
             // $exitCode % 256;
             // 3809 % 256 = 225
             // see https://tldp.org/LDP/abs/html/exitcodes.html
-            exit_code: $event->exitCode,
-            duration: (int) round(($now - $this->startTime) * 1_000_000),
-            bootstrap: 0,
-            action: 0,
-            terminating: 0,
+            exit_code: $exitCode,
+            duration: array_sum($this->executionState->stageDurations),
+            bootstrap: $this->executionState->stageDurations[ExecutionStage::Bootstrap->value],
+            action: $this->executionState->stageDurations[ExecutionStage::Action->value],
+            terminating: $this->executionState->stageDurations[ExecutionStage::Terminating->value],
             exceptions: $this->executionState->exceptions,
             logs: $this->executionState->logs,
             queries: $this->executionState->queries,

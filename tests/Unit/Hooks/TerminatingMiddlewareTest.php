@@ -1,10 +1,17 @@
 <?php
 
+use Illuminate\Support\Env;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\State\ExecutionState;
+use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+
+use function Orchestra\Testbench\Pest\defineEnvironment;
+
+defineEnvironment(function () {
+    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+});
 
 it('gracefully handles exceptions', function () {
     $sensor = new class extends SensorManager
@@ -20,7 +27,7 @@ it('gracefully handles exceptions', function () {
             throw new RuntimeException('Whoops!');
         }
     };
-    $middleware = new TerminatingMiddleware($sensor, app(ExecutionState::class));
+    $middleware = new TerminatingMiddleware($sensor, app(RequestState::class));
     $request = Request::create('/test');
     $nextCalledWith = null;
     $next = function ($request) use (&$nextCalledWith) {
@@ -54,7 +61,7 @@ it('handles response types that laravel does not wrap', function () {
             throw new RuntimeException('Whoops!');
         }
     };
-    $middleware = new TerminatingMiddleware($sensor, app(ExecutionState::class));
+    $middleware = new TerminatingMiddleware($sensor, app(RequestState::class));
     $request = Request::create('/test');
     $nextCalledWith = null;
     $next = function ($request) use (&$nextCalledWith) {

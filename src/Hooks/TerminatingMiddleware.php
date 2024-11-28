@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\State\ExecutionState;
+use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -15,7 +15,7 @@ final class TerminatingMiddleware
 {
     public function __construct(
         private SensorManager $sensor,
-        private ExecutionState $executionState,
+        private RequestState $executionState,
     ) {
         //
     }

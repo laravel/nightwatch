@@ -34,13 +34,16 @@ use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Env;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Console\Application as Artisan;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
 use Laravel\Nightwatch\Factories\LocalIngestFactory;
-use Laravel\Nightwatch\Hooks\BootedHandler;
+use Laravel\Nightwatch\Hooks\RequestBootedHandler;
+use Laravel\Nightwatch\Hooks\CommandBootedHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandListener;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
@@ -57,7 +60,8 @@ use Laravel\Nightwatch\Hooks\RouteMatchedListener;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
-use Laravel\Nightwatch\State\ExecutionState;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\Console\Input\InputInterface;
 use Throwable;
 
@@ -190,17 +194,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Clock */
         $clock = $this->app->instance(Clock::class, new Clock);
 
-        /** @var ExecutionState */
-        $state = $this->app->instance(ExecutionState::class, new ExecutionState(
-            timestamp: $this->timestamp,
-            trace: $traceId = (string) Str::uuid(),
-            id: $traceId,
-            source: 'request', // TODO
-            currentExecutionStageStartedAtMicrotime: $this->timestamp,
-            deploy: $this->nightwatchConfig['deployment'] ?? '',
-            server: $this->nightwatchConfig['server'] ?? '',
-        ));
-
         /** @var Location */
         $location = $this->app->instance(Location::class, new Location(
             $this->app->basePath(), $this->app->publicPath(),
@@ -208,43 +201,46 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $userProvider = new UserProvider($auth);
 
+        if (Env::get('NIGHTWATCH_FORCE_REQUEST') || ! $this->app->runningInConsole()) {
+            /** @var RequestState */
+            $state = $this->app->instance(RequestState::class, new RequestState(
+                timestamp: $this->timestamp,
+                trace: $traceId = (string) Str::uuid(),
+                id: $traceId,
+                source: 'request', // TODO
+                currentExecutionStageStartedAtMicrotime: $this->timestamp,
+                deploy: $this->nightwatchConfig['deployment'] ?? '',
+                server: $this->nightwatchConfig['server'] ?? '',
+            ));
+        } else {
+            /** @var CommandState */
+            $state = $this->app->instance(CommandState::class, new CommandState(
+                timestamp: $this->timestamp,
+                trace: $traceId = (string) Str::uuid(),
+                id: $traceId,
+                source: 'request', // TODO
+                currentExecutionStageStartedAtMicrotime: $this->timestamp,
+                deploy: $this->nightwatchConfig['deployment'] ?? '',
+                server: $this->nightwatchConfig['server'] ?? '',
+            ));
+        }
+
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
             $state, $clock, $location, $userProvider, $this->config
         ));
+
+        if (Env::get('NIGHTWATCH_FORCE_REQUEST') || ! $this->app->runningInConsole()) {
+            $this->registerRequestHooks($events, $sensor, $state);
+        } else {
+            $this->registerConsoleHooks($events, $sensor, $state);
+        }
 
         //
         // -------------------------------------------------------------------------
         // Execution stage hooks
         // --------------------------------------------------------------------------
         //
-
-        /**
-         * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
-         */
-        $this->app->booted((new BootedHandler($sensor))(...));
-
-        /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Action
-         * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-         */
-        $events->listen(RouteMatched::class, (new RouteMatchedListener)(...));
-
-        /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Render
-         */
-        $events->listen(PreparingResponse::class, (new PreparingResponseListener($sensor, $state))(...));
-
-        /**
-         * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
-         */
-        $events->listen(ResponsePrepared::class, (new ResponsePreparedListener($sensor, $state))(...));
-
-        /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Sending
-         */
-        $events->listen(RequestHandled::class, (new RequestHandledListener($sensor))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
@@ -303,6 +299,14 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\Records\Mail
          */
         $events->listen(MessageSent::class, (new MessageSentListener($sensor))(...));
+    }
+
+    private function registerRequestHooks(Dispatcher $events, SensorManager $sensor, RequestState $state): void
+    {
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
+         */
+        $this->app->booted((new RequestBootedHandler($sensor))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
@@ -311,38 +315,69 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($sensor, $state))(...));
 
-        // TODO: Listen for ArtisanStarting event to capture bootstrapping?
-        $events->listen([
-            CommandStarting::class, // TODO: Should this change the execution stage?
-            CommandFinished::class,
-        ], (new CommandListener($sensor, $clock))(...));
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Action
+         * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         */
+        $events->listen(RouteMatched::class, (new RouteMatchedListener)(...));
 
-        $events->listen(CommandFinished::class, fn () => $this->app->make(LocalIngest::class)->write($state->records->flush()));
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Render
+         */
+        $events->listen(PreparingResponse::class, (new PreparingResponseListener($sensor, $state))(...));
 
-        //$this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor) {
-        //    try {
-        //        if (! $kernel instanceof ConsoleKernel) {
-        //            return;
-        //        }
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
+         */
+        $events->listen(ResponsePrepared::class, (new ResponsePreparedListener($sensor, $state))(...));
 
-        //        $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $status) use ($sensor, $app) {
-        //            try {
-        //                if (! $this->app->runningInConsole()) {
-        //                    return;
-        //                }
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Sending
+         */
+        $events->listen(RequestHandled::class, (new RequestHandledListener($sensor))(...));
+    }
 
-        //                $sensor->command($startedAt, $input, $status);
-        //                /** @var LocalIngest */
-        //                $ingest = $app->make(LocalIngest::class);
+    private function registerConsoleHooks(Dispatcher $events, SensorManager $sensor, CommandState $state): void
+    {
+        Artisan::starting(fn ($artisan) => $state->artisan = $artisan);
 
-        //                $ingest->write($sensor->flush());
-        //            } catch (Throwable $e) {
-        //                //
-        //            }
-        //        });
-        //    } catch (Throwable $e) {
-        //        //
-        //    }
-        //});
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
+         */
+        $this->app->booted((new CommandBootedHandler($sensor))(...));
+
+        // TODO: Set terminating when event doesn't exist
+
+        $events->listen(CommandFinished::class, function ($event) use ($state) {
+            $state->name = $event->command;
+        });
+
+        $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor, $state) {
+           try {
+               if (! $kernel instanceof ConsoleKernel) {
+                   return;
+               }
+
+               $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $exitCode) use ($sensor, $state, $app) {
+                   try {
+                       if (! $this->app->runningInConsole()) {
+                           return;
+                       }
+
+                       $sensor->stage(ExecutionStage::End);
+                       $sensor->command($input, $exitCode);
+                       /** @var LocalIngest */
+                       $ingest = $app->make(LocalIngest::class);
+
+                       $ingest->write($state->records->flush());
+                   } catch (Throwable $e) {
+                       //
+                   }
+               });
+           } catch (Throwable $e) {
+               //
+           }
+        });
     }
 }

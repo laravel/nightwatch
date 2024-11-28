@@ -4,21 +4,35 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Console\Input\StringInput;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
+use Illuminate\Support\Env;
+use Illuminate\Support\Facades\Log;
+use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\State\CommandState;
 
+use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\travelTo;
 
 uses(WithConsoleEvents::class);
 
+defineEnvironment(function () {
+    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '0');
+});
+
 beforeEach(function () {
-    setDeploy('v1.2.3');
-    setServerName('web-01');
-    setPeakMemory(1234);
-    setTraceId('00000000-0000-0000-0000-000000000000');
-    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    app(CommandState::class)->deploy = 'v1.2.3';
+    app(CommandState::class)->server = 'web-01';
+    app(CommandState::class)->peakMemoryResolver = fn () => 1234;
+    app(CommandState::class)->trace = '00000000-0000-0000-0000-000000000000';
+    app(CommandState::class)->timestamp = (float) ($timestamp = CarbonImmutable::parse('2000-01-01 01:02:03.456789'))->format('U.u');
+    travelTo($timestamp);
+    app(CommandState::class)->stageDurations[ExecutionStage::Bootstrap->value] = 0;
+    app(CommandState::class)->stage = ExecutionStage::Action;
+    app(CommandState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
 });
 
 it('can ingest commands', function () {
     $ingest = fakeIngest();
+    Log::listen(dump(...));
     Artisan::command('app:build {destination} {--force} {--compress}', function () {
         travelTo(now()->addMicroseconds(1234567));
 
@@ -39,13 +53,13 @@ it('can ingest commands', function () {
             'server' => 'web-01',
             '_group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
             'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'class' => '',
+            'class' => 'Illuminate\Foundation\Console\ClosureCommand',
             'name' => 'app:build',
             'command' => 'app:build path/to/output --force',
             'exit_code' => 3,
             'duration' => 1234567,
             'bootstrap' => 0,
-            'action' => 0,
+            'action' => 1234567,
             'terminating' => 0,
             'exceptions' => 0,
             'logs' => 0,

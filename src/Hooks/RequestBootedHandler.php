@@ -2,24 +2,23 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Illuminate\Console\Events\CommandFinished;
-use Illuminate\Console\Events\CommandStarting;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Throwable;
 
-final class CommandListener
+final class RequestBootedHandler
 {
     public function __construct(private SensorManager $sensor)
     {
         //
     }
 
-    public function __invoke($event): void
+    public function __invoke(Application $app): void
     {
         try {
-            // $this->sensor->stage('action');
-            $this->sensor->command($event);
+            $this->sensor->stage(ExecutionStage::BeforeMiddleware);
         } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }

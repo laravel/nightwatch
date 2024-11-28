@@ -4,6 +4,8 @@ namespace Laravel\Nightwatch\State;
 
 use Closure;
 use Illuminate\Foundation\Application;
+use Illuminate\Console\Application as Artisan;
+use Illuminate\Console\Command;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Types\Str;
@@ -14,7 +16,7 @@ use function memory_get_peak_usage;
 /**
  * @internal
  */
-final class ExecutionState
+final class CommandState
 {
     public int $v = 1;
 
@@ -61,6 +63,9 @@ final class ExecutionState
         public RecordsBuffer $records = new RecordsBuffer,
         public string $phpVersion = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION.'.'.PHP_RELEASE_VERSION,
         public string $laravelVersion = Application::VERSION,
+        public ?Artisan $artisan = null,
+        public ?string $name = null,
+        public ?int $exitCode = null,
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
@@ -75,3 +80,4 @@ final class ExecutionState
         return memory_get_peak_usage(true);
     }
 }
+

@@ -2,12 +2,18 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Laravel\Nightwatch\Types\Str;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
 
+use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\get;
+
+defineEnvironment(function () {
+    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+});
 
 beforeEach(function () {
     setDeploy('v1.2.3');
@@ -15,7 +21,7 @@ beforeEach(function () {
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     setExecutionId('00000000-0000-0000-0000-000000000001');
-    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    setRequestStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 
     setPhpVersion('8.4.1');
     setLaravelVersion('11.33.0');

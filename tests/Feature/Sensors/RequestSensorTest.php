@@ -7,25 +7,32 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\State\ExecutionState;
+use Laravel\Nightwatch\State\RequestState;
 
+use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;
 use function Pest\Laravel\get;
 use function Pest\Laravel\head;
 use function Pest\Laravel\travelTo;
 
+defineEnvironment(function () {
+    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+});
+
 beforeEach(function () {
     setDeploy('v1.2.3');
     setServerName('web-01');
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    setRequestStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    // dump('before each');
 });
 
 it('can ingest requests', function () {
@@ -108,7 +115,7 @@ it('gracefully handles response size for a streamed file that is deleted after s
     $ingest = fakeIngest();
     /** @var SensorManager */
     $sensor = app(SensorManager::class);
-    $state = app(ExecutionState::class);
+    $state = app(RequestState::class);
     $request = Request::create('http://localhost/users');
 
     $file = tmpfile();
@@ -151,7 +158,7 @@ it('uses the content-length header as the response size when present on a stream
     $ingest = fakeIngest();
     /** @var SensorManager */
     $sensor = app(SensorManager::class);
-    $state = app(ExecutionState::class);
+    $state = app(RequestState::class);
     $request = Request::create('http://localhost/users');
 
     $file = tmpfile();

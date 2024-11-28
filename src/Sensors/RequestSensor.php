@@ -7,7 +7,7 @@ use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
-use Laravel\Nightwatch\State\ExecutionState;
+use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\UserProvider;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Exception\UnexpectedValueException;
@@ -29,7 +29,7 @@ use function strlen;
 final class RequestSensor
 {
     public function __construct(
-        private ExecutionState $executionState,
+        private RequestState $executionState,
         private UserProvider $user,
     ) {
         //

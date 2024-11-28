@@ -21,9 +21,11 @@ use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\QueuedJobSensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
 use Laravel\Nightwatch\Sensors\StageSensor;
-use Laravel\Nightwatch\State\ExecutionState;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -53,7 +55,7 @@ class SensorManager
     private ?StageSensor $stageSensor;
 
     public function __construct(
-        private ExecutionState $executionState,
+        private RequestState|CommandState $executionState,
         private Clock $clock,
         private Location $location,
         private UserProvider $user,
@@ -87,14 +89,13 @@ class SensorManager
      * TODO if they do trigger, should we not listen to any commands in a request
      * lifecycle? Push that out to the service provider not here.
      */
-    public function command(CommandStarting|CommandFinished $event): void
+    public function command(InputInterface $input, int $status): void
     {
         $sensor = $this->commandSensor ??= new CommandSensor(
-            clock: $this->clock,
             executionState: $this->executionState,
         );
 
-        $sensor($event);
+        $sensor($input, $status);
     }
 
     /**
@@ -182,7 +183,7 @@ class SensorManager
     public function prepareForNextInvocation(): void
     {
         // $this->clock->executionStartInMicrotime = $this->clock->microtime();
-        // // $this->executionState = new ExecutionState(
+        // // $this->executionState = new RequestState(
         // //     traceId: $traceId = (string) Str::uuid(),
         // //     executionId: $traceId,
         // // );

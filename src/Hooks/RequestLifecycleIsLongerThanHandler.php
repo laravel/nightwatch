@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\State\ExecutionState;
+use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -17,7 +17,7 @@ final class RequestLifecycleIsLongerThanHandler
 {
     public function __construct(
         private SensorManager $sensor,
-        private ExecutionState $executionState,
+        private RequestState $executionState,
         private Application $app,
     ) {
         //

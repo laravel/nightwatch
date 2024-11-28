@@ -5,9 +5,15 @@ use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 
+use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
+
+defineEnvironment(function () {
+    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+});
 
 beforeEach(function () {
     setDeploy('v1.2.3');
@@ -15,7 +21,7 @@ beforeEach(function () {
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     setExecutionId('00000000-0000-0000-0000-000000000001');
-    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    setRequestStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 });
 
 it('ingests on-demand notifications', function () {
