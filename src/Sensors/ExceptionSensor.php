@@ -77,13 +77,15 @@ final class ExceptionSensor
 
     private function wasManuallyReported(Throwable $e): bool
     {
-        foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
-            if ($frame['function'] === 'report' && ! isset($frame['type'])) {
-                return true;
-            }
-        }
-
         return false;
+
+        // foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 20) as $frame) {
+        //     if ($frame['function'] === 'report' && ! isset($frame['type'])) {
+        //         return true;
+        //     }
+        // }
+
+        // return false;
     }
 
     /**
