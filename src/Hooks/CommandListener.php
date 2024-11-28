@@ -2,8 +2,6 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Illuminate\Console\Events\CommandFinished;
-use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\SensorManager;
 use Throwable;

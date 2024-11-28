@@ -3,8 +3,6 @@
 namespace Laravel\Nightwatch;
 
 use Illuminate\Cache\Events\CacheEvent;
-use Illuminate\Console\Events\CommandFinished;
-use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;

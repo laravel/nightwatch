@@ -3,9 +3,8 @@
 namespace Laravel\Nightwatch\State;
 
 use Closure;
-use Illuminate\Foundation\Application;
 use Illuminate\Console\Application as Artisan;
-use Illuminate\Console\Command;
+use Illuminate\Foundation\Application;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Types\Str;
@@ -80,4 +79,3 @@ final class CommandState
         return memory_get_peak_usage(true);
     }
 }
-

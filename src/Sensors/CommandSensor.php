@@ -2,18 +2,15 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Illuminate\Console\Events\CommandFinished;
-use Illuminate\Console\Events\CommandStarting;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\State\CommandState;
-use RuntimeException;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 
+use function array_sum;
 use function hash;
 use function implode;
-use function round;
 
 /**
  * @internal

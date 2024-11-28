@@ -14,8 +14,8 @@ use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
+use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Events\CommandFinished;
-use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -37,15 +37,12 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Env;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Illuminate\Console\Application as Artisan;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
 use Laravel\Nightwatch\Factories\LocalIngestFactory;
-use Laravel\Nightwatch\Hooks\RequestBootedHandler;
-use Laravel\Nightwatch\Hooks\CommandBootedHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
-use Laravel\Nightwatch\Hooks\CommandListener;
+use Laravel\Nightwatch\Hooks\CommandBootedHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
@@ -54,6 +51,7 @@ use Laravel\Nightwatch\Hooks\MessageSentListener;
 use Laravel\Nightwatch\Hooks\NotificationSentListener;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
+use Laravel\Nightwatch\Hooks\RequestBootedHandler;
 use Laravel\Nightwatch\Hooks\RequestHandledListener;
 use Laravel\Nightwatch\Hooks\ResponsePreparedListener;
 use Laravel\Nightwatch\Hooks\RouteMatchedListener;
@@ -340,7 +338,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerConsoleHooks(Dispatcher $events, SensorManager $sensor, CommandState $state): void
     {
-        Artisan::starting(fn ($artisan) => $state->artisan = $artisan);
+        Artisan::starting(static fn ($artisan) => $state->artisan = $artisan);
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
@@ -349,35 +347,35 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         // TODO: Set terminating when event doesn't exist
 
-        $events->listen(CommandFinished::class, function ($event) use ($state) {
+        $events->listen(CommandFinished::class, static function ($event) use ($state) {
             $state->name = $event->command;
         });
 
         $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor, $state) {
-           try {
-               if (! $kernel instanceof ConsoleKernel) {
-                   return;
-               }
+            try {
+                if (! $kernel instanceof ConsoleKernel) {
+                    return;
+                }
 
-               $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $exitCode) use ($sensor, $state, $app) {
-                   try {
-                       if (! $this->app->runningInConsole()) {
-                           return;
-                       }
+                $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $exitCode) use ($sensor, $state, $app) {
+                    try {
+                        if (! $this->app->runningInConsole()) {
+                            return;
+                        }
 
-                       $sensor->stage(ExecutionStage::End);
-                       $sensor->command($input, $exitCode);
-                       /** @var LocalIngest */
-                       $ingest = $app->make(LocalIngest::class);
+                        $sensor->stage(ExecutionStage::End);
+                        $sensor->command($input, $exitCode);
+                        /** @var LocalIngest */
+                        $ingest = $app->make(LocalIngest::class);
 
-                       $ingest->write($state->records->flush());
-                   } catch (Throwable $e) {
-                       //
-                   }
-               });
-           } catch (Throwable $e) {
-               //
-           }
+                        $ingest->write($state->records->flush());
+                    } catch (Throwable $e) {
+                        //
+                    }
+                });
+            } catch (Throwable $e) {
+                //
+            }
         });
     }
 }
