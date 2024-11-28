@@ -37,7 +37,7 @@ final class JobAttemptSensor
             timestamp: '', // TODO
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', ''), // TODO
+            _group: hash('md5', $event->job->resolveName()),
             trace_id: $this->executionState->trace,
             user: $this->user->id(),
             job_id: $event->job->getJobId(), // TODO: Which is the job id and which is the attempt id?
