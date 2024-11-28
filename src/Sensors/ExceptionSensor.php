@@ -79,6 +79,7 @@ final class ExceptionSensor
     {
         return false;
 
+        // We have temporarily disabled debug_backtrace to reduce the memory impact
         // foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 20) as $frame) {
         //     if ($frame['function'] === 'report' && ! isset($frame['type'])) {
         //         return true;

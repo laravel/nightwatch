@@ -58,6 +58,7 @@ it('can ingest queries', function () {
             'execution_stage' => 'action',
             'user' => '',
             'sql' => 'select * from "users"',
+            // We have temporarily disabled debug_backtrace to reduce the memory impact
             // 'file' => 'tests/Feature/Sensors/QuerySensorTest.php',
             // 'line' => $line,
             'file' => '',
@@ -70,11 +71,6 @@ it('can ingest queries', function () {
 
 it('can captures the line and file', function () {
     $ingest = fakeIngest();
-    afterMigrations(fn () => prependListener(QueryExecuted::class, function ($event) {
-        $event->time = 4.321;
-
-        travelTo(now()->addMicroseconds(4321));
-    }));
 
     $line = null;
     Route::get('/users', function () use (&$line) {
@@ -84,11 +80,6 @@ it('can captures the line and file', function () {
     });
 
     $response = get('/users');
-
-    // Workbench replaces `testing` with `sqlite`. Will capture it dynamically
-    // so that the tests pass whether workbench has configured its own database
-    // or not.
-    expect($connection = config('database.default'))->toBeIn(['testing', 'sqlite']);
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);

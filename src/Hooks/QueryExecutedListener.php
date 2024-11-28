@@ -19,6 +19,7 @@ final class QueryExecutedListener
     public function __invoke(QueryExecuted $event): void
     {
         try {
+            // We have temporarily disabled debug_backtrace to reduce the memory impact
             // $this->sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 20));
             $this->sensor->query($event, []);
         } catch (Throwable $e) {
