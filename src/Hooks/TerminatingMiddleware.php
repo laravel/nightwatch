@@ -15,7 +15,7 @@ final class TerminatingMiddleware
 {
     public function __construct(
         private SensorManager $sensor,
-        private RequestState $executionState,
+        private RequestState $requestState,
     ) {
         //
     }
@@ -28,7 +28,7 @@ final class TerminatingMiddleware
     public function terminate(Request $request, Response $response): void
     {
         try {
-            if ($this->executionState->stage !== ExecutionStage::Terminating) {
+            if ($this->requestState->stage !== ExecutionStage::Terminating) {
                 $this->sensor->stage(ExecutionStage::Terminating);
             }
         } catch (Throwable $e) {

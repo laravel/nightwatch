@@ -75,7 +75,7 @@ class SensorManager
     public function request(Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
-            executionState: $this->executionState,
+            requestState: $this->executionState,
             user: $this->user,
         );
 

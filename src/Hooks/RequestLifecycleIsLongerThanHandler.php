@@ -17,7 +17,7 @@ final class RequestLifecycleIsLongerThanHandler
 {
     public function __construct(
         private SensorManager $sensor,
-        private RequestState $executionState,
+        private RequestState $requestState,
         private Application $app,
     ) {
         //
@@ -43,7 +43,7 @@ final class RequestLifecycleIsLongerThanHandler
             /** @var LocalIngest */
             $ingest = $this->app->make(LocalIngest::class);
 
-            $ingest->write($this->executionState->records->flush());
+            $ingest->write($this->requestState->records->flush());
         } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }
