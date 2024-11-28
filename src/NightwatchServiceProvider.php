@@ -225,9 +225,9 @@ final class NightwatchServiceProvider extends ServiceProvider
         ));
 
         if (Env::get('NIGHTWATCH_FORCE_REQUEST') || ! $this->app->runningInConsole()) {
-            $this->registerRequestHooks($events, $sensor, $state);
+            $this->registerRequestHooks($events, $sensor, $state); // @phpstan-ignore argument.type
         } else {
-            $this->registerConsoleHooks($events, $sensor, $state);
+            $this->registerConsoleHooks($events, $sensor, $state); // @phpstan-ignore argument.type
         }
 
         //
@@ -334,7 +334,9 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerConsoleHooks(Dispatcher $events, SensorManager $sensor, CommandState $state): void
     {
-        Artisan::starting(static fn ($artisan) => $state->artisan = $artisan);
+        Artisan::starting(static function ($artisan) use ($state) {
+            $state->artisan = $artisan;
+        });
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware

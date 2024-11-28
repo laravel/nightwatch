@@ -73,7 +73,7 @@ class SensorManager
     public function request(Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
-            requestState: $this->executionState,
+            requestState: $this->executionState, // @phpstan-ignore argument.type
             user: $this->user,
         );
 
@@ -83,7 +83,7 @@ class SensorManager
     public function command(InputInterface $input, int $status): void
     {
         $sensor = new CommandSensor(
-            executionState: $this->executionState,
+            executionState: $this->executionState, // @phpstan-ignore argument.type
         );
 
         $sensor($input, $status);
