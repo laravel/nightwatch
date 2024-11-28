@@ -36,8 +36,6 @@ class SensorManager
 {
     private ?CacheEventSensor $cacheEventSensor;
 
-    private ?CommandSensor $commandSensor;
-
     private ?ExceptionSensor $exceptionSensor;
 
     private ?OutgoingRequestSensor $outgoingRequestSensor;
@@ -82,14 +80,9 @@ class SensorManager
         $sensor($request, $response);
     }
 
-    /**
-     * TODO should we cache this one for commands that run within a request?
-     * TODO if they do trigger, should we not listen to any commands in a request
-     * lifecycle? Push that out to the service provider not here.
-     */
     public function command(InputInterface $input, int $status): void
     {
-        $sensor = $this->commandSensor ??= new CommandSensor(
+        $sensor = new CommandSensor(
             executionState: $this->executionState,
         );
 
