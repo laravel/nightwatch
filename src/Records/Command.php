@@ -28,6 +28,9 @@ final class Command
         public string $command,
         public int $exit_code,
         public int $duration,
+        public int $bootstrap,
+        public int $action,
+        public int $terminating,
         // --- //
         public int $exceptions,
         public int $logs,

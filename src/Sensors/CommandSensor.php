@@ -55,7 +55,7 @@ final class CommandSensor
             _group: hash('sha256', ''),
             trace_id: $this->executionState->trace,
             class: '',
-            name: $event->input?->getFirstArgument() ?? 'list',
+            name: $event->command,
             command: $event->input instanceof ArgvInput
                 ? implode(' ', $event->input->getRawTokens())
                 : (string) $event->input,
@@ -65,6 +65,9 @@ final class CommandSensor
             // see https://tldp.org/LDP/abs/html/exitcodes.html
             exit_code: $event->exitCode,
             duration: (int) round(($now - $this->startTime) * 1_000_000),
+            bootstrap: 0,
+            action: 0,
+            terminating: 0,
             exceptions: $this->executionState->exceptions,
             logs: $this->executionState->logs,
             queries: $this->executionState->queries,
