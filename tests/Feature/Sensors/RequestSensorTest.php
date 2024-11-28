@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\ExecutionState;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;

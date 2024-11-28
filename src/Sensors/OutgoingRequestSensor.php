@@ -2,8 +2,8 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\OutgoingRequest;
+use Laravel\Nightwatch\State\ExecutionState;
 use Laravel\Nightwatch\UserProvider;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;

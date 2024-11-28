@@ -5,8 +5,8 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Events\CallQueuedListener;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\QueuedJob;
+use Laravel\Nightwatch\State\ExecutionState;
 use Laravel\Nightwatch\UserProvider;
 use ReflectionClass;
 

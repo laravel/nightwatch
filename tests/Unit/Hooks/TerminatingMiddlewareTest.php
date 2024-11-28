@@ -2,8 +2,8 @@
 
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\ExecutionState;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 it('gracefully handles exceptions', function () {

@@ -9,8 +9,8 @@ use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\ExecutionState;
 use Symfony\Component\HttpFoundation\Response;
 
 it('gracefully handles exceptions in all three phases', function () {

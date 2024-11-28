@@ -57,7 +57,7 @@ use Laravel\Nightwatch\Hooks\RouteMatchedListener;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
-use Laravel\Nightwatch\Records\ExecutionState;
+use Laravel\Nightwatch\State\ExecutionState;
 use Symfony\Component\Console\Input\InputInterface;
 use Throwable;
 

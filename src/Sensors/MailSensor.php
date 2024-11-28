@@ -4,8 +4,8 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Mail\Events\MessageSent;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Mail;
+use Laravel\Nightwatch\State\ExecutionState;
 use Laravel\Nightwatch\UserProvider;
 
 use function count;

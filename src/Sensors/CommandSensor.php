@@ -6,7 +6,7 @@ use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\Command;
-use Laravel\Nightwatch\Records\ExecutionState;
+use Laravel\Nightwatch\State\ExecutionState;
 use RuntimeException;
 use Symfony\Component\Console\Input\ArgvInput;
 

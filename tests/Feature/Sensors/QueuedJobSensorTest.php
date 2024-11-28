@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\ExecutionState;
 use Ramsey\Uuid\Uuid;
 
 use function Pest\Laravel\post;

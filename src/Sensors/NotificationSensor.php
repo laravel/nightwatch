@@ -4,8 +4,8 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Notifications\Events\NotificationSent;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Notification;
+use Laravel\Nightwatch\State\ExecutionState;
 use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
 

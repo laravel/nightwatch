@@ -5,8 +5,8 @@ namespace Laravel\Nightwatch\Hooks;
 use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\ExecutionState;
 use Throwable;
 
 final class PreparingResponseListener

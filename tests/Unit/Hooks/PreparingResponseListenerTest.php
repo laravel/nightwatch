@@ -4,8 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Events\PreparingResponse;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\ExecutionState;
 
 it('gracefully handles exceptions', function () {
     $sensor = new class extends SensorManager

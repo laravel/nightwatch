@@ -4,7 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Records\ExecutionState;
+use Laravel\Nightwatch\State\ExecutionState;
 
 use function round;
 

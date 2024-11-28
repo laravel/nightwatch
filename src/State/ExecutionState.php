@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Nightwatch\Records;
+namespace Laravel\Nightwatch\State;
 
 use Closure;
 use Illuminate\Foundation\Application;

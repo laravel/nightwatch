@@ -16,7 +16,7 @@ use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
-use Laravel\Nightwatch\Records\ExecutionState;
+use Laravel\Nightwatch\State\ExecutionState;
 use Laravel\Nightwatch\UserProvider;
 use RuntimeException;
 

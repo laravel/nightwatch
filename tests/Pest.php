@@ -10,7 +10,7 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Location;
-use Laravel\Nightwatch\Records\ExecutionState;
+use Laravel\Nightwatch\State\ExecutionState;
 use Tests\FakeIngest;
 
 use function Illuminate\Filesystem\join_paths;
