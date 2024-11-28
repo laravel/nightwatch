@@ -27,6 +27,7 @@ final class FakeIngest implements LocalIngest
         if (strlen($payload) === 0) {
             throw new \RuntimeException('The payload was empty.');
         }
+
         $this->writes[] = $payload;
     }
 
