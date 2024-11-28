@@ -132,7 +132,9 @@ it('can ingest reported exceptions', function () {
                     'array' => 'array',
                 }, $frame['args'])).')',
             ], $trace)),
-            'handled' => true,
+            // We have temporarily disabled debug_backtrace to reduce the memory impact
+            // 'handled' => true,
+            'handled' => false,
             'php_version' => '8.4.1',
             'laravel_version' => '11.33.0',
         ],
@@ -228,7 +230,7 @@ it('captures handled and unhandled exceptions', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exception:0.handled', true);
     $ingest->assertLatestWrite('exception:1.handled', false);
-});
+})->skip('We have temporarily disabled debug_backtrace to reduce the memory impact');
 
 it('handles the file in the trace', function () {
     $ingest = fakeIngest();
