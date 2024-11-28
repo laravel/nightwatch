@@ -13,6 +13,9 @@ final class JobAttempt
 
     public string $t = 'job-attempt';
 
+    /**
+     * @param  'processed'|'released'|'failed'  $status
+     */
     public function __construct(
         public float $timestamp,
         public string $deploy,
