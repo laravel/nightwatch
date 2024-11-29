@@ -8,8 +8,8 @@ use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\JobAttempt;
+use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
 use RuntimeException;
@@ -27,7 +27,7 @@ final class JobAttemptSensor
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
      */
     public function __construct(
-        private ExecutionState $executionState,
+        private CommandState $executionState,
         private UserProvider $user,
         private Clock $clock,
         private array $connectionConfig,
