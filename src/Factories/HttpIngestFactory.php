@@ -49,8 +49,8 @@ final class HttpIngestFactory
             ->withHeader('Content-Type', 'application/octet-stream')
             ->withHeader('Content-Encoding', 'gzip')
             // TODO this should be "env" id
-            ->withHeader('nightwatch-app-id', $this->config['env_id'] ?? '')
-            ->withBase($this->config['ingests']['http']['uri'] ?? '/'), $this->debug ? '?debug=1' : '');
+            ->withHeader('Nightwatch-App-Id', $this->config['env_id'] ?? '')
+            ->withBase($this->config['ingests']['http']['uri'] ?? ''), $this->debug ? '?debug=1' : '');
 
         return new HttpIngest($client, $this->clock, $this->config['ingests']['http']['connection_limit'] ?? 2);
     }
