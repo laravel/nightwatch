@@ -94,7 +94,5 @@ final class CacheEventSensor
             duration: $this->duration,
             ttl: in_array($event::class, [KeyWritten::class, KeyWriteFailed::class], true) ? ($event->seconds ?? 0) : 0,
         ));
-
-        $this->startTime = null;
     }
 }

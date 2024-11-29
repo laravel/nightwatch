@@ -86,7 +86,5 @@ final class JobAttemptSensor
             hydrated_models: $this->executionState->hydratedModels,
             peak_memory_usage: $this->executionState->peakMemory(),
         ));
-
-        $this->startTime = null;
     }
 }
