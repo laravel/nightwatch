@@ -7,9 +7,11 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Concerns\NormalizesQueue;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\UserProvider;
+use phpDocumentor\Reflection\Types\This;
 use RuntimeException;
 
 /**
@@ -17,6 +19,8 @@ use RuntimeException;
  */
 final class JobAttemptSensor
 {
+    use NormalizesQueue;
+
     private ?float $startTime = null;
 
     /**
@@ -61,7 +65,7 @@ final class JobAttemptSensor
             attempt: $event->job->attempts(),
             name: $event->job->resolveName(),
             connection: $event->job->getConnectionName(),
-            queue: $event->job->getQueue(),
+            queue: $this->normalizeQueue($event->job->getConnectionName(), $event->job->getQueue()),
             status: match ($event::class) {
                 JobProcessed::class => 'processed',
                 JobReleasedAfterException::class => 'released',

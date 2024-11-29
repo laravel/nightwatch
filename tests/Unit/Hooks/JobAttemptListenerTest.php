@@ -2,6 +2,7 @@
 
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Queue\Jobs\FakeJob;
 use Laravel\Nightwatch\Hooks\JobAttemptListener;
@@ -14,7 +15,7 @@ it('gracefully handles exceptions', function () {
 
         public function __construct() {}
 
-        public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
+        public function jobAttempt(JobProcessing|JobProcessed|JobReleasedAfterException|JobFailed $event): void
         {
             $this->thrown = true;
 
