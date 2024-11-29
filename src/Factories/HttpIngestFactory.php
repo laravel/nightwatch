@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Contracts\RemoteIngest;
 use Laravel\Nightwatch\Ingests\Remote\HttpClient;
 use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
 use React\EventLoop\LoopInterface;
