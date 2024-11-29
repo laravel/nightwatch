@@ -36,16 +36,6 @@ it('gracefully handles exceptions in all three phases', function () {
             throw new RuntimeException('Whoops!');
         }
     };
-    // $ingest = app()->instance(LocalIngest::class, new class implements LocalIngest {
-    //     public bool $thrown = false;
-
-    //     public function write(string $payload): void
-    //     {
-    //         $this->thrown = true;
-
-    //         throw new RuntimeException('Whoops!');
-    //     }
-    // });
     $state = app(ExecutionState::class);
     $state->records = new class extends RecordsBuffer {
         public $thrownInFlush = false;
