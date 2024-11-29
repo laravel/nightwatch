@@ -43,6 +43,7 @@ final class JobAttemptSensor
 
         $now = $this->clock->microtime();
 
+        // TODO: Listen for `JobProcessing` or `JobPopped` event to reset the CommandState.
         if ($event::class === JobProcessing::class) {
             $this->startTime = $now;
 
@@ -58,7 +59,7 @@ final class JobAttemptSensor
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', $event->job->resolveName()),
-            trace_id: $this->executionState->trace,
+            trace_id: $this->executionState->trace, // TODO: Retrieve from job payload
             user: $this->user->id(),
             job_id: $event->job->uuid(),
             attempt_id: (string) Str::uuid(),
