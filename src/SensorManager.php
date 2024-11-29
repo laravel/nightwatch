@@ -10,6 +10,7 @@ use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Records\ExecutionState;
@@ -178,7 +179,7 @@ class SensorManager
         $sensor($event);
     }
 
-    public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
+    public function jobAttempt(JobProcessing|JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
         $sensor = $this->jobAttemptSensor ??= new JobAttemptSensor(
             executionState: $this->executionState,

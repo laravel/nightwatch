@@ -4,17 +4,21 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\UserProvider;
+use RuntimeException;
 
 /**
  * @internal
  */
 final class JobAttemptSensor
 {
+    private ?float $startTime = null;
+
     /**
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
      */
@@ -27,21 +31,33 @@ final class JobAttemptSensor
         //
     }
 
-    public function __invoke(JobProcessed|JobReleasedAfterException|JobFailed $event): void
+    public function __invoke(JobProcessing|JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
         if ($event->connectionName === 'sync') {
             return;
         }
 
+        $now = $this->clock->microtime();
+
+        if ($event::class === JobProcessing::class) {
+            $this->startTime = $now;
+
+            return;
+        }
+
+        if ($this->startTime === null) {
+            throw new RuntimeException('No start time found for ['.$event::class.'].');
+        }
+
         $this->executionState->records->write(new JobAttempt(
-            timestamp: '', // TODO
+            timestamp: $this->startTime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', $event->job->resolveName()),
             trace_id: $this->executionState->trace,
             user: $this->user->id(),
-            job_id: $event->job->getJobId(), // TODO: Which is the job id and which is the attempt id?
-            attempt_id: $event->job->uuid(), // TODO
+            job_id: $event->job->getJobId(), // TODO: Seems like both the id and the uuid are the job identifier
+            attempt_id: $event->job->uuid(), // TODO: Is there any identifier for the attempt?
             attempt: $event->job->attempts(),
             name: $event->job->resolveName(),
             connection: $event->job->getConnectionName(),
@@ -51,7 +67,7 @@ final class JobAttemptSensor
                 JobReleasedAfterException::class => 'released',
                 JobFailed::class => 'failed',
             },
-            duration: 0, // TODO: Calculate duration
+            duration: (int) round(($now - $this->startTime) * 1_000_000),
             exceptions: $this->executionState->exceptions,
             logs: $this->executionState->logs,
             queries: $this->executionState->queries,

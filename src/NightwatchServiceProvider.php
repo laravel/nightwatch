@@ -31,6 +31,7 @@ use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Routing\Events\PreparingResponse;
@@ -269,7 +270,12 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
          */
-        $events->listen([JobProcessed::class, JobReleasedAfterException::class, JobFailed::class], (new JobAttemptListener($sensor))(...));
+        $events->listen([
+            JobProcessing::class,
+            JobProcessed::class,
+            JobReleasedAfterException::class,
+            JobFailed::class
+        ], (new JobAttemptListener($sensor))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\Notification
