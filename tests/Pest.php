@@ -4,6 +4,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
@@ -11,6 +12,7 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Location;
+use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Tests\FakeIngest;
 
@@ -23,6 +25,22 @@ pest()->extends(Tests\TestCase::class)->beforeEach(function () {
     app(Location::class)->setBasePath($path)->setPublicPath("{$path}/public");
 });
 
+function forceRequestExecutionState(): void {
+    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+}
+
+function forceCommandExecutionState(): void {
+    Env::getRepository()->set('NIGHTWATCH_FORCE_COMMAND', '1');
+}
+
+function executionState(): RequestState|CommandState {
+    return match (true) {
+        (bool) Env::get('NIGHTWATCH_FORCE_REQUEST') => app(RequestState::class),
+        (bool) Env::get('NIGHTWATCH_FORCE_COMMAND') => app(CommandState::class),
+        default => throw new RuntimeException('Unknown execution state type. Make sure to call the `forceRequestExecutionState` or `forceCommandExecutionState` function.')
+    };
+}
+
 function setRequestStart(CarbonImmutable $timestamp): void
 {
     syncClock($timestamp);
@@ -31,45 +49,53 @@ function setRequestStart(CarbonImmutable $timestamp): void
     app(RequestState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
 }
 
+function setCommandStart(CarbonImmutable $timestamp): void
+{
+    syncClock($timestamp);
+    app(CommandState::class)->stageDurations[ExecutionStage::Bootstrap->value] = 0;
+    app(CommandState::class)->stage = ExecutionStage::Action;
+    app(CommandState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
+}
+
 function syncClock(DateTimeInterface $timestamp): void
 {
-    app(RequestState::class)->timestamp = (float) $timestamp->format('U.u');
+    executionState()->timestamp = (float) $timestamp->format('U.u');
     travelTo($timestamp);
 }
 
 function setDeploy(string $deploy): void
 {
-    app(RequestState::class)->deploy = $deploy;
+    executionState()->deploy = $deploy;
 }
 
 function setServerName(string $server): void
 {
-    app(RequestState::class)->server = $server;
+    executionState()->server = $server;
 }
 
 function setTraceId(string $traceId): void
 {
-    app(RequestState::class)->trace = $traceId;
+    executionState()->trace = $traceId;
 }
 
 function setExecutionId(string $executionId): void
 {
-    app(RequestState::class)->id = $executionId;
+    executionState()->id = $executionId;
 }
 
 function setPeakMemory(int $value): void
 {
-    app(RequestState::class)->peakMemoryResolver = fn () => $value;
+    executionState()->peakMemoryResolver = fn () => $value;
 }
 
 function setLaravelVersion(string $version): void
 {
-    app(RequestState::class)->laravelVersion = $version;
+    executionState()->laravelVersion = $version;
 }
 
 function setPhpVersion(string $version): void
 {
-    app(RequestState::class)->phpVersion = $version;
+    executionState()->phpVersion = $version;
 }
 
 function fakeIngest(): FakeIngest

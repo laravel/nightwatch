@@ -12,7 +12,7 @@ use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 
 defineEnvironment(function () {
-    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+    forceRequestExecutionState();
 });
 
 beforeEach(function () {

@@ -27,7 +27,7 @@ use function Pest\Laravel\travelTo;
 use function Pest\Laravel\withoutExceptionHandling;
 
 defineEnvironment(function () {
-    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+    forceRequestExecutionState();
 });
 
 beforeEach(function () {

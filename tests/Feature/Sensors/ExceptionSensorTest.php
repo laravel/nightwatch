@@ -12,7 +12,7 @@ use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\get;
 
 defineEnvironment(function () {
-    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+    forceRequestExecutionState();
 });
 
 beforeEach(function () {

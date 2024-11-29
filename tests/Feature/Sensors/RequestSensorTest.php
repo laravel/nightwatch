@@ -23,7 +23,7 @@ use function Pest\Laravel\head;
 use function Pest\Laravel\travelTo;
 
 defineEnvironment(function () {
-    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+    forceRequestExecutionState();
 });
 
 beforeEach(function () {
@@ -32,7 +32,6 @@ beforeEach(function () {
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     setRequestStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
-    // dump('before each');
 });
 
 it('can ingest requests', function () {

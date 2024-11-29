@@ -15,19 +15,16 @@ use function Pest\Laravel\travelTo;
 uses(WithConsoleEvents::class);
 
 defineEnvironment(function () {
-    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '0');
+    forceCommandExecutionState();
 });
 
 beforeEach(function () {
-    app(CommandState::class)->deploy = 'v1.2.3';
-    app(CommandState::class)->server = 'web-01';
-    app(CommandState::class)->peakMemoryResolver = fn () => 1234;
-    app(CommandState::class)->trace = '00000000-0000-0000-0000-000000000000';
-    app(CommandState::class)->timestamp = (float) ($timestamp = CarbonImmutable::parse('2000-01-01 01:02:03.456789'))->format('U.u');
-    travelTo($timestamp);
-    app(CommandState::class)->stageDurations[ExecutionStage::Bootstrap->value] = 0;
-    app(CommandState::class)->stage = ExecutionStage::Action;
-    app(CommandState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
+    setDeploy('v1.2.3');
+    setServerName('web-01');
+    setPeakMemory(1234);
+    setTraceId('00000000-0000-0000-0000-000000000000');
+    setExecutionId('00000000-0000-0000-0000-000000000001');
+    setCommandStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 });
 
 it('can ingest commands', function () {

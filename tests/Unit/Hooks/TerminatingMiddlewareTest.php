@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use function Orchestra\Testbench\Pest\defineEnvironment;
 
 defineEnvironment(function () {
-    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+    forceRequestExecutionState();
 });
 
 it('gracefully handles exceptions', function () {

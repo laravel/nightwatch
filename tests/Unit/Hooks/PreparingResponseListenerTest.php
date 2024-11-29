@@ -11,7 +11,7 @@ use Laravel\Nightwatch\State\RequestState;
 use function Orchestra\Testbench\Pest\defineEnvironment;
 
 defineEnvironment(function () {
-    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+    forceRequestExecutionState();
 });
 
 it('gracefully handles exceptions', function () {

@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 use function Orchestra\Testbench\Pest\defineEnvironment;
 
 defineEnvironment(function () {
-    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+    forceRequestExecutionState();
 });
 
 it('gracefully handles exceptions in all three phases', function () {
