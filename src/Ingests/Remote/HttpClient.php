@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Nightwatch;
+namespace Laravel\Nightwatch\Ingests\Remote;
 
 use Psr\Http\Message\ResponseInterface;
 use React\Http\Browser;
@@ -13,7 +13,7 @@ use function gzencode;
 /**
  * @internal
  */
-class Client
+class HttpClient
 {
     public function __construct(
         private Browser $browser,
