@@ -10,8 +10,8 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
 use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\JobAttempt;
+use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
-use phpDocumentor\Reflection\Types\This;
 use RuntimeException;
 
 /**
@@ -60,8 +60,8 @@ final class JobAttemptSensor
             _group: hash('md5', $event->job->resolveName()),
             trace_id: $this->executionState->trace,
             user: $this->user->id(),
-            job_id: $event->job->getJobId(), // TODO: Seems like both the id and the uuid are the job identifier
-            attempt_id: $event->job->uuid(), // TODO: Is there any identifier for the attempt?
+            job_id: $event->job->uuid(),
+            attempt_id: (string) Str::uuid(),
             attempt: $event->job->attempts(),
             name: $event->job->resolveName(),
             connection: $event->job->getConnectionName(),
