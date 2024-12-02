@@ -44,6 +44,7 @@ use Laravel\Nightwatch\Factories\LocalIngestFactory;
 use Laravel\Nightwatch\Hooks\ArtisanStartingHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
+use Laravel\Nightwatch\Hooks\CommandLifecycleIsLongerThanHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
@@ -347,22 +348,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                     return;
                 }
 
-                $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $exitCode) use ($sensor, $state, $app) {
-                    try {
-                        if (! $this->app->runningInConsole()) {
-                            return;
-                        }
-
-                        $sensor->stage(ExecutionStage::End);
-                        $sensor->command($input, $exitCode);
-                        /** @var LocalIngest */
-                        $ingest = $app->make(LocalIngest::class);
-
-                        $ingest->write($state->records->flush());
-                    } catch (Throwable $e) {
-                        //
-                    }
-                });
+                $kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($sensor, $state, $app));
             } catch (Throwable $e) {
                 //
             }
