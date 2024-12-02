@@ -33,7 +33,8 @@ final class CommandSensor
     {
         $class = $this->executionState->artisan->get($this->executionState->name)::class; // @phpstan-ignore method.nonObject
 
-        $name = $this->executionState->name ?? '';
+        /** @var string */
+        $name = $this->executionState->name;
 
         $this->executionState->records->write(new Command(
             timestamp: $this->executionState->timestamp,
