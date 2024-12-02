@@ -75,6 +75,9 @@ it('can ingest commands', function () {
     ]);
 });
 
+it('filters out the list command')->todo();
+it('filters out the queue:work command')->todo();
+
 it('handles commands run via fuzzy matching, e.g., "build" and not "app:build"')->todo();
 
 it('handles commands run with confirmation, e.g., "gelp" and not "help"')->todo();
