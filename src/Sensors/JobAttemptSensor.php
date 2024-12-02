@@ -11,6 +11,9 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
 
+use function hash;
+use function round;
+
 /**
  * @internal
  */
