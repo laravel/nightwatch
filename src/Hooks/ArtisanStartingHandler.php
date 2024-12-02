@@ -7,13 +7,13 @@ use Laravel\Nightwatch\State\CommandState;
 
 final class ArtisanStartingHandler
 {
-    public function __construct(private CommandState $state)
+    public function __construct(private CommandState $commandState)
     {
         //
     }
 
     public function __invoke(Artisan $artisan): void
     {
-        $this->state->artisan = $artisan;
+        $this->commandState->artisan = $artisan;
     }
 }
