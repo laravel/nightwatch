@@ -4,10 +4,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Console\Input\StringInput;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
-use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Log;
-use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\State\CommandState;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\travelTo;

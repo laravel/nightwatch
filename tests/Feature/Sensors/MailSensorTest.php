@@ -2,14 +2,11 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
-use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
-use function Pest\Laravel\travelTo;
 
 defineEnvironment(function () {
     forceRequestExecutionState();
@@ -21,7 +18,7 @@ beforeEach(function () {
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     setExecutionId('00000000-0000-0000-0000-000000000001');
-    setRequestStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 
     Config::set('mail.default', 'array');
 });

@@ -7,7 +7,6 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
-use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -31,7 +30,7 @@ beforeEach(function () {
     setServerName('web-01');
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
-    setRequestStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 });
 
 it('can ingest requests', function () {

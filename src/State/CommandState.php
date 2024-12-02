@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\State;
 
 use Closure;
 use Illuminate\Console\Application as Artisan;
+use Illuminate\Foundation\Application;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\ExecutionStage;
@@ -37,25 +38,30 @@ final class CommandState
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
-        public ExecutionStage $stage,
-        public array $stageDurations,
-        public int $exceptions,
-        public int $logs,
-        public int $queries,
-        public int $lazyLoads,
-        public int $jobsQueued,
-        public int $mail,
-        public int $notifications,
-        public int $outgoingRequests,
-        public int $filesRead,
-        public int $filesWritten,
-        public int $cacheEvents,
-        public int $hydratedModels,
-        public RecordsBuffer $records,
-        public string $phpVersion,
-        public string $laravelVersion,
-        public ?Artisan $artisan,
-        public ?string $name,
+        public ExecutionStage $stage = ExecutionStage::Bootstrap,
+        public array $stageDurations = [
+            ExecutionStage::Bootstrap->value => 0,
+            ExecutionStage::Action->value => 0,
+            ExecutionStage::Terminating->value => 0,
+            ExecutionStage::End->value => 0,
+        ],
+        public int $exceptions = 0,
+        public int $logs = 0,
+        public int $queries = 0,
+        public int $lazyLoads = 0,
+        public int $jobsQueued = 0,
+        public int $mail = 0,
+        public int $notifications = 0,
+        public int $outgoingRequests = 0,
+        public int $filesRead = 0,
+        public int $filesWritten = 0,
+        public int $cacheEvents = 0,
+        public int $hydratedModels = 0,
+        public RecordsBuffer $records = new RecordsBuffer,
+        public string $phpVersion = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION.'.'.PHP_RELEASE_VERSION,
+        public string $laravelVersion = Application::VERSION,
+        public ?Artisan $artisan = null,
+        public ?string $name = null,
         private Clock $clock,
     ) {
         $this->deploy = Str::tinyText($this->deploy);
