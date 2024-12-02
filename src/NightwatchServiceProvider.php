@@ -96,6 +96,8 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private Repository $config;
 
+    private bool $isRequest;
+
     public function register(): void
     {
         // We capture this as early as possible in case the the constant and
@@ -120,7 +122,13 @@ final class NightwatchServiceProvider extends ServiceProvider
             return;
         }
 
+        $this->determineExecutionType();
         $this->registerHooks();
+    }
+
+    private function determineExecutionType(): void
+    {
+        $this->isRequest = ! $this->app->runningInConsole() || Env::get('NIGHTWATCH_FORCE_REQUEST');
     }
 
     private function registerConfig(): void
@@ -199,42 +207,24 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $userProvider = new UserProvider($auth);
 
-        if (Env::get('NIGHTWATCH_FORCE_REQUEST') || ! $this->app->runningInConsole()) {
-            /** @var RequestState */
-            $state = $this->app->instance(RequestState::class, new RequestState(
-                timestamp: $this->timestamp,
-                trace: (string) Str::uuid(),
-                currentExecutionStageStartedAtMicrotime: $this->timestamp,
-                deploy: $this->nightwatchConfig['deployment'] ?? '',
-                server: $this->nightwatchConfig['server'] ?? '',
-            ));
-        } else {
-            /** @var CommandState */
-            $state = $this->app->instance(CommandState::class, new CommandState(
-                timestamp: $this->timestamp,
-                trace: (string) Str::uuid(),
-                currentExecutionStageStartedAtMicrotime: $this->timestamp,
-                deploy: $this->nightwatchConfig['deployment'] ?? '',
-                server: $this->nightwatchConfig['server'] ?? '',
-            ));
-        }
+        $state = $this->executionState();
 
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
             $state, $clock, $location, $userProvider, $this->config
         ));
 
-        if (Env::get('NIGHTWATCH_FORCE_REQUEST') || ! $this->app->runningInConsole()) {
-            $this->registerRequestHooks($events, $sensor, $state); // @phpstan-ignore argument.type
-        } else {
-            $this->registerConsoleHooks($events, $sensor, $state); // @phpstan-ignore argument.type
-        }
-
         //
         // -------------------------------------------------------------------------
         // Execution stage hooks
         // --------------------------------------------------------------------------
         //
+
+        if ($this->isRequest) {
+            $this->registerRequestHooks($events, $sensor, $state); // @phpstan-ignore argument.type
+        } else {
+            $this->registerConsoleHooks($events, $sensor, $state); // @phpstan-ignore argument.type
+        }
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
@@ -375,5 +365,30 @@ final class NightwatchServiceProvider extends ServiceProvider
                 //
             }
         });
+    }
+
+    private function executionState(): RequestState|CommandState
+    {
+        if ($this->isRequest) {
+            /** @var RequestState */
+            $state = $this->app->instance(RequestState::class, new RequestState(
+                timestamp: $this->timestamp,
+                trace: (string) Str::uuid(),
+                currentExecutionStageStartedAtMicrotime: $this->timestamp,
+                deploy: $this->nightwatchConfig['deployment'] ?? '',
+                server: $this->nightwatchConfig['server'] ?? '',
+            ));
+        } else {
+            /** @var CommandState */
+            $state = $this->app->instance(CommandState::class, new CommandState(
+                timestamp: $this->timestamp,
+                trace: (string) Str::uuid(),
+                currentExecutionStageStartedAtMicrotime: $this->timestamp,
+                deploy: $this->nightwatchConfig['deployment'] ?? '',
+                server: $this->nightwatchConfig['server'] ?? '',
+            ));
+        }
+
+        return $state;
     }
 }
