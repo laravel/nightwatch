@@ -23,12 +23,6 @@ final class CommandSensor
         //
     }
 
-    /**
-     * TODO this needs to better collect this information, likely via events,
-     * as the events give us the normalised values and we can better filter out
-     * the `list` command.
-     * TODO group
-     */
     public function __invoke(InputInterface $input, int $exitCode): void
     {
         $class = $this->executionState->artisan->get($this->executionState->name)::class; // @phpstan-ignore method.nonObject
