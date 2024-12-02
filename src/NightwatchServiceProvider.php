@@ -335,8 +335,6 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-         * @see \Laravel\Nightwatch\ExecutionStage::End
-         * @see \Laravel\Nightwatch\Contracts\LocalIngest
          */
         $events->listen(CommandFinished::class, (new CommandFinishedListener($sensor, $state))(...));
 

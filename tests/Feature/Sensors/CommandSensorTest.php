@@ -77,6 +77,7 @@ it('can ingest commands', function () {
 
 it('filters out the list command')->todo();
 it('filters out the queue:work command')->todo();
+it('filters out the queue:listen command')->todo();
 
 it('modifies status code to value in range of 0-255', function () {
     $ingest = fakeIngest();
