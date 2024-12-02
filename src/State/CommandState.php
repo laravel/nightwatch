@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Foundation\Application;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
+use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Types\Str;
 
@@ -61,6 +62,7 @@ final class CommandState
         public string $laravelVersion = Application::VERSION,
         public ?Artisan $artisan = null,
         public ?string $name = null,
+        private Clock $clock,
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
@@ -74,5 +76,23 @@ final class CommandState
         }
 
         return memory_get_peak_usage(true);
+    }
+
+    public function prepareForNextJobAttempt(): void
+    {
+        $this->id = (string) Str::uuid();
+        $this->timestamp = $this->clock->microtime();
+        $this->exceptions = 0;
+        $this->logs = 0;
+        $this->queries = 0;
+        $this->lazyLoads = 0;
+        $this->jobsQueued = 0;
+        $this->mail = 0;
+        $this->notifications = 0;
+        $this->outgoingRequests = 0;
+        $this->filesRead = 0;
+        $this->filesWritten = 0;
+        $this->cacheEvents = 0;
+        $this->hydratedModels = 0;
     }
 }
