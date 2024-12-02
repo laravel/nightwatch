@@ -16,7 +16,8 @@ use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
-use Laravel\Nightwatch\Records\ExecutionState;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\UserProvider;
 use RuntimeException;
 
@@ -43,7 +44,7 @@ final class CacheEventSensor
 
     public function __construct(
         private Clock $clock,
-        private ExecutionState $executionState,
+        private RequestState|CommandState $executionState,
         private UserProvider $user,
     ) {
         //

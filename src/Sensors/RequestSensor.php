@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
+use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\UserProvider;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Exception\UnexpectedValueException;
@@ -29,7 +29,7 @@ use function strlen;
 final class RequestSensor
 {
     public function __construct(
-        private ExecutionState $executionState,
+        private RequestState $requestState,
         private UserProvider $user,
     ) {
         //
@@ -61,12 +61,12 @@ final class RequestSensor
             Log::critical('[nightwatch] '.$e->getMessage());
         }
 
-        $this->executionState->records->write(new RequestRecord(
-            timestamp: $this->executionState->timestamp,
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
+        $this->requestState->records->write(new RequestRecord(
+            timestamp: $this->requestState->timestamp,
+            deploy: $this->requestState->deploy,
+            server: $this->requestState->server,
             _group: hash('md5', implode('|', $routeMethods).",{$routeDomain},{$routePath}"),
-            trace_id: $this->executionState->trace,
+            trace_id: $this->requestState->trace,
             user: $this->user->id(),
             method: $request->getMethod(),
             url: $request->getSchemeAndHttpHost().$request->getBaseUrl().$request->getPathInfo().(strlen($query) > 0 ? "?{$query}" : ''),
@@ -76,30 +76,30 @@ final class RequestSensor
             route_action: $route?->getActionName() ?? '',
             route_path: $routePath,
             ip: $request->ip() ?? '',
-            duration: array_sum($this->executionState->stageDurations),
+            duration: array_sum($this->requestState->stageDurations),
             status_code: $response->getStatusCode(),
             request_size: strlen($request->getContent()),
             response_size: $this->parseResponseSize($response),
-            bootstrap: $this->executionState->stageDurations[ExecutionStage::Bootstrap->value],
-            before_middleware: $this->executionState->stageDurations[ExecutionStage::BeforeMiddleware->value],
-            action: $this->executionState->stageDurations[ExecutionStage::Action->value],
-            render: $this->executionState->stageDurations[ExecutionStage::Render->value],
-            after_middleware: $this->executionState->stageDurations[ExecutionStage::AfterMiddleware->value],
-            sending: $this->executionState->stageDurations[ExecutionStage::Sending->value],
-            terminating: $this->executionState->stageDurations[ExecutionStage::Terminating->value],
-            exceptions: $this->executionState->exceptions,
-            logs: $this->executionState->logs,
-            queries: $this->executionState->queries,
-            lazy_loads: $this->executionState->lazyLoads,
-            jobs_queued: $this->executionState->jobsQueued,
-            mail: $this->executionState->mail,
-            notifications: $this->executionState->notifications,
-            outgoing_requests: $this->executionState->outgoingRequests,
-            files_read: $this->executionState->filesRead,
-            files_written: $this->executionState->filesWritten,
-            cache_events: $this->executionState->cacheEvents,
-            hydrated_models: $this->executionState->hydratedModels,
-            peak_memory_usage: $this->executionState->peakMemory(),
+            bootstrap: $this->requestState->stageDurations[ExecutionStage::Bootstrap->value],
+            before_middleware: $this->requestState->stageDurations[ExecutionStage::BeforeMiddleware->value],
+            action: $this->requestState->stageDurations[ExecutionStage::Action->value],
+            render: $this->requestState->stageDurations[ExecutionStage::Render->value],
+            after_middleware: $this->requestState->stageDurations[ExecutionStage::AfterMiddleware->value],
+            sending: $this->requestState->stageDurations[ExecutionStage::Sending->value],
+            terminating: $this->requestState->stageDurations[ExecutionStage::Terminating->value],
+            exceptions: $this->requestState->exceptions,
+            logs: $this->requestState->logs,
+            queries: $this->requestState->queries,
+            lazy_loads: $this->requestState->lazyLoads,
+            jobs_queued: $this->requestState->jobsQueued,
+            mail: $this->requestState->mail,
+            notifications: $this->requestState->notifications,
+            outgoing_requests: $this->requestState->outgoingRequests,
+            files_read: $this->requestState->filesRead,
+            files_written: $this->requestState->filesWritten,
+            cache_events: $this->requestState->cacheEvents,
+            hydrated_models: $this->requestState->hydratedModels,
+            peak_memory_usage: $this->requestState->peakMemory(),
         ));
     }
 

@@ -3,11 +3,17 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
 
+use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+
+defineEnvironment(function () {
+    forceRequestExecutionState();
+});
 
 beforeEach(function () {
     setDeploy('v1.2.3');

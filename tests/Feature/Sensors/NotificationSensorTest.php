@@ -5,9 +5,15 @@ use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 
+use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
+
+defineEnvironment(function () {
+    forceRequestExecutionState();
+});
 
 beforeEach(function () {
     setDeploy('v1.2.3');

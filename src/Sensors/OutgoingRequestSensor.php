@@ -2,8 +2,9 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\OutgoingRequest;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\UserProvider;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
@@ -19,7 +20,7 @@ use function round;
 final class OutgoingRequestSensor
 {
     public function __construct(
-        private ExecutionState $executionState,
+        private RequestState|CommandState $executionState,
         private UserProvider $user,
     ) {
         //

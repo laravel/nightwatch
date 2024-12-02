@@ -6,7 +6,8 @@ use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Exception;
-use Laravel\Nightwatch\Records\ExecutionState;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\UserProvider;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
@@ -31,7 +32,7 @@ final class ExceptionSensor
 {
     public function __construct(
         private Clock $clock,
-        private ExecutionState $executionState,
+        private RequestState|CommandState $executionState,
         private Location $location,
         private UserProvider $user,
     ) {

@@ -2,12 +2,18 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Laravel\Nightwatch\Types\Str;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
 
+use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\get;
+
+defineEnvironment(function () {
+    forceRequestExecutionState();
+});
 
 beforeEach(function () {
     setDeploy('v1.2.3');

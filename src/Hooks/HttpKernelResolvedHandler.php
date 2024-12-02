@@ -6,14 +6,16 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Kernel;
-use Laravel\Nightwatch\Records\ExecutionState;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\RequestState;
+use Throwable;
 
 use function class_exists;
 
 final class HttpKernelResolvedHandler
 {
-    public function __construct(private SensorManager $sensor, private ExecutionState $executionState)
+    public function __construct(private SensorManager $sensor, private RequestState $requestState)
     {
         //
     }
@@ -25,15 +27,19 @@ final class HttpKernelResolvedHandler
         }
 
         if (! class_exists(Terminating::class)) {
-            $kernel->setGlobalMiddleware([
-                TerminatingMiddleware::class, // TODO Check this isn't a memory leak in Octane.
-                ...$kernel->getGlobalMiddleware(),
-            ]);
+            try {
+                $kernel->setGlobalMiddleware([
+                    TerminatingMiddleware::class, // TODO Check this isn't a memory leak in Octane.
+                    ...$kernel->getGlobalMiddleware(),
+                ]);
+            } catch (Throwable $e) {
+                Log::critical('[nightwatch] '.$e->getMessage());
+            }
         }
 
         // TODO Check this isn't a memory leak in Octane.
         // TODO Check if we can cache this handler between requests on Octane. Same goes for other
         // sub-handlers.
-        $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->sensor, $this->executionState, $app));
+        $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->sensor, $this->requestState, $app));
     }
 }

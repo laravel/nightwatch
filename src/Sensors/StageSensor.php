@@ -4,7 +4,8 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Records\ExecutionState;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 
 use function round;
 
@@ -12,7 +13,7 @@ final class StageSensor
 {
     public function __construct(
         private Clock $clock,
-        private ExecutionState $executionState,
+        private RequestState|CommandState $executionState,
     ) {
         //
     }

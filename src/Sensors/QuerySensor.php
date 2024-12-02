@@ -5,8 +5,9 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Database\Events\QueryExecuted;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Location;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Query;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\UserProvider;
 
 use function hash;
@@ -19,7 +20,7 @@ final class QuerySensor
 {
     public function __construct(
         private Clock $clock,
-        private ExecutionState $executionState,
+        private RequestState|CommandState $executionState,
         private Location $location,
         private UserProvider $user,
     ) {

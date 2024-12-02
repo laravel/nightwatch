@@ -7,18 +7,24 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\RequestState;
 
+use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;
 use function Pest\Laravel\get;
 use function Pest\Laravel\head;
 use function Pest\Laravel\travelTo;
+
+defineEnvironment(function () {
+    forceRequestExecutionState();
+});
 
 beforeEach(function () {
     setDeploy('v1.2.3');
@@ -108,7 +114,7 @@ it('gracefully handles response size for a streamed file that is deleted after s
     $ingest = fakeIngest();
     /** @var SensorManager */
     $sensor = app(SensorManager::class);
-    $state = app(ExecutionState::class);
+    $state = app(RequestState::class);
     $request = Request::create('http://localhost/users');
 
     $file = tmpfile();
@@ -151,7 +157,7 @@ it('uses the content-length header as the response size when present on a stream
     $ingest = fakeIngest();
     /** @var SensorManager */
     $sensor = app(SensorManager::class);
-    $state = app(ExecutionState::class);
+    $state = app(RequestState::class);
     $request = Request::create('http://localhost/users');
 
     $file = tmpfile();

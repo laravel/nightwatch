@@ -8,7 +8,7 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Throwable;
 
-final class BootedHandler
+final class CommandBootedHandler
 {
     public function __construct(private SensorManager $sensor)
     {
@@ -18,7 +18,7 @@ final class BootedHandler
     public function __invoke(Application $app): void
     {
         try {
-            $this->sensor->stage(ExecutionStage::BeforeMiddleware);
+            $this->sensor->stage(ExecutionStage::Action);
         } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }

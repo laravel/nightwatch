@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch;
 
-use Carbon\Carbon;
 use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Events\QueryExecuted;
@@ -10,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Queue\Events\JobQueued;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
@@ -21,6 +19,8 @@ use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\QueuedJobSensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
 use Laravel\Nightwatch\Sensors\StageSensor;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Console\Input\InputInterface;
@@ -51,7 +51,7 @@ class SensorManager
     private ?StageSensor $stageSensor;
 
     public function __construct(
-        private ExecutionState $executionState,
+        private RequestState|CommandState $executionState,
         private Clock $clock,
         private Location $location,
         private UserProvider $user,
@@ -73,26 +73,20 @@ class SensorManager
     public function request(Request $request, Response $response): void
     {
         $sensor = new RequestSensor(
-            executionState: $this->executionState,
+            requestState: $this->executionState, // @phpstan-ignore argument.type
             user: $this->user,
         );
 
         $sensor($request, $response);
     }
 
-    /**
-     * TODO should we cache this one for commands that run within a request?
-     * TODO if they do trigger, should we not listen to any commands in a request
-     * lifecycle? Push that out to the service provider not here.
-     */
-    public function command(Carbon $startedAt, InputInterface $input, int $status): void
+    public function command(InputInterface $input, int $status): void
     {
-        // $sensor = new CommandSensor(
-        //     executionState: $this->state,
-        //     user: $this->user,
-        // );
+        $sensor = new CommandSensor(
+            executionState: $this->executionState, // @phpstan-ignore argument.type
+        );
 
-        // $sensor($startedAt, $input, $status);
+        $sensor($input, $status);
     }
 
     /**
@@ -180,7 +174,7 @@ class SensorManager
     public function prepareForNextInvocation(): void
     {
         // $this->clock->executionStartInMicrotime = $this->clock->microtime();
-        // // $this->executionState = new ExecutionState(
+        // // $this->executionState = new RequestState(
         // //     traceId: $traceId = (string) Str::uuid(),
         // //     executionId: $traceId,
         // // );

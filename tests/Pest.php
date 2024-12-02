@@ -4,13 +4,16 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Location;
-use Laravel\Nightwatch\Records\ExecutionState;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Tests\FakeIngest;
 
 use function Illuminate\Filesystem\join_paths;
@@ -22,54 +25,87 @@ pest()->extends(Tests\TestCase::class)->beforeEach(function () {
     app(Location::class)->setBasePath($path)->setPublicPath("{$path}/public");
 });
 
+function forceRequestExecutionState(): void {
+    Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+    Env::getRepository()->clear('NIGHTWATCH_FORCE_COMMAND');
+}
+
+function forceCommandExecutionState(): void {
+    Env::getRepository()->set('NIGHTWATCH_FORCE_COMMAND', '1');
+    Env::getRepository()->clear('NIGHTWATCH_FORCE_REQUEST');
+}
+
+function executionState(): RequestState|CommandState {
+    return match (true) {
+        (bool) Env::get('NIGHTWATCH_FORCE_REQUEST') => app(RequestState::class),
+        (bool) Env::get('NIGHTWATCH_FORCE_COMMAND') => app(CommandState::class),
+        default => throw new RuntimeException('Unknown execution state type. Make sure to call the `forceRequestExecutionState` or `forceCommandExecutionState` function.')
+    };
+}
+
 function setExecutionStart(CarbonImmutable $timestamp): void
 {
+    match (executionState()::class) {
+        RequestState::class => setRequestStart($timestamp),
+        CommandState::class => setCommandStart($timestamp),
+    };
+}
+
+function setRequestStart(CarbonImmutable $timestamp): void
+{
     syncClock($timestamp);
-    app(ExecutionState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
-    app(ExecutionState::class)->stage = ExecutionStage::BeforeMiddleware;
-    app(ExecutionState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
-    app(ExecutionState::class)->stageDurations[ExecutionStage::Bootstrap->value] = 0;
+    app(RequestState::class)->stageDurations[ExecutionStage::Bootstrap->value] = 0;
+    app(RequestState::class)->stage = ExecutionStage::BeforeMiddleware;
+    app(RequestState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
+}
+
+function setCommandStart(CarbonImmutable $timestamp): void
+{
+    syncClock($timestamp);
+    app(CommandState::class)->stageDurations[ExecutionStage::Bootstrap->value] = 0;
+    app(CommandState::class)->stage = ExecutionStage::Action;
+    app(CommandState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
 }
 
 function syncClock(DateTimeInterface $timestamp): void
 {
-    app(ExecutionState::class)->timestamp = (float) $timestamp->format('U.u');
+    executionState()->timestamp = (float) $timestamp->format('U.u');
     travelTo($timestamp);
 }
 
 function setDeploy(string $deploy): void
 {
-    app(ExecutionState::class)->deploy = $deploy;
+    executionState()->deploy = $deploy;
 }
 
 function setServerName(string $server): void
 {
-    app(ExecutionState::class)->server = $server;
+    executionState()->server = $server;
 }
 
 function setTraceId(string $traceId): void
 {
-    app(ExecutionState::class)->trace = $traceId;
+    executionState()->trace = $traceId;
 }
 
 function setExecutionId(string $executionId): void
 {
-    app(ExecutionState::class)->id = $executionId;
+    executionState()->id = $executionId;
 }
 
 function setPeakMemory(int $value): void
 {
-    app(ExecutionState::class)->peakMemoryResolver = fn () => $value;
+    executionState()->peakMemoryResolver = fn () => $value;
 }
 
 function setLaravelVersion(string $version): void
 {
-    app(ExecutionState::class)->laravelVersion = $version;
+    executionState()->laravelVersion = $version;
 }
 
 function setPhpVersion(string $version): void
 {
-    app(ExecutionState::class)->phpVersion = $version;
+    executionState()->phpVersion = $version;
 }
 
 function fakeIngest(): FakeIngest

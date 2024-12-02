@@ -2,11 +2,17 @@
 
 use Carbon\CarbonImmutable;
 use GuzzleHttp\Psr7\StreamDecoratorTrait;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\StreamInterface;
 
+use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+
+defineEnvironment(function () {
+    forceRequestExecutionState();
+});
 
 beforeEach(function () {
     setDeploy('v1.2.3');

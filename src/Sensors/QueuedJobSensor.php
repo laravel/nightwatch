@@ -5,8 +5,9 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Events\CallQueuedListener;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\QueuedJob;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\UserProvider;
 use ReflectionClass;
 
@@ -34,7 +35,7 @@ final class QueuedJobSensor
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
      */
     public function __construct(
-        private ExecutionState $executionState,
+        private RequestState|CommandState $executionState,
         private UserProvider $user,
         private Clock $clock,
         private array $connectionConfig,

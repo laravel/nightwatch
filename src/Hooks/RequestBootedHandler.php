@@ -2,26 +2,24 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Exception;
-use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
+use Throwable;
 
-/**
- * @internal
- */
-final class JobQueuedListener
+final class RequestBootedHandler
 {
     public function __construct(private SensorManager $sensor)
     {
         //
     }
 
-    public function __invoke(JobQueued $event): void
+    public function __invoke(Application $app): void
     {
         try {
-            $this->sensor->queuedJob($event);
-        } catch (Exception $e) {
+            $this->sensor->stage(ExecutionStage::BeforeMiddleware);
+        } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }
     }

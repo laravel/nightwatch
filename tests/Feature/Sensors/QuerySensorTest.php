@@ -2,12 +2,18 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\SensorManager;
 
+use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\get;
 use function Pest\Laravel\travelTo;
+
+defineEnvironment(function () {
+    forceRequestExecutionState();
+});
 
 beforeEach(function () {
     setDeploy('v1.2.3');

@@ -4,8 +4,9 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Notifications\Events\NotificationSent;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Notification;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
 
@@ -18,7 +19,7 @@ use function str_contains;
 final class NotificationSensor
 {
     public function __construct(
-        private ExecutionState $executionState,
+        private RequestState|CommandState $executionState,
         private UserProvider $user,
         private Clock $clock,
     ) {
