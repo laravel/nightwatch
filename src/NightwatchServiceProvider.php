@@ -33,7 +33,6 @@ use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Env;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -62,7 +61,6 @@ use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Symfony\Component\Console\Input\InputInterface;
 use Throwable;
 
 use function class_exists;
@@ -342,7 +340,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $state->name = $event->command;
         });
 
-        $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor, $state) {
+        $this->callAfterResolving(ConsoleKernelContract::class, static function (ConsoleKernelContract $kernel, Application $app) use ($sensor, $state) {
             try {
                 if (! $kernel instanceof ConsoleKernel) {
                     return;

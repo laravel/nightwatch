@@ -4,15 +4,12 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 final class CommandLifecycleIsLongerThanHandler
@@ -51,4 +48,3 @@ final class CommandLifecycleIsLongerThanHandler
         }
     }
 }
-
