@@ -31,9 +31,7 @@ final class CommandSensor
      */
     public function __invoke(InputInterface $input, int $exitCode): void
     {
-        if ($this->executionState->artisan && $this->executionState->name) {
-            $class = $this->executionState->artisan->get($this->executionState->name)::class;
-        }
+        $class = $this->executionState->artisan->get($this->executionState->name)::class; // @phpstan-ignore method.nonObject
 
         $name = $this->executionState->name ?? '';
 
@@ -43,7 +41,7 @@ final class CommandSensor
             server: $this->executionState->server,
             _group: hash('md5', $name),
             trace_id: $this->executionState->trace,
-            class: $class ?? '',
+            class: $class,
             name: $name,
             command: $input instanceof ArgvInput
                 ? implode(' ', $input->getRawTokens())
