@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Carbon\Carbon;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
@@ -18,7 +17,6 @@ final class CommandLifecycleIsLongerThanHandler
         private SensorManager $sensor,
         private CommandState $commandState,
         private LocalIngest $ingest,
-        private Application $app,
     ) {
         //
     }

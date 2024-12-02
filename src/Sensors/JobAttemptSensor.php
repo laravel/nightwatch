@@ -46,15 +46,15 @@ final class JobAttemptSensor
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', $event->job->resolveName()),
-            trace_id: Context::getHidden('nightwatch_trace_id'),
+            trace_id: Context::getHidden('nightwatch_trace_id'), // @phpstan-ignore argument.type
             user: $this->user->id(),
-            job_id: $event->job->uuid(),
+            job_id: $event->job->uuid(), // @phpstan-ignore argument.type
             attempt_id: (string) Str::uuid(),
             attempt: $event->job->attempts(),
             name: $event->job->resolveName(),
             connection: $event->job->getConnectionName(),
             queue: $this->normalizeQueue($event->job->getConnectionName(), $event->job->getQueue()),
-            status: match (true) {
+            status: match (true) { // @phpstan-ignore match.unhandled
                 $event->successful() => 'processed',
                 $event->job->isReleased() => 'released',
                 $event->job->hasFailed() => 'failed',

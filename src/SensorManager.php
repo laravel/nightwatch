@@ -178,7 +178,7 @@ class SensorManager
     public function jobAttempt(JobAttempted $event): void
     {
         $sensor = $this->jobAttemptSensor ??= new JobAttemptSensor(
-            executionState: $this->executionState,
+            executionState: $this->executionState, // @phpstan-ignore argument.type
             user: $this->user,
             clock: $this->clock,
             connectionConfig: $this->config->all()['queue']['connections'] ?? [],

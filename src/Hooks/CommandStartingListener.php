@@ -6,7 +6,6 @@ use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobPopped;
@@ -27,7 +26,6 @@ final class CommandStartingListener
         private LocalIngest $ingest,
         private Dispatcher $events,
         private ConsoleKernelContract $kernel,
-        private Application $app,
     ) {
         //
     }
@@ -71,6 +69,6 @@ final class CommandStartingListener
         // TODO Check this isn't a memory leak in Octane.
         // TODO Check if we can cache this handler between requests on Octane. Same goes for other
         // sub-handlers.
-        $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->state, $this->ingest, $this->app));
+        $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->state, $this->ingest));
     }
 }
