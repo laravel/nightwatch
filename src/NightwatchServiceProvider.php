@@ -41,6 +41,7 @@ use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
 use Laravel\Nightwatch\Factories\LocalIngestFactory;
+use Laravel\Nightwatch\Hooks\ArtisanStartingHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
@@ -324,9 +325,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerConsoleHooks(Dispatcher $events, SensorManager $sensor, CommandState $state): void
     {
-        Artisan::starting(static function ($artisan) use ($state) {
-            $state->artisan = $artisan;
-        });
+        Artisan::starting((new ArtisanStartingHandler($state))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Action
