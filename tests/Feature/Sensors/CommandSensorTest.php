@@ -13,6 +13,7 @@ uses(WithConsoleEvents::class);
 
 defineEnvironment(function () {
     forceCommandExecutionState();
+    $this->ingest = fakeIngest();
 });
 
 beforeEach(function () {
@@ -25,7 +26,6 @@ beforeEach(function () {
 });
 
 it('can ingest commands', function () {
-    $ingest = fakeIngest();
     Log::listen(dump(...));
     Artisan::command('app:build {destination} {--force} {--compress}', function () {
         travelTo(now()->addMicroseconds(1234567));
@@ -37,8 +37,8 @@ it('can ingest commands', function () {
     Artisan::terminate($input, $status);
 
     expect($status)->toBe(3);
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite([
+    $this->ingest->assertWrittenTimes(1);
+    $this->ingest->assertLatestWrite([
         [
             'v' => 1,
             't' => 'command',
@@ -77,7 +77,6 @@ it('filters out the queue:work command')->todo();
 it('filters out the queue:listen command')->todo();
 
 it('modifies status code to value in range of 0-255', function () {
-    $ingest = fakeIngest();
     $status = [
         -1,
         0,
@@ -98,20 +97,20 @@ it('modifies status code to value in range of 0-255', function () {
     };
 
     expect($run())->toBe(-1);
-    $ingest->assertLatestWrite('command:0.exit_code', 255);
+    $this->ingest->assertLatestWrite('command:0.exit_code', 255);
 
     expect($run())->toBe(0);
-    $ingest->assertLatestWrite('command:0.exit_code', 0);
+    $this->ingest->assertLatestWrite('command:0.exit_code', 0);
 
     expect($run())->toBe(1);
-    $ingest->assertLatestWrite('command:0.exit_code', 1);
+    $this->ingest->assertLatestWrite('command:0.exit_code', 1);
 
     expect($run())->toBe(254);
-    $ingest->assertLatestWrite('command:0.exit_code', 254);
+    $this->ingest->assertLatestWrite('command:0.exit_code', 254);
 
     expect($run())->toBe(255);
-    $ingest->assertLatestWrite('command:0.exit_code', 255);
+    $this->ingest->assertLatestWrite('command:0.exit_code', 255);
 
     expect($run())->toBe(256);
-    $ingest->assertLatestWrite('command:0.exit_code', 255);
+    $this->ingest->assertLatestWrite('command:0.exit_code', 255);
 });
