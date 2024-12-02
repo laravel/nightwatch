@@ -4,9 +4,8 @@ namespace Laravel\Nightwatch\Console;
 
 use Illuminate\Console\Command;
 use Laravel\Nightwatch\Buffers\StreamBuffer;
-use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
+use Laravel\Nightwatch\Contracts\RemoteIngest;
 use Laravel\Nightwatch\Ingests\Remote\IngestSucceededResult;
-use Laravel\Nightwatch\Ingests\Remote\NullIngest;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
 use React\Promise\PromiseInterface;
@@ -43,28 +42,28 @@ final class Agent extends Command
 
     public function __construct(
         private StreamBuffer $buffer,
-        private HttpIngest|NullIngest $ingest,
         private LoopInterface $loop,
         private int|float $timeout,
+        private int $delay,
     ) {
         parent::__construct();
 
         $this->connections = new WeakMap;
     }
 
-    public function handle(Server $server): void
+    public function handle(Server $server, RemoteIngest $ingest): void
     {
-        $server->on('connection', function (ConnectionInterface $connection) {
+        $server->on('connection', function (ConnectionInterface $connection) use ($ingest) {
             $this->accept($connection);
 
             $connection->on('data', function (string $chunk) use ($connection) {
                 $this->bufferConnectionChunk($connection, $chunk);
             });
 
-            $connection->on('end', function () use ($connection) {
+            $connection->on('end', function () use ($ingest, $connection) {
                 $this->buffer->write($this->flushConnectionBuffer($connection));
 
-                $this->queueOrPerformIngest(static function (PromiseInterface $response) {
+                $this->queueOrPerformIngest($ingest, static function (PromiseInterface $response) {
                     $response->then(static function (IngestSucceededResult $result) {
                         echo date('Y-m-d H:i:s')." SUCCESS: Took [{$result->duration}]s.".PHP_EOL;
                     }, static function (Throwable $e) {
@@ -133,7 +132,7 @@ final class Agent extends Command
     /**
      * @param  (callable(PromiseInterface<IngestSucceededResult>): void)  $after
      */
-    private function queueOrPerformIngest(callable $after): void
+    private function queueOrPerformIngest(RemoteIngest $ingest, callable $after): void
     {
         if ($this->buffer->wantsFlushing()) {
             $records = $this->buffer->flush();
@@ -143,14 +142,14 @@ final class Agent extends Command
                 $this->flushBufferAfterDelayTimer = null;
             }
 
-            $after($this->ingest->write($records));
+            $after($ingest->write($records));
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer(10, function () use ($after) {
+            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer($this->delay, function () use ($ingest, $after) {
                 $records = $this->buffer->flush();
 
                 $this->flushBufferAfterDelayTimer = null;
 
-                $after($this->ingest->write($records));
+                $after($ingest->write($records));
             });
         }
     }

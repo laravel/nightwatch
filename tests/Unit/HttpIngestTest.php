@@ -1,6 +1,6 @@
 <?php
 
-use Laravel\Nightwatch\Client;
+use Laravel\Nightwatch\Ingests\Remote\HttpClient;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
 use React\Http\Message\Response;
@@ -10,7 +10,7 @@ use React\Promise\PromiseInterface;
 
 it('limits the number of concurrent requests', function () {
     $deferred = new Deferred();
-    $ingest = new HttpIngest(new class($deferred->promise()) extends Client {
+    $ingest = new HttpIngest(new class($deferred->promise()) extends HttpClient {
         public function __construct(private PromiseInterface $promise) {}
 
         public function send(string $payload): PromiseInterface
@@ -41,7 +41,7 @@ it('tracks resolved requests when considering connection limit', function () {
         new Deferred(),
         new Deferred(),
     ];
-    $ingest = new HttpIngest(new class($deferredPromises) extends Client {
+    $ingest = new HttpIngest(new class($deferredPromises) extends HttpClient {
         public function __construct(private array $deferredPromises) {}
 
         public function send(string $payload): PromiseInterface

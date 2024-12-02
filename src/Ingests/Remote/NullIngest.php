@@ -2,12 +2,13 @@
 
 namespace Laravel\Nightwatch\Ingests\Remote;
 
+use Laravel\Nightwatch\Contracts\RemoteIngest;
 use React\Promise\Promise;
 
 /**
  * @internal
  */
-final class NullIngest
+final class NullIngest implements RemoteIngest
 {
     /**
      * @return Promise<IngestSucceededResult>

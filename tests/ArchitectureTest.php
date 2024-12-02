@@ -1,5 +1,7 @@
 <?php
 
+use Laravel\Nightwatch\Ingests\Remote\HttpClient;
+
 arch()->expect('Laravel\Nightwatch')
     ->not->toUse([
         // We should always reference \Symfony\HttpFoundation\Response as not all
@@ -18,7 +20,7 @@ arch()->expect('Laravel\Nightwatch')
     ->ignoring([
         'Laravel\Nightwatch\Contracts',
         Laravel\Nightwatch\Buffers\RecordsBuffer::class,
-        Laravel\Nightwatch\Client::class,
+        Laravel\Nightwatch\Ingests\Remote\HttpClient::class,
         Laravel\Nightwatch\ExecutionStage::class,
         Laravel\Nightwatch\SensorManager::class,
     ]);

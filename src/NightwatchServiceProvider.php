@@ -96,6 +96,8 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private bool $isRequest;
 
+    private Clock $clock;
+
     public function register(): void
     {
         // We capture this as early as possible in case the the constant and
@@ -140,9 +142,25 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerBindings(): void
     {
+        $this->registerClock();
         $this->registerAgent();
         $this->registerLocalIngest();
         $this->registerMiddleware();
+    }
+
+    private function registerClock(): void
+    {
+        $this->clock = $this->app->instance(Clock::class, new Clock); // @phpstan-ignore assign.propertyType
+    }
+
+    private function registerAgent(): void
+    {
+        $this->app->singleton(Agent::class, (new AgentFactory($this->clock, $this->nightwatchConfig))(...));
+    }
+
+    private function registerLocalIngest(): void
+    {
+        $this->app->singleton(LocalIngest::class, (new LocalIngestFactory($this->nightwatchConfig))(...));
     }
 
     private function registerMiddleware(): void
@@ -152,16 +170,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         if (! class_exists(Terminating::class)) {
             $this->app->singleton(TerminatingMiddleware::class);
         }
-    }
-
-    private function registerAgent(): void
-    {
-        $this->app->singleton(Agent::class, (new AgentFactory($this->nightwatchConfig))(...));
-    }
-
-    private function registerLocalIngest(): void
-    {
-        $this->app->singleton(LocalIngest::class, (new LocalIngestFactory($this->nightwatchConfig))(...));
     }
 
     private function registerPublications(): void
@@ -195,9 +203,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var AuthManager */
         $auth = $this->app->make(AuthManager::class);
 
-        /** @var Clock */
-        $clock = $this->app->instance(Clock::class, new Clock);
-
         $state = $this->executionState();
 
         /** @var Location */
@@ -209,7 +214,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
-            $state, $clock, $location, $userProvider, $this->config
+            $state, $this->clock, $location, $userProvider, $this->config
         ));
 
         //
@@ -258,7 +263,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\Records\OutgoingRequest
          */
-        $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($sensor, $clock))(...));
+        $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($sensor, $this->clock))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\CacheEvent
