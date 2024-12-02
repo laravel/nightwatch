@@ -346,8 +346,13 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->app->booted((new CommandBootedHandler($sensor))(...));
 
-        $ingest = $this->app->make(LocalIngest::class);
-        $kernel = $this->app->make(ConsoleKernelContract::class);
-        $events->listen(CommandStarting::class, (new CommandStartingListener($sensor, $state, $ingest, $events, $kernel, $this->app))(...));
+        $events->listen(CommandStarting::class, (new CommandStartingListener(
+            sensor: $sensor,
+            state: $state,
+            ingest: $this->app->make(LocalIngest::class),
+            events: $events,
+            kernel: $this->app->make(ConsoleKernelContract::class),
+            app: $this->app
+        ))(...));
     }
 }

@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\CommandState;
-use phpDocumentor\Reflection\Types\This;
 use Throwable;
 
 /**
