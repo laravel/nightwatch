@@ -38,6 +38,7 @@ final class CommandState
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
+        private Clock $clock,
         public ExecutionStage $stage = ExecutionStage::Bootstrap,
         public array $stageDurations = [
             ExecutionStage::Bootstrap->value => 0,
@@ -62,7 +63,6 @@ final class CommandState
         public string $laravelVersion = Application::VERSION,
         public ?Artisan $artisan = null,
         public ?string $name = null,
-        private Clock $clock,
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
