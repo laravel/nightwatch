@@ -13,6 +13,7 @@ use Illuminate\Queue\Events\JobPopped;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Support\Facades\Log;
+use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
@@ -26,6 +27,9 @@ final class CommandStartingListener
         private SensorManager $sensor,
         private CommandState $state,
         private Dispatcher $events,
+        private Clock $clock,
+        private ConsoleKernelContract $kernel,
+        private Application $app,
     ) {
         //
     }
@@ -47,7 +51,7 @@ final class CommandStartingListener
     {
         $this->state->source = 'job';
 
-        $this->events->listen(JobPopped::class, (new JobPoppedListener($this->sensor, $this->state))(...));
+        $this->events->listen(JobPopped::class, (new JobPoppedListener($this->sensor, $this->state, $this->clock))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
@@ -67,13 +71,11 @@ final class CommandStartingListener
             $this->state->name = $event->command;
         });
 
-        // Can we assume that `ConsoleKernelContract` is always resolved here?
-        $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) {
-            if (! $kernel instanceof ConsoleKernel) {
-                return;
-            }
 
-            $kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->state, $app));
-        });
+        if (! $this->kernel instanceof ConsoleKernel) {
+            return;
+        }
+
+        $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->state, $this->app));
     }
 }

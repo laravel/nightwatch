@@ -17,6 +17,7 @@ use Illuminate\Cache\Events\WritingManyKeys;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
@@ -228,7 +229,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         if (Env::get('NIGHTWATCH_FORCE_REQUEST') || ! $this->app->runningInConsole()) {
             $this->registerRequestHooks($events, $sensor, $state); // @phpstan-ignore argument.type
         } else {
-            $this->registerConsoleHooks($events, $sensor, $state); // @phpstan-ignore argument.type
+            $this->registerConsoleHooks($events, $sensor, $state, $clock); // @phpstan-ignore argument.type
         }
 
         //
@@ -333,7 +334,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $events->listen(RequestHandled::class, (new RequestHandledListener($sensor))(...));
     }
 
-    private function registerConsoleHooks(Dispatcher $events, SensorManager $sensor, CommandState $state): void
+    private function registerConsoleHooks(Dispatcher $events, SensorManager $sensor, CommandState $state, Clock $clock): void
     {
         Artisan::starting(static function ($artisan) use ($state) {
             $state->artisan = $artisan;
@@ -344,6 +345,7 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->app->booted((new CommandBootedHandler($sensor))(...));
 
-        $events->listen(CommandStarting::class, (new CommandStartingListener($sensor, $state, $events))(...));
+        $kernel = $this->app->make(ConsoleKernelContract::class);
+        $events->listen(CommandStarting::class, (new CommandStartingListener($sensor, $state, $events, $clock, $kernel, $this->app))(...));
     }
 }
