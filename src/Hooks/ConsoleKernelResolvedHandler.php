@@ -2,16 +2,11 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Contracts\Console\Kernel as KernelContract;
-use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Console\Kernel;
-use Illuminate\Foundation\Events\Terminating;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\CommandState;
-
-use function class_exists;
 
 final class ConsoleKernelResolvedHandler
 {

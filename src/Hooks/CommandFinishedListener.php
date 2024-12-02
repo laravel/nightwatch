@@ -9,6 +9,8 @@ use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
+use function class_exists;
+
 final class CommandFinishedListener
 {
     public function __construct(private SensorManager $sensor, private CommandState $commandState)

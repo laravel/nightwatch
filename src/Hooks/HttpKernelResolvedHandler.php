@@ -9,8 +9,8 @@ use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\RequestState;
-
 use Throwable;
+
 use function class_exists;
 
 final class HttpKernelResolvedHandler
