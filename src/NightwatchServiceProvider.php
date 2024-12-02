@@ -325,6 +325,9 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerConsoleHooks(Dispatcher $events, SensorManager $sensor, CommandState $state): void
     {
+        /**
+         * @see \Laravel\Nightwatch\State\CommandState::$artisan
+         */
         Artisan::starting((new ArtisanStartingHandler($state))(...));
 
         /**
