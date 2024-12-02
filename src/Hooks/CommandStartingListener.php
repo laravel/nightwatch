@@ -5,9 +5,9 @@ namespace Laravel\Nightwatch\Hooks;
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
-use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobPopped;
 use Illuminate\Support\Facades\Log;
@@ -63,7 +63,6 @@ final class CommandStartingListener
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
         $this->events->listen(CommandFinished::class, (new CommandFinishedListener($this->sensor, $this->state))(...));
-
 
         if (! $this->kernel instanceof ConsoleKernel) {
             return;
