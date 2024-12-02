@@ -47,6 +47,11 @@
         }
     },
     "scripts": {
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php vendor/bin/testbench workbench:build --ansi",
+            "npx concurrently -c \"#93c5fd,#c4b5fd\" \"composer serve\" \"composer agent\" --names=serve,agent"
+        ],
         "post-autoload-dump": [
             "@php vendor/bin/testbench package:purge-skeleton",
             "@php vendor/bin/testbench package:discover",
