@@ -6,8 +6,10 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Kernel;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\RequestState;
+use Throwable;
 
 use function class_exists;
 
@@ -25,10 +27,14 @@ final class HttpKernelResolvedHandler
         }
 
         if (! class_exists(Terminating::class)) {
-            $kernel->setGlobalMiddleware([
-                TerminatingMiddleware::class, // TODO Check this isn't a memory leak in Octane.
-                ...$kernel->getGlobalMiddleware(),
-            ]);
+            try {
+                $kernel->setGlobalMiddleware([
+                    TerminatingMiddleware::class, // TODO Check this isn't a memory leak in Octane.
+                    ...$kernel->getGlobalMiddleware(),
+                ]);
+            } catch (Throwable $e) {
+                Log::critical('[nightwatch] '.$e->getMessage());
+            }
         }
 
         // TODO Check this isn't a memory leak in Octane.

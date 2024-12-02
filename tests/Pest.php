@@ -26,10 +26,12 @@ pest()->extends(Tests\TestCase::class)->beforeEach(function () {
 
 function forceRequestExecutionState(): void {
     Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+    Env::getRepository()->clear('NIGHTWATCH_FORCE_COMMAND');
 }
 
 function forceCommandExecutionState(): void {
     Env::getRepository()->set('NIGHTWATCH_FORCE_COMMAND', '1');
+    Env::getRepository()->clear('NIGHTWATCH_FORCE_REQUEST');
 }
 
 function executionState(): RequestState|CommandState {
@@ -37,6 +39,14 @@ function executionState(): RequestState|CommandState {
         (bool) Env::get('NIGHTWATCH_FORCE_REQUEST') => app(RequestState::class),
         (bool) Env::get('NIGHTWATCH_FORCE_COMMAND') => app(CommandState::class),
         default => throw new RuntimeException('Unknown execution state type. Make sure to call the `forceRequestExecutionState` or `forceCommandExecutionState` function.')
+    };
+}
+
+function setExecutionStart(CarbonImmutable $timestamp): void
+{
+    match (executionState()::class) {
+        RequestState::class => setRequestStart($timestamp),
+        CommandState::class => setCommandStart($timestamp),
     };
 }
 

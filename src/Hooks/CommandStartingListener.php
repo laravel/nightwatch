@@ -59,17 +59,19 @@ final class CommandStartingListener
 
     private function registerCommandHooks(): void
     {
-        // TODO: Set terminating when event doesn't exist
-
-        $this->events->listen(CommandFinished::class, function ($event) {
-            $this->state->name = $event->command;
-        });
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         */
+        $this->events->listen(CommandFinished::class, (new CommandFinishedListener($this->sensor, $this->state))(...));
 
 
         if (! $this->kernel instanceof ConsoleKernel) {
             return;
         }
 
+        // TODO Check this isn't a memory leak in Octane.
+        // TODO Check if we can cache this handler between requests on Octane. Same goes for other
+        // sub-handlers.
         $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->state, $this->ingest, $this->app));
     }
 }

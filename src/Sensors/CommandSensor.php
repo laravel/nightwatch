@@ -23,33 +23,28 @@ final class CommandSensor
         //
     }
 
-    /**
-     * TODO this needs to better collect this information, likely via events,
-     * as the events give us the normalised values and we can better filter out
-     * the `list` command.
-     * TODO group
-     */
     public function __invoke(InputInterface $input, int $exitCode): void
     {
-        if ($this->executionState->artisan && $this->executionState->name) {
-            $class = $this->executionState->artisan->get($this->executionState->name)::class;
+        $class = $this->executionState->artisan->get($this->executionState->name)::class; // @phpstan-ignore method.nonObject
+
+        /** @var string */
+        $name = $this->executionState->name;
+
+        if ($exitCode < 0 || $exitCode > 255) {
+            $exitCode = 255;
         }
 
         $this->executionState->records->write(new Command(
             timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('sha256', ''),
+            _group: hash('md5', $name),
             trace_id: $this->executionState->trace,
-            class: $class ?? '',
-            name: $this->executionState->name ?? '',
+            class: $class,
+            name: $name,
             command: $input instanceof ArgvInput
                 ? implode(' ', $input->getRawTokens())
                 : (string) $input,
-            // If this value is over 255 or under zero we should run modules 256 on it, e.g.,
-            // $exitCode % 256;
-            // 3809 % 256 = 225
-            // see https://tldp.org/LDP/abs/html/exitcodes.html
             exit_code: $exitCode,
             duration: array_sum($this->executionState->stageDurations),
             bootstrap: $this->executionState->stageDurations[ExecutionStage::Bootstrap->value],

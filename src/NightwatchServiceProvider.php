@@ -42,6 +42,7 @@ use Laravel\Nightwatch\Factories\LocalIngestFactory;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
 use Laravel\Nightwatch\Hooks\CommandStartingListener;
+use Laravel\Nightwatch\Hooks\ArtisanStartingHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
@@ -93,6 +94,10 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private Repository $config;
 
+    private bool $isRequest;
+
+    private Clock $clock;
+
     public function register(): void
     {
         // We capture this as early as possible in case the the constant and
@@ -117,7 +122,13 @@ final class NightwatchServiceProvider extends ServiceProvider
             return;
         }
 
+        $this->determineExecutionType();
         $this->registerHooks();
+    }
+
+    private function determineExecutionType(): void
+    {
+        $this->isRequest = ! $this->app->runningInConsole() || Env::get('NIGHTWATCH_FORCE_REQUEST');
     }
 
     private function registerConfig(): void
@@ -131,9 +142,25 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerBindings(): void
     {
+        $this->registerClock();
         $this->registerAgent();
         $this->registerLocalIngest();
         $this->registerMiddleware();
+    }
+
+    private function registerClock(): void
+    {
+        $this->clock = $this->app->instance(Clock::class, new Clock); // @phpstan-ignore assign.propertyType
+    }
+
+    private function registerAgent(): void
+    {
+        $this->app->singleton(Agent::class, (new AgentFactory($this->clock, $this->nightwatchConfig))(...));
+    }
+
+    private function registerLocalIngest(): void
+    {
+        $this->app->singleton(LocalIngest::class, (new LocalIngestFactory($this->nightwatchConfig))(...));
     }
 
     private function registerMiddleware(): void
@@ -143,16 +170,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         if (! class_exists(Terminating::class)) {
             $this->app->singleton(TerminatingMiddleware::class);
         }
-    }
-
-    private function registerAgent(): void
-    {
-        $this->app->singleton(Agent::class, (new AgentFactory($this->nightwatchConfig))(...));
-    }
-
-    private function registerLocalIngest(): void
-    {
-        $this->app->singleton(LocalIngest::class, (new LocalIngestFactory($this->nightwatchConfig))(...));
     }
 
     private function registerPublications(): void
@@ -189,55 +206,33 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var ContextRepository */
         $context = $this->app->make(ContextRepository::class);
 
-        /** @var Clock */
-        $clock = $this->app->instance(Clock::class, new Clock);
-
         /** @var Location */
         $location = $this->app->instance(Location::class, new Location(
             $this->app->basePath(), $this->app->publicPath(),
         ));
 
-        $userProvider = new UserProvider($auth);
-
-        if (Env::get('NIGHTWATCH_FORCE_REQUEST') || ! $this->app->runningInConsole()) {
-            /** @var RequestState */
-            $state = $this->app->instance(RequestState::class, new RequestState(
-                timestamp: $this->timestamp,
-                trace: (string) Str::uuid(),
-                currentExecutionStageStartedAtMicrotime: $this->timestamp,
-                deploy: $this->nightwatchConfig['deployment'] ?? '',
-                server: $this->nightwatchConfig['server'] ?? '',
-            ));
-        } else {
-            /** @var CommandState */
-            $state = $this->app->instance(CommandState::class, new CommandState(
-                timestamp: $this->timestamp,
-                trace: (string) Str::uuid(),
-                currentExecutionStageStartedAtMicrotime: $this->timestamp,
-                deploy: $this->nightwatchConfig['deployment'] ?? '',
-                server: $this->nightwatchConfig['server'] ?? '',
-                clock: $clock,
-            ));
-        }
+        $state = $this->executionState();
 
         $context->addHidden('nightwatch_trace_id', $state->trace);
 
+        $userProvider = new UserProvider($auth);
+
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
-            $state, $clock, $location, $userProvider, $this->config
+            $state, $this->clock, $location, $userProvider, $this->config
         ));
-
-        if (Env::get('NIGHTWATCH_FORCE_REQUEST') || ! $this->app->runningInConsole()) {
-            $this->registerRequestHooks($events, $sensor, $state); // @phpstan-ignore argument.type
-        } else {
-            $this->registerConsoleHooks($events, $sensor, $state); // @phpstan-ignore argument.type
-        }
 
         //
         // -------------------------------------------------------------------------
         // Execution stage hooks
         // --------------------------------------------------------------------------
         //
+
+        if ($this->isRequest) {
+            $this->registerRequestHooks($events, $sensor, $state); // @phpstan-ignore argument.type
+        } else {
+            $this->registerConsoleHooks($events, $sensor, $state); // @phpstan-ignore argument.type
+        }
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
@@ -273,7 +268,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\Records\OutgoingRequest
          */
-        $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($sensor, $clock))(...));
+        $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($sensor, $this->clock))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\CacheEvent
@@ -306,6 +301,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->app->booted((new RequestBootedHandler($sensor))(...));
 
         /**
+         * @see \Laravel\Nightwatch\Records\Request
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Contracts\LocalIngest
@@ -337,12 +333,13 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerConsoleHooks(Dispatcher $events, SensorManager $sensor, CommandState $state): void
     {
-        Artisan::starting(static function ($artisan) use ($state) {
-            $state->artisan = $artisan;
-        });
+        /**
+         * @see \Laravel\Nightwatch\State\CommandState::$artisan
+         */
+        Artisan::starting((new ArtisanStartingHandler($state))(...));
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
+         * @see \Laravel\Nightwatch\ExecutionStage::Action
          */
         $this->app->booted((new CommandBootedHandler($sensor))(...));
 
@@ -354,5 +351,31 @@ final class NightwatchServiceProvider extends ServiceProvider
             kernel: $this->app->make(ConsoleKernelContract::class),
             app: $this->app
         ))(...));
+    }
+
+    private function executionState(): RequestState|CommandState
+    {
+        if ($this->isRequest) {
+            /** @var RequestState */
+            $state = $this->app->instance(RequestState::class, new RequestState(
+                timestamp: $this->timestamp,
+                trace: (string) Str::uuid(),
+                currentExecutionStageStartedAtMicrotime: $this->timestamp,
+                deploy: $this->nightwatchConfig['deployment'] ?? '',
+                server: $this->nightwatchConfig['server'] ?? '',
+            ));
+        } else {
+            /** @var CommandState */
+            $state = $this->app->instance(CommandState::class, new CommandState(
+                timestamp: $this->timestamp,
+                trace: (string) Str::uuid(),
+                currentExecutionStageStartedAtMicrotime: $this->timestamp,
+                deploy: $this->nightwatchConfig['deployment'] ?? '',
+                server: $this->nightwatchConfig['server'] ?? '',
+                clock: $this->clock,
+            ));
+        }
+
+        return $state;
     }
 }

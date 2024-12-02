@@ -2,8 +2,8 @@
 
 namespace Laravel\Nightwatch\Ingests\Remote;
 
-use Laravel\Nightwatch\Client;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Contracts\RemoteIngest;
 use Psr\Http\Message\ResponseInterface;
 use React\Promise\Internal\RejectedPromise;
 use React\Promise\PromiseInterface;
@@ -13,12 +13,12 @@ use Throwable;
 /**
  * @internal
  */
-final class HttpIngest
+final class HttpIngest implements RemoteIngest
 {
     private int $concurrentRequests = 0;
 
     public function __construct(
-        private Client $client,
+        private HttpClient $client,
         private Clock $clock,
         private int $concurrentRequestLimit,
     ) {

@@ -6,6 +6,7 @@ use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\State\RequestState;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;

@@ -16,23 +16,29 @@ final class CommandLifecycleIsLongerThanHandler
 {
     public function __construct(
         private SensorManager $sensor,
-        private CommandState $state,
+        private CommandState $commandState,
         private LocalIngest $ingest,
         private Application $app,
     ) {
         //
     }
 
-    public function __invoke(Carbon $startedAt, InputInterface $input, int $exitCode): void
+    public function __invoke(Carbon $startedAt, InputInterface $input, int $status): void
     {
         try {
-            if (! $this->app->runningInConsole()) {
-                return;
-            }
-
             $this->sensor->stage(ExecutionStage::End);
-            $this->sensor->command($input, $exitCode);
-            $this->ingest->write($this->state->records->flush());
+        } catch (Throwable $e) {
+            Log::critical('[nightwatch] '.$e->getMessage());
+        }
+
+        try {
+            $this->sensor->command($input, $status);
+        } catch (Throwable $e) {
+            Log::critical('[nightwatch] '.$e->getMessage());
+        }
+
+        try {
+            $this->ingest->write($this->commandState->records->flush());
         } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }
