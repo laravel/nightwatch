@@ -45,9 +45,7 @@ function executionState(): RequestState|CommandState {
 
 function setExecutionStart(CarbonImmutable $timestamp): void
 {
-    $state = executionState();
-
-    match ($state::class) {
+    match (executionState()::class) {
         RequestState::class => setRequestStart($timestamp),
         CommandState::class => setCommandStart($timestamp),
     };
