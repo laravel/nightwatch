@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
@@ -12,7 +11,6 @@ use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
-use RuntimeException;
 
 /**
  * @internal
@@ -20,8 +18,6 @@ use RuntimeException;
 final class JobAttemptSensor
 {
     use NormalizesQueue;
-
-    private ?float $startTime = null;
 
     /**
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
@@ -35,7 +31,7 @@ final class JobAttemptSensor
         //
     }
 
-    public function __invoke(JobProcessing|JobProcessed|JobReleasedAfterException|JobFailed $event): void
+    public function __invoke(JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
         if ($event->connectionName === 'sync') {
             return;
@@ -43,19 +39,8 @@ final class JobAttemptSensor
 
         $now = $this->clock->microtime();
 
-        // TODO: Listen for `JobProcessing` or `JobPopped` event to reset the CommandState.
-        if ($event::class === JobProcessing::class) {
-            $this->startTime = $now;
-
-            return;
-        }
-
-        if ($this->startTime === null) {
-            throw new RuntimeException('No start time found for ['.$event::class.'].');
-        }
-
         $this->executionState->records->write(new JobAttempt(
-            timestamp: $this->startTime,
+            timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', $event->job->resolveName()),
@@ -72,7 +57,7 @@ final class JobAttemptSensor
                 JobReleasedAfterException::class => 'released',
                 JobFailed::class => 'failed',
             },
-            duration: (int) round(($now - $this->startTime) * 1_000_000),
+            duration: (int) round(($now - $this->executionState->timestamp) * 1_000_000),
             exceptions: $this->executionState->exceptions,
             logs: $this->executionState->logs,
             queries: $this->executionState->queries,

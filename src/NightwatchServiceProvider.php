@@ -15,29 +15,21 @@ use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Illuminate\Console\Application as Artisan;
-use Illuminate\Console\Events\CommandFinished;
+use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Config\Repository;
-use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Illuminate\Database\Events\QueryExecuted;
-use Illuminate\Foundation\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSent;
-use Illuminate\Queue\Events\JobFailed;
-use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobQueued;
-use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Env;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -47,10 +39,10 @@ use Laravel\Nightwatch\Factories\AgentFactory;
 use Laravel\Nightwatch\Factories\LocalIngestFactory;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
+use Laravel\Nightwatch\Hooks\CommandStartingListener;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
-use Laravel\Nightwatch\Hooks\JobAttemptListener;
 use Laravel\Nightwatch\Hooks\JobQueuedListener;
 use Laravel\Nightwatch\Hooks\MessageSentListener;
 use Laravel\Nightwatch\Hooks\NotificationSentListener;
@@ -65,8 +57,6 @@ use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Symfony\Component\Console\Input\InputInterface;
-use Throwable;
 
 use function class_exists;
 use function defined;
@@ -268,16 +258,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         $events->listen(JobQueued::class, (new JobQueuedListener($sensor))(...));
 
         /**
-         * @see \Laravel\Nightwatch\Records\JobAttempt
-         */
-        $events->listen([
-            JobProcessing::class,
-            JobProcessed::class,
-            JobReleasedAfterException::class,
-            JobFailed::class
-        ], (new JobAttemptListener($sensor))(...));
-
-        /**
          * @see \Laravel\Nightwatch\Records\Notification
          */
         $events->listen(NotificationSent::class, (new NotificationSentListener($sensor))(...));
@@ -358,37 +338,6 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->app->booted((new CommandBootedHandler($sensor))(...));
 
-        // TODO: Set terminating when event doesn't exist
-
-        $events->listen(CommandFinished::class, static function ($event) use ($state) {
-            $state->name = $event->command;
-        });
-
-        $this->callAfterResolving(ConsoleKernelContract::class, function (ConsoleKernelContract $kernel, Application $app) use ($sensor, $state) {
-            try {
-                if (! $kernel instanceof ConsoleKernel) {
-                    return;
-                }
-
-                $kernel->whenCommandLifecycleIsLongerThan(-1, function (Carbon $startedAt, InputInterface $input, int $exitCode) use ($sensor, $state, $app) {
-                    try {
-                        if (! $this->app->runningInConsole()) {
-                            return;
-                        }
-
-                        $sensor->stage(ExecutionStage::End);
-                        $sensor->command($input, $exitCode);
-                        /** @var LocalIngest */
-                        $ingest = $app->make(LocalIngest::class);
-
-                        $ingest->write($state->records->flush());
-                    } catch (Throwable $e) {
-                        //
-                    }
-                });
-            } catch (Throwable $e) {
-                //
-            }
-        });
+        $events->listen(CommandStarting::class, (new CommandStartingListener($sensor, $state, $events))(...));
     }
 }
