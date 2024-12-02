@@ -8,13 +8,13 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobPopped;
-use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Support\Facades\Log;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\CommandState;
+use phpDocumentor\Reflection\Types\This;
 use Throwable;
 
 /**
@@ -25,6 +25,7 @@ final class CommandStartingListener
     public function __construct(
         private SensorManager $sensor,
         private CommandState $state,
+        private LocalIngest $ingest,
         private Dispatcher $events,
         private ConsoleKernelContract $kernel,
         private Application $app,
@@ -54,11 +55,7 @@ final class CommandStartingListener
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
          */
-        $this->events->listen([
-            JobProcessed::class,
-            JobReleasedAfterException::class,
-            JobFailed::class
-        ], (new JobAttemptListener($this->sensor))(...));
+        $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->sensor, $this->state, $this->ingest))(...));
     }
 
     private function registerCommandHooks(): void
@@ -74,6 +71,6 @@ final class CommandStartingListener
             return;
         }
 
-        $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->state, $this->app));
+        $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->state, $this->ingest, $this->app));
     }
 }

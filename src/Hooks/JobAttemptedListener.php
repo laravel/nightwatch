@@ -2,36 +2,31 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Carbon\Carbon;
-use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Contracts\LocalIngest;
-use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\CommandState;
-use Symfony\Component\Console\Input\InputInterface;
 use Throwable;
 
-final class CommandLifecycleIsLongerThanHandler
+/**
+ * @internal
+ */
+final class JobAttemptedListener
 {
     public function __construct(
         private SensorManager $sensor,
         private CommandState $state,
         private LocalIngest $ingest,
-        private Application $app,
     ) {
         //
     }
 
-    public function __invoke(Carbon $startedAt, InputInterface $input, int $exitCode): void
+    public function __invoke(JobAttempted $event): void
     {
         try {
-            if (! $this->app->runningInConsole()) {
-                return;
-            }
+            $this->sensor->jobAttempt($event);
 
-            $this->sensor->stage(ExecutionStage::End);
-            $this->sensor->command($input, $exitCode);
             $this->ingest->write($this->state->records->flush());
         } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());

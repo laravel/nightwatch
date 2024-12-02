@@ -5,7 +5,7 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Queue\Jobs\FakeJob;
-use Laravel\Nightwatch\Hooks\JobAttemptListener;
+use Laravel\Nightwatch\Hooks\JobAttemptedListener;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
@@ -22,7 +22,7 @@ it('gracefully handles exceptions', function () {
             throw new RuntimeException('Whoops!');
         }
     };
-    $handler = new JobAttemptListener($sensor);
+    $handler = new JobAttemptedListener($sensor);
 
     $handler(new JobProcessed('redis', new FakeJob));
 

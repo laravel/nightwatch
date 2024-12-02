@@ -8,10 +8,8 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSent;
-use Illuminate\Queue\Events\JobFailed;
-use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobQueued;
-use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
@@ -177,7 +175,7 @@ class SensorManager
         $sensor($event);
     }
 
-    public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
+    public function jobAttempt(JobAttempted $event): void
     {
         $sensor = $this->jobAttemptSensor ??= new JobAttemptSensor(
             executionState: $this->executionState,

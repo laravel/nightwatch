@@ -2,9 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Illuminate\Queue\Events\JobFailed;
-use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Queue\Events\JobReleasedAfterException;
+use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Support\Facades\Context;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
@@ -32,7 +30,7 @@ final class JobAttemptSensor
         //
     }
 
-    public function __invoke(JobProcessed|JobReleasedAfterException|JobFailed $event): void
+    public function __invoke(JobAttempted $event): void
     {
         if ($event->connectionName === 'sync') {
             return;
@@ -53,10 +51,10 @@ final class JobAttemptSensor
             name: $event->job->resolveName(),
             connection: $event->job->getConnectionName(),
             queue: $this->normalizeQueue($event->job->getConnectionName(), $event->job->getQueue()),
-            status: match ($event::class) {
-                JobProcessed::class => 'processed',
-                JobReleasedAfterException::class => 'released',
-                JobFailed::class => 'failed',
+            status: match (true) {
+                $event->successful() => 'processed',
+                $event->job->isReleased() => 'released',
+                $event->job->hasFailed() => 'failed',
             },
             duration: (int) round(($now - $this->executionState->timestamp) * 1_000_000),
             exceptions: $this->executionState->exceptions,
