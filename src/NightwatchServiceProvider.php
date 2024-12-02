@@ -200,14 +200,14 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Clock */
         $clock = $this->app->instance(Clock::class, new Clock);
 
+        $state = $this->executionState();
+
         /** @var Location */
         $location = $this->app->instance(Location::class, new Location(
             $this->app->basePath(), $this->app->publicPath(),
         ));
 
         $userProvider = new UserProvider($auth);
-
-        $state = $this->executionState();
 
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
