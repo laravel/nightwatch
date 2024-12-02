@@ -78,8 +78,42 @@ it('can ingest commands', function () {
 it('filters out the list command')->todo();
 it('filters out the queue:work command')->todo();
 
-it('handles commands run via fuzzy matching, e.g., "build" and not "app:build"')->todo();
+it('modifies status code to value in range of 0-255', function () {
+    $ingest = fakeIngest();
+    $status = [
+        -1,
+        0,
+        1,
+        254,
+        255,
+        256,
+    ];
+    Artisan::command('app:build {destination} {--force} {--compress}', function () use (&$status) {
+        return array_shift($status);
+    });
 
-it('handles commands run with confirmation, e.g., "gelp" and not "help"')->todo();
+    $run = function () {
+        $status = Artisan::handle($input = new StringInput('app:build path/to/output --force'));
+        Artisan::terminate($input, $status);
 
-it('handles commands called within a request')->todo();
+        return $status;
+    };
+
+    expect($run())->toBe(-1);
+    $ingest->assertLatestWrite('command:0.exit_code', 255);
+
+    expect($run())->toBe(0);
+    $ingest->assertLatestWrite('command:0.exit_code', 0);
+
+    expect($run())->toBe(1);
+    $ingest->assertLatestWrite('command:0.exit_code', 1);
+
+    expect($run())->toBe(254);
+    $ingest->assertLatestWrite('command:0.exit_code', 254);
+
+    expect($run())->toBe(255);
+    $ingest->assertLatestWrite('command:0.exit_code', 255);
+
+    expect($run())->toBe(256);
+    $ingest->assertLatestWrite('command:0.exit_code', 255);
+});

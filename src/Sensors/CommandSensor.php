@@ -30,6 +30,10 @@ final class CommandSensor
         /** @var string */
         $name = $this->executionState->name;
 
+        if ($exitCode < 0 || $exitCode > 255) {
+            $exitCode = 255;
+        }
+
         $this->executionState->records->write(new Command(
             timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
@@ -41,7 +45,6 @@ final class CommandSensor
             command: $input instanceof ArgvInput
                 ? implode(' ', $input->getRawTokens())
                 : (string) $input,
-            // TODO modulo
             exit_code: $exitCode,
             duration: array_sum($this->executionState->stageDurations),
             bootstrap: $this->executionState->stageDurations[ExecutionStage::Bootstrap->value],
