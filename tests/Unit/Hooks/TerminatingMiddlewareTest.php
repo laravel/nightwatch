@@ -27,7 +27,7 @@ it('gracefully handles exceptions', function () {
             throw new RuntimeException('Whoops!');
         }
     };
-    $middleware = new TerminatingMiddleware($sensor, app(RequestState::class));
+    $middleware = new TerminatingMiddleware($sensor);
     $request = Request::create('/test');
     $nextCalledWith = null;
     $next = function ($request) use (&$nextCalledWith) {
@@ -61,7 +61,7 @@ it('handles response types that laravel does not wrap', function () {
             throw new RuntimeException('Whoops!');
         }
     };
-    $middleware = new TerminatingMiddleware($sensor, app(RequestState::class));
+    $middleware = new TerminatingMiddleware($sensor);
     $request = Request::create('/test');
     $nextCalledWith = null;
     $next = function ($request) use (&$nextCalledWith) {

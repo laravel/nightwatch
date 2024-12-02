@@ -41,6 +41,7 @@ final class CommandSensor
             command: $input instanceof ArgvInput
                 ? implode(' ', $input->getRawTokens())
                 : (string) $input,
+            // TODO modulo
             exit_code: $exitCode,
             duration: array_sum($this->executionState->stageDurations),
             bootstrap: $this->executionState->stageDurations[ExecutionStage::Bootstrap->value],

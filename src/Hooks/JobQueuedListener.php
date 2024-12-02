@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Exception;
 use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\SensorManager;
 
 /**
@@ -21,7 +22,7 @@ final class JobQueuedListener
         try {
             $this->sensor->queuedJob($event);
         } catch (Exception $e) {
-            //
+            Log::critical('[nightwatch] '.$e->getMessage());
         }
     }
 }

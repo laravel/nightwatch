@@ -17,10 +17,8 @@ use Illuminate\Cache\Events\WritingManyKeys;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Contracts\Config\Repository;
-use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernelContract;
@@ -43,7 +41,8 @@ use Laravel\Nightwatch\Factories\LocalIngestFactory;
 use Laravel\Nightwatch\Hooks\ArtisanStartingHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
-use Laravel\Nightwatch\Hooks\CommandLifecycleIsLongerThanHandler;
+use Laravel\Nightwatch\Hooks\CommandFinishedListener;
+use Laravel\Nightwatch\Hooks\ConsoleKernelResolvedHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
@@ -61,7 +60,6 @@ use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Throwable;
 
 use function class_exists;
 use function defined;
@@ -293,6 +291,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->app->booted((new RequestBootedHandler($sensor))(...));
 
         /**
+         * @see \Laravel\Nightwatch\Records\Request
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Contracts\LocalIngest
@@ -334,23 +333,19 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->app->booted((new CommandBootedHandler($sensor))(...));
 
-        // TODO: Set terminating when event doesn't exist
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         * @see \Laravel\Nightwatch\ExecutionStage::End
+         * @see \Laravel\Nightwatch\Contracts\LocalIngest
+         */
+        $events->listen(CommandFinished::class, (new CommandFinishedListener($sensor, $state))(...));
 
-        $events->listen(CommandFinished::class, static function ($event) use ($state) {
-            $state->name = $event->command;
-        });
-
-        $this->callAfterResolving(ConsoleKernelContract::class, static function (ConsoleKernelContract $kernel, Application $app) use ($sensor, $state) {
-            try {
-                if (! $kernel instanceof ConsoleKernel) {
-                    return;
-                }
-
-                $kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($sensor, $state, $app));
-            } catch (Throwable $e) {
-                //
-            }
-        });
+        /**
+         * @see \Laravel\Nightwatch\Records\Command
+         * @see \Laravel\Nightwatch\ExecutionStage::End
+         * @see \Laravel\Nightwatch\Contracts\LocalIngest
+         */
+        $this->callAfterResolving(ConsoleKernelContract::class, (new ConsoleKernelResolvedHandler($sensor, $state))(...));
     }
 
     private function executionState(): RequestState|CommandState
