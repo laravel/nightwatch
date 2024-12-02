@@ -48,7 +48,7 @@ it('can ingest commands', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            '_group' => md5('app:build'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'class' => 'Illuminate\Foundation\Console\ClosureCommand',
             'name' => 'app:build',

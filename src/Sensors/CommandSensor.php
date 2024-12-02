@@ -35,14 +35,16 @@ final class CommandSensor
             $class = $this->executionState->artisan->get($this->executionState->name)::class;
         }
 
+        $name = $this->executionState->name ?? '';
+
         $this->executionState->records->write(new Command(
             timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('sha256', ''),
+            _group: hash('md5', $name),
             trace_id: $this->executionState->trace,
             class: $class ?? '',
-            name: $this->executionState->name ?? '',
+            name: $name,
             command: $input instanceof ArgvInput
                 ? implode(' ', $input->getRawTokens())
                 : (string) $input,
