@@ -27,10 +27,12 @@ pest()->extends(Tests\TestCase::class)->beforeEach(function () {
 
 function forceRequestExecutionState(): void {
     Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
+    Env::getRepository()->clear('NIGHTWATCH_FORCE_COMMAND');
 }
 
 function forceCommandExecutionState(): void {
     Env::getRepository()->set('NIGHTWATCH_FORCE_COMMAND', '1');
+    Env::getRepository()->clear('NIGHTWATCH_FORCE_REQUEST');
 }
 
 function executionState(): RequestState|CommandState {
