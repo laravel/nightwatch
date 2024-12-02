@@ -329,7 +329,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         });
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
+         * @see \Laravel\Nightwatch\ExecutionStage::Action
          */
         $this->app->booted((new CommandBootedHandler($sensor))(...));
 
