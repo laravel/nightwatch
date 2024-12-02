@@ -45,11 +45,11 @@ final class HttpIngestFactory
 
         $client = new HttpClient((new Browser($connector, $this->loop))
             ->withTimeout($this->config['ingests']['http']['timeout'] ?? 3.0)
-            ->withHeader('User-Agent', 'NightwatchAgent/1')
-            ->withHeader('Content-Type', 'application/octet-stream')
-            ->withHeader('Content-Encoding', 'gzip')
+            ->withHeader('user-agent', 'NightwatchAgent/1')
+            ->withHeader('content-type', 'application/octet-stream')
+            ->withHeader('content-encoding', 'gzip')
             // TODO this should be "env" id
-            ->withHeader('Nightwatch-App-Id', $this->config['env_id'] ?? '')
+            ->withHeader('nightwatch-app-id', $this->config['env_id'] ?? '')
             ->withBase($this->config['ingests']['http']['uri'] ?? ''), $this->debug ? '?debug=1' : '');
 
         return new HttpIngest($client, $this->clock, $this->config['ingests']['http']['connection_limit'] ?? 2);
