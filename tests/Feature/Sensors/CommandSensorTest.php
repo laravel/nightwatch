@@ -24,7 +24,7 @@ beforeEach(function () {
     setPeakMemory(1234);
     setTraceId('00000000-0000-0000-0000-000000000000');
     setExecutionId('00000000-0000-0000-0000-000000000001');
-    setCommandStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 });
 
 it('can ingest commands', function () {

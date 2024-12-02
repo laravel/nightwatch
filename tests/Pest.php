@@ -43,6 +43,16 @@ function executionState(): RequestState|CommandState {
     };
 }
 
+function setExecutionStart(CarbonImmutable $timestamp): void
+{
+    $state = executionState();
+
+    match ($state::class) {
+        RequestState::class => setRequestStart($timestamp),
+        CommandState::class => setCommandStart($timestamp),
+    };
+}
+
 function setRequestStart(CarbonImmutable $timestamp): void
 {
     syncClock($timestamp);
