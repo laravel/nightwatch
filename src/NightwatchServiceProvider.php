@@ -24,6 +24,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Client\Factory as Http;
+use Illuminate\Log\Context\Repository as ContextRepository;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Queue\Events\JobQueued;
@@ -184,6 +185,9 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var AuthManager */
         $auth = $this->app->make(AuthManager::class);
 
+        /** @var ContextRepository */
+        $context = $this->app->make(ContextRepository::class);
+
         /** @var Clock */
         $clock = $this->app->instance(Clock::class, new Clock);
 
@@ -213,6 +217,8 @@ final class NightwatchServiceProvider extends ServiceProvider
                 server: $this->nightwatchConfig['server'] ?? '',
             ));
         }
+
+        $context->addHidden('nightwatch_trace_id', $state->trace);
 
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(

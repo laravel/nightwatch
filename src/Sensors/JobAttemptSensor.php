@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobReleasedAfterException;
+use Illuminate\Support\Facades\Context;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
 use Laravel\Nightwatch\Records\JobAttempt;
@@ -44,7 +45,7 @@ final class JobAttemptSensor
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', $event->job->resolveName()),
-            trace_id: $this->executionState->trace, // TODO: Retrieve from job payload
+            trace_id: Context::getHidden('nightwatch_trace_id'),
             user: $this->user->id(),
             job_id: $event->job->uuid(),
             attempt_id: (string) Str::uuid(),
