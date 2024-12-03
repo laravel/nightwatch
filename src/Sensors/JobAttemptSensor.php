@@ -55,9 +55,9 @@ final class JobAttemptSensor
             connection: $event->job->getConnectionName(),
             queue: $this->normalizeQueue($event->job->getConnectionName(), $event->job->getQueue()),
             status: match (true) { // @phpstan-ignore match.unhandled
-                $event->successful() => 'processed',
                 $event->job->isReleased() => 'released',
                 $event->job->hasFailed() => 'failed',
+                default => 'processed',
             },
             duration: (int) round(($now - $this->executionState->timestamp) * 1_000_000),
             exceptions: $this->executionState->exceptions,
