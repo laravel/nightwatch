@@ -12,7 +12,7 @@ use Throwable;
  */
 final class JobPoppedListener
 {
-    public function __construct(private CommandState $state)
+    public function __construct(private CommandState $executionState)
     {
         //
     }
@@ -20,7 +20,7 @@ final class JobPoppedListener
     public function __invoke(JobPopped $event): void
     {
         try {
-            $this->state->prepareForNextJobAttempt();
+            $this->executionState->prepareForNextJobAttempt();
         } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }

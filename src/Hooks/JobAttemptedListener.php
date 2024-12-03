@@ -16,7 +16,7 @@ final class JobAttemptedListener
 {
     public function __construct(
         private SensorManager $sensor,
-        private CommandState $state,
+        private CommandState $executionState,
         private LocalIngest $ingest,
     ) {
         //
@@ -27,7 +27,7 @@ final class JobAttemptedListener
         try {
             $this->sensor->jobAttempt($event);
 
-            $this->ingest->write($this->state->records->flush());
+            $this->ingest->write($this->executionState->records->flush());
         } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }

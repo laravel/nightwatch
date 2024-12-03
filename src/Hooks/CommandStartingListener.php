@@ -22,7 +22,7 @@ final class CommandStartingListener
 {
     public function __construct(
         private SensorManager $sensor,
-        private CommandState $state,
+        private CommandState $executionState,
         private LocalIngest $ingest,
         private Dispatcher $events,
         private ConsoleKernelContract $kernel,
@@ -45,14 +45,14 @@ final class CommandStartingListener
 
     private function registerJobHooks(): void
     {
-        $this->state->source = 'job';
+        $this->executionState->source = 'job';
 
-        $this->events->listen(JobPopped::class, (new JobPoppedListener($this->state))(...));
+        $this->events->listen(JobPopped::class, (new JobPoppedListener($this->executionState))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
          */
-        $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->sensor, $this->state, $this->ingest))(...));
+        $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->sensor, $this->executionState, $this->ingest))(...));
     }
 
     private function registerCommandHooks(): void
@@ -60,7 +60,7 @@ final class CommandStartingListener
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
-        $this->events->listen(CommandFinished::class, (new CommandFinishedListener($this->sensor, $this->state))(...));
+        $this->events->listen(CommandFinished::class, (new CommandFinishedListener($this->sensor, $this->executionState))(...));
 
         if (! $this->kernel instanceof ConsoleKernel) {
             return;
@@ -69,6 +69,6 @@ final class CommandStartingListener
         // TODO Check this isn't a memory leak in Octane.
         // TODO Check if we can cache this handler between requests on Octane. Same goes for other
         // sub-handlers.
-        $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->state, $this->ingest));
+        $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->executionState, $this->ingest));
     }
 }
