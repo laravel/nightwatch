@@ -24,7 +24,6 @@ it('gracefully handles exceptions', function () {
         }
     };
 
-    $ingest = new NullIngest;
     $state = new CommandState(
         timestamp: microtime(true),
         trace: (string) Str::uuid(),
@@ -33,6 +32,7 @@ it('gracefully handles exceptions', function () {
         currentExecutionStageStartedAtMicrotime: microtime(true),
         clock: new Clock,
     );
+    $ingest = new NullIngest;
 
     $handler = new JobAttemptedListener($sensor, $state, $ingest);
 
