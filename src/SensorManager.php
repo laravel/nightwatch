@@ -54,7 +54,6 @@ class SensorManager
         private RequestState|CommandState $executionState,
         private Clock $clock,
         private Location $location,
-        private UserProvider $user,
         private Repository $config,
     ) {
         //
@@ -74,7 +73,6 @@ class SensorManager
     {
         $sensor = new RequestSensor(
             requestState: $this->executionState, // @phpstan-ignore argument.type
-            user: $this->user,
         );
 
         $sensor($request, $response);
@@ -98,7 +96,6 @@ class SensorManager
             clock: $this->clock,
             executionState: $this->executionState,
             location: $this->location,
-            user: $this->user,
         );
 
         $sensor($event, $trace);
@@ -109,7 +106,6 @@ class SensorManager
         $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
             clock: $this->clock,
             executionState: $this->executionState,
-            user: $this->user,
         );
 
         $sensor($event);
@@ -119,7 +115,6 @@ class SensorManager
     {
         $sensor = $this->mailSensor ??= new MailSensor(
             executionState: $this->executionState,
-            user: $this->user,
             clock: $this->clock,
         );
 
@@ -130,7 +125,6 @@ class SensorManager
     {
         $sensor = $this->notificationSensor ??= new NotificationSensor(
             executionState: $this->executionState,
-            user: $this->user,
             clock: $this->clock,
         );
 
@@ -141,7 +135,6 @@ class SensorManager
     {
         $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
             executionState: $this->executionState,
-            user: $this->user,
         );
 
         $sensor($startMicrotime, $endMicrotime, $request, $response);
@@ -153,7 +146,6 @@ class SensorManager
             clock: $this->clock,
             executionState: $this->executionState,
             location: $this->location,
-            user: $this->user,
         );
 
         $sensor($e);
@@ -163,7 +155,6 @@ class SensorManager
     {
         $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
             executionState: $this->executionState,
-            user: $this->user,
             clock: $this->clock,
             connectionConfig: $this->config->all()['queue']['connections'] ?? [],
         );

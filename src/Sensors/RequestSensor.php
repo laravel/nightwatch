@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\UserProvider;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Exception\UnexpectedValueException;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,7 +29,6 @@ final class RequestSensor
 {
     public function __construct(
         private RequestState $requestState,
-        private UserProvider $user,
     ) {
         //
     }
@@ -67,7 +65,7 @@ final class RequestSensor
             server: $this->requestState->server,
             _group: hash('md5', implode('|', $routeMethods).",{$routeDomain},{$routePath}"),
             trace_id: $this->requestState->trace,
-            user: $this->user->id(),
+            user: $this->requestState->user->id(),
             method: $request->getMethod(),
             url: $request->getSchemeAndHttpHost().$request->getBaseUrl().$request->getPathInfo().(strlen($query) > 0 ? "?{$query}" : ''),
             route_name: $route?->getName() ?? '',

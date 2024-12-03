@@ -7,7 +7,6 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\UserProvider;
 
 use function count;
 use function hash;
@@ -19,7 +18,6 @@ final class MailSensor
 {
     public function __construct(
         private RequestState|CommandState $executionState,
-        private UserProvider $user,
         private Clock $clock,
     ) {
         //
@@ -41,7 +39,7 @@ final class MailSensor
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
             execution_stage: $this->executionState->stage,
-            user: $this->user->id(),
+            user: $this->executionState->user->id(),
             mailer: $event->data['mailer'] ?? '',
             class: $class,
             subject: $event->message->getSubject() ?? '',

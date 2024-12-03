@@ -8,7 +8,6 @@ use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\UserProvider;
 
 use function hash;
 use function round;
@@ -22,7 +21,6 @@ final class QuerySensor
         private Clock $clock,
         private RequestState|CommandState $executionState,
         private Location $location,
-        private UserProvider $user,
     ) {
         //
     }
@@ -46,7 +44,7 @@ final class QuerySensor
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
             execution_stage: $this->executionState->stage,
-            user: $this->user->id(),
+            user: $this->executionState->user->id(),
             sql: $event->sql,
             file: $file ?? '',
             line: $line ?? 0,

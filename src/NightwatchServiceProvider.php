@@ -202,9 +202,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Dispatcher */
         $events = $this->app->make(Dispatcher::class);
 
-        /** @var AuthManager */
-        $auth = $this->app->make(AuthManager::class);
-
         $state = $this->executionState();
 
         /** @var Location */
@@ -212,11 +209,9 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->app->basePath(), $this->app->publicPath(),
         ));
 
-        $userProvider = new UserProvider($auth);
-
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
-            $state, $this->clock, $location, $userProvider, $this->config
+            $state, $this->clock, $location, $this->config
         ));
 
         //
@@ -297,8 +292,6 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->app->booted((new RequestBootedHandler($sensor))(...));
 
-        $events->listen(Logout::class, (new LogoutListener($userProvider))(...));
-
         /**
          * @see \Laravel\Nightwatch\Records\Request
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
@@ -328,6 +321,11 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\ExecutionStage::Sending
          */
         $events->listen(RequestHandled::class, (new RequestHandledListener($sensor))(...));
+
+        /**
+         * @see \Laravel\Nightwatch\State\RequestState::$user
+         */
+        $events->listen(Logout::class, (new LogoutListener($state))(...));
     }
 
     private function registerConsoleHooks(Dispatcher $events, SensorManager $sensor, CommandState $state): void
@@ -358,6 +356,9 @@ final class NightwatchServiceProvider extends ServiceProvider
     private function executionState(): RequestState|CommandState
     {
         if ($this->isRequest) {
+            /** @var AuthManager */
+            $auth = $this->app->make(AuthManager::class);
+
             /** @var RequestState */
             $state = $this->app->instance(RequestState::class, new RequestState(
                 timestamp: $this->timestamp,
@@ -365,6 +366,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
                 server: $this->nightwatchConfig['server'] ?? '',
+                user: new UserProvider($auth),
             ));
         } else {
             /** @var CommandState */

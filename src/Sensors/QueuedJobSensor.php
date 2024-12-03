@@ -8,7 +8,6 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\UserProvider;
 use ReflectionClass;
 
 use function hash;
@@ -36,7 +35,6 @@ final class QueuedJobSensor
      */
     public function __construct(
         private RequestState|CommandState $executionState,
-        private UserProvider $user,
         private Clock $clock,
         private array $connectionConfig,
     ) {
@@ -62,7 +60,7 @@ final class QueuedJobSensor
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
-            user: $this->user->id(),
+            user: $this->executionState->user->id(),
             job_id: $event->payload()['uuid'],
             name: $name,
             connection: $event->connectionName,
