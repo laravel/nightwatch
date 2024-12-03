@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Types\Str;
 
 /**
@@ -15,6 +16,7 @@ final class CacheEvent
     public string $t = 'cache-event';
 
     /**
+     * @param  string|LazyValue<string>  $user
      * @param  'hit'|'miss'|'write'|'write-failure'|'delete'|'delete-failure'  $type
      */
     public function __construct(
@@ -26,7 +28,7 @@ final class CacheEvent
         public string $execution_source,
         public string $execution_id,
         public ExecutionStage $execution_stage,
-        public string $user,
+        public string|LazyValue $user,
         // --- //
         public string $store,
         public string $key,

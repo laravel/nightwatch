@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch;
 
 use Illuminate\Auth\AuthManager;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\ForgettingKey;
@@ -44,6 +45,7 @@ use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
 use Laravel\Nightwatch\Hooks\JobQueuedListener;
+use Laravel\Nightwatch\Hooks\LogoutListener;
 use Laravel\Nightwatch\Hooks\MessageSentListener;
 use Laravel\Nightwatch\Hooks\NotificationSentListener;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
@@ -305,6 +307,8 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\Records\Mail
          */
         $events->listen(MessageSent::class, (new MessageSentListener($sensor))(...));
+
+        $events->listen(Logout::class, (new LogoutListener($userProvider))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
