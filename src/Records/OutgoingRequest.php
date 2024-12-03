@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\LazyValue;
 
 /**
  * @internal
@@ -15,6 +16,8 @@ final class OutgoingRequest
 
     /**
      * TODO limit string length
+     *
+     * @param  string|LazyValue<string>  $user
      */
     public function __construct(
         public float $timestamp,
@@ -25,7 +28,7 @@ final class OutgoingRequest
         public string $execution_source,
         public string $execution_id,
         public ExecutionStage $execution_stage,
-        public string $user,
+        public string|LazyValue $user,
         // --- /
         public string $host,
         public string $method,

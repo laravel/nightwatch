@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Types\Str;
 
 /**
@@ -13,6 +14,9 @@ final class QueuedJob
 
     public string $t = 'queued-job';
 
+    /**
+     * @param  string|LazyValue<string>  $user
+     */
     public function __construct(
         public float $timestamp,
         public string $deploy,
@@ -21,7 +25,7 @@ final class QueuedJob
         public string $trace_id,
         public string $execution_source,
         public string $execution_id,
-        public string $user,
+        public string|LazyValue $user,
         // --- /
         public string $job_id,
         public string $name,
