@@ -18,7 +18,6 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\UserProvider;
 use RuntimeException;
 
 use function hash;
@@ -45,7 +44,6 @@ final class CacheEventSensor
     public function __construct(
         private Clock $clock,
         private RequestState|CommandState $executionState,
-        private UserProvider $user,
     ) {
         //
     }
@@ -87,7 +85,7 @@ final class CacheEventSensor
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
             execution_stage: $this->executionState->stage,
-            user: $this->user->id(),
+            user: $this->executionState->user->id(),
             store: $event->storeName ?? '',
             key: $event->key,
             type: $type,

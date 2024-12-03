@@ -8,7 +8,6 @@ use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
-use Laravel\Nightwatch\UserProvider;
 
 use function hash;
 use function str_contains;
@@ -20,7 +19,6 @@ final class NotificationSensor
 {
     public function __construct(
         private RequestState|CommandState $executionState,
-        private UserProvider $user,
         private Clock $clock,
     ) {
         //
@@ -47,7 +45,7 @@ final class NotificationSensor
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
             execution_stage: $this->executionState->stage,
-            user: $this->user->id(),
+            user: $this->executionState->user->id(),
             channel: $event->channel,
             class: $class,
             duration: 0, // TODO
