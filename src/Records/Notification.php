@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\LazyValue;
 
 /**
  * @internal
@@ -13,6 +14,9 @@ final class Notification
 
     public string $t = 'notification';
 
+    /**
+     * @param  string|LazyValue<string>  $user
+     */
     public function __construct(
         public float $timestamp,
         public string $deploy,
@@ -22,7 +26,7 @@ final class Notification
         public string $execution_source,
         public string $execution_id,
         public ExecutionStage $execution_stage,
-        public string $user,
+        public string|LazyValue $user,
         // --- //
         public string $channel,
         public string $class,
