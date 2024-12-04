@@ -33,6 +33,7 @@ use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Env;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\Agent;
@@ -62,6 +63,7 @@ use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Throwable;
 
 use function class_exists;
 use function defined;
@@ -102,30 +104,38 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        // We capture this as early as possible in case the the constant and
-        // server variable are not defined.
-        $this->timestamp = match (true) {
-            defined('LARAVEL_START') => LARAVEL_START,
-            default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
-        };
+        try {
+            // We capture this as early as possible in case the the constant and
+            // server variable are not defined.
+            $this->timestamp = match (true) {
+                defined('LARAVEL_START') => LARAVEL_START,
+                default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
+            };
 
-        $this->registerConfig();
-        $this->registerBindings();
+            $this->registerConfig();
+            $this->registerBindings();
+        } catch (Throwable $e) {
+            Log::critical('[nightwatch] '.$e->getMessage());
+        }
     }
 
     public function boot(): void
     {
-        if ($this->app->runningInConsole()) {
-            $this->registerPublications();
-            $this->registerCommands();
-        }
+        try {
+            if ($this->app->runningInConsole()) {
+                $this->registerPublications();
+                $this->registerCommands();
+            }
 
-        if (! ($this->nightwatchConfig['enabled'] ?? true)) {
-            return;
-        }
+            if (! ($this->nightwatchConfig['enabled'] ?? true)) {
+                return;
+            }
 
-        $this->determineExecutionType();
-        $this->registerHooks();
+            $this->determineExecutionType();
+            $this->registerHooks();
+        } catch (Throwable $e) {
+            Log::critical('[nightwatch] '.$e->getMessage());
+        }
     }
 
     private function determineExecutionType(): void
