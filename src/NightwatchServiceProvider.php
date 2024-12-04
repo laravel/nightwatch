@@ -33,6 +33,7 @@ use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\Agent;
@@ -97,29 +98,37 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        // We capture this as early as possible in case the the constant and
-        // server variable are not defined.
-        $this->timestamp = match (true) {
-            defined('LARAVEL_START') => LARAVEL_START,
-            default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
-        };
+        try {
+            // We capture this as early as possible in case the the constant and
+            // server variable are not defined.
+            $this->timestamp = match (true) {
+                defined('LARAVEL_START') => LARAVEL_START,
+                default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
+            };
 
-        $this->registerConfig();
-        $this->registerBindings();
+            $this->registerConfig();
+            $this->registerBindings();
+        } catch (Throwable $e) {
+            Log::critical('[nightwatch] '.$e->getMessage());
+        }
     }
 
     public function boot(): void
     {
-        if ($this->app->runningInConsole()) {
-            $this->registerPublications();
-            $this->registerCommands();
-        }
+        try {
+            if ($this->app->runningInConsole()) {
+                $this->registerPublications();
+                $this->registerCommands();
+            }
 
-        if (! ($this->nightwatchConfig['enabled'] ?? true)) {
-            return;
-        }
+            if (! ($this->nightwatchConfig['enabled'] ?? true)) {
+                return;
+            }
 
-        $this->registerHooks();
+            $this->registerHooks();
+        } catch (Throwable $e) {
+            Log::critical('[nightwatch] '.$e->getMessage());
+        }
     }
 
     private function registerConfig(): void
