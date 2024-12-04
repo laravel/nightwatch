@@ -36,13 +36,6 @@ beforeEach(function () {
     Config::set('queue.default', 'database');
 });
 
-// Ensure the following
-// 1. The trace id is set from the hidden context
-// 2. The source is set to 'job' in child records
-// 2. The attempt id is generated
-// 3. The records are written to the ingest
-// 4. The duration is captured in microseconds
-// 5. The command state is reset on each job attempt
 it('ingests processed job attempts', function () {
     ProcessedJob::dispatch();
 
