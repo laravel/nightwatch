@@ -7,6 +7,8 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -264,7 +266,14 @@ final class MyEvent
     use Dispatchable;
 }
 
-class MyQueuedMail extends Mailable implements ShouldQueue
+class MyQueuedMail extends Mailable
 {
-    //
+    public function content(): Content
+    {
+        travelTo(now()->addMicroseconds(2500));
+
+        return new Content(
+            view: 'mail',
+        );
+    }
 }

@@ -33,7 +33,7 @@ final class CommandStartingListener
     public function __invoke(CommandStarting $event): void
     {
         try {
-            if ($event->command === 'queue:work') {
+            if (in_array($event->command, ['queue:work', 'queue:listen'])) {
                 $this->registerJobHooks();
             } else {
                 $this->registerCommandHooks();
