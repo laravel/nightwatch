@@ -81,7 +81,6 @@ final class CommandState
     public function prepareForNextJobAttempt(): void
     {
         $this->id = (string) Str::uuid();
-        $this->timestamp = $this->clock->microtime();
         $this->exceptions = 0;
         $this->logs = 0;
         $this->queries = 0;
@@ -94,5 +93,11 @@ final class CommandState
         $this->filesWritten = 0;
         $this->cacheEvents = 0;
         $this->hydratedModels = 0;
+        $this->records->flush();
+    }
+
+    public function resetTimestamp(): void
+    {
+        $this->timestamp = $this->clock->microtime();
     }
 }

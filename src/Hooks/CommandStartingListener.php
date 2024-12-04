@@ -8,7 +8,8 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Queue\Events\JobAttempted;
-use Illuminate\Queue\Events\JobPopped;
+use Illuminate\Queue\Events\JobPopping;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\SensorManager;
@@ -47,7 +48,9 @@ final class CommandStartingListener
     {
         $this->executionState->source = 'job';
 
-        $this->events->listen(JobPopped::class, (new JobPoppedListener($this->executionState))(...));
+        $this->events->listen(JobPopping::class, (new JobPoppingListener($this->executionState))(...));
+
+        $this->events->listen(JobProcessing::class, (new JobProcessingListener($this->executionState))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt

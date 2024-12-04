@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\UserController;
 use App\Jobs\MyJob;
 use App\Mail\MyMail;
 use App\Notifications\MyNotification;

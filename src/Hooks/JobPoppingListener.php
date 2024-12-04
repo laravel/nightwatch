@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Illuminate\Queue\Events\JobPopped;
+use Illuminate\Queue\Events\JobPopping;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
@@ -10,14 +10,14 @@ use Throwable;
 /**
  * @internal
  */
-final class JobPoppedListener
+final class JobPoppingListener
 {
     public function __construct(private CommandState $executionState)
     {
         //
     }
 
-    public function __invoke(JobPopped $event): void
+    public function __invoke(JobPopping $event): void
     {
         try {
             $this->executionState->prepareForNextJobAttempt();
