@@ -12,6 +12,7 @@ use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Records\Request;
 
+use function array_shift;
 use function count;
 use function json_encode;
 
@@ -27,6 +28,11 @@ class RecordsBuffer
 
     public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|Mail|Notification $record): void
     {
+        // TODO only for Forge
+        if (count($this->records) > 499) {
+            array_shift($this->records);
+        }
+
         $this->records[] = $record;
     }
 
