@@ -16,6 +16,8 @@ use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
+use function in_array;
+
 /**
  * @internal
  */
@@ -34,7 +36,7 @@ final class CommandStartingListener
     public function __invoke(CommandStarting $event): void
     {
         try {
-            if (in_array($event->command, ['queue:work', 'queue:listen'])) {
+            if (in_array($event->command, ['queue:work', 'queue:listen'], true)) {
                 $this->registerJobHooks();
             } else {
                 $this->registerCommandHooks();
