@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\NullUserProvider;
 use Laravel\Nightwatch\Types\Str;
 
 use function call_user_func;
@@ -63,6 +64,7 @@ final class CommandState
         public string $laravelVersion = Application::VERSION,
         public ?Artisan $artisan = null,
         public ?string $name = null,
+        public NullUserProvider $user = new NullUserProvider,
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);

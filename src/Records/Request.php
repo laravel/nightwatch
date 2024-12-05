@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Types\Str;
 
 /**
@@ -14,6 +15,7 @@ final class Request
     public string $t = 'request';
 
     /**
+     * @param  string|LazyValue<string>  $user
      * @param  list<string>  $route_methods
      */
     public function __construct(
@@ -22,7 +24,7 @@ final class Request
         public string $server,
         public string $_group,
         public string $trace_id,
-        public string $user,
+        public string|LazyValue $user,
         // --- //
         public string $method,
         public string $url,

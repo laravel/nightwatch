@@ -7,6 +7,7 @@ use Illuminate\Foundation\Application;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Types\Str;
+use Laravel\Nightwatch\UserProvider;
 
 use function call_user_func;
 use function memory_get_peak_usage;
@@ -36,6 +37,7 @@ final class RequestState
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
+        public UserProvider $user,
         public ExecutionStage $stage = ExecutionStage::Bootstrap,
         public array $stageDurations = [
             ExecutionStage::Bootstrap->value => 0,

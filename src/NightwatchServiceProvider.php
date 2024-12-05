@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch;
 
 use Illuminate\Auth\AuthManager;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\ForgettingKey;
@@ -33,6 +34,7 @@ use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Env;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\Agent;
@@ -47,6 +49,7 @@ use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
 use Laravel\Nightwatch\Hooks\JobQueuedListener;
+use Laravel\Nightwatch\Hooks\LogoutListener;
 use Laravel\Nightwatch\Hooks\MessageSentListener;
 use Laravel\Nightwatch\Hooks\NotificationSentListener;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
@@ -60,6 +63,7 @@ use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Throwable;
 
 use function class_exists;
 use function defined;
@@ -100,30 +104,38 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        // We capture this as early as possible in case the the constant and
-        // server variable are not defined.
-        $this->timestamp = match (true) {
-            defined('LARAVEL_START') => LARAVEL_START,
-            default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
-        };
+        try {
+            // We capture this as early as possible in case the the constant and
+            // server variable are not defined.
+            $this->timestamp = match (true) {
+                defined('LARAVEL_START') => LARAVEL_START,
+                default => $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true),
+            };
 
-        $this->registerConfig();
-        $this->registerBindings();
+            $this->registerConfig();
+            $this->registerBindings();
+        } catch (Throwable $e) {
+            Log::critical('[nightwatch] '.$e->getMessage());
+        }
     }
 
     public function boot(): void
     {
-        if ($this->app->runningInConsole()) {
-            $this->registerPublications();
-            $this->registerCommands();
-        }
+        try {
+            if ($this->app->runningInConsole()) {
+                $this->registerPublications();
+                $this->registerCommands();
+            }
 
-        if (! ($this->nightwatchConfig['enabled'] ?? true)) {
-            return;
-        }
+            if (! ($this->nightwatchConfig['enabled'] ?? true)) {
+                return;
+            }
 
-        $this->determineExecutionType();
-        $this->registerHooks();
+            $this->determineExecutionType();
+            $this->registerHooks();
+        } catch (Throwable $e) {
+            Log::critical('[nightwatch] '.$e->getMessage());
+        }
     }
 
     private function determineExecutionType(): void
@@ -200,9 +212,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Dispatcher */
         $events = $this->app->make(Dispatcher::class);
 
-        /** @var AuthManager */
-        $auth = $this->app->make(AuthManager::class);
-
         /** @var ContextRepository */
         $context = $this->app->make(ContextRepository::class);
 
@@ -215,11 +224,9 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $context->addHidden('nightwatch_trace_id', $state->trace);
 
-        $userProvider = new UserProvider($auth);
-
         /** @var SensorManager */
         $sensor = $this->app->instance(SensorManager::class, new SensorManager(
-            $state, $this->clock, $location, $userProvider, $this->config
+            $state, $this->clock, $location, $this->config
         ));
 
         //
@@ -329,6 +336,11 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\ExecutionStage::Sending
          */
         $events->listen(RequestHandled::class, (new RequestHandledListener($sensor))(...));
+
+        /**
+         * @see \Laravel\Nightwatch\State\RequestState::$user
+         */
+        $events->listen(Logout::class, (new LogoutListener($state))(...));
     }
 
     private function registerConsoleHooks(Dispatcher $events, SensorManager $sensor, CommandState $state): void
@@ -355,6 +367,9 @@ final class NightwatchServiceProvider extends ServiceProvider
     private function executionState(): RequestState|CommandState
     {
         if ($this->isRequest) {
+            /** @var AuthManager */
+            $auth = $this->app->make(AuthManager::class);
+
             /** @var RequestState */
             $state = $this->app->instance(RequestState::class, new RequestState(
                 timestamp: $this->timestamp,
@@ -362,6 +377,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
                 server: $this->nightwatchConfig['server'] ?? '',
+                user: new UserProvider($auth),
             ));
         } else {
             /** @var CommandState */
