@@ -9,7 +9,6 @@ use Laravel\Nightwatch\Concerns\NormalizesQueue;
 use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
-use Laravel\Nightwatch\UserProvider;
 
 use function hash;
 use function round;
@@ -26,7 +25,6 @@ final class JobAttemptSensor
      */
     public function __construct(
         private CommandState $executionState,
-        private UserProvider $user,
         private Clock $clock,
         private array $connectionConfig,
     ) {
@@ -47,14 +45,14 @@ final class JobAttemptSensor
             server: $this->executionState->server,
             _group: hash('md5', $event->job->resolveName()),
             trace_id: Context::getHidden('nightwatch_trace_id'), // @phpstan-ignore argument.type
-            user: $this->user->id(),
+            user: $this->executionState->user->id(),
             job_id: $event->job->uuid(), // @phpstan-ignore argument.type
             attempt_id: (string) Str::uuid(),
             attempt: $event->job->attempts(),
             name: $event->job->resolveName(),
             connection: $event->job->getConnectionName(),
             queue: $this->normalizeQueue($event->job->getConnectionName(), $event->job->getQueue()),
-            status: match (true) { // @phpstan-ignore match.unhandled
+            status: match (true) {
                 $event->job->isReleased() => 'released',
                 $event->job->hasFailed() => 'failed',
                 default => 'processed',
