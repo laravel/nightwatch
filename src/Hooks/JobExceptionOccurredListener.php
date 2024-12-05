@@ -12,7 +12,8 @@ use Throwable;
  */
 final class JobExceptionOccurredListener
 {
-    public function __construct(private SensorManager $sensor) {
+    public function __construct(private SensorManager $sensor)
+    {
         //
     }
 
