@@ -1,8 +1,11 @@
 <?php
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\Types\Str;
 
 it('gracefully handles exceptions', function () {
     $sensor = new class extends SensorManager
@@ -18,8 +21,18 @@ it('gracefully handles exceptions', function () {
             throw new RuntimeException('Whoops!');
         }
     };
+
+    $state = new CommandState(
+        timestamp: microtime(true),
+        trace: (string) Str::uuid(),
+        deploy: 'v1.0.0',
+        server: 'web-01',
+        currentExecutionStageStartedAtMicrotime: microtime(true),
+        clock: new Clock,
+    );
+
     $exceptionHandler = app(ExceptionHandler::class);
-    $handler = new ExceptionHandlerResolvedHandler($sensor);
+    $handler = new ExceptionHandlerResolvedHandler($sensor, $state);
     $handler($exceptionHandler);
     $exceptionHandler->report(new RuntimeException('Test'));
 
@@ -38,6 +51,14 @@ it('gracefully handles custom exception handlers', function () {
             $this->captured = true;
         }
     };
+    $state = new CommandState(
+        timestamp: microtime(true),
+        trace: (string) Str::uuid(),
+        deploy: 'v1.0.0',
+        server: 'web-01',
+        currentExecutionStageStartedAtMicrotime: microtime(true),
+        clock: new Clock,
+    );
     $exceptionHandler = new class implements ExceptionHandler
     {
         public function report(Throwable $e)
@@ -60,7 +81,7 @@ it('gracefully handles custom exception handlers', function () {
             //
         }
     };
-    $handler = new ExceptionHandlerResolvedHandler($sensor);
+    $handler = new ExceptionHandlerResolvedHandler($sensor, $state);
     $handler($exceptionHandler);
     $exceptionHandler->report(new RuntimeException('Test'));
 

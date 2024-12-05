@@ -260,7 +260,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\Records\Exception
          */
-        $this->callAfterResolving(ExceptionHandler::class, (new ExceptionHandlerResolvedHandler($sensor))(...));
+        $this->callAfterResolving(ExceptionHandler::class, (new ExceptionHandlerResolvedHandler($sensor, $state))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\QueuedJob
