@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Types\Str;
 
 /**
@@ -14,6 +15,7 @@ final class JobAttempt
     public string $t = 'job-attempt';
 
     /**
+     * @param  string|LazyValue<string>  $user
      * @param  'processed'|'released'|'failed'  $status
      */
     public function __construct(
@@ -22,7 +24,7 @@ final class JobAttempt
         public string $server,
         public string $_group,
         public string $trace_id,
-        public string $user,
+        public string|LazyValue $user,
         // --- /
         public string $job_id,
         public string $attempt_id,
