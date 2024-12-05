@@ -8,6 +8,7 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Queue\Events\JobAttempted;
+use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobPopping;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Log;
@@ -58,6 +59,11 @@ final class CommandStartingListener
          * @see \Laravel\Nightwatch\Records\JobAttempt
          */
         $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->sensor, $this->executionState, $this->ingest))(...));
+
+        /**
+         * @see \Laravel\Nightwatch\Records\Exception
+         */
+        $this->events->listen(JobExceptionOccurred::class, (new JobExceptionOccurredListener($this->sensor))(...));
     }
 
     private function registerCommandHooks(): void

@@ -142,7 +142,7 @@ it('ingests job failed job attempts', function () {
             'queue' => 'default',
             'status' => 'failed',
             'duration' => 2500,
-            'exceptions' => 0, // TODO: `exceptions` not incremented because JobAttemptedListener is called before Exception handler.
+            'exceptions' => 1,
             'logs' => 0,
             'queries' => 4, // Reserve and delete the job
             'lazy_loads' => 0,
