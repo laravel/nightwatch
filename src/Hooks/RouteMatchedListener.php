@@ -12,7 +12,8 @@ final class RouteMatchedListener
 {
     public function __invoke(RouteMatched $event): void
     {
-        $middleware = $event->route->action['middleware'] ?? [];
+        /** @var array<string> */
+        $middleware = $event->route->middleware();
 
         // TODO check this isn't a memory leak in Octane. When checking this one
         // remember that Laravel will automaticall deduplicate middleware, so you
