@@ -157,6 +157,8 @@ it('ingests job failed job attempts', function () {
             'peak_memory_usage' => 1234,
         ],
     ]);
+    $this->ingest->assertLatestWrite('exception:0.execution_source', 'job');
+    $this->ingest->assertLatestWrite('exception:0.execution_id', $this->executionId);
 });
 
 it('does not ingest jobs dispatched on the sync queue', function () {
@@ -166,6 +168,7 @@ it('does not ingest jobs dispatched on the sync queue', function () {
 });
 
 it('captures closure job', function () {
+    $line = __LINE__ + 1;
     dispatch(function () {
         travelTo(now()->addMicroseconds(2500));
     });
@@ -180,13 +183,13 @@ it('captures closure job', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => md5('Closure (JobAttemptSensorTest.php:169)'),
+            '_group' => md5("Closure (JobAttemptSensorTest.php:{$line})"),
             'trace_id' => $this->traceId,
             'user' => '',
             'job_id' => $this->jobId,
             'attempt_id' => $this->attemptId,
             'attempt' => 1,
-            'name' => 'Closure (JobAttemptSensorTest.php:169)',
+            'name' => "Closure (JobAttemptSensorTest.php:{$line})",
             'connection' => 'database',
             'queue' => 'default',
             'status' => 'processed',
