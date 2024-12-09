@@ -3,10 +3,12 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
-use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Contracts\RemoteIngest;
+use React\EventLoop\LoopInterface;
 use RuntimeException;
 
-final class LocalIngestFactory
+final class RemoteIngestFactory
 {
     /**
      * @param  array{
@@ -26,20 +28,23 @@ final class LocalIngestFactory
      *      }
      * }  $config
      */
-    public function __construct(private array $config)
-    {
+    public function __construct(
+        private LoopInterface $loop,
+        private Clock $clock,
+        private array $config,
+        private bool $debug,
+    ) {
         //
     }
 
-    public function __invoke(Application $app): LocalIngest
+    public function __invoke(Application $app): RemoteIngest
     {
-        $name = $this->config['local_ingest'] ?? 'socket';
+        $name = $this->config['remote_ingest'] ?? 'http';
 
         $factory = match ($name) {
-            'null' => new NullLocalIngestFactory,
-            'log' => new LogIngestFactory($this->config),
-            'socket' => new SocketIngestFactory($this->config),
-            default => throw new RuntimeException("Unknown local ingest [{$name}]."),
+            'null' => new NullRemoteIngestFactory,
+            'http' => new HttpIngestFactory($this->loop, $this->clock, $this->config, $this->debug),
+            default => throw new RuntimeException("Unknown remote ingest [{$name}]."),
         };
 
         return $factory($app);
