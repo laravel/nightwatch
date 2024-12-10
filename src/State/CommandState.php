@@ -13,6 +13,7 @@ use Laravel\Nightwatch\Types\Str;
 
 use function call_user_func;
 use function memory_get_peak_usage;
+use function memory_reset_peak_usage;
 
 /**
  * @internal
