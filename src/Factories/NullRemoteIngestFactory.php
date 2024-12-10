@@ -2,9 +2,9 @@
 
 namespace Laravel\Nightwatch\Factories;
 
-use Laravel\Nightwatch\Ingests\Local\NullIngest;
+use Laravel\Nightwatch\Ingests\Remote\NullIngest;
 
-final class NullIngestFactory
+final class NullRemoteIngestFactory
 {
     public function __invoke(): NullIngest
     {
