@@ -96,6 +96,8 @@ final class CommandState
         $this->cacheEvents = 0;
         $this->hydratedModels = 0;
         $this->records->flush();
+
+        memory_reset_peak_usage();
     }
 
     public function resetTimestamp(): void
