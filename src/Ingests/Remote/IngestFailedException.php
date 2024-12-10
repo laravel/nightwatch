@@ -21,7 +21,7 @@ final class IngestFailedException extends RuntimeException
 
             $message = (string) $this->response->getBody();
         } else {
-            $message = 'Unknown error.';
+            $message = $previous->getMessage();
         }
 
         parent::__construct("Took [{$this->duration}]s. {$message}", previous: $previous);
