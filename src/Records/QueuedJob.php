@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Types\Str;
 
@@ -25,6 +26,7 @@ final class QueuedJob
         public string $trace_id,
         public string $execution_source,
         public string $execution_id,
+        public ExecutionStage $execution_stage,
         public string|LazyValue $user,
         // --- /
         public string $job_id,
