@@ -3,6 +3,9 @@
 namespace Laravel\Nightwatch;
 
 use Illuminate\Cache\Events\CacheEvent;
+use Illuminate\Console\Events\ScheduledTaskFailed;
+use Illuminate\Console\Events\ScheduledTaskFinished;
+use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
@@ -20,6 +23,7 @@ use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
 use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\QueuedJobSensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
+use Laravel\Nightwatch\Sensors\ScheduledTaskSensor;
 use Laravel\Nightwatch\Sensors\StageSensor;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -53,6 +57,8 @@ class SensorManager
     private ?MailSensor $mailSensor;
 
     private ?StageSensor $stageSensor;
+
+    private ?ScheduledTaskSensor $scheduledTaskSensor;
 
     public function __construct(
         private RequestState|CommandState $executionState,
@@ -172,6 +178,16 @@ class SensorManager
             executionState: $this->executionState, // @phpstan-ignore argument.type
             clock: $this->clock,
             connectionConfig: $this->config->all()['queue']['connections'] ?? [],
+        );
+
+        $sensor($event);
+    }
+
+    public function scheduledTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
+    {
+        $sensor = $this->scheduledTaskSensor ??= new ScheduledTaskSensor(
+            executionState: $this->executionState,
+            clock: $this->clock,
         );
 
         $sensor($event);

@@ -81,7 +81,7 @@ final class CommandState
         return memory_get_peak_usage(true);
     }
 
-    public function prepareForNextJobAttempt(): void
+    public function prepareForNextExecution(): void
     {
         $this->id = (string) Str::uuid();
         $this->exceptions = 0;
@@ -99,6 +99,11 @@ final class CommandState
         $this->records->flush();
 
         memory_reset_peak_usage();
+    }
+
+    public function resetTraceId(): void
+    {
+        $this->trace = (string) Str::uuid();
     }
 
     public function resetTimestamp(): void
