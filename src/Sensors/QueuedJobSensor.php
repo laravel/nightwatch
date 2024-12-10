@@ -61,6 +61,7 @@ final class QueuedJobSensor
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
+            execution_stage: $this->executionState->stage,
             user: $this->user->id(),
             job_id: $event->payload()['uuid'],
             name: $name,
