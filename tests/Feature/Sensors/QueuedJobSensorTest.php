@@ -80,6 +80,7 @@ it('can ingest queued jobs', function () {
             'name' => 'MyJob',
             'connection' => 'database',
             'queue' => 'default',
+            'duration' => 0,
         ],
     ]);
 });
@@ -176,6 +177,7 @@ it('captures queued mail', function () {
         'name' => 'MyQueuedMail',
         'connection' => 'database',
         'queue' => 'default',
+        'duration' => 0,
     ]);
 });
 
