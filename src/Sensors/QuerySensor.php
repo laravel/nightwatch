@@ -10,6 +10,7 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 
 use function hash;
+use function preg_replace;
 use function round;
 
 /**
@@ -35,17 +36,19 @@ final class QuerySensor
 
         $this->executionState->queries++;
 
+        $sql = preg_replace('/in \([\d?\s,]+\)/', 'in (...?)', $event->sql) ?? $event->sql;
+
         $this->executionState->records->write(new Query(
             timestamp: $this->clock->microtime() - ($event->time / 1000),
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', "{$event->connectionName},{$event->sql}"),
+            _group: hash('md5', "{$event->connectionName},{$sql}"),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
             execution_stage: $this->executionState->stage,
             user: $this->executionState->user->id(),
-            sql: $event->sql,
+            sql: $sql,
             file: $file ?? '',
             line: $line ?? 0,
             duration: $durationInMicroseconds,
