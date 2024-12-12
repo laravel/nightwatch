@@ -24,6 +24,7 @@
     },
     "require-dev": {
         "mockery/mockery": "^1.6",
+        "mongodb/laravel-mongodb": "^5.1",
         "orchestra/pest-plugin-testbench": "^3.1",
         "orchestra/testbench": "^9.0",
         "pestphp/pest": "^3.0",

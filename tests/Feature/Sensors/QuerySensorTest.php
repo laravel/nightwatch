@@ -3,9 +3,15 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Env;
+use Illuminate\Database\MariaDbConnection;
+use Illuminate\Database\MySqlConnection;
+use Illuminate\Database\PostgresConnection;
+use Illuminate\Database\SQLiteConnection;
+use Illuminate\Database\SqlServerConnection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\SensorManager;
+use MongoDB\Laravel\Connection as MongoDbConnection;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\get;
@@ -22,11 +28,10 @@ beforeEach(function () {
     setTraceId('00000000-0000-0000-0000-000000000000');
     setExecutionId('00000000-0000-0000-0000-000000000001');
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
-
-    ignoreMigrationQueries();
 });
 
 it('can ingest queries', function () {
+    ignoreMigrationQueries();
     $ingest = fakeIngest();
     afterMigrations(fn () => prependListener(QueryExecuted::class, function ($event) {
         $event->time = 4.321;
@@ -76,6 +81,7 @@ it('can ingest queries', function () {
 });
 
 it('can captures the line and file', function () {
+    ignoreMigrationQueries();
     $ingest = fakeIngest();
 
     $line = null;
@@ -94,6 +100,7 @@ it('can captures the line and file', function () {
 })->skip('We have temporarily disabled debug_backtrace to reduce the memory impact');
 
 it('captures aggregate query data on the request', function () {
+    ignoreMigrationQueries();
     $ingest = fakeIngest();
     prependListener(QueryExecuted::class, function (QueryExecuted $event) {
         $event->time = 4.321;
@@ -115,6 +122,7 @@ it('captures aggregate query data on the request', function () {
 });
 
 it('always uses current time minus execution time for the timestamp', function () {
+    ignoreMigrationQueries();
     $ingest = fakeIngest();
     afterMigrations(fn () => prependListener(QueryExecuted::class, function (QueryExecuted $event) {
         $event->time = 4.321;
@@ -133,3 +141,47 @@ it('always uses current time minus execution time for the timestamp', function (
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('query:0.timestamp', 946688523.466665);
 });
+
+it('collapses variadic "where in" binding placeholders and raw integer values', function ($sql, $expected, $connection) {
+    $ingest = fakeIngest();
+    Route::get('/users', function () use ($sql, $connection) {
+        Event::dispatch(new QueryExecuted($sql, [], 1, $connection));
+    });
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('query:0.sql', $expected);
+})->with([
+    'mysql' => [
+        'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
+        'select * from `users` where `users`.`id` in (...?) and `id` in (...?)',
+        new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql'])
+    ],
+    'mariadb' => [
+        'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
+        'select * from `users` where `users`.`id` in (...?) and `id` in (...?)',
+        new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb'])
+    ],
+    'pgsql' => [
+        'select * from "users" where "users"."id" in (1, 2, 3) and "id" in (?, ?, ?)',
+        'select * from "users" where "users"."id" in (...?) and "id" in (...?)',
+        new PostgresConnection('test', config: ['name' => 'foo', 'driver' => 'pgsql'])
+    ],
+    'sqlite' => [
+        'select * from "users" where "users"."id" in (1, 2, 3) and "id" in (?, ?, ?)',
+        'select * from "users" where "users"."id" in (...?) and "id" in (...?)',
+        new SQLiteConnection('test', config: ['name' => 'foo', 'driver' => 'sqlite'])
+    ],
+    'sqlsrv' => [
+        'select * from [users] where [users].[id] in (1, 2, 3) and [id] in (?, ?, ?)',
+        'select * from [users] where [users].[id] in (...?) and [id] in (...?)',
+        new SqlServerConnection('test', config: ['name' => 'foo', 'driver' => 'sqlsrv'])
+    ],
+    'mongodb' => [
+        'some mongo query in (1, 2, 3) and [id] in (?, ?, ?)',
+        'some mongo query in (1, 2, 3) and [id] in (?, ?, ?)',
+        new MongoDbConnection(['name' => 'foo', 'driver' => 'mongodb', 'host' => 'localhost', 'database' => 'test'])
+    ],
+]);
