@@ -36,7 +36,14 @@ final class QuerySensor
 
         $this->executionState->queries++;
 
-        $sql = preg_replace('/in \([\d?\s,]+\)/', 'in (...?)', $event->sql) ?? $event->sql;
+        $sql = match ($event->connection->getDriverName()) {
+            'mariadb',
+            'mysql',
+            'pgsql',
+            'sqlite',
+            'sqlsrv' => preg_replace('/in \([\d?\s,]+\)/', 'in (...?)', $event->sql) ?? $event->sql,
+            default => $event->sql,
+        };
 
         $this->executionState->records->write(new Query(
             timestamp: $this->clock->microtime() - ($event->time / 1000),

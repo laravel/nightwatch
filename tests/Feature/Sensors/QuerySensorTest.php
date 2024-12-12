@@ -11,6 +11,7 @@ use Illuminate\Database\SqlServerConnection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use MongoDB\Laravel\Connection as MongoDbConnection;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\get;
@@ -177,5 +178,10 @@ it('collapses variadic "where in" binding placeholders and raw integer values', 
         'select * from [users] where [users].[id] in (1, 2, 3) and [id] in (?, ?, ?)',
         'select * from [users] where [users].[id] in (...?) and [id] in (...?)',
         new SqlServerConnection('test', config: ['name' => 'foo', 'driver' => 'sqlsrv'])
+    ],
+    'mongodb' => [
+        'some mongo query in (1, 2, 3) and [id] in (?, ?, ?)',
+        'some mongo query in (1, 2, 3) and [id] in (?, ?, ?)',
+        new MongoDbConnection(['name' => 'foo', 'driver' => 'mongodb', 'host' => 'localhost', 'database' => 'test'])
     ],
 ]);
