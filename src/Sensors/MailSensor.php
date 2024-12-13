@@ -27,7 +27,7 @@ final class MailSensor
     {
         $now = $this->clock->microtime();
 
-        if(isset($event->data['__laravel_notification'])){
+        if (isset($event->data['__laravel_notification'])) {
             return;
         }
 
