@@ -66,7 +66,7 @@ final class QuerySensor
         $sql = preg_replace('/in \([\d?\s,]+\)/', 'in (...?)', $event->sql) ?? $event->sql;
 
         if (str_contains($sql, 'insert')) {
-            $sql = preg_replace('/values [(?,\s\n)]+/i', 'values ...', $sql) ?? $sql;
+            $sql = preg_replace('/values [(?,\s)]+/', 'values ...', $sql) ?? $sql;
         }
 
         return hash('md5', "{$event->connectionName},{$sql}");
