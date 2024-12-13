@@ -72,7 +72,53 @@ it('ingests mails', function () {
     ]);
 });
 
+it('ingests markdown mailables', function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        Mail::to('phillip@laravel.com')->send(new MyMarkdownMail);
+    });
+
+    $response = post('/users');
+    $response->assertOk();
+
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('request:0.mail', 1);
+    $ingest->assertLatestWrite('mail:*', [
+        [
+            'v' => 1,
+            't' => 'mail',
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            '_group' => md5('MyMarkdownMail'),
+            'trace_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_source' => 'request',
+            'execution_id' => '00000000-0000-0000-0000-000000000001',
+            'execution_stage' => 'action',
+            'user' => '',
+            'mailer' => 'array',
+            'class' => 'MyMarkdownMail',
+            'subject' => 'My Markdown Mail',
+            'to' => 1,
+            'cc' => 0,
+            'bcc' => 0,
+            'attachments' => 0,
+            'duration' => 0,
+            'failed' => false,
+        ],
+    ]);
+
+});
+
 class MyMail extends Mailable
 {
     //
+}
+
+class MyMarkdownMail extends Mailable
+{
+    public function build()
+    {
+        return $this->markdown('mail');
+    }
 }
