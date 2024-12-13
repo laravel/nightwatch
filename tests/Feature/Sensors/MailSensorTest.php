@@ -1,15 +1,16 @@
 <?php
 
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
-use Illuminate\Support\Env;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
-use function Pest\Laravel\travelTo;
 
 defineEnvironment(function () {
     forceRequestExecutionState();
@@ -110,6 +111,36 @@ it('ingests markdown mailables', function () {
 
 });
 
+it('ignores notifications sent on the mail channel ', function () {
+
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        NotificationFacade::send([
+            User::factory()->create(),
+        ], new class extends MyNotification {
+            public function via(object $notifiable)
+            {
+                return ['mail'];
+            }
+
+            public function toMail(object $notifiable): MailMessage
+            {
+                return (new MailMessage)
+                            ->line('The introduction to the notification.')
+                            ->action('Notification Action', url('/'))
+                            ->line('Thank you for using our application!');
+            }
+        });
+    });
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertLatestWrite('request:0.mail', 0);
+    $ingest->assertWrittenTimes(1);
+
+});
+
 class MyMail extends Mailable
 {
     //
@@ -121,4 +152,29 @@ class MyMarkdownMail extends Mailable
     {
         return $this->markdown('mail');
     }
+}
+
+class MyNotification extends Notification
+{
+
+    public function via(object $notifiable)
+    {
+        return ['broadcast', 'mail'];
+    }
+
+    public function toArray(object $notifiable)
+    {
+        return [
+            'message' => 'Hello World',
+        ];
+    }
+
+    public function toMail(object $notifiable)
+    {
+        return (new  Illuminate\Mail\Mailable)
+            ->subject('Hello World')
+            ->to('dummy@example.com')
+            ->html("<p>It's me again</p>");
+    }
+
 }
