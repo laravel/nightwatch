@@ -18,6 +18,9 @@ jobs:
           extensions: json, dom, curl, libxml, mbstring
           coverage: none
 
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-interaction --no-progress
+
       - name: Run Pint (CI only)
         run: vendor/bin/pint --config=pint.ci.json
 
