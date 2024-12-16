@@ -113,7 +113,6 @@ it('ingests markdown mailables', function () {
 });
 
 it('ignores notifications sent as MailMessages', function () {
-
     $ingest = fakeIngest();
     Route::post('/users', function () {
         NotificationFacade::send([
@@ -126,10 +125,12 @@ it('ignores notifications sent as MailMessages', function () {
 
             public function toMail(object $notifiable): MailMessage
             {
+                app()->useAppPath(app()->basePath('src'));
+
                 return (new MailMessage)
-                            ->line('The introduction to the notification.')
-                            ->action('Notification Action', url('/'))
-                            ->line('Thank you for using our application!');
+                    ->line('The introduction to the notification.')
+                    ->action('Notification Action', url('/'))
+                    ->line('Thank you for using our application!');
             }
         });
     });
@@ -138,6 +139,7 @@ it('ignores notifications sent as MailMessages', function () {
 
     $response->assertOk();
     $ingest->assertLatestWrite('request:0.mail', 0);
+    $ingest->assertLatestWrite('request:0.notifications', 1);
     $ingest->assertWrittenTimes(1);
 
 });
