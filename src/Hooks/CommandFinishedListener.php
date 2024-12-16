@@ -22,7 +22,7 @@ final class CommandFinishedListener
     {
         try {
             $this->commandState->name = $event->command;
-        } catch (Throwable $e) {
+        } catch (Throwable $e) { // @phpstan-ignore catch.neverThrown
             Log::critical('[nightwatch] '.$e->getMessage());
         }
 
