@@ -3,7 +3,9 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Console\Application as Artisan;
+use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\State\CommandState;
+use Throwable;
 
 final class ArtisanStartingHandler
 {
@@ -14,6 +16,10 @@ final class ArtisanStartingHandler
 
     public function __invoke(Artisan $artisan): void
     {
-        $this->commandState->artisan = $artisan;
+        try {
+            $this->commandState->artisan = $artisan;
+        } catch (Throwable $e) { // @phpstan-ignore catch.neverThrown
+            Log::critical('[nightwatch] '.$e->getMessage());
+        }
     }
 }
