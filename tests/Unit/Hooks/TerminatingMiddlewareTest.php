@@ -1,10 +1,8 @@
 <?php
 
-use Illuminate\Support\Env;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;

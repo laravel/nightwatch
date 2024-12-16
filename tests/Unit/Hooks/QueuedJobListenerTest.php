@@ -1,10 +1,7 @@
 <?php
 
 use Illuminate\Queue\Events\JobQueued;
-use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\JobQueuedListener;
-use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {

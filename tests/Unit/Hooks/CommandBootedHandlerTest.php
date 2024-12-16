@@ -2,7 +2,6 @@
 
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
-use Laravel\Nightwatch\Hooks\RequestBootedHandler;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {

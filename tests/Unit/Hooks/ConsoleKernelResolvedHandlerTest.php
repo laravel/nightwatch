@@ -1,20 +1,15 @@
 <?php
 
-use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Console\Kernel;
-use Illuminate\Support\Env;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\ConsoleKernelResolvedHandler;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\StringInput;
-use Symfony\Component\HttpFoundation\Response;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
 
@@ -27,7 +22,9 @@ it('gracefully handles exceptions in all three phases', function () {
     $sensor = new class extends SensorManager
     {
         public bool $thrownInStage = false;
+
         public bool $thrownInCommand = false;
+
         public bool $thrownInFlush = false;
 
         public function __construct() {}
@@ -47,16 +44,18 @@ it('gracefully handles exceptions in all three phases', function () {
         }
     };
     $state = app(CommandState::class);
-    $state->records = new class extends RecordsBuffer {
+    $state->records = new class extends RecordsBuffer
+    {
         public $thrownInFlush = false;
+
         public function __construct() {}
 
-            public function flush(): string
-            {
-                $this->thrownInFlush = true;
+        public function flush(): string
+        {
+            $this->thrownInFlush = true;
 
-                throw new RuntimeException('Whoops!');
-            }
+            throw new RuntimeException('Whoops!');
+        }
     };
     $handler = new ConsoleKernelResolvedHandler($sensor, app(CommandState::class));
     $kernel = app(Kernel::class);
@@ -93,7 +92,8 @@ it('gracefully handles exceptions thrown while ingesting', function () {
             return '';
         }
     };
-    $ingest = app()->instance(LocalIngest::class, new class implements LocalIngest {
+    $ingest = app()->instance(LocalIngest::class, new class implements LocalIngest
+    {
         public bool $thrown = false;
 
         public function write(string $payload): void
@@ -139,10 +139,7 @@ it('gracefully handles custom Kernel implementations', function () {
             return 0;
         }
 
-        public function call($command, array $parameters = [], $outputBuffer = null)
-        {
-
-        }
+        public function call($command, array $parameters = [], $outputBuffer = null) {}
 
         public function terminate($input, $status)
         {
@@ -169,4 +166,3 @@ it('gracefully handles custom Kernel implementations', function () {
 
     expect(true)->toBeTrue();
 });
-

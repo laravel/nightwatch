@@ -2,8 +2,6 @@
 
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\SentMessage;
-use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Hooks\BootedHandler;
 use Laravel\Nightwatch\Hooks\MessageSentListener;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\Mailer\Envelope;

@@ -2,7 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Events\ResponsePrepared;
-use Illuminate\Support\Env;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\ResponsePreparedListener;
 use Laravel\Nightwatch\SensorManager;

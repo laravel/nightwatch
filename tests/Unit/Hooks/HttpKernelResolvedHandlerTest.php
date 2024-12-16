@@ -1,14 +1,11 @@
 <?php
 
-use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Http\Request;
-use Illuminate\Support\Env;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\RequestState;
@@ -24,7 +21,9 @@ it('gracefully handles exceptions in all three phases', function () {
     $sensor = new class extends SensorManager
     {
         public bool $thrownInStage = false;
+
         public bool $thrownInRequest = false;
+
         public bool $thrownInFlush = false;
 
         public function __construct() {}
@@ -44,23 +43,25 @@ it('gracefully handles exceptions in all three phases', function () {
         }
     };
     $state = app(RequestState::class);
-    $state->records = new class extends RecordsBuffer {
+    $state->records = new class extends RecordsBuffer
+    {
         public $thrownInFlush = false;
+
         public function __construct() {}
 
-            public function flush(): string
-            {
-                $this->thrownInFlush = true;
+        public function flush(): string
+        {
+            $this->thrownInFlush = true;
 
-                throw new RuntimeException('Whoops!');
-            }
+            throw new RuntimeException('Whoops!');
+        }
     };
     $handler = new HttpKernelResolvedHandler($sensor, app(RequestState::class));
     $kernel = app(Kernel::class);
 
     $handler($kernel, app());
     $kernel->handle(Request::create('/test'));
-    $kernel->terminate(Request::create('/test'), new Response());
+    $kernel->terminate(Request::create('/test'), new Response);
 
     expect($sensor->thrownInStage)->toBeTrue();
     expect($sensor->thrownInRequest)->toBeTrue();
@@ -87,7 +88,8 @@ it('gracefully handles exceptions thrown while ingesting', function () {
             return '';
         }
     };
-    $ingest = app()->instance(LocalIngest::class, new class implements LocalIngest {
+    $ingest = app()->instance(LocalIngest::class, new class implements LocalIngest
+    {
         public bool $thrown = false;
 
         public function write(string $payload): void
@@ -102,7 +104,7 @@ it('gracefully handles exceptions thrown while ingesting', function () {
 
     $handler($kernel, app());
     $kernel->handle(Request::create('/test'));
-    $kernel->terminate(Request::create('/test'), new Response());
+    $kernel->terminate(Request::create('/test'), new Response);
 
     expect($ingest->thrown)->toBeTrue();
 });

@@ -117,7 +117,8 @@ it('ignores notifications sent as MailMessages', function () {
     Route::post('/users', function () {
         NotificationFacade::send([
             User::factory()->create(),
-        ], new class extends MyTestNotification {
+        ], new class extends MyTestNotification
+        {
             public function via(object $notifiable)
             {
                 return ['mail'];
@@ -159,7 +160,6 @@ class MyTestMarkdownMail extends Mailable
 
 class MyTestNotification extends Notification
 {
-
     public function via(object $notifiable)
     {
         return ['broadcast', 'mail'];
@@ -174,10 +174,9 @@ class MyTestNotification extends Notification
 
     public function toMail(object $notifiable)
     {
-        return (new  Illuminate\Mail\Mailable)
+        return (new Illuminate\Mail\Mailable)
             ->subject('Hello World')
             ->to('dummy@example.com')
             ->html("<p>It's me again</p>");
     }
-
 }
