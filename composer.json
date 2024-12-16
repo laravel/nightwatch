@@ -23,6 +23,7 @@
         "react/socket": "^1.15.0"
     },
     "require-dev": {
+        "laravel/pint": "1.18.3",
         "mockery/mockery": "^1.6",
         "mongodb/laravel-mongodb": "^5.1",
         "orchestra/pest-plugin-testbench": "^3.1",
