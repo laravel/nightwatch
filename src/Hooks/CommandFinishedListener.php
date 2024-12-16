@@ -22,16 +22,16 @@ final class CommandFinishedListener
     {
         try {
             $this->commandState->name = $event->command;
-
-            if (! class_exists(Terminating::class)) {
-                try {
-                    $this->sensor->stage(ExecutionStage::Terminating);
-                } catch (Throwable $e) {
-                    Log::critical('[nightwatch] '.$e->getMessage());
-                }
-            }
         } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
+        }
+
+        if (! class_exists(Terminating::class)) {
+            try {
+                $this->sensor->stage(ExecutionStage::Terminating);
+            } catch (Throwable $e) {
+                Log::critical('[nightwatch] '.$e->getMessage());
+            }
         }
     }
 }
