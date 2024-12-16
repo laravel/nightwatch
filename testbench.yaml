@@ -12,3 +12,6 @@ workbench:
   build:
     - create-sqlite-db
     - migrate-refresh
+  sync:
+    - from: workbench/storage/logs
+      to: storage/logs

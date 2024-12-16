@@ -53,12 +53,15 @@
         ],
         "serve": [
             "Composer\\Config::disableProcessTimeout",
+            "@php vendor/bin/testbench workbench:sync-skeleton --ansi",
             "@php vendor/bin/testbench workbench:build --ansi",
             "@php vendor/bin/testbench serve"
         ],
         "agent": [
             "Composer\\Config::disableProcessTimeout",
             "@putenv NIGHTWATCH_DEBUG=1",
+            "@php vendor/bin/testbench workbench:sync-skeleton --ansi",
+            "@php vendor/bin/testbench workbench:build --ansi",
             "@php vendor/bin/testbench nightwatch:agent"
         ],
         "ci": [
