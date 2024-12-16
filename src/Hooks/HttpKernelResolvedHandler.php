@@ -27,17 +27,21 @@ final class HttpKernelResolvedHandler
                 return;
             }
 
+            // TODO Check this isn't a memory leak in Octane.
+            // TODO Check if we can cache this handler between requests on Octane. Same goes for other
+            // sub-handlers.
+            $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->sensor, $this->requestState, $app));
+        } catch (Throwable $e) {
+            Log::critical('[nightwatch] '.$e->getMessage());
+        }
+
+        try {
             if (! class_exists(Terminating::class)) {
                 $kernel->setGlobalMiddleware([
                     TerminatingMiddleware::class, // TODO Check this isn't a memory leak in Octane.
                     ...$kernel->getGlobalMiddleware(),
                 ]);
             }
-
-            // TODO Check this isn't a memory leak in Octane.
-            // TODO Check if we can cache this handler between requests on Octane. Same goes for other
-            // sub-handlers.
-            $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->sensor, $this->requestState, $app));
         } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }
