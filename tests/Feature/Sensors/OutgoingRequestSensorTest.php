@@ -2,9 +2,9 @@
 
 use Carbon\CarbonImmutable;
 use GuzzleHttp\Psr7\StreamDecoratorTrait;
-use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\StreamInterface;
+use Illuminate\Support\Facades\Route;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
