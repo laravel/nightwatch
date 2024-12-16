@@ -2,7 +2,6 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
-use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Laravel\Nightwatch\Types\Str;

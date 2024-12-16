@@ -37,4 +37,3 @@ it('can remember an authenticated user and limits the length of their identifier
 
     expect($provider->id()->jsonSerialize())->toEqual(str_repeat('x', 255));
 });
-

@@ -7,7 +7,6 @@ use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
@@ -25,17 +24,20 @@ pest()->extends(Tests\TestCase::class)->beforeEach(function () {
     app(Location::class)->setBasePath($path)->setPublicPath("{$path}/public");
 });
 
-function forceRequestExecutionState(): void {
+function forceRequestExecutionState(): void
+{
     Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
     Env::getRepository()->clear('NIGHTWATCH_FORCE_COMMAND');
 }
 
-function forceCommandExecutionState(): void {
+function forceCommandExecutionState(): void
+{
     Env::getRepository()->set('NIGHTWATCH_FORCE_COMMAND', '1');
     Env::getRepository()->clear('NIGHTWATCH_FORCE_REQUEST');
 }
 
-function executionState(): RequestState|CommandState {
+function executionState(): RequestState|CommandState
+{
     return match (true) {
         (bool) Env::get('NIGHTWATCH_FORCE_REQUEST') => app(RequestState::class),
         (bool) Env::get('NIGHTWATCH_FORCE_COMMAND') => app(CommandState::class),

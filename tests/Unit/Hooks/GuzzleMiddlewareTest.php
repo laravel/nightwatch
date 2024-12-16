@@ -1,8 +1,6 @@
 <?php
 
 use GuzzleHttp\Promise\FulfilledPromise;
-use GuzzleHttp\Promise\Promise;
-use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Laravel\Nightwatch\Clock;
@@ -28,7 +26,7 @@ it('gracefully handles exceptions in the before middleware', function () {
 
     $thrown = false;
     $clock = app(Clock::class);
-    $clock->microtimeResolver = function () use (&$thrown) : float {
+    $clock->microtimeResolver = function () use (&$thrown): float {
         $thrown = true;
 
         throw new RuntimeException('Whoops!');

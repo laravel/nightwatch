@@ -5,7 +5,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Auth\GuardHelpers;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\actingAs;
@@ -22,7 +21,6 @@ beforeEach(function () {
 
     ignoreMigrationQueries();
 });
-
 
 it('captures the authenticated user if they login during the request', function () {
     $ingest = fakeIngest();
