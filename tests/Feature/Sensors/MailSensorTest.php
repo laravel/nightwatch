@@ -39,7 +39,7 @@ it('ingests mails', function () {
             'jeremy@laravel.com',
         ])->bcc([
             'james@laravel.com',
-        ])->send((new MyMail)->html('')->subject('Welcome!')->attachData('hunter2', 'password.txt'));
+        ])->send((new MyTestMail)->html('')->subject('Welcome!')->attachData('hunter2', 'password.txt'));
     });
 
     $response = post('/users');
@@ -54,14 +54,14 @@ it('ingests mails', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => md5('MyMail'),
+            '_group' => md5('MyTestMail'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
             'mailer' => 'array',
-            'class' => 'MyMail',
+            'class' => 'MyTestMail',
             'subject' => 'Welcome!',
             'to' => 3,
             'cc' => 2,
@@ -76,7 +76,7 @@ it('ingests mails', function () {
 it('ingests markdown mailables', function () {
     $ingest = fakeIngest();
     Route::post('/users', function () {
-        Mail::to('phillip@laravel.com')->send(new MyMarkdownMail);
+        Mail::to('phillip@laravel.com')->send(new MyTestMarkdownMail);
     });
 
     $response = post('/users');
@@ -91,15 +91,15 @@ it('ingests markdown mailables', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => md5('MyMarkdownMail'),
+            '_group' => md5('MyTestMarkdownMail'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
             'mailer' => 'array',
-            'class' => 'MyMarkdownMail',
-            'subject' => 'My Markdown Mail',
+            'class' => 'MyTestMarkdownMail',
+            'subject' => 'My Test Markdown Mail',
             'to' => 1,
             'cc' => 0,
             'bcc' => 0,
@@ -117,7 +117,7 @@ it('ignores notifications sent on the mail channel ', function () {
     Route::post('/users', function () {
         NotificationFacade::send([
             User::factory()->create(),
-        ], new class extends MyNotification {
+        ], new class extends MyTestNotification {
             public function via(object $notifiable)
             {
                 return ['mail'];
@@ -141,12 +141,12 @@ it('ignores notifications sent on the mail channel ', function () {
 
 });
 
-class MyMail extends Mailable
+class MyTestMail extends Mailable
 {
     //
 }
 
-class MyMarkdownMail extends Mailable
+class MyTestMarkdownMail extends Mailable
 {
     public function build()
     {
@@ -154,7 +154,7 @@ class MyMarkdownMail extends Mailable
     }
 }
 
-class MyNotification extends Notification
+class MyTestNotification extends Notification
 {
 
     public function via(object $notifiable)
