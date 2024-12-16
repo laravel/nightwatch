@@ -20,14 +20,12 @@ final class ConsoleKernelResolvedHandler
     public function __invoke(KernelContract $kernel, Application $app): void
     {
         try {
-            if (! $kernel instanceof Kernel) {
-                return;
+            if ($kernel instanceof Kernel) {
+                // TODO Check this isn't a memory leak in Octane.
+                // TODO Check if we can cache this handler between requests on Octane. Same goes for other
+                // sub-handlers.
+                $kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->commandState, $app));
             }
-
-            // TODO Check this isn't a memory leak in Octane.
-            // TODO Check if we can cache this handler between requests on Octane. Same goes for other
-            // sub-handlers.
-            $kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->commandState, $app));
         } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }
