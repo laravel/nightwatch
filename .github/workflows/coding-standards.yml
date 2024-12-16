@@ -14,15 +14,15 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
-          tools: composer:v2, laravel/pint
+          tools: composer:v2
           extensions: json, dom, curl, libxml, mbstring
           coverage: none
 
       - name: Run Pint (CI only)
-        run: pint --config=pint.ci.json
+        run: vendor/bin/pint --config=pint.ci.json
 
       - name: Run Pint
-        run: pint
+        run: vendor/bin/pint
 
       - name: Commit linted files
         uses: stefanzweifel/git-auto-commit-action@v5
