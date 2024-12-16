@@ -112,7 +112,7 @@ it('ingests markdown mailables', function () {
 
 });
 
-it('ignores notifications sent on the mail channel ', function () {
+it('ignores notifications sent as MailMessages', function () {
 
     $ingest = fakeIngest();
     Route::post('/users', function () {
