@@ -49,22 +49,22 @@
     "scripts": {
         "post-autoload-dump": [
             "@clear",
-            "@prepare"
+            "@prepare",
+            "@sync"
         ],
         "clear": "@php vendor/bin/testbench package:purge-skeleton",
-        "prepare": [
-            "@php vendor/bin/testbench package:discover",
-            "@php vendor/bin/testbench package:sync-skeleton"
-        ],
+        "prepare": "@php vendor/bin/testbench package:discover",
+        "sync": "@php vendor/bin/testbench package:sync-skeleton",
         "build": "@php vendor/bin/testbench workbench:build",
         "serve": [
             "Composer\\Config::disableProcessTimeout",
+            "@sync",
             "@build",
             "@php vendor/bin/testbench serve"
         ],
         "agent": [
             "Composer\\Config::disableProcessTimeout",
-            "@composer sync",
+            "@sync",
             "@putenv NIGHTWATCH_DEBUG=1",
             "@php vendor/bin/testbench nightwatch:agent"
         ],
