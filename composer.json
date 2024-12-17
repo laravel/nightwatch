@@ -48,20 +48,24 @@
     },
     "scripts": {
         "post-autoload-dump": [
-            "@php vendor/bin/testbench package:purge-skeleton --ansi",
-            "@php vendor/bin/testbench package:discover --ansi"
+            "@clear",
+            "@prepare"
         ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton",
+        "prepare": [
+            "@php vendor/bin/testbench package:discover",
+            "@php vendor/bin/testbench package:sync-skeleton"
+        ],
+        "build": "@php vendor/bin/testbench workbench:build",
         "serve": [
             "Composer\\Config::disableProcessTimeout",
-            "@php vendor/bin/testbench workbench:sync-skeleton --ansi",
-            "@php vendor/bin/testbench workbench:build --ansi",
+            "@build",
             "@php vendor/bin/testbench serve"
         ],
         "agent": [
             "Composer\\Config::disableProcessTimeout",
+            "@composer sync",
             "@putenv NIGHTWATCH_DEBUG=1",
-            "@php vendor/bin/testbench workbench:sync-skeleton --ansi",
-            "@php vendor/bin/testbench workbench:build --ansi",
             "@php vendor/bin/testbench nightwatch:agent"
         ],
         "ci": [
@@ -69,11 +73,12 @@
             "@composer lint"
         ],
         "lint": [
-            "@php pint --config=pint.ci.json",
-            "@php pint",
-            "@php phpstan --memory-limit=-1 --verbose"
+            "@php vendor/bin/pint --config=pint.ci.json",
+            "@php vendor/bin/pint",
+            "@php vendor/bin/phpstan --memory-limit=-1 --verbose"
         ],
         "test": [
+            "@clear",
             "@php vendor/bin/pest"
         ]
     },
