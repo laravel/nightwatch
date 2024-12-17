@@ -48,25 +48,24 @@
     },
     "scripts": {
         "post-autoload-dump": [
-            "@clear",
-            "@prepare",
-            "@sync"
+            "@php vendor/bin/testbench package:purge-skeleton",
+            "@php vendor/bin/testbench package:discover",
+            "@build"
         ],
-        "clear": "@php vendor/bin/testbench package:purge-skeleton",
-        "prepare": "@php vendor/bin/testbench package:discover",
-        "sync": "@php vendor/bin/testbench package:sync-skeleton",
-        "build": "@php vendor/bin/testbench workbench:build",
         "serve": [
             "Composer\\Config::disableProcessTimeout",
-            "@sync",
             "@build",
             "@php vendor/bin/testbench serve"
         ],
         "agent": [
             "Composer\\Config::disableProcessTimeout",
-            "@sync",
+            "@build",
             "@putenv NIGHTWATCH_DEBUG=1",
             "@php vendor/bin/testbench nightwatch:agent"
+        ],
+        "build": [
+            "@php vendor/bin/testbench package:sync-skeleton",
+            "@php vendor/bin/testbench workbench:build"
         ],
         "ci": [
             "@composer test",
@@ -78,7 +77,7 @@
             "@php vendor/bin/phpstan --memory-limit=-1 --verbose"
         ],
         "test": [
-            "@clear",
+            "@php vendor/bin/testbench package:purge-skeleton",
             "@php vendor/bin/pest"
         ]
     },
