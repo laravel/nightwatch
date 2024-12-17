@@ -17,6 +17,7 @@ use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Events\CommandFinished;
+use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -44,6 +45,7 @@ use Laravel\Nightwatch\Hooks\ArtisanStartingHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
 use Laravel\Nightwatch\Hooks\CommandFinishedListener;
+use Laravel\Nightwatch\Hooks\CommandStartingListener;
 use Laravel\Nightwatch\Hooks\ConsoleKernelResolvedHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
@@ -349,6 +351,11 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\ExecutionStage::Action
          */
         $this->app->booted((new CommandBootedHandler($sensor))(...));
+
+        /**
+         * @see \Laravel\Nightwatch\State\CommandState::$name
+         */
+        $events->listen(CommandStarting::class, (new CommandStartingListener($state))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating

@@ -3,6 +3,7 @@
 use App\Jobs\MyJob;
 use App\Mail\MyMail;
 use App\Notifications\MyNotification;
+use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +12,9 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 
 Artisan::command('kitchen-sink', function () {
+    // This should not be captured as a new top-level command
+    $this->callSilently('inspire');
+
     DB::table('users')->get('name');
 
     MyJob::dispatch();
@@ -31,3 +35,7 @@ Artisan::command('kitchen-sink', function () {
 
     $this->info('done');
 });
+
+Artisan::command('inspire', function () {
+    $this->comment(Inspiring::quote());
+})->purpose('Display an inspiring quote')->hourly();
