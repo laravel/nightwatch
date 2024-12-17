@@ -353,7 +353,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->app->booted((new CommandBootedHandler($sensor))(...));
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         * @see \Laravel\Nightwatch\State\CommandState::$name
          */
         $events->listen(CommandStarting::class, (new CommandStartingListener($state))(...));
 
