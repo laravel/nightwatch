@@ -3,6 +3,7 @@
 use App\Jobs\MyJob;
 use App\Mail\MyMail;
 use App\Notifications\MyNotification;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -11,6 +12,9 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', static function () {
+    // This should not be captured.
+    Artisan::call('inspire');
+
     DB::table('users')->get('name');
 
     MyJob::dispatch();
