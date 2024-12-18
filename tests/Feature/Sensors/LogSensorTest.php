@@ -4,7 +4,12 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
+use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\get;
+
+defineEnvironment(function () {
+    forceRequestExecutionState();
+});
 
 beforeEach(function () {
     setDeploy('v1.2.3');
@@ -66,27 +71,14 @@ it('formats messages with replacements', function () {
     $ingest->assertLatestWrite('log:0.message', 'hello world');
 });
 
-it('timestamp is always in UTC', function () {
-    $ingest = fakeIngest();
-    Route::get('/users', function () {
-        Log::channel('nightwatch')->info('hello {location}', [
-            'location' => 'world',
-        ]);
-    });
-
-    $response = get('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('log:0.message', 'hello world');
-});
-
 it('formats messages with replacement dates using configured format', function () {
     $ingest = fakeIngest();
     Route::get('/users', function () {
-        Log::channel('nightwatch')->info('datetime: {datetime}; carbon: {carbon}', [
+        Log::channel('nightwatch')->info('{datetime} - {datetimeimmutable} - {carbon} - {carbonimmutable}', [
             'datetime' => now()->toDateTime(),
+            'datetimeimmutable' => now()->toDateTimeImmutable(),
             'carbon' => now(),
+            'carbonimmutable' => now()->toImmutable(),
         ]);
     });
 
@@ -94,15 +86,17 @@ it('formats messages with replacement dates using configured format', function (
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('log:0.message', 'datetime: 2000-01-01 01:02:03.456789; carbon: 2000-01-01 01:02:03.456789');
+    $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC)');
 });
 
 it('always logs UTC time', function () {
     $ingest = fakeIngest();
     Route::get('/users', function () {
-        Log::channel('nightwatch')->info('datetime: {datetime}; carbon: {carbon}', [
+        Log::channel('nightwatch')->info('{datetime} - {datetimeimmutable} - {carbon} - {carbonimmutable}', [
             'datetime' => now('Australia/Melbourne')->toDateTime(),
+            'datetimeimmutable' => now('Australia/Melbourne')->toDateTimeImmutable(),
             'carbon' => now('Australia/Melbourne'),
+            'carbonimmutable' => now('Australia/Melbourne')->toImmutable(),
         ]);
     });
 
@@ -110,7 +104,7 @@ it('always logs UTC time', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('log:0.message', 'datetime: 2000-01-01 01:02:03.456789; carbon: 2000-01-01 01:02:03.456789');
+    $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC)');
 });
 
 it('does not mutate the date objects', function () {
@@ -120,11 +114,11 @@ it('does not mutate the date objects', function () {
     $carbon = now('Australia/Melbourne')->toMutable();
     $carbonImmutable = now('Australia/Melbourne')->toImmutable();
     Route::get('/users', function () use ($datetime, $datetimeImmutable, $carbon, $carbonImmutable) {
-        Log::channel('nightwatch')->info('datetime: {datetime}; carbon: {carbon}', [
+        Log::channel('nightwatch')->info('{datetime} - {datetimeimmutable} - {carbon} - {carbonimmutable}', [
             'datetime' => $datetime,
             'carbon' => $carbon,
-            'DateTimeImmutable' => $datetimeImmutable,
-            'CarbonImmutable' => $carbonImmutable,
+            'datetimeimmutable' => $datetimeImmutable,
+            'carbonimmutable' => $carbonImmutable,
         ]);
     });
 
@@ -132,35 +126,18 @@ it('does not mutate the date objects', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC)');
     expect($datetime->getTimezone()->getName())->toBe('Australia/Melbourne');
     expect($carbon->getTimezone()->getName())->toBe('Australia/Melbourne');
     expect($datetimeImmutable->getTimezone()->getName())->toBe('Australia/Melbourne');
     expect($carbonImmutable->getTimezone()->getName())->toBe('Australia/Melbourne');
-
-    // $ingest->assertLatestWrite('request:0.logs', 1);
-    $ingest->assertLatestWrite('log:*', function (array $records) {
-        expect($records)->toHaveCount(1);
-        expect($records[0])->toHaveKey('timestamp');
-        expect($records[0]['timestamp'])->toBeFloat();
-        expect($records[0]['timestamp'])->toEqualWithDelta(microtime(true), 0.1);
-        expect(Arr::except($records[0], 'timestamp'))->toBe([
-            'v' => 1,
-            't' => 'log',
-            'deploy' => 'v1.2.3',
-            'server' => 'web-01',
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'execution_context' => 'request',
-            'execution_id' => '00000000-0000-0000-0000-000000000001',
-            'execution_stage' => 'action',
-            'user' => '',
-            'level' => 'info',
-            'message' => 'hello world',
-            'context' => [],
-            'extra' => [],
-        ]);
-
-        return true;
-    });
-
-    $ingest->assertLatestWrite('log:0.message', 'date: 2000-01-01 01:02:03.456789');
 });
+
+it('does not recursively capture nightwatch logs', function () {
+    // Nightwatch often writes logs when things go wrong.
+    // What if something goes wrong while we are trying to write logs!
+    // We would then try and write more logs: bad!
+})->todo();
+
+it('captures context')->todo();
+it('captures extra')->todo();

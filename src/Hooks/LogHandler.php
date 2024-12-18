@@ -39,8 +39,12 @@ final class LogHandler implements HandlerInterface
      */
     public function handleBatch(array $records): void
     {
-        foreach ($records as $record) {
-            $this->handle($record);
+        try {
+            foreach ($records as $record) {
+                $this->handle($record);
+            }
+        } catch (Throwable $e) {
+            Log::critical('[nightwatch] '.$e->getMessage());
         }
     }
 

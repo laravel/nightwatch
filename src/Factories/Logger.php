@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Factories;
 use DateTimeZone;
 use Illuminate\Log\Logger as IlluminateLogger;
 use Laravel\Nightwatch\Hooks\LogHandler;
+use Laravel\Nightwatch\Hooks\LogRecordProcessor;
 use Laravel\Nightwatch\SensorManager;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Logger as Monolog;
@@ -31,7 +32,8 @@ final class Logger
                 new LogHandler($this->sensor),
             ],
             processors: [
-                new PsrLogMessageProcessor('Y-m-d H:i:s.u'),
+                new LogRecordProcessor('Y-m-d H:i:s.u (e)'),
+                new PsrLogMessageProcessor('Y-m-d H:i:s.u (e)'),
                 // new JsonFormatter, // ditch stack trace? see other options.
             ],
             // timezone: new DateTimeZone('UTC'),
