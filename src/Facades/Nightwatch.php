@@ -5,6 +5,8 @@ namespace Laravel\Nightwatch\Facades;
 use Illuminate\Support\Facades\Facade;
 
 /**
+ * @method static void report(\Throwable $e)
+ *
  * @see \Laravel\Nightwatch\Core
  */
 final class Nightwatch extends Facade
