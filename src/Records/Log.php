@@ -16,8 +16,8 @@ final class Log
 
     /**
      * @param  LazyValue<string>  $user
-     * @param  array<string, mixed>  $context
-     * @param  array<string, mixed>  $extra
+     * @param  array<mixed>  $context
+     * @param  array<mixed>  $extra
      */
     public function __construct(
         public float $timestamp,
