@@ -4,6 +4,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Types\Str;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
 
@@ -514,6 +515,56 @@ it('strips base_path from trace files', function () {
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '"file":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Route.php:'));
+});
+
+it('can manually report exceptions', function () {
+    $ingest = fakeIngest();
+    $trace = null;
+    $line = null;
+    Route::get('/users', function () use (&$trace, &$line) {
+        $line = __LINE__ + 1;
+        $e = new MyException('Whoops!');
+
+        $trace = $e->getTrace();
+
+        Nightwatch::report($e);
+    });
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exception:*', [
+        [
+            'v' => 1,
+            't' => 'exception',
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            '_group' => hash('md5', "MyException,0,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"),
+            'trace_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_source' => 'request',
+            'execution_id' => '00000000-0000-0000-0000-000000000001',
+            'execution_stage' => 'action',
+            'user' => '',
+            'class' => 'MyException',
+            'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
+            'line' => $line,
+            'message' => 'Whoops!',
+            'code' => 0,
+            'trace' => json_encode(array_map(fn ($frame) => [
+                'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
+                'source' => ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'].'('.implode(', ', array_map(fn ($arg) => match (gettype($arg)) {
+                    'object' => $arg::class,
+                    'string' => 'string',
+                    'array' => 'array',
+                }, $frame['args'])).')',
+            ], $trace)),
+            'handled' => false,
+            'php_version' => '8.4.1',
+            'laravel_version' => '11.33.0',
+        ],
+    ]);
 });
 
 final class MyException extends RuntimeException
