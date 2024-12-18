@@ -41,19 +41,17 @@ class SensorManager
 
     private ?ExceptionSensor $exceptionSensor;
 
+    private ?LogSensor $logSensor;
+
     private ?OutgoingRequestSensor $outgoingRequestSensor;
 
     private ?QuerySensor $querySensor;
 
     private ?QueuedJobSensor $queuedJobSensor;
 
-    private ?LogSensor $logSensor;
-
     private ?NotificationSensor $notificationSensor;
 
     private ?MailSensor $mailSensor;
-
-    private ?LogSensor $logSensor;
 
     private ?StageSensor $stageSensor;
 
@@ -158,6 +156,15 @@ class SensorManager
         $sensor($e);
     }
 
+    public function log(LogRecord $record): void
+    {
+        $sensor = $this->logSensor ??= new LogSensor(
+            executionState: $this->executionState,
+        );
+
+        $sensor($record);
+    }
+
     public function queuedJob(JobQueued $event): void
     {
         $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
@@ -167,16 +174,6 @@ class SensorManager
         );
 
         $sensor($event);
-    }
-
-    public function log(LogRecord $record): void
-    {
-        $sensor = $this->logSensor ??= new LogSensor(
-            executionState: $this->executionState,
-            user: $this->user,
-        );
-
-        $sensor($record);
     }
 
     public function prepareForNextInvocation(): void
