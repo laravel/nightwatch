@@ -5,7 +5,7 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Mail;
 
 it('only keeps 100 records in memory', function () {
-    $buffer = new RecordsBuffer();
+    $buffer = new RecordsBuffer;
 
     for ($i = 0; $i < 1_000; $i++) {
         $buffer->write(new Mail(
@@ -20,13 +20,13 @@ it('only keeps 100 records in memory', function () {
             user: '',
             mailer: '',
             class: '',
-                subject: '',
-                to: 0,
-                cc: 0,
-                bcc: 0,
-                attachments: 0,
-                duration: 0,
-                failed: false,
+            subject: '',
+            to: 0,
+            cc: 0,
+            bcc: 0,
+            attachments: 0,
+            duration: 0,
+            failed: false,
         ));
     }
 
