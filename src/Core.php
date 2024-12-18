@@ -4,7 +4,7 @@ namespace Laravel\Nightwatch;
 
 use Throwable;
 
-class Core
+final class Core
 {
     public function __construct(private SensorManager $sensorManager)
     {

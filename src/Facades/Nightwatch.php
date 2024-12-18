@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @see \Laravel\Nightwatch\Core
  */
-class Nightwatch extends Facade
+final class Nightwatch extends Facade
 {
     /**
      * Get the registered name of the component.
