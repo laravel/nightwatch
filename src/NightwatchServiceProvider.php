@@ -152,8 +152,8 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $this->config = $this->app->make(Repository::class); // @phpstan-ignore assign.propertyType
 
-        if (! isset($this->config->all()['logging']['channels']['nightwatch'])) {
-            $this->config->set('logging.channels.nightwatch', [
+        if (! isset($this->config->all()['logging']['channels']['nightwatch'])) { // @phpstan-ignore method.nonObject
+            $this->config->set('logging.channels.nightwatch', [ // @phpstan-ignore method.nonObject
                 'driver' => 'custom',
                 'via' => Logger::class,
             ]);

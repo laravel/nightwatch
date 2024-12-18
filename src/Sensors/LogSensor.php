@@ -2,10 +2,9 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Records\ExecutionState;
 use Laravel\Nightwatch\Records\Log;
-use Laravel\Nightwatch\UserProvider;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Monolog\LogRecord;
 
 /**
@@ -14,8 +13,7 @@ use Monolog\LogRecord;
 final class LogSensor
 {
     public function __construct(
-        private ExecutionState $executionState,
-        private UserProvider $user,
+        private RequestState|CommandState $executionState,
     ) {
         //
     }
@@ -32,7 +30,7 @@ final class LogSensor
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
             execution_stage: $this->executionState->stage,
-            user: $this->user->id(),
+            user: $this->executionState->user->id(),
             level: $record->level->toPsrLogLevel(),
             message: $record->message,
             context: $record->context,
