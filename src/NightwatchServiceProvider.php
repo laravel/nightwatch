@@ -226,6 +226,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             $state, $this->clock, $location, $this->config
         ));
 
+        $this->app->instance(Core::class, new Core($sensor));
+
         //
         // -------------------------------------------------------------------------
         // Execution stage hooks
