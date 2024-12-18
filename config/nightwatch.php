@@ -7,7 +7,7 @@ return [
     'env_secret' => env('NIGHTWATCH_ENV_SECRET'),
 
     'deployment' => env('NIGHTWATCH_DEPLOY'),
-    'server' => env('NIGHTWATCH_SERVER', gethostname() ?: ''),
+    'server' => env('NIGHTWATCH_SERVER', (string) gethostname()),
 
     'local_ingest' => env('NIGHTWATCH_LOCAL_INGEST', 'socket'), // "socket"|"log"|"null"
     'remote_ingest' => env('NIGHTWATCH_REMOTE_INGEST', 'http'),

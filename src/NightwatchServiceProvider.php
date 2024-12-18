@@ -41,6 +41,7 @@ use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
 use Laravel\Nightwatch\Factories\LocalIngestFactory;
+use Laravel\Nightwatch\Factories\Logger;
 use Laravel\Nightwatch\Hooks\ArtisanStartingHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
@@ -150,6 +151,13 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
 
         $this->config = $this->app->make(Repository::class); // @phpstan-ignore assign.propertyType
+
+        if (! isset($this->config->all()['logging']['channels']['nightwatch'])) {
+            $this->config->set('logging.channels.nightwatch', [
+                'driver' => 'custom',
+                'via' => Logger::class,
+            ]);
+        }
 
         $this->nightwatchConfig = $this->config->all()['nightwatch'] ?? []; // @phpstan-ignore method.nonObject
     }

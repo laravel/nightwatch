@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Buffers;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\Exception;
+use Laravel\Nightwatch\Records\Log;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\OutgoingRequest;
@@ -22,11 +23,11 @@ use function json_encode;
 class RecordsBuffer
 {
     /**
-     * @var list<Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|Mail|Notification>
+     * @var list<Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|Mail|Notification|Log>
      */
     private array $records = [];
 
-    public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|Mail|Notification $record): void
+    public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|Mail|Notification|Log $record): void
     {
         // TODO only for Forge
         if (count($this->records) > 499) {

@@ -12,6 +12,7 @@ use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
+use Laravel\Nightwatch\Sensors\LogSensor;
 use Laravel\Nightwatch\Sensors\MailSensor;
 use Laravel\Nightwatch\Sensors\NotificationSensor;
 use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
@@ -21,6 +22,8 @@ use Laravel\Nightwatch\Sensors\RequestSensor;
 use Laravel\Nightwatch\Sensors\StageSensor;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Types\Str;
+use Monolog\LogRecord;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Console\Input\InputInterface;
@@ -44,9 +47,13 @@ class SensorManager
 
     private ?QueuedJobSensor $queuedJobSensor;
 
+    private ?LogSensor $logSensor;
+
     private ?NotificationSensor $notificationSensor;
 
     private ?MailSensor $mailSensor;
+
+    private ?LogSensor $logSensor;
 
     private ?StageSensor $stageSensor;
 
@@ -160,6 +167,16 @@ class SensorManager
         );
 
         $sensor($event);
+    }
+
+    public function log(LogRecord $record): void
+    {
+        $sensor = $this->logSensor ??= new LogSensor(
+            executionState: $this->executionState,
+            user: $this->user,
+        );
+
+        $sensor($record);
     }
 
     public function prepareForNextInvocation(): void
