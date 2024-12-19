@@ -72,6 +72,7 @@ use Throwable;
 
 use function class_exists;
 use function defined;
+use function is_string;
 use function microtime;
 
 /**
@@ -329,7 +330,7 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
-        $events->listen(RouteMatched::class, (new RouteMatchedListener)(...));
+        $events->listen(RouteMatched::class, (new RouteMatchedListener($sensor))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Render
@@ -349,7 +350,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\State\RequestState::$user
          */
-        $events->listen(Logout::class, (new LogoutListener($state))(...));
+        $events->listen(Logout::class, (new LogoutListener($sensor, $state))(...));
     }
 
     private function registerConsoleHooks(Dispatcher $events, SensorManager $sensor, CommandState $state): void
@@ -357,7 +358,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\State\CommandState::$artisan
          */
-        Artisan::starting((new ArtisanStartingHandler($state))(...));
+        Artisan::starting((new ArtisanStartingHandler($sensor, $state))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Action
@@ -411,7 +412,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         return $state;
     }
 
-    private function logError(Throwable $e)
+    private function logError(Throwable $e): void
     {
         try {
             /** @var LogManager */
@@ -432,6 +433,12 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Repository */
         $config = $this->app->make('config');
 
-        return $log->channel($config->get('nightwatch.error_log_channel') ?: 'single');
+        $channel = $config->get('nightwatch.error_log_channel');
+
+        if (! is_string($channel) || ! $channel) {
+            $channel = 'single';
+        }
+
+        return $log->channel($channel);
     }
 }

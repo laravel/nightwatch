@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Routing\Events\RouteMatched;
+use Laravel\Nightwatch\SensorManager;
 use Throwable;
 
 use function array_unshift;
@@ -11,6 +12,11 @@ use function class_exists;
 
 final class RouteMatchedListener
 {
+    public function __construct(private SensorManager $sensor)
+    {
+        //
+    }
+
     public function __invoke(RouteMatched $event): void
     {
         try {

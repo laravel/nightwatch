@@ -12,10 +12,10 @@ final class ReportableHandler
         //
     }
 
-    public function __invoke(Throwable $exception): void
+    public function __invoke(Throwable $e): void
     {
         try {
-            $this->sensor->exception($exception);
+            $this->sensor->exception($e);
         } catch (Throwable $e) {
             // Handle this!
         }

@@ -21,7 +21,7 @@ final class JobQueuedListener
         try {
             $this->sensor->queuedJob($event);
         } catch (Exception $e) {
-            $this->sensor->exception($exception);
+            $this->sensor->exception($e);
         }
     }
 }

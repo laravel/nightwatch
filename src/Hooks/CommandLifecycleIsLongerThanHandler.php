@@ -26,13 +26,13 @@ final class CommandLifecycleIsLongerThanHandler
         try {
             $this->sensor->stage(ExecutionStage::End);
         } catch (Throwable $e) {
-            $this->sensor->exception($exception);
+            $this->sensor->exception($e);
         }
 
         try {
             $this->sensor->command($input, $status);
         } catch (Throwable $e) {
-            $this->sensor->exception($exception);
+            $this->sensor->exception($e);
         }
 
         try {
@@ -43,7 +43,7 @@ final class CommandLifecycleIsLongerThanHandler
 
             $ingest->write($this->commandState->records->flush());
         } catch (Throwable $e) {
-            $this->sensor->exception($exception);
+            $this->sensor->exception($e);
         }
     }
 }

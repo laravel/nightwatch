@@ -55,7 +55,7 @@ final class RequestSensor
         try {
             $query = $request->server->getString('QUERY_STRING');
         } catch (UnexpectedValueException $e) {
-            $this->sensor->exception($exception);
+            //
         }
 
         $this->requestState->records->write(new RequestRecord(

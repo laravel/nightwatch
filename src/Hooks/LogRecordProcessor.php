@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Hooks;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
+use Laravel\Nightwatch\SensorManager;
 use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 use Throwable;
@@ -14,8 +15,10 @@ use Throwable;
  */
 final class LogRecordProcessor implements ProcessorInterface
 {
-    public function __construct(private string $format)
-    {
+    public function __construct(
+        private string $format,
+        private SensorManager $sensor,
+    ) {
         //
     }
 
@@ -34,7 +37,7 @@ final class LogRecordProcessor implements ProcessorInterface
 
             return $record->with(context: $context);
         } catch (Throwable $e) {
-            $this->sensor->exception($exception);
+            $this->sensor->exception($e);
         }
 
         return $record;

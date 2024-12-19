@@ -30,7 +30,7 @@ final class Logger
                 new LogHandler($this->sensor),
             ],
             processors: [
-                new LogRecordProcessor('Y-m-d H:i:s.uP'),
+                new LogRecordProcessor('Y-m-d H:i:s.uP', $this->sensor),
                 new PsrLogMessageProcessor('Y-m-d H:i:s.uP'),
             ],
             timezone: new DateTimeZone('UTC'),

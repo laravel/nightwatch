@@ -27,7 +27,7 @@ final class GuzzleMiddleware
             try {
                 $startMicrotime = $this->clock->microtime();
             } catch (Throwable $e) {
-                $this->sensor->exception($exception);
+                $this->sensor->exception($e);
 
                 return $handler($request, $options);
             }
@@ -41,7 +41,7 @@ final class GuzzleMiddleware
                         $request, $response,
                     );
                 } catch (Throwable $e) {
-                    $this->sensor->exception($exception);
+                    $this->sensor->exception($e);
                 }
 
                 return $response;
