@@ -16,8 +16,8 @@ use Throwable;
 final class LogRecordProcessor implements ProcessorInterface
 {
     public function __construct(
-        private string $format,
         private SensorManager $sensor,
+        private string $format,
     ) {
         //
     }
