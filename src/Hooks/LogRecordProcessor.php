@@ -10,6 +10,9 @@ use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 use Throwable;
 
+/**
+ * @internal
+ */
 final class LogRecordProcessor implements ProcessorInterface
 {
     public function __construct(private string $format)
@@ -32,6 +35,7 @@ final class LogRecordProcessor implements ProcessorInterface
 
             return $record->with(context: $context);
         } catch (Throwable $e) {
+            // TODO ensure this does not write to the nightwatch logger!
             Log::critical('[nightwatch] '.$e->getMessage());
         }
 
