@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
+use Closure;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\Events\CacheHit;
@@ -70,6 +71,8 @@ use Laravel\Nightwatch\State\RequestState;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
+use function app;
+use function call_user_func;
 use function class_exists;
 use function defined;
 use function is_string;
@@ -225,19 +228,19 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Dispatcher */
         $events = $this->app->make(Dispatcher::class);
 
-        $state = $this->executionState();
-
-        /** @var Location */
-        $location = $this->app->instance(Location::class, new Location(
+        $this->app->instance(Location::class, $location = new Location(
             $this->app->basePath(), $this->app->publicPath(),
         ));
 
-        /** @var SensorManager */
-        $sensor = $this->app->instance(SensorManager::class, new SensorManager(
-            $state, $this->clock, $location, $this->config
+        $this->app->instance(SensorManager::class, $sensor = new SensorManager(
+            $state = $this->executionState(), $this->clock, $location, $this->config
         ));
 
-        $this->app->instance(Core::class, new Core($sensor));
+        $this->app->instance(Core::class, $core = new Core(
+            sensor: $sensor,
+            state: $state,
+            emergencyLoggerResolver: $this->emergencyLoggerResolver())
+        );
 
         //
         // -------------------------------------------------------------------------
@@ -246,15 +249,17 @@ final class NightwatchServiceProvider extends ServiceProvider
         //
 
         if ($this->isRequest) {
-            $this->registerRequestHooks($events, $sensor, $state); // @phpstan-ignore argument.type
+            /** @var Core<RequestState> $core */
+            $this->registerRequestHooks($events, $core);
         } else {
-            $this->registerConsoleHooks($events, $sensor, $state); // @phpstan-ignore argument.type
+            /** @var Core<CommandState> $core */
+            $this->registerConsoleHooks($events, $core);
         }
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
-        $events->listen(Terminating::class, (new TerminatingListener($sensor))(...));
+        $events->listen(Terminating::class, (new TerminatingListener($core))(...));
 
         //
         // -------------------------------------------------------------------------
@@ -265,27 +270,27 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\Records\Query
          */
-        $events->listen(QueryExecuted::class, (new QueryExecutedListener($sensor))(...));
+        $events->listen(QueryExecuted::class, (new QueryExecutedListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\Exception
          */
-        $this->callAfterResolving(ExceptionHandler::class, (new ExceptionHandlerResolvedHandler($sensor))(...));
+        $this->callAfterResolving(ExceptionHandler::class, (new ExceptionHandlerResolvedHandler($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\QueuedJob
          */
-        $events->listen(JobQueued::class, (new JobQueuedListener($sensor))(...));
+        $events->listen(JobQueued::class, (new JobQueuedListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\Notification
          */
-        $events->listen(NotificationSent::class, (new NotificationSentListener($sensor))(...));
+        $events->listen(NotificationSent::class, (new NotificationSentListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\OutgoingRequest
          */
-        $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($sensor, $this->clock))(...));
+        $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($core, $this->clock))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\CacheEvent
@@ -302,20 +307,23 @@ final class NightwatchServiceProvider extends ServiceProvider
             ForgettingKey::class,
             KeyForgotten::class,
             KeyForgetFailed::class,
-        ], (new CacheEventListener($sensor))(...));
+        ], (new CacheEventListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\Mail
          */
-        $events->listen(MessageSent::class, (new MessageSentListener($sensor))(...));
+        $events->listen(MessageSent::class, (new MessageSentListener($core))(...));
     }
 
-    private function registerRequestHooks(Dispatcher $events, SensorManager $sensor, RequestState $state): void
+    /**
+     * @param  Core<RequestState>  $core
+     */
+    private function registerRequestHooks(Dispatcher $events, Core $core): void
     {
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
          */
-        $this->app->booted((new RequestBootedHandler($sensor))(...));
+        $this->app->booted((new RequestBootedHandler($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\Request
@@ -323,64 +331,67 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Contracts\LocalIngest
          */
-        $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($sensor, $state))(...));
+        $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Action
          * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
-        $events->listen(RouteMatched::class, (new RouteMatchedListener($sensor))(...));
+        $events->listen(RouteMatched::class, (new RouteMatchedListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Render
          */
-        $events->listen(PreparingResponse::class, (new PreparingResponseListener($sensor, $state))(...));
+        $events->listen(PreparingResponse::class, (new PreparingResponseListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
          */
-        $events->listen(ResponsePrepared::class, (new ResponsePreparedListener($sensor, $state))(...));
+        $events->listen(ResponsePrepared::class, (new ResponsePreparedListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Sending
          */
-        $events->listen(RequestHandled::class, (new RequestHandledListener($sensor))(...));
+        $events->listen(RequestHandled::class, (new RequestHandledListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\State\RequestState::$user
          */
-        $events->listen(Logout::class, (new LogoutListener($sensor, $state))(...));
+        $events->listen(Logout::class, (new LogoutListener($core))(...));
     }
 
-    private function registerConsoleHooks(Dispatcher $events, SensorManager $sensor, CommandState $state): void
+    /**
+     * @param  Core<CommandState>  $core
+     */
+    private function registerConsoleHooks(Dispatcher $events, Core $core): void
     {
         /**
          * @see \Laravel\Nightwatch\State\CommandState::$artisan
          */
-        Artisan::starting((new ArtisanStartingHandler($sensor, $state))(...));
+        Artisan::starting((new ArtisanStartingHandler($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Action
          */
-        $this->app->booted((new CommandBootedHandler($sensor))(...));
+        $this->app->booted((new CommandBootedHandler($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\State\CommandState::$name
          */
-        $events->listen(CommandStarting::class, (new CommandStartingListener($state))(...));
+        $events->listen(CommandStarting::class, (new CommandStartingListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
-        $events->listen(CommandFinished::class, (new CommandFinishedListener($sensor, $state))(...));
+        $events->listen(CommandFinished::class, (new CommandFinishedListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\Command
          * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Contracts\LocalIngest
          */
-        $this->callAfterResolving(ConsoleKernelContract::class, (new ConsoleKernelResolvedHandler($sensor, $state))(...));
+        $this->callAfterResolving(ConsoleKernelContract::class, (new ConsoleKernelResolvedHandler($core))(...));
     }
 
     private function executionState(): RequestState|CommandState
@@ -415,30 +426,32 @@ final class NightwatchServiceProvider extends ServiceProvider
     private function logError(Throwable $e): void
     {
         try {
-            /** @var LogManager */
-            $log = $this->app->make('log');
-            /** @var Repository */
-            $config = $this->app->make('config');
+            $logger = call_user_func($this->emergencyLoggerResolver());
 
-            $this->errorLogger()->critical('[nightwatch] '.$e->getMessage());
+            $logger->critical('[nightwatch] '.$e->getMessage());
         } catch (Throwable $e) {
             //
         }
     }
 
-    private function errorLogger(): LoggerInterface
+    /**
+     * @return (Closure(): LoggerInterface)
+     */
+    private function emergencyLoggerResolver(): Closure
     {
-        /** @var LogManager */
-        $log = $this->app->make('log');
-        /** @var Repository */
-        $config = $this->app->make('config');
+        return static function () {
+            /** @var LogManager */
+            $log = app()->make('log');
+            /** @var Repository */
+            $config = app()->make('config');
 
-        $channel = $config->get('nightwatch.error_log_channel');
+            $channel = $config->get('nightwatch.error_log_channel');
 
-        if (! is_string($channel) || ! $channel) {
-            $channel = 'single';
-        }
+            if (! is_string($channel) || ! $channel) {
+                $channel = 'single';
+            }
 
-        return $log->channel($channel);
+            return $log->channel($channel);
+        };
     }
 }

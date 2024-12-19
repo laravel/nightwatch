@@ -3,15 +3,21 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Database\Events\QueryExecuted;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 use function debug_backtrace;
 
 final class QueryExecutedListener
 {
-    public function __construct(private SensorManager $sensor)
-    {
+    /**
+     * @param  Core<RequestState>|Core<CommandState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
@@ -19,10 +25,10 @@ final class QueryExecutedListener
     {
         try {
             // We have temporarily disabled debug_backtrace to reduce the memory impact
-            // $this->sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 20));
-            $this->sensor->query($event, []);
+            // $this->nightwatch->sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 20));
+            $this->nightwatch->sensor->query($event, []);
         } catch (Throwable $e) {
-            $this->sensor->exception($e);
+            $this->nightwatch->report($e);
         }
     }
 }

@@ -1,11 +1,12 @@
 <?php
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -17,9 +18,9 @@ it('gracefully handles exceptions', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
+    });
     $exceptionHandler = app(ExceptionHandler::class);
-    $handler = new ExceptionHandlerResolvedHandler($sensor);
+    $handler = new ExceptionHandlerResolvedHandler($nightwatch);
     $handler($exceptionHandler);
     $exceptionHandler->report(new RuntimeException('Test'));
 
@@ -27,7 +28,7 @@ it('gracefully handles exceptions', function () {
 });
 
 it('gracefully handles custom exception handlers', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
     {
         public bool $captured = false;
 
@@ -37,7 +38,7 @@ it('gracefully handles custom exception handlers', function () {
         {
             $this->captured = true;
         }
-    };
+    });
     $exceptionHandler = new class implements ExceptionHandler
     {
         public function report(Throwable $e)
@@ -60,7 +61,7 @@ it('gracefully handles custom exception handlers', function () {
             //
         }
     };
-    $handler = new ExceptionHandlerResolvedHandler($sensor);
+    $handler = new ExceptionHandlerResolvedHandler($nightwatch);
     $handler($exceptionHandler);
     $exceptionHandler->report(new RuntimeException('Test'));
 

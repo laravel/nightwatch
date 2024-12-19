@@ -3,23 +3,28 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Contracts\Foundation\Application;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 final class RequestBootedHandler
 {
-    public function __construct(private SensorManager $sensor)
-    {
+    /**
+     * @param  Core<RequestState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
     public function __invoke(Application $app): void
     {
         try {
-            $this->sensor->stage(ExecutionStage::BeforeMiddleware);
+            $this->nightwatch->sensor->stage(ExecutionStage::BeforeMiddleware);
         } catch (Throwable $e) {
-            $this->sensor->exception($e);
+            $this->nightwatch->report($e);
         }
     }
 }

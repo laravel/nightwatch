@@ -4,24 +4,30 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Exception;
 use Illuminate\Queue\Events\JobQueued;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 
 /**
  * @internal
  */
 final class JobQueuedListener
 {
-    public function __construct(private SensorManager $sensor)
-    {
+    /**
+     * @param  Core<RequestState>|Core<CommandState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
     public function __invoke(JobQueued $event): void
     {
         try {
-            $this->sensor->queuedJob($event);
+            $this->nightwatch->sensor->queuedJob($event);
         } catch (Exception $e) {
-            $this->sensor->exception($e);
+            $this->nightwatch->report($e);
         }
     }
 }

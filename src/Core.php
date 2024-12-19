@@ -2,17 +2,54 @@
 
 namespace Laravel\Nightwatch;
 
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
+use function call_user_func;
+
+/**
+ * @template TState of RequestState|CommandState
+ */
 final class Core
 {
-    public function __construct(private SensorManager $sensorManager)
-    {
+    /**
+     * @param  TState  $state
+     * @param  (callable(): LoggerInterface)  $emergencyLoggerResolver
+     */
+    public function __construct(
+        public SensorManager $sensor,
+        public RequestState|CommandState $state,
+        private $emergencyLoggerResolver,
+    ) {
         //
     }
 
     public function report(Throwable $e): void
     {
-        $this->sensorManager->exception($e);
+        try {
+            $this->sensor->exception($e);
+        } catch (Throwable $e) {
+            try {
+                $logger = call_user_func($this->emergencyLoggerResolver);
+
+                $logger->critical('[nighwatch] '.$e->getMessage());
+            } catch (Throwable $e) {
+                //
+            }
+        }
+    }
+
+    /**
+     * @internal
+     *
+     * @return Core<TState>
+     */
+    public function setSensor(SensorManager $sensor): self
+    {
+        $this->sensor = $sensor;
+
+        return $this;
     }
 }

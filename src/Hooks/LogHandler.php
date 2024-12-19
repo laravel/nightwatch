@@ -2,7 +2,9 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Monolog\Handler\HandlerInterface;
 use Monolog\LogRecord;
 use Throwable;
@@ -12,8 +14,12 @@ use Throwable;
  */
 final class LogHandler implements HandlerInterface
 {
-    public function __construct(private SensorManager $sensor)
-    {
+    /**
+     * @param  Core<RequestState>|Core<CommandState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
@@ -25,9 +31,9 @@ final class LogHandler implements HandlerInterface
     public function handle(LogRecord $record): bool
     {
         try {
-            $this->sensor->log($record);
+            $this->nightwatch->sensor->log($record);
         } catch (Throwable $e) {
-            $this->sensor->exception($e);
+            $this->nightwatch->report($e);
         }
 
         return true;
@@ -43,7 +49,7 @@ final class LogHandler implements HandlerInterface
                 $this->handle($record);
             }
         } catch (Throwable $e) {
-            $this->sensor->exception($e);
+            $this->nightwatch->report($e);
         }
     }
 

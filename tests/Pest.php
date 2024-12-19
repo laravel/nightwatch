@@ -6,6 +6,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\LocalIngest;
@@ -22,6 +23,7 @@ pest()->extends(Tests\TestCase::class)->beforeEach(function () {
     app(Clock::class)->microtimeResolver = fn () => (float) now()->format('U.u');
     app()->setBasePath($path = realpath(__DIR__.'/../'));
     app(Location::class)->setBasePath($path)->setPublicPath("{$path}/public");
+    Config::set('nightwatch.error_log_channel', 'null');
 });
 
 function forceRequestExecutionState(): void

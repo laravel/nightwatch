@@ -4,13 +4,14 @@ use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
 use Laravel\Nightwatch\SensorManager;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 it('gracefully handles exceptions in the before middleware', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -22,7 +23,7 @@ it('gracefully handles exceptions in the before middleware', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
+    });
 
     $thrown = false;
     $clock = app(Clock::class);
@@ -32,7 +33,7 @@ it('gracefully handles exceptions in the before middleware', function () {
         throw new RuntimeException('Whoops!');
     };
 
-    $middleware = new GuzzleMiddleware($sensor, $clock);
+    $middleware = new GuzzleMiddleware($nightwatch, $clock);
 
     $stack = $middleware(fn () => new Response(body: 'ok'));
     $response = $stack(new Request('GET', '/test'), []);
@@ -42,7 +43,7 @@ it('gracefully handles exceptions in the before middleware', function () {
 });
 
 it('gracefully handles exceptions in the after middleware', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -54,8 +55,8 @@ it('gracefully handles exceptions in the after middleware', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
-    $middleware = new GuzzleMiddleware($sensor, app(Clock::class));
+    });
+    $middleware = new GuzzleMiddleware($nightwatch, app(Clock::class));
     $stack = $middleware(fn () => new FulfilledPromise(new Response(body: 'ok')));
 
     $response = $stack(new Request('GET', '/test'), [])->wait();

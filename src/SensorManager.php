@@ -147,17 +147,13 @@ class SensorManager
 
     public function exception(Throwable $e): void
     {
-        try {
-            $sensor = $this->exceptionSensor ??= new ExceptionSensor(
-                clock: $this->clock,
-                executionState: $this->executionState,
-                location: $this->location,
-            );
+        $sensor = $this->exceptionSensor ??= new ExceptionSensor(
+            clock: $this->clock,
+            executionState: $this->executionState,
+            location: $this->location,
+        );
 
-            $sensor($e);
-        } catch (Throwable $e) {
-            // Log this!
-        }
+        $sensor($e);
     }
 
     public function log(LogRecord $record): void

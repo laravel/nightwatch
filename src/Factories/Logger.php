@@ -3,9 +3,11 @@
 namespace Laravel\Nightwatch\Factories;
 
 use DateTimeZone;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Hooks\LogHandler;
 use Laravel\Nightwatch\Hooks\LogRecordProcessor;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Monolog\Logger as Monolog;
 use Monolog\Processor\PsrLogMessageProcessor;
 
@@ -14,8 +16,12 @@ use Monolog\Processor\PsrLogMessageProcessor;
  */
 final class Logger
 {
-    public function __construct(private SensorManager $sensor)
-    {
+    /**
+     * @param  Core<RequestState>|Core<CommandState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
@@ -27,10 +33,10 @@ final class Logger
         return new Monolog(
             name: 'nightwatch',
             handlers: [
-                new LogHandler($this->sensor),
+                new LogHandler($this->nightwatch),
             ],
             processors: [
-                new LogRecordProcessor($this->sensor, 'Y-m-d H:i:s.uP'),
+                new LogRecordProcessor($this->nightwatch, 'Y-m-d H:i:s.uP'),
                 new PsrLogMessageProcessor('Y-m-d H:i:s.uP'),
             ],
             timezone: new DateTimeZone('UTC'),

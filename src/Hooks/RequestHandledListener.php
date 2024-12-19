@@ -3,23 +3,28 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Foundation\Http\Events\RequestHandled;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 final class RequestHandledListener
 {
-    public function __construct(private SensorManager $sensor)
-    {
+    /**
+     * @param  Core<RequestState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
     public function __invoke(RequestHandled $event): void
     {
         try {
-            $this->sensor->stage(ExecutionStage::Sending);
+            $this->nightwatch->sensor->stage(ExecutionStage::Sending);
         } catch (Throwable $e) {
-            $this->sensor->exception($e);
+            $this->nightwatch->report($e);
         }
     }
 }

@@ -4,7 +4,8 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Routing\Events\RouteMatched;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 use function array_unshift;
@@ -12,8 +13,12 @@ use function class_exists;
 
 final class RouteMatchedListener
 {
-    public function __construct(private SensorManager $sensor)
-    {
+    /**
+     * @param  Core<RequestState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
@@ -35,7 +40,7 @@ final class RouteMatchedListener
 
             $event->route->action['middleware'] = $middleware;
         } catch (Throwable $e) {
-            $this->sensor->exception($e);
+            $this->nightwatch->report($e);
         }
     }
 }

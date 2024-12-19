@@ -2,11 +2,12 @@
 
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -18,9 +19,9 @@ it('gracefully handles exceptions', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
+    });
 
-    $listener = new QueryExecutedListener($sensor);
+    $listener = new QueryExecutedListener($nightwatch);
     $event = new QueryExecuted('select * from "users"', [], 5, DB::connection());
 
     $listener($event);
