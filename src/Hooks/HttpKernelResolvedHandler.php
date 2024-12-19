@@ -31,7 +31,7 @@ final class HttpKernelResolvedHandler
             // sub-handlers.
             $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->sensor, $this->requestState, $app));
         } catch (Throwable $e) {
-            $this->sensor->exception($e);
+            // Handle this!
         }
 
         try {
