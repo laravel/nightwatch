@@ -156,7 +156,7 @@ class SensorManager
 
             $sensor($e);
         } catch (Throwable $e) {
-            //
+            // Log this!
         }
     }
 
