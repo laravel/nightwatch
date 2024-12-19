@@ -229,16 +229,21 @@ final class NightwatchServiceProvider extends ServiceProvider
         $events = $this->app->make(Dispatcher::class);
 
         $this->app->instance(Location::class, $location = new Location(
-            $this->app->basePath(), $this->app->publicPath(),
+            basePath: $this->app->basePath(),
+            publicPath: $this->app->publicPath(),
         ));
 
-        $this->app->instance(SensorManager::class, $sensor = new SensorManager(
-            $state = $this->executionState(), $this->clock, $location, $this->config
-        ));
+        $sensor = new SensorManager(
+            executionState: $state = $this->executionState(),
+            clock: $this->clock,
+            location: $location,
+            config: $this->config,
+        );
 
         $this->app->instance(Core::class, $core = new Core(
             sensor: $sensor,
             state: $state,
+            clock: $this->clock,
             emergencyLoggerResolver: $this->emergencyLoggerResolver())
         );
 
@@ -441,9 +446,9 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         return static function () {
             /** @var LogManager */
-            $log = app()->make('log');
+            $log = app('log');
             /** @var Repository */
-            $config = app()->make('config');
+            $config = app('config');
 
             $channel = $config->get('nightwatch.error_log_channel');
 

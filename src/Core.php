@@ -21,6 +21,7 @@ final class Core
     public function __construct(
         public SensorManager $sensor,
         public RequestState|CommandState $state,
+        public Clock $clock,
         private $emergencyLoggerResolver,
     ) {
         //
