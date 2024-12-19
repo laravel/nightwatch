@@ -87,7 +87,7 @@ it('formats messages with replacement dates using configured format', function (
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC)');
+    $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00');
 });
 
 it('always logs UTC time', function () {
@@ -105,7 +105,7 @@ it('always logs UTC time', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC)');
+    $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00');
 });
 
 it('does not mutate the date objects', function () {
@@ -127,7 +127,7 @@ it('does not mutate the date objects', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC) - 2000-01-01 01:02:03.456789 (UTC)');
+    $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00');
     expect($datetime->getTimezone()->getName())->toBe('Australia/Melbourne');
     expect($carbon->getTimezone()->getName())->toBe('Australia/Melbourne');
     expect($datetimeImmutable->getTimezone()->getName())->toBe('Australia/Melbourne');
@@ -153,7 +153,7 @@ it('captures context', function () {
     $ingest->assertLatestWrite('log:0.context', [
         'shared' => 'context',
         'context' => 'value',
-        'date' => '2000-01-01 01:02:03.456789 (UTC)',
+        'date' => '2000-01-01 01:02:03.456789+00:00',
     ]);
     $ingest->assertLatestWrite('log:0.extra', []);
 });
