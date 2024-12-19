@@ -10,7 +10,7 @@ use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 use Throwable;
 
-class LogRecordProcessor implements ProcessorInterface
+final class LogRecordProcessor implements ProcessorInterface
 {
     public function __construct(private string $format)
     {
@@ -38,4 +38,3 @@ class LogRecordProcessor implements ProcessorInterface
         return $record;
     }
 }
-
