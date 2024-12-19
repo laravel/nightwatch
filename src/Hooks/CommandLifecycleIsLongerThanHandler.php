@@ -43,7 +43,7 @@ final class CommandLifecycleIsLongerThanHandler
 
             $ingest->write($this->commandState->records->flush());
         } catch (Throwable $e) {
-            $this->sensor->exception($e);
+            // NEED TO HANDLE THIS!
         }
     }
 }
