@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Database\Events\QueryExecuted;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\SensorManager;
 use Throwable;
 
@@ -23,7 +22,7 @@ final class QueryExecutedListener
             // $this->sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 20));
             $this->sensor->query($event, []);
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->sensor->exception($e);
         }
     }
 }

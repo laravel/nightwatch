@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Console\Events\CommandFinished;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\CommandState;
@@ -25,7 +24,7 @@ final class CommandFinishedListener
                 $this->sensor->stage(ExecutionStage::Terminating);
             }
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->sensor->exception($e);
         }
     }
 }

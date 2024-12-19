@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Console\Events\CommandStarting;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
@@ -21,7 +20,7 @@ final class CommandStartingListener
                 $this->commandState->name = $event->command;
             }
         } catch (Throwable $e) { // @phpstan-ignore catch.neverThrown
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->sensor->exception($e);
         }
     }
 }

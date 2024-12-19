@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Cache\Events\CacheEvent;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\SensorManager;
 use Throwable;
 
@@ -19,7 +18,7 @@ final class CacheEventListener
         try {
             $this->sensor->cacheEvent($event);
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->sensor->exception($e);
         }
     }
 }

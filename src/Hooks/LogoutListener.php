@@ -3,14 +3,16 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Auth\Events\Logout;
-use Illuminate\Support\Facades\Log;
+use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 final class LogoutListener
 {
-    public function __construct(private RequestState $requestState)
-    {
+    public function __construct(
+        private SensorManager $sensor,
+        private RequestState $requestState,
+    ) {
         //
     }
 
@@ -21,7 +23,7 @@ final class LogoutListener
                 $this->requestState->user->remember($event->user);
             }
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->sensor->exception($e);
         }
     }
 }

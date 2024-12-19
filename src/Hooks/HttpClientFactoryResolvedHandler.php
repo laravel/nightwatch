@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Http\Client\Factory;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\SensorManager;
 use Throwable;
@@ -21,7 +20,7 @@ final class HttpClientFactoryResolvedHandler
             // TODO check this isn't a memory leak in octane
             $factory->globalMiddleware(new GuzzleMiddleware($this->sensor, $this->clock));
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->sensor->exception($e);
         }
     }
 }

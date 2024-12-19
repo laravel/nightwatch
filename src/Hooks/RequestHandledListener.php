@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Foundation\Http\Events\RequestHandled;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Throwable;
@@ -20,7 +19,7 @@ final class RequestHandledListener
         try {
             $this->sensor->stage(ExecutionStage::Sending);
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->sensor->exception($e);
         }
     }
 }

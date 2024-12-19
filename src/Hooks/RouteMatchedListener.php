@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Routing\Events\RouteMatched;
-use Illuminate\Support\Facades\Log;
 use Throwable;
 
 use function array_unshift;
@@ -30,7 +29,7 @@ final class RouteMatchedListener
 
             $event->route->action['middleware'] = $middleware;
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->sensor->exception($e);
         }
     }
 }

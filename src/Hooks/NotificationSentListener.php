@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Notifications\Events\NotificationSent;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\SensorManager;
 use Throwable;
 
@@ -22,7 +21,7 @@ final class NotificationSentListener
         try {
             $this->sensor->notification($event);
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->sensor->exception($e);
         }
     }
 }

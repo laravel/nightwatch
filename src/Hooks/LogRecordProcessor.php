@@ -5,7 +5,6 @@ namespace Laravel\Nightwatch\Hooks;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use Illuminate\Support\Facades\Log;
 use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 use Throwable;
@@ -35,8 +34,7 @@ final class LogRecordProcessor implements ProcessorInterface
 
             return $record->with(context: $context);
         } catch (Throwable $e) {
-            // TODO ensure this does not write to the nightwatch logger!
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->sensor->exception($exception);
         }
 
         return $record;

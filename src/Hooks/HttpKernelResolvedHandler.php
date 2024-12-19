@@ -6,7 +6,6 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Kernel;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
@@ -32,7 +31,7 @@ final class HttpKernelResolvedHandler
             // sub-handlers.
             $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->sensor, $this->requestState, $app));
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->sensor->exception($exception);
         }
 
         try {
@@ -43,7 +42,7 @@ final class HttpKernelResolvedHandler
                 ]);
             }
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->sensor->exception($exception);
         }
     }
 }

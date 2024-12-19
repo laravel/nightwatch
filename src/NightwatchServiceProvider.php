@@ -27,6 +27,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Client\Factory as Http;
+use Illuminate\Log\LogManager;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Queue\Events\JobQueued;
@@ -66,6 +67,7 @@ use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 use function class_exists;
@@ -118,7 +120,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerConfig();
             $this->registerBindings();
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->logError($e);
         }
     }
 
@@ -137,7 +139,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->determineExecutionType();
             $this->registerHooks();
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->logError($e);
         }
     }
 
@@ -407,5 +409,29 @@ final class NightwatchServiceProvider extends ServiceProvider
         }
 
         return $state;
+    }
+
+    private function logError(Throwable $e)
+    {
+        try {
+            /** @var LogManager */
+            $log = $this->app->make('log');
+            /** @var Repository */
+            $config = $this->app->make('config');
+
+            $this->errorLogger()->critical('[nightwatch] '.$e->getMessage());
+        } catch (Throwable $e) {
+            //
+        }
+    }
+
+    private function errorLogger(): LoggerInterface
+    {
+        /** @var LogManager */
+        $log = $this->app->make('log');
+        /** @var Repository */
+        $config = $this->app->make('config');
+
+        return $log->channel($config->get('nightwatch.error_log_channel') ?: 'single');
     }
 }
