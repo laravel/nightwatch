@@ -26,7 +26,7 @@ final class ConsoleKernelResolvedHandler
                 $kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->commandState, $app));
             }
         } catch (Throwable $e) {
-            $this->sensor->exception($e);
+            // Handle this!
         }
     }
 }
