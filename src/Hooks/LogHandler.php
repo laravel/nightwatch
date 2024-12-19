@@ -28,6 +28,7 @@ final class LogHandler implements HandlerInterface
         try {
             $this->sensor->log($record);
         } catch (Throwable $e) {
+            // TODO we need to ensure this does not log to the Nightwatch logger!
             Log::critical('[nightwatch] '.$e->getMessage());
         }
 
@@ -44,6 +45,7 @@ final class LogHandler implements HandlerInterface
                 $this->handle($record);
             }
         } catch (Throwable $e) {
+            // TODO we need to ensure this does not log to the Nightwatch logger!
             Log::critical('[nightwatch] '.$e->getMessage());
         }
     }

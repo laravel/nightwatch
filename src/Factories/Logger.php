@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Factories;
 
 use DateTimeZone;
-use Illuminate\Log\Logger as IlluminateLogger;
 use Laravel\Nightwatch\Hooks\LogHandler;
 use Laravel\Nightwatch\Hooks\LogRecordProcessor;
 use Laravel\Nightwatch\SensorManager;
@@ -24,9 +23,9 @@ final class Logger
     /**
      * @param  array<string, mixed>  $config
      */
-    public function __invoke(array $config): IlluminateLogger
+    public function __invoke(array $config): Monolog
     {
-        return new IlluminateLogger(new Monolog(
+        return new Monolog(
             name: 'nightwatch',
             handlers: [
                 new LogHandler($this->sensor),
@@ -37,6 +36,6 @@ final class Logger
                 // new JsonFormatter, // ditch stack trace? see other options.
             ],
             // timezone: new DateTimeZone('UTC'),
-        ));
+        );
     }
 }

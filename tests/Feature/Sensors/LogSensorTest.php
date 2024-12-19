@@ -2,6 +2,7 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
@@ -133,11 +134,49 @@ it('does not mutate the date objects', function () {
     expect($carbonImmutable->getTimezone()->getName())->toBe('Australia/Melbourne');
 });
 
+it('captures context', function () {
+    $ingest = fakeIngest();
+    Log::shareContext([
+        'shared' => 'context',
+    ]);
+    Route::get('/users', function () {
+        Log::channel('nightwatch')->info('Hello world!', [
+            'context' => 'value',
+            'date' => now(),
+        ]);
+    });
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('log:0.context', [
+        'shared' => 'context',
+        'context' => 'value',
+        'date' => '2000-01-01 01:02:03.456789 (UTC)',
+    ]);
+    $ingest->assertLatestWrite('log:0.extra', []);
+});
+
+it('captures extra', function () {
+    $ingest = fakeIngest();
+    Context::add('extra', 'context');
+    Route::get('/users', function () {
+        Log::channel('nightwatch')->info('Hello world!');
+    });
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('log:0.extra', [
+        'extra' => 'context',
+    ]);
+    $ingest->assertLatestWrite('log:0.context', []);
+});
+
 it('does not recursively capture nightwatch logs', function () {
     // Nightwatch often writes logs when things go wrong.
     // What if something goes wrong while we are trying to write logs!
     // We would then try and write more logs: bad!
 })->todo();
-
-it('captures context')->todo();
-it('captures extra')->todo();
