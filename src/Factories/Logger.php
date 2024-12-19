@@ -33,7 +33,7 @@ final class Logger
                 new LogRecordProcessor('Y-m-d H:i:s.uP'),
                 new PsrLogMessageProcessor('Y-m-d H:i:s.uP'),
             ],
-            // timezone: new DateTimeZone('UTC'),
+            timezone: new DateTimeZone('UTC'),
         );
     }
 }
