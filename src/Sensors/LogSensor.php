@@ -7,6 +7,8 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Monolog\LogRecord;
 
+use function json_encode;
+
 /**
  * @internal
  */
@@ -33,8 +35,8 @@ final class LogSensor
             user: $this->executionState->user->id(),
             level: $record->level->toPsrLogLevel(),
             message: $record->message,
-            context: $record->context,
-            extra: $record->extra,
+            context: json_encode((object) $record->context, flags: JSON_THROW_ON_ERROR),
+            extra: json_encode((object) $record->extra, flags: JSON_THROW_ON_ERROR),
         ));
     }
 }

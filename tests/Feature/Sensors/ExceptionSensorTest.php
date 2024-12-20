@@ -64,7 +64,7 @@ it('can ingest thrown exceptions', function () {
             'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
             'line' => $line,
             'message' => 'Whoops!',
-            'code' => 0,
+            'code' => '0',
             'trace' => json_encode(array_map(fn ($frame) => [
                 'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
                 'source' => ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'].'('.implode(', ', array_map(fn ($arg) => match (gettype($arg)) {
@@ -93,7 +93,7 @@ it('captures the code', function () {
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exception:0._group', hash('md5', "MyException,999,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"));
-    $ingest->assertLatestWrite('exception:0.code', 999);
+    $ingest->assertLatestWrite('exception:0.code', '999');
 });
 
 it('can ingest reported exceptions', function () {
@@ -130,7 +130,7 @@ it('can ingest reported exceptions', function () {
             'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
             'line' => $line,
             'message' => 'Whoops!',
-            'code' => 0,
+            'code' => '0',
             'trace' => json_encode(array_map(fn ($frame) => [
                 'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
                 'source' => ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'].'('.implode(', ', array_map(fn ($arg) => match (gettype($arg)) {
@@ -177,7 +177,7 @@ it('handles view exceptions', function () {
     $ingest->assertLatestWrite('exception:0.file', 'workbench/resources/views/exception.blade.php');
     $ingest->assertLatestWrite('exception:0.class', 'Exception');
     $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
-    $ingest->assertLatestWrite('exception:0.code', 999);
+    $ingest->assertLatestWrite('exception:0.code', '999');
     $ingest->assertLatestWrite('exception:0._group', hash('md5', 'Exception,999,workbench/resources/views/exception.blade.php,'));
 });
 
@@ -196,7 +196,7 @@ it('handles spatie view exceptions', function () {
     $ingest->assertLatestWrite('exception:0.file', 'workbench/resources/views/exception.blade.php');
     $ingest->assertLatestWrite('exception:0.class', 'Exception');
     $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
-    $ingest->assertLatestWrite('exception:0.code', 999);
+    $ingest->assertLatestWrite('exception:0.code', '999');
     $ingest->assertLatestWrite('exception:0._group', hash('md5', 'Exception,999,workbench/resources/views/exception.blade.php,6'));
 });
 
@@ -552,7 +552,7 @@ it('can manually report exceptions', function () {
             'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
             'line' => $line,
             'message' => 'Whoops!',
-            'code' => 0,
+            'code' => '0',
             'trace' => json_encode(array_map(fn ($frame) => [
                 'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
                 'source' => ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'].'('.implode(', ', array_map(fn ($arg) => match (gettype($arg)) {

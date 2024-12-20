@@ -51,8 +51,8 @@ it('ingests logs', function () {
             'user' => '',
             'level' => 'info',
             'message' => 'hello world',
-            'context' => [],
-            'extra' => [],
+            'context' => '{}',
+            'extra' => '{}',
         ]);
 
         return true;
@@ -152,12 +152,8 @@ it('captures context', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('log:0.context', [
-        'shared' => 'context',
-        'context' => 'value',
-        'date' => '2000-01-01 01:02:03.456789+00:00',
-    ]);
-    $ingest->assertLatestWrite('log:0.extra', []);
+    $ingest->assertLatestWrite('log:0.context', '{"shared":"context","context":"value","date":"2000-01-01 01:02:03.456789+00:00"}');
+    $ingest->assertLatestWrite('log:0.extra', '{}');
 });
 
 it('captures extra', function () {
@@ -171,10 +167,8 @@ it('captures extra', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('log:0.extra', [
-        'extra' => 'context',
-    ]);
-    $ingest->assertLatestWrite('log:0.context', []);
+    $ingest->assertLatestWrite('log:0.extra', '{"extra":"context"}');
+    $ingest->assertLatestWrite('log:0.context', '{}');
 });
 
 it('falls back to "single" log channel when error log is set to "nightwatch"', function () {
