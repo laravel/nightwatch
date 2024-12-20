@@ -32,13 +32,7 @@ final class Core
         try {
             $this->sensor->exception($e);
         } catch (Throwable $e) {
-            try {
-                $logger = call_user_func($this->emergencyLoggerResolver);
-
-                $logger->critical('[nighwatch] '.$e->getMessage());
-            } catch (Throwable $e) {
-                //
-            }
+            $this->handleUnrecoverableException($e);
         }
     }
 
@@ -52,5 +46,19 @@ final class Core
         $this->sensor = $sensor;
 
         return $this;
+    }
+
+    /**
+     * @internal
+     */
+    public function handleUnrecoverableException(Throwable $e): void
+    {
+        try {
+            $logger = call_user_func($this->emergencyLoggerResolver);
+
+            $logger->critical('[nighwatch] '.$e->getMessage());
+        } catch (Throwable $e) {
+            //
+        }
     }
 }

@@ -122,7 +122,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerConfig();
             $this->registerBindings();
         } catch (Throwable $e) {
-            $this->logError($e);
+            $this->handleUnrecoverableException($e);
         }
     }
 
@@ -141,7 +141,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->determineExecutionType();
             $this->registerHooks();
         } catch (Throwable $e) {
-            $this->logError($e);
+            $this->handleUnrecoverableException($e);
         }
     }
 
@@ -420,7 +420,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         return $state;
     }
 
-    private function logError(Throwable $e): void
+    private function handleUnrecoverableException(Throwable $e): void
     {
         try {
             $logger = call_user_func($this->emergencyLoggerResolver());

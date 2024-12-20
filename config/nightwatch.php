@@ -14,8 +14,7 @@ return [
 
     'buffer_threshold' => env('NIGHTWATCH_BUFFER_THRESHOLD', 1_000_000),
 
-    // TODO what is the best default here? Could be a LOT of errors depending on the traffic.
-    'error_log_channel' => env('NIGHTWATCH_ERROR_LOG_CHANNEL', 'stderr'),
+    'error_log_channel' => env('NIGHTWATCH_ERROR_LOG_CHANNEL', 'single'),
 
     'ingests' => [
 

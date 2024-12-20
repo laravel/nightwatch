@@ -45,7 +45,7 @@ final class CommandLifecycleIsLongerThanHandler
 
             $ingest->write($this->nightwatch->state->records->flush());
         } catch (Throwable $e) {
-            // NEED TO HANDLE THIS!
+            $this->nightwatch->handleUnrecoverableException($e);
         }
     }
 }

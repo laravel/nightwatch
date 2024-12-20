@@ -30,7 +30,7 @@ final class ConsoleKernelResolvedHandler
                 $kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->nightwatch, $app));
             }
         } catch (Throwable $e) {
-            // Handle this!
+            $this->nightwatch->handleUnrecoverableException($e);
         }
     }
 }

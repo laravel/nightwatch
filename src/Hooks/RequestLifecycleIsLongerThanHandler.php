@@ -46,7 +46,7 @@ final class RequestLifecycleIsLongerThanHandler
 
             $ingest->write($this->nightwatch->state->records->flush());
         } catch (Throwable $e) {
-            // HANDLE THIS!
+            $this->nightwatch->handleUnrecoverableException($e);
         }
     }
 }

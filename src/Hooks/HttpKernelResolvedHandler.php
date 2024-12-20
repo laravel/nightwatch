@@ -7,7 +7,6 @@ use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Kernel;
 use Laravel\Nightwatch\Core;
-use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 use function class_exists;
@@ -35,7 +34,7 @@ final class HttpKernelResolvedHandler
             // sub-handlers.
             $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->nightwatch, $app));
         } catch (Throwable $e) {
-            // Handle this!
+            $this->nightwatch->handleUnrecoverableException($e);
         }
 
         try {
