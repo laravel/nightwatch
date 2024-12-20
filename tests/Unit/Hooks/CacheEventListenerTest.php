@@ -18,11 +18,6 @@ it('gracefully handles exceptions', function () {
 
             throw new RuntimeException('Whoops!');
         }
-
-        public function exception(Throwable $e): void
-        {
-            //
-        }
     });
 
     $listener = new CacheEventListener($nightwatch);
