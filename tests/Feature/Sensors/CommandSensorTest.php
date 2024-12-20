@@ -5,7 +5,6 @@ use Illuminate\Console\Command;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\Console\Input\StringInput;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
@@ -28,7 +27,6 @@ beforeEach(function () {
 
 it('can ingest commands', function () {
     $ingest = fakeIngest();
-    Log::listen(dump(...));
     Artisan::command('app:build {destination} {--force} {--compress}', function () {
         travelTo(now()->addMicroseconds(1234567));
 

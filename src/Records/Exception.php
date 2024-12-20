@@ -33,7 +33,7 @@ final class Exception
         public string $file,
         public int $line,
         public string $message,
-        public int $code,
+        public int|string $code,
         public string $trace,
         public bool $handled,
         public string $php_version,

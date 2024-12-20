@@ -4,6 +4,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Types\Str;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
@@ -565,6 +566,19 @@ it('can manually report exceptions', function () {
             'laravel_version' => '11.33.0',
         ],
     ]);
+});
+
+it('handles PDOExceptions where the code is a string', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', function () use (&$trace, &$line) {
+        DB::table('__foo__')->get();
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exception:0.code', 'HY000');
 });
 
 final class MyException extends RuntimeException

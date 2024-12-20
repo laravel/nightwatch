@@ -446,11 +446,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             $channel = $config->get('nightwatch.error_log_channel');
 
-            if (! is_string($channel) || ! $channel) {
-                $channel = 'single';
-            }
-
-            if ($channel === 'nightwatch') {
+            if (! is_string($channel) || ! $channel || $channel === 'nightwatch') {
                 $channel = 'single';
             }
 
