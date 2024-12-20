@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 
@@ -121,8 +120,8 @@ it('gracefully handles response size for a streamed file that is deleted after s
     $response = response()->file(stream_get_meta_data($file)['uri'])->deleteFileAfterSend()->sendContent();
     ob_end_clean();
 
-    app(Core::class)->sensor->request($request, $response);
-    $ingest->write(app(Core::class)->state->records->flush());
+    nightwatch()->sensor->request($request, $response);
+    $ingest->write(nightwatch()->state->records->flush());
 
     $ingest->assertLatestWrite('request:0.response_size', 0);
 });
@@ -162,8 +161,8 @@ it('uses the content-length header as the response size when present on a stream
     $response = response()->file(stream_get_meta_data($file)['uri'], headers: ['Content-length' => 17])->deleteFileAfterSend()->sendContent();
     ob_end_clean();
 
-    app(Core::class)->sensor->request($request, $response);
-    $ingest->write(app(Core::class)->state->records->flush());
+    nightwatch()->sensor->request($request, $response);
+    $ingest->write(nightwatch()->state->records->flush());
 
     $ingest->assertLatestWrite('request:0.response_size', 17);
 });
@@ -377,7 +376,7 @@ it('captures bootstrap execution stage', function () {
     Route::get('/users', fn () => []);
 
     // Simulating boot time.
-    app(Core::class)->sensor->stage(ExecutionStage::Bootstrap);
+    nightwatch()->sensor->stage(ExecutionStage::Bootstrap);
     syncClock(now()->addMicroseconds(5));
     $response = get('/users');
 

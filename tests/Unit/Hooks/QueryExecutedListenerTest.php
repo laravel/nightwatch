@@ -2,12 +2,11 @@
 
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
-use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 

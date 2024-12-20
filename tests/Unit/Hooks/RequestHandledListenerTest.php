@@ -3,12 +3,11 @@
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\RequestHandledListener;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 

@@ -1,7 +1,6 @@
 <?php
 
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -13,7 +12,7 @@ defineEnvironment(function () {
 });
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -47,7 +46,7 @@ it('gracefully handles exceptions', function () {
 });
 
 it('handles response types that laravel does not wrap', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 

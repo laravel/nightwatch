@@ -2,12 +2,11 @@
 
 use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Cache\Events\RetrievingKey;
-use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 

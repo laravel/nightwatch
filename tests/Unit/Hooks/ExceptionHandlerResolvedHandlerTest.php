@@ -1,12 +1,11 @@
 <?php
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
-use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -28,7 +27,7 @@ it('gracefully handles exceptions', function () {
 });
 
 it('gracefully handles custom exception handlers', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $captured = false;
 

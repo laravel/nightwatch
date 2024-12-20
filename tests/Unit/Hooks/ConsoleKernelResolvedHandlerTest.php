@@ -5,7 +5,6 @@ use Illuminate\Foundation\Console\Kernel;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\ConsoleKernelResolvedHandler;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\CommandState;
@@ -20,7 +19,7 @@ defineEnvironment(function () {
 
 it('gracefully handles exceptions in all three phases', function () {
     Artisan::command('app:build', fn () => 0);
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrownInStage = false;
 
@@ -77,7 +76,7 @@ it('gracefully handles exceptions in all three phases', function () {
 
 it('gracefully handles exceptions thrown while ingesting', function () {
     Artisan::command('app:build', fn () => 0);
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public function __construct() {}
 
@@ -125,7 +124,7 @@ it('gracefully handles exceptions thrown while ingesting', function () {
 });
 
 it('gracefully handles custom Kernel implementations', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 

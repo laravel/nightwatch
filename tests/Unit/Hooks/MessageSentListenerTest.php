@@ -2,7 +2,6 @@
 
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\SentMessage;
-use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\MessageSentListener;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\Mailer\Envelope;
@@ -11,7 +10,7 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\RawMessage;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 

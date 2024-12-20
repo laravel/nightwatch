@@ -3,15 +3,13 @@
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use Laravel\Nightwatch\Core;
-use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
 use Laravel\Nightwatch\SensorManager;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 it('gracefully handles exceptions in the before middleware', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -26,7 +24,7 @@ it('gracefully handles exceptions in the before middleware', function () {
     });
 
     $thrown = false;
-    app(Core::class)->clock->microtimeResolver = function () use (&$thrown): float {
+    nightwatch()->clock->microtimeResolver = function () use (&$thrown): float {
         $thrown = true;
 
         throw new RuntimeException('Whoops!');
@@ -42,7 +40,7 @@ it('gracefully handles exceptions in the before middleware', function () {
 });
 
 it('gracefully handles exceptions in the after middleware', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 

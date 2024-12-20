@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\Core;
 use Ramsey\Uuid\Uuid;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
@@ -188,7 +187,7 @@ it('normalizes sqs queue names', function () {
         'suffix' => '-production',
     ]);
 
-    app(Core::class)->sensor->queuedJob(new JobQueued(
+    nightwatch()->sensor->queuedJob(new JobQueued(
         connectionName: 'my-sqs-queue',
         queue: 'https://sqs.us-east-1.amazonaws.com/your-account-id/queue-name-production',
         id: Str::uuid()->toString(),
@@ -196,7 +195,7 @@ it('normalizes sqs queue names', function () {
         payload: '{"uuid":"00000000-0000-0000-0000-000000000000"}',
         delay: 0,
     ));
-    $ingest->write(app(Core::class)->state->records->flush());
+    $ingest->write(nightwatch()->state->records->flush());
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('queued-job:0.queue', 'queue-name');

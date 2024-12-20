@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
 use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\RequestState;
@@ -19,7 +18,7 @@ defineEnvironment(function () {
 });
 
 it('gracefully handles exceptions in all three phases', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrownInStage = false;
 
@@ -70,7 +69,7 @@ it('gracefully handles exceptions in all three phases', function () {
 });
 
 it('gracefully handles exceptions thrown while ingesting', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public function __construct() {}
 
@@ -111,7 +110,7 @@ it('gracefully handles exceptions thrown while ingesting', function () {
 });
 
 it('gracefully handles custom exception handlers', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 

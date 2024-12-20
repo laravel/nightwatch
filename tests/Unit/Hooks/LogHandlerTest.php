@@ -1,14 +1,13 @@
 <?php
 
 use Carbon\CarbonImmutable;
-use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\LogHandler;
 use Laravel\Nightwatch\SensorManager;
 use Monolog\Level;
 use Monolog\LogRecord;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 

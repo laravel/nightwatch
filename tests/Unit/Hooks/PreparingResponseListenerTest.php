@@ -3,7 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Routing\Events\PreparingResponse;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\SensorManager;
 
@@ -14,7 +13,7 @@ defineEnvironment(function () {
 });
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = Nightwatch::setSensor($sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
