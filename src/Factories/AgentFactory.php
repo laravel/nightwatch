@@ -5,7 +5,6 @@ namespace Laravel\Nightwatch\Factories;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Env;
 use Laravel\Nightwatch\Buffers\StreamBuffer;
-use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Console\Agent;
 use React\EventLoop\StreamSelectLoop;
 
@@ -29,7 +28,7 @@ final class AgentFactory
      *      }
      * }  $config
      */
-    public function __construct(private Clock $clock, private array $config)
+    public function __construct(private array $config)
     {
         //
     }
@@ -46,7 +45,7 @@ final class AgentFactory
         // running the command.
         $app->bindMethod([Agent::class, 'handle'], fn (Agent $agent, Application $app) => $agent->handle(
             (new SocketServerFactory($loop, $this->config))($app),
-            (new RemoteIngestFactory($loop, $this->clock, $this->config, $debug))($app),
+            (new RemoteIngestFactory($loop, $this->config, $debug))($app),
         ));
 
         return new Agent(new StreamBuffer, $loop, $this->config['ingests']['socket']['timeout'] ?? 0.5, $debug ? 1 : 10);

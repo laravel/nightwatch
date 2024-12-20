@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Http\Client\Factory;
-use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -16,7 +15,6 @@ final class HttpClientFactoryResolvedHandler
      */
     public function __construct(
         private Core $nightwatch,
-        private Clock $clock,
     ) {
         //
     }
@@ -25,7 +23,7 @@ final class HttpClientFactoryResolvedHandler
     {
         try {
             // TODO check this isn't a memory leak in octane
-            $factory->globalMiddleware(new GuzzleMiddleware($this->nightwatch, $this->clock));
+            $factory->globalMiddleware(new GuzzleMiddleware($this->nightwatch));
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

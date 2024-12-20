@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
-use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\RemoteIngest;
 use React\EventLoop\LoopInterface;
 use RuntimeException;
@@ -30,7 +29,6 @@ final class RemoteIngestFactory
      */
     public function __construct(
         private LoopInterface $loop,
-        private Clock $clock,
         private array $config,
         private bool $debug,
     ) {
@@ -43,7 +41,7 @@ final class RemoteIngestFactory
 
         $factory = match ($name) {
             'null' => new NullRemoteIngestFactory,
-            'http' => new HttpIngestFactory($this->loop, $this->clock, $this->config, $this->debug),
+            'http' => new HttpIngestFactory($this->loop, $this->config, $this->debug),
             default => throw new RuntimeException("Unknown remote ingest [{$name}]."),
         };
 

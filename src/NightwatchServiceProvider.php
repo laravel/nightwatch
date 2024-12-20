@@ -109,8 +109,6 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private bool $isRequest;
 
-    private Clock $clock;
-
     public function register(): void
     {
         try {
@@ -170,20 +168,14 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerBindings(): void
     {
-        $this->registerClock();
         $this->registerAgent();
         $this->registerLocalIngest();
         $this->registerMiddleware();
     }
 
-    private function registerClock(): void
-    {
-        $this->clock = $this->app->instance(Clock::class, new Clock); // @phpstan-ignore assign.propertyType
-    }
-
     private function registerAgent(): void
     {
-        $this->app->singleton(Agent::class, (new AgentFactory($this->clock, $this->nightwatchConfig))(...));
+        $this->app->singleton(Agent::class, (new AgentFactory($this->nightwatchConfig))(...));
     }
 
     private function registerLocalIngest(): void
@@ -235,7 +227,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $sensor = new SensorManager(
             executionState: $state = $this->executionState(),
-            clock: $this->clock,
+            clock: $clock = new Clock,
             location: $location,
             config: $this->config,
         );
@@ -243,7 +235,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->app->instance(Core::class, $core = new Core(
             sensor: $sensor,
             state: $state,
-            clock: $this->clock,
+            clock: $clock,
             emergencyLoggerResolver: $this->emergencyLoggerResolver())
         );
 
@@ -295,7 +287,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\Records\OutgoingRequest
          */
-        $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($core, $this->clock))(...));
+        $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\CacheEvent

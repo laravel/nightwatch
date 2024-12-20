@@ -19,8 +19,8 @@ final class HttpIngest implements RemoteIngest
 
     public function __construct(
         private HttpClient $client,
-        private Clock $clock,
         private int $concurrentRequestLimit,
+        private Clock $clock = new Clock,
     ) {
         //
     }
