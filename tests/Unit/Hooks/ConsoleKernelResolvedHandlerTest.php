@@ -42,11 +42,6 @@ it('gracefully handles exceptions in all three phases', function () {
 
             throw new RuntimeException('Whoops!');
         }
-
-        public function exception(Throwable $e): void
-        {
-            //
-        }
     });
     $state = app(CommandState::class);
     $state->records = new class extends RecordsBuffer
@@ -90,11 +85,6 @@ it('gracefully handles exceptions thrown while ingesting', function () {
             $this->thrownInCommand = true;
 
             throw new RuntimeException('Whoops!');
-        }
-
-        public function exception(Throwable $e): void
-        {
-            //
         }
 
         public function flush(): string
