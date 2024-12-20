@@ -10,7 +10,7 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\RawMessage;
 
 it('gracefully handles exceptions', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -22,11 +22,11 @@ it('gracefully handles exceptions', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
+    });
     $event = new MessageSent(new SentMessage(new MailerSentMessage(
         new RawMessage('Hello world'), new Envelope(new Address('nightwatch@laravel.com'), [new Address('tim@laravel.com')])
     )));
-    $handler = new MessageSentListener($sensor);
+    $handler = new MessageSentListener($nightwatch);
 
     $handler($event);
 

@@ -6,9 +6,10 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
-use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\State\CommandState;
@@ -19,10 +20,16 @@ use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\travelTo;
 
 pest()->extends(Tests\TestCase::class)->beforeEach(function () {
-    app(Clock::class)->microtimeResolver = fn () => (float) now()->format('U.u');
+    nightwatch()->clock->microtimeResolver = fn () => (float) now()->format('U.u');
     app()->setBasePath($path = realpath(__DIR__.'/../'));
     app(Location::class)->setBasePath($path)->setPublicPath("{$path}/public");
+    Config::set('nightwatch.error_log_channel', 'null');
 });
+
+function nightwatch(): Core
+{
+    return app(Core::class);
+}
 
 function forceRequestExecutionState(): void
 {

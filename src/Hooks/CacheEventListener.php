@@ -3,23 +3,28 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Cache\Events\CacheEvent;
-use Illuminate\Support\Facades\Log;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 final class CacheEventListener
 {
-    public function __construct(private SensorManager $sensor)
-    {
+    /**
+     * @param  Core<RequestState>|Core<CommandState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
     public function __invoke(CacheEvent $event): void
     {
         try {
-            $this->sensor->cacheEvent($event);
+            $this->nightwatch->sensor->cacheEvent($event);
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->report($e);
         }
     }
 }

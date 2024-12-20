@@ -6,8 +6,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Kernel;
-use Illuminate\Support\Facades\Log;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
@@ -15,8 +14,12 @@ use function class_exists;
 
 final class HttpKernelResolvedHandler
 {
-    public function __construct(private SensorManager $sensor, private RequestState $requestState)
-    {
+    /**
+     * @param  Core<RequestState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
@@ -30,9 +33,9 @@ final class HttpKernelResolvedHandler
             // TODO Check this isn't a memory leak in Octane.
             // TODO Check if we can cache this handler between requests on Octane. Same goes for other
             // sub-handlers.
-            $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->sensor, $this->requestState, $app));
+            $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->nightwatch, $app));
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->handleUnrecoverableException($e);
         }
 
         try {
@@ -43,7 +46,7 @@ final class HttpKernelResolvedHandler
                 ]);
             }
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->report($e);
         }
     }
 }

@@ -5,7 +5,6 @@ use Illuminate\Routing\Events\PreparingResponse;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\State\RequestState;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
 
@@ -14,7 +13,7 @@ defineEnvironment(function () {
 });
 
 it('gracefully handles exceptions', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -26,10 +25,9 @@ it('gracefully handles exceptions', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
-    $state = app(RequestState::class);
-    $state->stage = ExecutionStage::Action;
-    $listener = new PreparingResponseListener($sensor, $state);
+    });
+    $nightwatch->state->stage = ExecutionStage::Action;
+    $listener = new PreparingResponseListener($nightwatch);
     $event = new PreparingResponse(Request::create('/tests'), response(''));
 
     $listener($event);

@@ -1,6 +1,5 @@
 <?php
 
-use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Ingests\Remote\HttpClient;
 use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
 use React\Http\Message\Response;
@@ -17,7 +16,7 @@ it('limits the number of concurrent requests', function () {
         {
             return $this->promise;
         }
-    }, new Clock(0), 5);
+    }, 5);
 
     $ingest->write('[]');
     $ingest->write('[]');
@@ -49,7 +48,7 @@ it('tracks resolved requests when considering connection limit', function () {
         {
             return array_shift($this->deferredPromises)->promise();
         }
-    }, new Clock(0), 2);
+    }, 2);
 
     $response = new Response;
     $ingest->write('[]');

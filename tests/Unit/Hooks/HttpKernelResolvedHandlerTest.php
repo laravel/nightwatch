@@ -18,7 +18,7 @@ defineEnvironment(function () {
 });
 
 it('gracefully handles exceptions in all three phases', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrownInStage = false;
 
@@ -41,7 +41,7 @@ it('gracefully handles exceptions in all three phases', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
+    });
     $state = app(RequestState::class);
     $state->records = new class extends RecordsBuffer
     {
@@ -56,7 +56,7 @@ it('gracefully handles exceptions in all three phases', function () {
             throw new RuntimeException('Whoops!');
         }
     };
-    $handler = new HttpKernelResolvedHandler($sensor, app(RequestState::class));
+    $handler = new HttpKernelResolvedHandler($nightwatch);
     $kernel = app(Kernel::class);
 
     $handler($kernel, app());
@@ -69,7 +69,7 @@ it('gracefully handles exceptions in all three phases', function () {
 });
 
 it('gracefully handles exceptions thrown while ingesting', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public function __construct() {}
 
@@ -87,7 +87,7 @@ it('gracefully handles exceptions thrown while ingesting', function () {
         {
             return '';
         }
-    };
+    });
     $ingest = app()->instance(LocalIngest::class, new class implements LocalIngest
     {
         public bool $thrown = false;
@@ -99,7 +99,7 @@ it('gracefully handles exceptions thrown while ingesting', function () {
             throw new RuntimeException('Whoops!');
         }
     });
-    $handler = new HttpKernelResolvedHandler($sensor, app(RequestState::class));
+    $handler = new HttpKernelResolvedHandler($nightwatch);
     $kernel = app(Kernel::class);
 
     $handler($kernel, app());
@@ -110,7 +110,7 @@ it('gracefully handles exceptions thrown while ingesting', function () {
 });
 
 it('gracefully handles custom exception handlers', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -122,7 +122,7 @@ it('gracefully handles custom exception handlers', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
+    });
     $kernel = new class implements HttpKernel
     {
         public function bootstrap()
@@ -145,7 +145,7 @@ it('gracefully handles custom exception handlers', function () {
             //
         }
     };
-    $handler = new HttpKernelResolvedHandler($sensor, app(RequestState::class));
+    $handler = new HttpKernelResolvedHandler($nightwatch);
     $handler($kernel, app());
 
     expect(true)->toBeTrue();

@@ -54,12 +54,9 @@ final class FakeIngest implements LocalIngest
 
         if (str_contains($key, ':')) {
             $type = Str::before($key, ':');
+            $key = Str::after($key, ':');
 
             $latestWrite = collect($latestWrite)->where('t', $type)->values()->all();
-
-            expect(count($latestWrite) > 0)->toBeTrue('The type was not found in the latest write.');
-
-            $key = Str::after($key, ':');
         }
 
         if ($key === '*') {

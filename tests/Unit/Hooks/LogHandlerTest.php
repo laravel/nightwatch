@@ -1,8 +1,10 @@
 <?php
 
-use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Hooks\CommandBootedHandler;
+use Carbon\CarbonImmutable;
+use Laravel\Nightwatch\Hooks\LogHandler;
 use Laravel\Nightwatch\SensorManager;
+use Monolog\Level;
+use Monolog\LogRecord;
 
 it('gracefully handles exceptions', function () {
     $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
@@ -11,16 +13,16 @@ it('gracefully handles exceptions', function () {
 
         public function __construct() {}
 
-        public function stage(ExecutionStage $executionStage): void
+        public function log(LogRecord $record): void
         {
             $this->thrown = true;
 
             throw new RuntimeException('Whoops!');
         }
     });
-    $handler = new CommandBootedHandler($nightwatch);
+    $handler = new LogHandler($nightwatch);
 
-    $handler(app());
+    $handler->handle(new LogRecord(CarbonImmutable::now(), 'nightwatch', Level::Debug, 'hello world'));
 
     expect($sensor->thrown)->toBeTrue();
 });

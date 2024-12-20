@@ -56,7 +56,7 @@ final class QuerySensor
         ));
     }
 
-    protected function hash(QueryExecuted $event): string
+    private function hash(QueryExecuted $event): string
     {
         if (! in_array($event->connection->getDriverName(), ['mariadb', 'mysql', 'pgsql', 'sqlite', 'sqlsrv'], true)) {
             return hash('md5', "{$event->connectionName},{$event->sql}");
