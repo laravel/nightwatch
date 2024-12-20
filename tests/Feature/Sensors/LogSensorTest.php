@@ -2,8 +2,10 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\get;
@@ -175,8 +177,27 @@ it('captures extra', function () {
     $ingest->assertLatestWrite('log:0.context', []);
 });
 
-it('does not recursively capture nightwatch logs', function () {
-    // Nightwatch often writes logs when things go wrong.
-    // What if something goes wrong while we are trying to write logs!
-    // We would then try and write more logs: bad!
-})->todo();
+it('falls back to "single" log channel when error log is set to "nightwatch"', function () {
+    $ingest = fakeIngest();
+    $logs = [];
+    Log::listen(function ($event) use (&$logs) {
+        $logs[] = $event;
+    });
+    $e = new RuntimeException('Whoops!');
+    Config::set('nightwatch.error_log_channel', 'nightwatch');
+    Route::get('/', function () use ($e) {
+        nightwatch()->handleUnrecoverableException($e);
+    });
+
+    $response = get('/');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('logs:*', []);
+    expect($logs)->toHaveCount(1);
+    expect($logs[0]->level)->toBe('critical');
+    expect($logs[0]->message)->toBe('[nightwatch] Whoops!');
+    expect($logs[0]->context)->toBe([
+        'exception' => $e,
+    ]);
+});

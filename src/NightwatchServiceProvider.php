@@ -425,7 +425,9 @@ final class NightwatchServiceProvider extends ServiceProvider
         try {
             $logger = call_user_func($this->emergencyLoggerResolver());
 
-            $logger->critical('[nightwatch] '.$e->getMessage());
+            $logger->critical('[nightwatch] '.$e->getMessage(), [
+                'exception' => $e,
+            ]);
         } catch (Throwable $e) {
             //
         }
@@ -445,6 +447,10 @@ final class NightwatchServiceProvider extends ServiceProvider
             $channel = $config->get('nightwatch.error_log_channel');
 
             if (! is_string($channel) || ! $channel) {
+                $channel = 'single';
+            }
+
+            if ($channel === 'nightwatch') {
                 $channel = 'single';
             }
 

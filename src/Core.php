@@ -56,7 +56,9 @@ final class Core
         try {
             $logger = call_user_func($this->emergencyLoggerResolver);
 
-            $logger->critical('[nighwatch] '.$e->getMessage());
+            $logger->critical('[nightwatch] '.$e->getMessage(), [
+                'exception' => $e,
+            ]);
         } catch (Throwable $e) {
             //
         }
