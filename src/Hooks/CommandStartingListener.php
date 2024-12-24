@@ -68,6 +68,19 @@ final class CommandStartingListener
         $this->events->listen(JobExceptionOccurred::class, (new JobExceptionOccurredListener($this->sensor))(...));
     }
 
+    private function registerScheduledTaskHooks(): void
+    {
+        $this->executionState->source = 'schedule';
+
+        $this->events->listen(ScheduledTaskStarting::class, (new ScheduledTaskStartingListener($this->executionState))(...));
+
+        $this->events->listen([
+            ScheduledTaskFinished::class,
+            ScheduledTaskSkipped::class,
+            ScheduledTaskFailed::class,
+        ], (new ScheduledTaskListener($this->sensor, $this->executionState, $this->ingest))(...));
+    }
+
     private function registerCommandHooks(): void
     {
         /**
@@ -83,16 +96,5 @@ final class CommandStartingListener
         // TODO Check if we can cache this handler between requests on Octane. Same goes for other
         // sub-handlers.
         $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->executionState, $this->ingest));
-    }
-
-    private function registerScheduledTaskHooks(): void
-    {
-        $this->events->listen(ScheduledTaskStarting::class, (new ScheduledTaskStartingListener($this->executionState))(...));
-
-        $this->events->listen([
-            ScheduledTaskFinished::class,
-            ScheduledTaskSkipped::class,
-            ScheduledTaskFailed::class,
-        ], (new ScheduledTaskListener($this->sensor, $this->executionState, $this->ingest))(...));
     }
 }
