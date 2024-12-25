@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
+use Illuminate\Console\Events\ScheduledBackgroundTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskSkipped;
@@ -76,6 +77,7 @@ final class CommandStartingListener
 
         $this->events->listen([
             ScheduledTaskFinished::class,
+            ScheduledBackgroundTaskFinished::class,
             ScheduledTaskSkipped::class,
             ScheduledTaskFailed::class,
         ], (new ScheduledTaskListener($this->sensor, $this->executionState, $this->ingest))(...));
