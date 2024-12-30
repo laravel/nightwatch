@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\State;
 use Closure;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Context;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\ExecutionStage;
@@ -104,6 +105,8 @@ final class CommandState
     public function resetTraceId(): void
     {
         $this->trace = (string) Str::uuid();
+
+        Context::addHidden('nightwatch_trace_id', $this->trace);
     }
 
     public function resetTimestamp(): void
