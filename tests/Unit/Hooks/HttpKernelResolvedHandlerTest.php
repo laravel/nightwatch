@@ -11,9 +11,7 @@ use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\Response;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
-
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 

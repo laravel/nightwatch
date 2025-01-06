@@ -12,11 +12,10 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use MongoDB\Laravel\Connection as MongoDbConnection;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\get;
 use function Pest\Laravel\travelTo;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 

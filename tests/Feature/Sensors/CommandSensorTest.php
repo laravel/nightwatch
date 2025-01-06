@@ -7,12 +7,11 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\Console\Input\StringInput;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\travelTo;
 
 uses(WithConsoleEvents::class);
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceCommandExecutionState();
 });
 

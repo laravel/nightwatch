@@ -13,7 +13,7 @@ use function debug_backtrace;
 final class QueryExecutedListener
 {
     /**
-     * @param  Core<RequestState>|Core<CommandState>  $nightwatch
+     * @param  Core<RequestState|CommandState>  $nightwatch
      */
     public function __construct(
         private Core $nightwatch,

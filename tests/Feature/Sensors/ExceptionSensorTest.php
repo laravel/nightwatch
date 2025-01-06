@@ -9,10 +9,9 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Types\Str;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\get;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 
