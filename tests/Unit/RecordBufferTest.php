@@ -4,7 +4,7 @@ use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Mail;
 
-it('only keeps 100 records in memory', function () {
+it('only keeps 500 records in memory', function () {
     $buffer = new RecordsBuffer;
 
     for ($i = 0; $i < 1_000; $i++) {
