@@ -17,7 +17,7 @@ use Monolog\Processor\PsrLogMessageProcessor;
 final class Logger
 {
     /**
-     * @param  Core<RequestState>|Core<CommandState>  $nightwatch
+     * @param  Core<RequestState|CommandState>  $nightwatch
      */
     public function __construct(
         private Core $nightwatch,

@@ -6,11 +6,10 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 

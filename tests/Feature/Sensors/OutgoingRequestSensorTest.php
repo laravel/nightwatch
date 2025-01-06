@@ -6,11 +6,10 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Psr\Http\Message\StreamInterface;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 

@@ -14,7 +14,7 @@ use Throwable;
 final class TerminatingMiddleware
 {
     /**
-     * @param  Core<RequestState>|Core<CommandState>  $nightwatch
+     * @param  Core<RequestState|CommandState>  $nightwatch
      */
     public function __construct(
         private Core $nightwatch,

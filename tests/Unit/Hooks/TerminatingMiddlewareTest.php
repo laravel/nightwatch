@@ -5,9 +5,7 @@ use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
-
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 

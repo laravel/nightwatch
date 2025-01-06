@@ -11,9 +11,7 @@ use Laravel\Nightwatch\State\CommandState;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\StringInput;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
-
-defineEnvironment(function () {
+beforeAll(function () {
     forceCommandExecutionState();
 });
 

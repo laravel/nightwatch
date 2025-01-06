@@ -22,6 +22,7 @@ final class Core
         public SensorManager $sensor,
         public RequestState|CommandState $state,
         public Clock $clock,
+        public bool $enabled,
         private $emergencyLoggerResolver,
     ) {
         //
@@ -29,6 +30,10 @@ final class Core
 
     public function report(Throwable $e): void
     {
+        if (! $this->enabled) {
+            return;
+        }
+
         try {
             $this->sensor->exception($e);
         } catch (Throwable $e) {

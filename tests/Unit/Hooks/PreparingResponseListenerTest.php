@@ -6,9 +6,7 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\SensorManager;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
-
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 

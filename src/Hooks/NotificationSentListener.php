@@ -14,7 +14,7 @@ use Throwable;
 final class NotificationSentListener
 {
     /**
-     * @param  Core<RequestState>|Core<CommandState>  $nightwatch
+     * @param  Core<RequestState|CommandState>  $nightwatch
      */
     public function __construct(
         private Core $nightwatch,

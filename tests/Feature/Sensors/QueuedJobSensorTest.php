@@ -18,12 +18,11 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 use function Pest\Laravel\withoutExceptionHandling;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 

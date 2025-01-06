@@ -13,14 +13,13 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;
 use function Pest\Laravel\get;
 use function Pest\Laravel\head;
 use function Pest\Laravel\travelTo;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 

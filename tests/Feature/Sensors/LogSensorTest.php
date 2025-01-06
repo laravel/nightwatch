@@ -7,10 +7,9 @@ use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\get;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 
