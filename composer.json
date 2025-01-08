@@ -52,6 +52,10 @@
             "@php vendor/bin/testbench package:discover",
             "@build"
         ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#fb7185\" \"composer agent\" \"sleep 2 && composer serve\"  --names=agent,serve"
+        ],
         "serve": [
             "Composer\\Config::disableProcessTimeout",
             "@build",
