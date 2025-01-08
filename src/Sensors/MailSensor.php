@@ -26,6 +26,11 @@ final class MailSensor
     public function __invoke(MessageSent $event): void
     {
         $now = $this->clock->microtime();
+
+        if (isset($event->data['__laravel_notification'])) {
+            return;
+        }
+
         $class = $event->data['__laravel_mailable'] ?? '';
 
         $this->executionState->mail++;

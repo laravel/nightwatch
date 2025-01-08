@@ -6,10 +6,10 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Log;
-use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\State\CommandState;
@@ -20,22 +20,31 @@ use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\travelTo;
 
 pest()->extends(Tests\TestCase::class)->beforeEach(function () {
-    app(Clock::class)->microtimeResolver = fn () => (float) now()->format('U.u');
+    nightwatch()->clock->microtimeResolver = fn () => (float) now()->format('U.u');
     app()->setBasePath($path = realpath(__DIR__.'/../'));
     app(Location::class)->setBasePath($path)->setPublicPath("{$path}/public");
+    Config::set('nightwatch.error_log_channel', 'null');
 });
 
-function forceRequestExecutionState(): void {
+function nightwatch(): Core
+{
+    return app(Core::class);
+}
+
+function forceRequestExecutionState(): void
+{
     Env::getRepository()->set('NIGHTWATCH_FORCE_REQUEST', '1');
     Env::getRepository()->clear('NIGHTWATCH_FORCE_COMMAND');
 }
 
-function forceCommandExecutionState(): void {
+function forceCommandExecutionState(): void
+{
     Env::getRepository()->set('NIGHTWATCH_FORCE_COMMAND', '1');
     Env::getRepository()->clear('NIGHTWATCH_FORCE_REQUEST');
 }
 
-function executionState(): RequestState|CommandState {
+function executionState(): RequestState|CommandState
+{
     return match (true) {
         (bool) Env::get('NIGHTWATCH_FORCE_REQUEST') => app(RequestState::class),
         (bool) Env::get('NIGHTWATCH_FORCE_COMMAND') => app(CommandState::class),

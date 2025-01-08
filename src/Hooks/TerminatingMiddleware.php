@@ -4,16 +4,20 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 final class TerminatingMiddleware
 {
+    /**
+     * @param  Core<RequestState|CommandState>  $nightwatch
+     */
     public function __construct(
-        private SensorManager $sensor,
+        private Core $nightwatch,
     ) {
         //
     }
@@ -26,9 +30,9 @@ final class TerminatingMiddleware
     public function terminate(Request $request, Response $response): void
     {
         try {
-            $this->sensor->stage(ExecutionStage::Terminating);
+            $this->nightwatch->sensor->stage(ExecutionStage::Terminating);
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->report($e);
         }
     }
 }

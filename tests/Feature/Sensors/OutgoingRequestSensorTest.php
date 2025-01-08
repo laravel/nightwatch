@@ -2,15 +2,14 @@
 
 use Carbon\CarbonImmutable;
 use GuzzleHttp\Psr7\StreamDecoratorTrait;
-use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Route;
 use Psr\Http\Message\StreamInterface;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 
@@ -165,7 +164,7 @@ it('gracefully handles request / response sizes that are streams', function () {
     $ingest->assertLatestWrite('outgoing-request:0.response_size', 0);
 });
 
- it("doesn't capture the outgoing request URL authentication details", function () {
+it("doesn't capture the outgoing request URL authentication details", function () {
     $ingest = fakeIngest();
     Route::post('/users', function () {
         Http::withBasicAuth('ryuta', 'secret')->get('https://laravel.com');
@@ -187,7 +186,7 @@ it('gracefully handles request / response sizes that are streams', function () {
     $ingest->assertLatestWrite('outgoing-request:2.url', 'https://laravel.com');
     expect($ingest->latestWriteAsString())->not->toContain('ryuta');
     expect($ingest->latestWriteAsString())->not->toContain('secret');
- });
+});
 
 final class NoReadStream implements StreamInterface
 {

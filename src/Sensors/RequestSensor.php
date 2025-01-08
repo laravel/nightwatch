@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
@@ -56,7 +55,7 @@ final class RequestSensor
         try {
             $query = $request->server->getString('QUERY_STRING');
         } catch (UnexpectedValueException $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            //
         }
 
         $this->requestState->records->write(new RequestRecord(

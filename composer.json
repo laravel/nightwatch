@@ -23,7 +23,9 @@
         "react/socket": "^1.15.0"
     },
     "require-dev": {
+        "laravel/pint": "1.18.3",
         "mockery/mockery": "^1.6",
+        "mongodb/laravel-mongodb": "^5.1",
         "orchestra/pest-plugin-testbench": "^3.1",
         "orchestra/testbench": "^9.0",
         "pestphp/pest": "^3.0",
@@ -46,23 +48,40 @@
     },
     "scripts": {
         "post-autoload-dump": [
-            "@php vendor/bin/testbench package:purge-skeleton --ansi",
-            "@php vendor/bin/testbench package:discover --ansi"
+            "@php vendor/bin/testbench package:purge-skeleton",
+            "@php vendor/bin/testbench package:discover",
+            "@build"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#fb7185\" \"composer agent\" \"sleep 2 && composer serve\"  --names=agent,serve"
         ],
         "serve": [
             "Composer\\Config::disableProcessTimeout",
-            "@php vendor/bin/testbench workbench:build --ansi",
+            "@build",
             "@php vendor/bin/testbench serve"
         ],
         "agent": [
             "Composer\\Config::disableProcessTimeout",
+            "@build",
             "@putenv NIGHTWATCH_DEBUG=1",
             "@php vendor/bin/testbench nightwatch:agent"
         ],
+        "build": [
+            "@php vendor/bin/testbench package:sync-skeleton",
+            "@php vendor/bin/testbench workbench:build"
+        ],
+        "ci": [
+            "@composer test",
+            "@composer lint"
+        ],
         "lint": [
-            "@php vendor/bin/phpstan analyse"
+            "@php vendor/bin/pint --config=pint.ci.json",
+            "@php vendor/bin/pint",
+            "@php vendor/bin/phpstan --memory-limit=-1 --verbose"
         ],
         "test": [
+            "@php vendor/bin/testbench package:purge-skeleton",
             "@php vendor/bin/pest"
         ]
     },

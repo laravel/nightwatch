@@ -5,12 +5,15 @@ use Carbon\CarbonImmutable;
 use Illuminate\Auth\GuardHelpers;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
+
+beforeAll(function () {
+    forceRequestExecutionState();
+});
 
 beforeEach(function () {
     setDeploy('v1.2.3');
@@ -22,7 +25,6 @@ beforeEach(function () {
 
     ignoreMigrationQueries();
 });
-
 
 it('captures the authenticated user if they login during the request', function () {
     $ingest = fakeIngest();

@@ -2,11 +2,10 @@
 
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
-use Laravel\Nightwatch\Hooks\RequestBootedHandler;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -18,8 +17,8 @@ it('gracefully handles exceptions', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
-    $handler = new CommandBootedHandler($sensor);
+    });
+    $handler = new CommandBootedHandler($nightwatch);
 
     $handler(app());
 

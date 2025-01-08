@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
-use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Ingests\Remote\HttpClient;
 use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
 use React\EventLoop\LoopInterface;
@@ -32,7 +31,6 @@ final class HttpIngestFactory
      */
     public function __construct(
         private LoopInterface $loop,
-        private Clock $clock,
         private array $config,
         private bool $debug,
     ) {
@@ -52,6 +50,6 @@ final class HttpIngestFactory
             ->withHeader('nightwatch-app-id', $this->config['env_id'] ?? '')
             ->withBase($this->config['ingests']['http']['uri'] ?? ''), $this->debug ? '?debug=1' : '');
 
-        return new HttpIngest($client, $this->clock, $this->config['ingests']['http']['connection_limit'] ?? 2);
+        return new HttpIngest($client, $this->config['ingests']['http']['connection_limit'] ?? 2);
     }
 }

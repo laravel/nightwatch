@@ -3,31 +3,30 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Console\Events\CommandFinished;
-use Illuminate\Support\Facades\Log;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
-use function class_exists;
-
 final class CommandFinishedListener
 {
-    public function __construct(private SensorManager $sensor, private CommandState $commandState)
-    {
+    /**
+     * @param  Core<CommandState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
     public function __invoke(CommandFinished $event): void
     {
-        $this->commandState->name = $event->command;
-
-        if (! class_exists(Terminating::class)) {
-            try {
-                $this->sensor->stage(ExecutionStage::Terminating);
-            } catch (Throwable $e) {
-                Log::critical('[nightwatch] '.$e->getMessage());
+        try {
+            if ($event->command === $this->nightwatch->state->name && ! $this->nightwatch->state->terminatingEventExists) {
+                $this->nightwatch->sensor->stage(ExecutionStage::Terminating);
             }
+        } catch (Throwable $e) {
+            $this->nightwatch->report($e);
         }
     }
 }

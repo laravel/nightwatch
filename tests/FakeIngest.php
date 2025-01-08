@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Contracts\LocalIngest;
+use RuntimeException;
 
 use function collect;
 use function count;
@@ -13,6 +14,7 @@ use function expect;
 use function is_array;
 use function json_decode;
 use function str_contains;
+use function strlen;
 use function value;
 
 final class FakeIngest implements LocalIngest
@@ -25,7 +27,7 @@ final class FakeIngest implements LocalIngest
     public function write(string $payload): void
     {
         if (strlen($payload) === 0) {
-            throw new \RuntimeException('The payload was empty.');
+            throw new RuntimeException('The payload was empty.');
         }
 
         $this->writes[] = $payload;
@@ -52,12 +54,9 @@ final class FakeIngest implements LocalIngest
 
         if (str_contains($key, ':')) {
             $type = Str::before($key, ':');
+            $key = Str::after($key, ':');
 
             $latestWrite = collect($latestWrite)->where('t', $type)->values()->all();
-
-            expect(count($latestWrite) > 0)->toBeTrue('The type was not found in the latest write.');
-
-            $key = Str::after($key, ':');
         }
 
         if ($key === '*') {

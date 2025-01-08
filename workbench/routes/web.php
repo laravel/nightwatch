@@ -1,17 +1,22 @@
 <?php
 
-use App\Http\UserController;
 use App\Jobs\MyJob;
 use App\Mail\MyMail;
 use App\Notifications\MyNotification;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
+Route::get('/', static function () {
+    // This should not be captured.
+    Artisan::call('inspire');
+
     DB::table('users')->get('name');
 
     MyJob::dispatch();
@@ -21,6 +26,11 @@ Route::get('/', function () {
     Mail::to('tim@laravel.com')->send(new MyMail);
 
     Http::get('https://laravel.com');
+
+    Context::add('some', 'extra');
+    Log::channel('nightwatch')->debug('Hello world!', [
+        'some' => 'context',
+    ]);
 
     report('Hello world!');
 

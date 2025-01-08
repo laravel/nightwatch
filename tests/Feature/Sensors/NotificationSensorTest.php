@@ -2,16 +2,14 @@
 
 use App\Models\User;
 use Carbon\CarbonImmutable;
-use Database\Factories\UserFactory;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
+use Illuminate\Support\Facades\Route;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 
@@ -82,7 +80,8 @@ it('ingests notifications for notifiables', function () {
             User::factory()->create(),
             User::factory()->create(),
             User::factory()->create(),
-        ], new class extends MyNotification {
+        ], new class extends MyNotification
+        {
             public function via(object $notifiable)
             {
                 return ['mail'];
@@ -146,14 +145,13 @@ it('ingests notifications for notifiables', function () {
             'class' => 'MyNotification@anonymous',
             'duration' => 0,
             'failed' => false,
-        ]
+        ],
     ]);
 
 });
 
 class MyNotification extends Notification
 {
-
     public function via(object $notifiable)
     {
         return ['broadcast', 'mail'];
@@ -168,10 +166,9 @@ class MyNotification extends Notification
 
     public function toMail(object $notifiable)
     {
-        return (new  Illuminate\Mail\Mailable)
+        return (new Illuminate\Mail\Mailable)
             ->subject('Hello World')
             ->to('dummy@example.com')
             ->html("<p>It's me again</p>");
     }
-
 }

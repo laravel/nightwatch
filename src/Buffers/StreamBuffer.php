@@ -10,7 +10,7 @@ use function substr;
  */
 final class StreamBuffer
 {
-    protected string $buffer = '';
+    private string $buffer = '';
 
     public function __construct(private int $threshold = 8_000_000)
     {

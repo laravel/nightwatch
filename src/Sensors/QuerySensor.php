@@ -10,7 +10,10 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 
 use function hash;
+use function in_array;
+use function preg_replace;
 use function round;
+use function str_contains;
 
 /**
  * @internal
@@ -39,7 +42,7 @@ final class QuerySensor
             timestamp: $this->clock->microtime() - ($event->time / 1000),
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', "{$event->connectionName},{$event->sql}"),
+            _group: $this->hash($event),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id,
@@ -51,5 +54,20 @@ final class QuerySensor
             duration: $durationInMicroseconds,
             connection: $event->connectionName,
         ));
+    }
+
+    private function hash(QueryExecuted $event): string
+    {
+        if (! in_array($event->connection->getDriverName(), ['mariadb', 'mysql', 'pgsql', 'sqlite', 'sqlsrv'], true)) {
+            return hash('md5', "{$event->connectionName},{$event->sql}");
+        }
+
+        $sql = preg_replace('/in \([\d?\s,]+\)/', 'in (...?)', $event->sql) ?? $event->sql;
+
+        if (str_contains($sql, 'insert')) {
+            $sql = preg_replace('/values [(?,\s)]+/', 'values ...', $sql) ?? $sql;
+        }
+
+        return hash('md5', "{$event->connectionName},{$sql}");
     }
 }
