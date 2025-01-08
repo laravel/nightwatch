@@ -28,3 +28,15 @@ it('gracefully ignores reported exceptions when nightwatch is disabled', functio
     $ingest->assertWrittenTimes(0);
     expect(nightwatch()->state->exceptions)->toBe(0);
 });
+
+it('gracefully ignores logs when nightwatch is disabled', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', fn () => Log::channel('nightwatch')->info('Hello world'));
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(0);
+    expect(nightwatch()->state->logs)->toBe(0);
+    expect(nightwatch()->state->exceptions)->toBe(0);
+});
