@@ -8,6 +8,8 @@ use DateTimeZone;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Monolog\Formatter\FormatterInterface;
+use Monolog\Formatter\NormalizerFormatter;
 use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 use Throwable;
@@ -17,12 +19,14 @@ use Throwable;
  */
 final class LogRecordProcessor implements ProcessorInterface
 {
+    private FormatterInterface $formatter;
+
     /**
      * @param  Core<RequestState|CommandState>  $nightwatch
      */
     public function __construct(
         private Core $nightwatch,
-        private string $format,
+        private string $dateFormat,
     ) {
         //
     }
@@ -30,21 +34,34 @@ final class LogRecordProcessor implements ProcessorInterface
     public function __invoke(LogRecord $record): LogRecord
     {
         try {
-            $context = $record->context;
+            /** @var array<string, mixed> */
+            $formatted = $this->formatter()->format($record);
 
-            foreach ($context as $key => $value) {
-                if ($value instanceof DateTimeInterface) {
-                    $context[$key] = DateTimeImmutable::createFromInterface($value)
-                        ->setTimezone(new DateTimeZone('UTC'))
-                        ->format($this->format);
-                }
-            }
-
-            return $record->with(context: $context);
+            return $record->with(
+                message: $formatted['message'] ?? '',
+                context: $formatted['context'] ?? [],
+                level: $record->level,
+                channel: $formatted['channel'] ?? '',
+                datetime: $record->datetime,
+                extra: $formatted['extra'] ?? [],
+            );
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
 
         return $record;
+    }
+
+    private function formatter(): FormatterInterface
+    {
+        return $this->formatter ??= new class($this->dateFormat) extends NormalizerFormatter
+        {
+            protected function formatDate(DateTimeInterface $date): string
+            {
+                return parent::formatDate(
+                    DateTimeImmutable::createFromInterface($date)->setTimezone(new DateTimeZone('UTC'))
+                );
+            }
+        };
     }
 }
