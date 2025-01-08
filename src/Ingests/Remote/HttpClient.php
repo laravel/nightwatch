@@ -17,7 +17,6 @@ class HttpClient
 {
     public function __construct(
         private Browser $browser,
-        private string $path,
     ) {
         //
     }
@@ -34,6 +33,6 @@ class HttpClient
             return new RejectedPromise(new RuntimeException('Unable to compress payload.'));
         }
 
-        return $this->browser->post($this->path, body: $payload);
+        return $this->browser->post('', body: $payload);
     }
 }
