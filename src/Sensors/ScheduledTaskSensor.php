@@ -37,6 +37,10 @@ final class ScheduledTaskSensor
             name: $event->task->command, // TODO: Can be `command`, `description`, or `callback` depending on the event
             cron: $event->task->expression,
             timezone: $event->task->timezone,
+            without_overlapping: $event->task->withoutOverlapping,
+            on_one_server: $event->task->onOneServer,
+            run_in_background: $event->task->runInBackground,
+            even_in_maintenance_mode: $event->task->evenInMaintenanceMode,
             status: match ($event::class) {
                 ScheduledTaskFinished::class => 'processed',
                 ScheduledTaskSkipped::class => 'skipped',

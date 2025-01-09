@@ -26,6 +26,10 @@ final class ScheduledTask
         public string $name,
         public string $cron,
         public string $timezone,
+        public bool $without_overlapping,
+        public bool $on_one_server,
+        public bool $run_in_background,
+        public bool $even_in_maintenance_mode,
         public string $status,
         public int $duration,
         // --- //
