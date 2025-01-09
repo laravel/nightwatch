@@ -1,9 +1,7 @@
 <?php
 
-use Laravel\Nightwatch\Location;
-
 it('can find the file in the trace', function () {
-    $location = app(Location::class);
+    $location = nightwatch()->sensor->location;
     $e = new Exception;
     $reflectedException = new ReflectionClass($e);
     $reflectedException->getProperty('file')->setValue($e, base_path('vendor/foo/bar/Baz.php'));
@@ -21,7 +19,7 @@ it('can find the file in the trace', function () {
 });
 
 it('skips vendor files in trace when a non-vendor file exists', function () {
-    $location = app(Location::class);
+    $location = nightwatch()->sensor->location;
     $e = new Exception;
     $reflectedException = new ReflectionClass($e);
     $reflectedException->getProperty('file')->setValue($e, base_path('vendor/foo/bar/Baz.php'));
@@ -43,7 +41,7 @@ it('skips vendor files in trace when a non-vendor file exists', function () {
 });
 
 it('skips artisan files when a non-vendor file exists', function () {
-    $location = app(Location::class);
+    $location = nightwatch()->sensor->location;
     $e = new Exception;
     $reflectedException = new ReflectionClass($e);
     $reflectedException->getProperty('file')->setValue($e, base_path('vendor/foo/bar/Baz.php'));
@@ -65,7 +63,7 @@ it('skips artisan files when a non-vendor file exists', function () {
 });
 
 it('skips index.php file when a non-vendor file exists', function () {
-    $location = app(Location::class);
+    $location = nightwatch()->sensor->location;
     $e = new Exception;
     $reflectedException = new ReflectionClass($e);
     $reflectedException->getProperty('file')->setValue($e, base_path('vendor/foo/bar/Baz.php'));
@@ -87,7 +85,7 @@ it('skips index.php file when a non-vendor file exists', function () {
 });
 
 it('handles missing line number', function () {
-    $location = app(Location::class);
+    $location = nightwatch()->sensor->location;
     $e = new Exception;
     $reflectedException = new ReflectionClass($e);
     $reflectedException->getProperty('file')->setValue($e, base_path('vendor/foo/bar/Baz.php'));
@@ -107,7 +105,7 @@ it('handles missing line number', function () {
 });
 
 it('uses the path of the exception when it is non vendor', function () {
-    $location = app(Location::class);
+    $location = nightwatch()->sensor->location;
     $e = new Exception;
     $reflectedException = new ReflectionClass($e);
     $reflectedException->getProperty('file')->setValue($e, base_path('app/Models/User.php'));
@@ -119,7 +117,7 @@ it('uses the path of the exception when it is non vendor', function () {
 });
 
 it('falls back to trace when exception is thrown in vendor frame', function () {
-    $location = app(Location::class);
+    $location = nightwatch()->sensor->location;
     $e = new Exception;
     $reflectedException = new ReflectionClass($e);
     $reflectedException->getProperty('file')->setValue($e, base_path('vendor/foo/bar/Baz.php'));
@@ -141,7 +139,7 @@ it('falls back to trace when exception is thrown in vendor frame', function () {
 });
 
 it('uses the thrown location when no non-vendor file is found', function () {
-    $location = app(Location::class);
+    $location = nightwatch()->sensor->location;
     $e = new Exception;
     $reflectedException = new ReflectionClass($e);
     $reflectedException->getProperty('file')->setValue($e, base_path('vendor/foo/bar/Baz1.php'));
@@ -159,7 +157,7 @@ it('uses the thrown location when no non-vendor file is found', function () {
 });
 
 it('finds first non-vendor frame from query trace', function () {
-    $location = app(Location::class);
+    $location = nightwatch()->sensor->location;
 
     $file = $location->forQueryTrace([
         [
@@ -188,7 +186,7 @@ it('finds first non-vendor frame from query trace', function () {
 });
 
 it('ignores internal frames when there is no non-vendor frames', function () {
-    $location = app(Location::class);
+    $location = nightwatch()->sensor->location;
 
     $file = $location->forQueryTrace([
         [
@@ -209,7 +207,7 @@ it('ignores internal frames when there is no non-vendor frames', function () {
 });
 
 it('uses first non-internal vendor frames', function () {
-    $location = app(Location::class);
+    $location = nightwatch()->sensor->location;
 
     $file = $location->forQueryTrace([
         [

@@ -125,7 +125,8 @@ it('ignores notifications sent as MailMessages', function () {
 
             public function toMail(object $notifiable): MailMessage
             {
-                app()->useAppPath(app()->basePath('src'));
+                app()->setBasePath(dirname(app()->basePath()).'/');
+                app()->useAppPath(app()->basePath('/src'));
 
                 return (new MailMessage)
                     ->line('The introduction to the notification.')

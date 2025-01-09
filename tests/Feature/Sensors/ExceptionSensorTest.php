@@ -22,6 +22,9 @@ beforeEach(function () {
     setTraceId('00000000-0000-0000-0000-000000000000');
     setExecutionId('00000000-0000-0000-0000-000000000001');
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    app()->setBasePath($base = dirname(app()->basePath()));
+    nightwatch()->sensor->location->setBasePath($base);
+    nightwatch()->sensor->location->setPublicPath($base.'/public');
 
     setPhpVersion('8.4.1');
     setLaravelVersion('11.33.0');

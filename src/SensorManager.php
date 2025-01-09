@@ -58,7 +58,7 @@ class SensorManager
     public function __construct(
         private RequestState|CommandState $executionState,
         private Clock $clock,
-        private Location $location,
+        public Location $location,
         private Repository $config,
     ) {
         //
