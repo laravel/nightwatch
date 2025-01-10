@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Event;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Tests\FakeIngest;
@@ -19,10 +18,10 @@ use Tests\FakeIngest;
 use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\travelTo;
 
+$_ENV['APP_BASE_PATH'] = realpath(__DIR__.'/../workbench/').'/';
+
 pest()->extends(Tests\TestCase::class)->beforeEach(function () {
     nightwatch()->clock->microtimeResolver = fn () => (float) now()->format('U.u');
-    app()->setBasePath($path = realpath(__DIR__.'/../'));
-    app(Location::class)->setBasePath($path)->setPublicPath("{$path}/public");
     Config::set('nightwatch.error_log_channel', 'null');
 });
 

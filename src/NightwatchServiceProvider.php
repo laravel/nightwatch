@@ -159,23 +159,20 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerCore(): void
     {
-        $this->app->instance(Location::class, $location = new Location(
-            basePath: $this->app->basePath(),
-            publicPath: $this->app->publicPath(),
-        ));
+        $this->app->instance(($state = $this->executionState())::class, $state);
 
-        $state = $this->executionState();
-        $this->app->instance($state::class, $state);
-
-        $sensor = new SensorManager(
-            executionState: $state,
-            clock: $clock = new Clock,
-            location: $location,
-            config: $this->config,
-        );
+        $clock = new Clock;
 
         $this->app->instance(Core::class, $this->core = new Core(
-            sensor: $sensor,
+            sensor: new SensorManager(
+                executionState: $state,
+                clock: $clock = new Clock,
+                location: new Location(
+                    basePath: $this->app->basePath(),
+                    publicPath: $this->app->publicPath(),
+                ),
+                config: $this->config,
+            ),
             state: $state,
             clock: $clock,
             enabled: ($this->nightwatchConfig['enabled'] ?? true),
@@ -206,9 +203,11 @@ final class NightwatchServiceProvider extends ServiceProvider
         if (! isset($this->config->all()['logging']['channels']['nightwatch'])) {
             $this->config->set('logging.channels.nightwatch', [
                 'driver' => 'custom',
-                'via' => new Logger($this->core),
+                'via' => Logger::class,
             ]);
         }
+
+        $this->app->singleton(Logger::class, fn () => new Logger($this->core));
     }
 
     private function registerAgent(): void
