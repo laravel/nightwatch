@@ -37,6 +37,10 @@ final class RemoteIngestFactory
 
     public function __invoke(Application $app): RemoteIngest
     {
+        if ($app->bound(RemoteIngest::class)) {
+            return $app->make(RemoteIngest::class); // @phpstan-ignore return.type
+        }
+
         $name = $this->config['remote_ingest'] ?? 'http';
 
         $factory = match ($name) {
