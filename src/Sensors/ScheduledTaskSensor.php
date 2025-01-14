@@ -121,9 +121,7 @@ final class ScheduledTaskSensor
         }
 
         if (is_array($callback)) {
-            $className = is_string($callback[0]) ? $callback[0] : $callback[0]::class;
-
-            return sprintf('%s::%s', $className, $callback[1]);
+            return is_string($callback[0]) ? $callback[0] : $callback[0]::class;
         }
 
         // Invokable class
