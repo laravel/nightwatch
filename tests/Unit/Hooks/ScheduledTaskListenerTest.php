@@ -39,7 +39,7 @@ it('gracefully handles exceptions', function () {
     $handler = new ScheduledTaskListener($sensor, $state, $ingest);
 
     $handler(new ScheduledTaskFinished(
-        task: Schedule::command('php artisan inspire')->everyMinute(),
+        task: Schedule::command('php artisan inspire'),
         runtime: 10.0,
     ));
 
