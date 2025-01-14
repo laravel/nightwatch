@@ -6,8 +6,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
-use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -255,22 +253,5 @@ final class MyListenerWithViaQueue implements ShouldQueue
     public function viaQueue(object $event)
     {
         return 'custom_queue';
-    }
-}
-
-final class MyEvent
-{
-    use Dispatchable;
-}
-
-class MyQueuedMail extends Mailable
-{
-    public function content(): Content
-    {
-        travelTo(now()->addMicroseconds(2500));
-
-        return new Content(
-            view: 'mail',
-        );
     }
 }

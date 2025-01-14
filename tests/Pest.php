@@ -1,6 +1,9 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
@@ -125,4 +128,21 @@ function prependListener(string $event, callable $listener): void
 function fixturePath(string $path): string
 {
     return join_paths(__DIR__, 'fixtures', $path);
+}
+
+class MyEvent
+{
+    use Dispatchable;
+}
+
+class MyQueuedMail extends Mailable
+{
+    public function content(): Content
+    {
+        travelTo(now()->addMicroseconds(2500));
+
+        return new Content(
+            view: 'mail',
+        );
+    }
 }
