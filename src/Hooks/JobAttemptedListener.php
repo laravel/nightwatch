@@ -27,7 +27,11 @@ final class JobAttemptedListener
     {
         try {
             $this->nightwatch->sensor->jobAttempt($event);
+        } catch (Throwable $e) {
+            $this->nightwatch->report($e);
+        }
 
+        try {
             $this->ingest->write($this->nightwatch->state->records->flush());
         } catch (Throwable $e) {
             $this->nightwatch->handleUnrecoverableException($e);
