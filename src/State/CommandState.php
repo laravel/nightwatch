@@ -102,9 +102,4 @@ final class CommandState
 
         memory_reset_peak_usage();
     }
-
-    // public function resetTimestamp(): void
-    // {
-    //     $this->timestamp = $this->clock->microtime();
-    // }
 }
