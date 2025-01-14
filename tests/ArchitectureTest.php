@@ -1,7 +1,5 @@
 <?php
 
-use Laravel\Nightwatch\Ingests\Remote\HttpClient;
-
 arch()->expect('Laravel\Nightwatch')
     ->not->toUse([
         // We should always reference \Symfony\HttpFoundation\Response as not all

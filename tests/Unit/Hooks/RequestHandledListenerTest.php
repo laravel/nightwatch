@@ -7,7 +7,7 @@ use Laravel\Nightwatch\Hooks\RequestHandledListener;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -19,8 +19,8 @@ it('gracefully handles exceptions', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
-    $listener = new RequestHandledListener($sensor);
+    });
+    $listener = new RequestHandledListener($nightwatch);
     $event = new RequestHandled(Request::create('/tests'), response(''));
 
     $listener($event);

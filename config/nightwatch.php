@@ -7,15 +7,14 @@ return [
     'env_secret' => env('NIGHTWATCH_ENV_SECRET'),
 
     'deployment' => env('NIGHTWATCH_DEPLOY'),
-    'server' => env('NIGHTWATCH_SERVER', gethostname() ?: ''),
+    'server' => env('NIGHTWATCH_SERVER', (string) gethostname()),
 
     'local_ingest' => env('NIGHTWATCH_LOCAL_INGEST', 'socket'), // "socket"|"log"|"null"
     'remote_ingest' => env('NIGHTWATCH_REMOTE_INGEST', 'http'),
 
     'buffer_threshold' => env('NIGHTWATCH_BUFFER_THRESHOLD', 1_000_000),
 
-    // TODO what is the best default here? Could be a LOT of errors depending on the traffic.
-    'error_log_channel' => env('NIGHTWATCH_ERROR_LOG_CHANNEL', 'stderr'),
+    'error_log_channel' => env('NIGHTWATCH_ERROR_LOG_CHANNEL', 'single'),
 
     'ingests' => [
 

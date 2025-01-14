@@ -11,6 +11,7 @@ use Laravel\Nightwatch\UserProvider;
 
 use function call_user_func;
 use function memory_get_peak_usage;
+use function memory_reset_peak_usage;
 
 /**
  * @internal
@@ -77,5 +78,24 @@ final class RequestState
         }
 
         return memory_get_peak_usage(true);
+    }
+
+    public function prepareForNextExecution(): void
+    {
+        $this->exceptions = 0;
+        $this->logs = 0;
+        $this->queries = 0;
+        $this->lazyLoads = 0;
+        $this->jobsQueued = 0;
+        $this->mail = 0;
+        $this->notifications = 0;
+        $this->outgoingRequests = 0;
+        $this->filesRead = 0;
+        $this->filesWritten = 0;
+        $this->cacheEvents = 0;
+        $this->hydratedModels = 0;
+        $this->records->flush();
+
+        memory_reset_peak_usage();
     }
 }

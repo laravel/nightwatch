@@ -3,26 +3,23 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
-use Laravel\Nightwatch\Types\Str;
-use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\travelTo;
 
 uses(WithConsoleEvents::class);
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceCommandExecutionState();
-    Str::createUuidsUsingSequence([
-        $this->traceId = '0d3ca349-e222-4982-ac23-2343692de258',
-        $this->jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
-        $this->executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
-        $this->attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
-    ]);
+});
+
+defineEnvironment(function () {
     $this->ingest = fakeIngest();
 });
 
@@ -31,12 +28,17 @@ beforeEach(function () {
     setServerName('web-01');
     setPeakMemory(1234);
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
-    ignoreMigrationQueries();
 
+    setTraceId('0d3ca349-e222-4982-ac23-2343692de258');
     Config::set('queue.default', 'database');
 });
 
 it('ingests processed job attempts', function () {
+    Str::createUuidsUsingSequence([
+        $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
+        $executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
+        $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
+    ]);
     ProcessedJob::dispatch();
 
     Artisan::call('queue:work', ['--max-jobs' => 1, '--stop-when-empty' => true, '--sleep' => 0]);
@@ -50,10 +52,10 @@ it('ingests processed job attempts', function () {
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => md5('ProcessedJob'),
-            'trace_id' => $this->traceId,
+            'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
             'user' => '',
-            'job_id' => $this->jobId,
-            'attempt_id' => $this->attemptId,
+            'job_id' => $jobId,
+            'attempt_id' => $attemptId,
             'attempt' => 1,
             'name' => 'ProcessedJob',
             'connection' => 'database',
@@ -78,6 +80,11 @@ it('ingests processed job attempts', function () {
 });
 
 it('ingests job released job attempts', function () {
+    Str::createUuidsUsingSequence([
+        $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
+        $executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
+        $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
+    ]);
     ReleasedJob::dispatch();
 
     Artisan::call('queue:work', ['--max-jobs' => 1, '--stop-when-empty' => true, '--sleep' => 0]);
@@ -91,10 +98,10 @@ it('ingests job released job attempts', function () {
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => md5('ReleasedJob'),
-            'trace_id' => $this->traceId,
+            'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
             'user' => '',
-            'job_id' => $this->jobId,
-            'attempt_id' => $this->attemptId,
+            'job_id' => $jobId,
+            'attempt_id' => $attemptId,
             'attempt' => 1,
             'name' => 'ReleasedJob',
             'connection' => 'database',
@@ -119,6 +126,11 @@ it('ingests job released job attempts', function () {
 });
 
 it('ingests job failed job attempts', function () {
+    Str::createUuidsUsingSequence([
+        $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
+        $executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
+        $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
+    ]);
     FailedJob::dispatch();
 
     Artisan::call('queue:work', ['--max-jobs' => 1, '--stop-when-empty' => true, '--sleep' => 0]);
@@ -132,10 +144,10 @@ it('ingests job failed job attempts', function () {
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => md5('FailedJob'),
-            'trace_id' => $this->traceId,
+            'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
             'user' => '',
-            'job_id' => $this->jobId,
-            'attempt_id' => $this->attemptId,
+            'job_id' => $jobId,
+            'attempt_id' => $attemptId,
             'attempt' => 1,
             'name' => 'FailedJob',
             'connection' => 'database',
@@ -144,7 +156,7 @@ it('ingests job failed job attempts', function () {
             'duration' => 2500,
             'exceptions' => 1,
             'logs' => 0,
-            'queries' => 4, // Reserve and delete the job
+            'queries' => 5, // Reserve and delete the job
             'lazy_loads' => 0,
             'jobs_queued' => 0,
             'mail' => 0,
@@ -158,7 +170,7 @@ it('ingests job failed job attempts', function () {
         ],
     ]);
     $this->ingest->assertLatestWrite('exception:0.execution_source', 'job');
-    $this->ingest->assertLatestWrite('exception:0.execution_id', $this->executionId);
+    $this->ingest->assertLatestWrite('exception:0.execution_id', $executionId);
 });
 
 it('does not ingest jobs dispatched on the sync queue', function () {
@@ -168,6 +180,11 @@ it('does not ingest jobs dispatched on the sync queue', function () {
 });
 
 it('captures closure job', function () {
+    Str::createUuidsUsingSequence([
+        $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
+        $executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
+        $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
+    ]);
     $line = __LINE__ + 1;
     dispatch(function () {
         travelTo(now()->addMicroseconds(2500));
@@ -184,10 +201,10 @@ it('captures closure job', function () {
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => md5("Closure (JobAttemptSensorTest.php:{$line})"),
-            'trace_id' => $this->traceId,
+            'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
             'user' => '',
-            'job_id' => $this->jobId,
-            'attempt_id' => $this->attemptId,
+            'job_id' => $jobId,
+            'attempt_id' => $attemptId,
             'attempt' => 1,
             'name' => "Closure (JobAttemptSensorTest.php:{$line})",
             'connection' => 'database',
@@ -212,6 +229,11 @@ it('captures closure job', function () {
 });
 
 it('captures queued event listener', function () {
+    Str::createUuidsUsingSequence([
+        $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
+        $executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
+        $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
+    ]);
     Event::listen(MyEvent::class, MyEventListener::class);
     Event::dispatch(new MyEvent);
 
@@ -226,10 +248,10 @@ it('captures queued event listener', function () {
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => md5('MyEventListener'),
-            'trace_id' => $this->traceId,
+            'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
             'user' => '',
-            'job_id' => $this->jobId,
-            'attempt_id' => $this->attemptId,
+            'job_id' => $jobId,
+            'attempt_id' => $attemptId,
             'attempt' => 1,
             'name' => 'MyEventListener',
             'connection' => 'database',
@@ -254,6 +276,11 @@ it('captures queued event listener', function () {
 });
 
 it('captures queued mail', function () {
+    Str::createUuidsUsingSequence([
+        $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
+        $executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
+        $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
+    ]);
     Config::set('mail.default', 'log');
 
     Mail::to('tim@laravel.com')->queue(new MyQueuedMail);
@@ -269,10 +296,10 @@ it('captures queued mail', function () {
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => md5('MyQueuedMail'),
-            'trace_id' => $this->traceId,
+            'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
             'user' => '',
-            'job_id' => $this->jobId,
-            'attempt_id' => $this->attemptId,
+            'job_id' => $jobId,
+            'attempt_id' => $attemptId,
             'attempt' => 1,
             'name' => 'MyQueuedMail',
             'connection' => 'database',
@@ -302,9 +329,9 @@ it('captures queued mail', function () {
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => md5('MyQueuedMail'),
-            'trace_id' => $this->traceId,
+            'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
             'execution_source' => 'job',
-            'execution_id' => $this->executionId,
+            'execution_id' => $executionId,
             'execution_stage' => 'action',
             'user' => '',
             'mailer' => 'log',

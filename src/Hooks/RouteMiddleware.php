@@ -4,24 +4,28 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 final class RouteMiddleware
 {
-    public function __construct(private SensorManager $sensor)
-    {
+    /**
+     * @param  Core<RequestState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
     public function handle(Request $request, Closure $next): mixed
     {
         try {
-            $this->sensor->stage(ExecutionStage::Action);
+            $this->nightwatch->sensor->stage(ExecutionStage::Action);
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->report($e);
         }
 
         return $next($request);

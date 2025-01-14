@@ -5,7 +5,7 @@ use Laravel\Nightwatch\Hooks\JobQueuedListener;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -17,8 +17,8 @@ it('gracefully handles exceptions', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
-    $handler = new JobQueuedListener($sensor);
+    });
+    $handler = new JobQueuedListener($nightwatch);
 
     $handler(new JobQueued('redis', 'default', '1', fn () => null, '{}', 0));
 

@@ -6,11 +6,10 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 
@@ -59,7 +58,7 @@ it('can ingest cache misses', function () {
 it('can ingest cache hits', function () {
     $ingest = fakeIngest();
     Cache::driver('array')->put('users:345', 'xxxx');
-        Route::post('/users', function () {
+    Route::post('/users', function () {
         Cache::driver('array')->get('users:345');
     });
 
@@ -114,7 +113,8 @@ it('can ingest cache hits and misses with multiple keys', function () {
         'driver' => 'custom',
         'events' => true,
     ]);
-    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore {
+    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore
+    {
         public function many($key)
         {
             travelTo(now()->addMicroseconds(2500));
@@ -205,23 +205,23 @@ it('can ingest cache writes', function () {
     $ingest->assertLatestWrite('request:0.cache_events', 1);
     $ingest->assertLatestWrite('cache-event:*', [
         [
-                'v' => 1,
-                't' => 'cache-event',
-                'timestamp' => 946688523.456789,
-                'deploy' => 'v1.2.3',
-                'server' => 'web-01',
-                '_group' => hash('md5', 'array,users:345'),
-                'trace_id' => '00000000-0000-0000-0000-000000000000',
-                'execution_source' => 'request',
-                'execution_id' => '00000000-0000-0000-0000-000000000001',
-                'execution_stage' => 'action',
-                'user' => '',
-                'store' => 'array',
-                'key' => 'users:345',
-                'type' => 'write',
-                'duration' => 0,
-                'ttl' => 60,
-            ],
+            'v' => 1,
+            't' => 'cache-event',
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            '_group' => hash('md5', 'array,users:345'),
+            'trace_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_source' => 'request',
+            'execution_id' => '00000000-0000-0000-0000-000000000001',
+            'execution_stage' => 'action',
+            'user' => '',
+            'store' => 'array',
+            'key' => 'users:345',
+            'type' => 'write',
+            'duration' => 0,
+            'ttl' => 60,
+        ],
     ]);
 });
 
@@ -231,7 +231,8 @@ it('can ingest cache write failures', function () {
         'driver' => 'custom',
         'events' => true,
     ]);
-    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore {
+    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore
+    {
         public function put($key, $value, $seconds)
         {
             return false;
@@ -250,23 +251,23 @@ it('can ingest cache write failures', function () {
     $ingest->assertLatestWrite('request:0.cache_events', 1);
     $ingest->assertLatestWrite('cache-event:*', [
         [
-                'v' => 1,
-                't' => 'cache-event',
-                'timestamp' => 946688523.456789,
-                'deploy' => 'v1.2.3',
-                'server' => 'web-01',
-                '_group' => hash('md5', ',users:345'),
-                'trace_id' => '00000000-0000-0000-0000-000000000000',
-                'execution_source' => 'request',
-                'execution_id' => '00000000-0000-0000-0000-000000000001',
-                'execution_stage' => 'action',
-                'user' => '',
-                'store' => '',
-                'key' => 'users:345',
-                'type' => 'write-failure',
-                'duration' => 0,
-                'ttl' => 60,
-            ],
+            'v' => 1,
+            't' => 'cache-event',
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            '_group' => hash('md5', ',users:345'),
+            'trace_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_source' => 'request',
+            'execution_id' => '00000000-0000-0000-0000-000000000001',
+            'execution_stage' => 'action',
+            'user' => '',
+            'store' => '',
+            'key' => 'users:345',
+            'type' => 'write-failure',
+            'duration' => 0,
+            'ttl' => 60,
+        ],
     ]);
 });
 
@@ -276,7 +277,8 @@ it('can ingest cache writes with multiple keys', function () {
         'driver' => 'custom',
         'events' => true,
     ]);
-    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore {
+    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore
+    {
         public function putMany(array $values, $seconds)
         {
             travelTo(now()->addMicroseconds(2500));
@@ -394,7 +396,8 @@ it('can ingest cache delete failures', function () {
         'driver' => 'custom',
         'events' => true,
     ]);
-    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore {
+    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore
+    {
         public function forget($key)
         {
             return false;
@@ -452,7 +455,8 @@ it('captures duration in microseconds', function () {
         'driver' => 'custom',
         'events' => true,
     ]);
-    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore {
+    Cache::extend('custom', fn () => Cache::repository(new class extends ArrayStore
+    {
         public function get($key)
         {
             travelTo(now()->addMicroseconds(2500));

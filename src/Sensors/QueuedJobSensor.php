@@ -60,6 +60,7 @@ final class QueuedJobSensor
             name: $name,
             connection: $event->connectionName,
             queue: $this->normalizeQueue($event->connectionName, $this->resolveQueue($event)),
+            duration: 0, // TODO
         ));
     }
 

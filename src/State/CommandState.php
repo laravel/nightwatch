@@ -5,13 +5,14 @@ namespace Laravel\Nightwatch\State;
 use Closure;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Events\Terminating;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\NullUserProvider;
 use Laravel\Nightwatch\Types\Str;
 
 use function call_user_func;
+use function class_exists;
 use function memory_get_peak_usage;
 use function memory_reset_peak_usage;
 
@@ -31,6 +32,8 @@ final class CommandState
      */
     public ?Closure $peakMemoryResolver = null;
 
+    public bool $terminatingEventExists;
+
     /**
      * @param  array<value-of<ExecutionStage>, int>  $stageDurations
      */
@@ -40,7 +43,6 @@ final class CommandState
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
-        private Clock $clock,
         public ExecutionStage $stage = ExecutionStage::Bootstrap,
         public array $stageDurations = [
             ExecutionStage::Bootstrap->value => 0,
@@ -70,6 +72,7 @@ final class CommandState
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
         $this->id = $trace;
+        $this->terminatingEventExists = class_exists(Terminating::class);
     }
 
     public function peakMemory(): int
@@ -81,9 +84,8 @@ final class CommandState
         return memory_get_peak_usage(true);
     }
 
-    public function prepareForNextJobAttempt(): void
+    public function prepareForNextExecution(): void
     {
-        $this->id = (string) Str::uuid();
         $this->exceptions = 0;
         $this->logs = 0;
         $this->queries = 0;
@@ -101,8 +103,8 @@ final class CommandState
         memory_reset_peak_usage();
     }
 
-    public function resetTimestamp(): void
-    {
-        $this->timestamp = $this->clock->microtime();
-    }
+    // public function resetTimestamp(): void
+    // {
+    //     $this->timestamp = $this->clock->microtime();
+    // }
 }

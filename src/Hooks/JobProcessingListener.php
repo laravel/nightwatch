@@ -3,7 +3,8 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Queue\Events\JobProcessing;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
@@ -12,17 +13,22 @@ use Throwable;
  */
 final class JobProcessingListener
 {
-    public function __construct(private CommandState $executionState)
-    {
+    /**
+     * @param  Core<CommandState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
     public function __invoke(JobProcessing $event): void
     {
         try {
-            $this->executionState->resetTimestamp();
+            $this->nightwatch->state->timestamp = $this->nightwatch->clock->microtime();
+            $this->nightwatch->state->id = (string) Str::uuid();
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->report($e);
         }
     }
 }

@@ -11,9 +11,8 @@ use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobPopping;
 use Illuminate\Queue\Events\JobProcessing;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Contracts\LocalIngest;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
@@ -24,9 +23,11 @@ use function in_array;
  */
 final class CommandStartingListener
 {
+    /**
+     * @param  Core<CommandState>  $nightwatch
+     */
     public function __construct(
-        private SensorManager $sensor,
-        private CommandState $executionState,
+        private Core $nightwatch,
         private LocalIngest $ingest,
         private Dispatcher $events,
         private ConsoleKernelContract $kernel,
@@ -37,33 +38,43 @@ final class CommandStartingListener
     public function __invoke(CommandStarting $event): void
     {
         try {
+            if ($this->nightwatch->state->name === null) {
+                $this->nightwatch->state->name = $event->command;
+            } else {
+                return;
+            }
+        } catch (Throwable $e) { // @phpstan-ignore catch.neverThrown
+            $this->nightwatch->report($e);
+        }
+
+        try {
             if (in_array($event->command, ['queue:work', 'queue:listen'], true)) {
                 $this->registerJobHooks();
             } else {
                 $this->registerCommandHooks();
             }
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->report($e);
         }
     }
 
     private function registerJobHooks(): void
     {
-        $this->executionState->source = 'job';
+        $this->nightwatch->state->source = 'job';
 
-        $this->events->listen(JobPopping::class, (new JobPoppingListener($this->executionState))(...));
+        $this->events->listen(JobPopping::class, (new JobPoppingListener($this->nightwatch))(...));
 
-        $this->events->listen(JobProcessing::class, (new JobProcessingListener($this->executionState))(...));
+        $this->events->listen(JobProcessing::class, (new JobProcessingListener($this->nightwatch))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
          */
-        $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->sensor, $this->executionState, $this->ingest))(...));
+        $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->nightwatch, $this->ingest))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\Exception
          */
-        $this->events->listen(JobExceptionOccurred::class, (new JobExceptionOccurredListener($this->sensor))(...));
+        $this->events->listen(JobExceptionOccurred::class, (new JobExceptionOccurredListener($this->nightwatch))(...));
     }
 
     private function registerCommandHooks(): void
@@ -71,7 +82,7 @@ final class CommandStartingListener
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
-        $this->events->listen(CommandFinished::class, (new CommandFinishedListener($this->sensor, $this->executionState))(...));
+        $this->events->listen(CommandFinished::class, (new CommandFinishedListener($this->nightwatch))(...));
 
         if (! $this->kernel instanceof ConsoleKernel) {
             return;
@@ -80,6 +91,6 @@ final class CommandStartingListener
         // TODO Check this isn't a memory leak in Octane.
         // TODO Check if we can cache this handler between requests on Octane. Same goes for other
         // sub-handlers.
-        $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->sensor, $this->executionState, $this->ingest));
+        $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->nightwatch, $this->ingest));
     }
 }

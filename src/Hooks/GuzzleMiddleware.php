@@ -2,9 +2,9 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Illuminate\Support\Facades\Log;
-use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
@@ -14,8 +14,12 @@ use Throwable;
  */
 final class GuzzleMiddleware
 {
-    public function __construct(private SensorManager $sensor, private Clock $clock)
-    {
+    /**
+     * @param  Core<RequestState|CommandState>  $nightwatch
+     */
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 
@@ -26,23 +30,23 @@ final class GuzzleMiddleware
     {
         return function (RequestInterface $request, array $options) use ($handler) {
             try {
-                $startMicrotime = $this->clock->microtime();
+                $startMicrotime = $this->nightwatch->clock->microtime();
             } catch (Throwable $e) {
-                Log::critical('[nightwatch] '.$e->getMessage());
+                $this->nightwatch->report($e);
 
                 return $handler($request, $options);
             }
 
             return $handler($request, $options)->then(function (ResponseInterface $response) use ($request, $startMicrotime) {
                 try {
-                    $endMicrotime = $this->clock->microtime();
+                    $endMicrotime = $this->nightwatch->clock->microtime();
 
-                    $this->sensor->outgoingRequest(
+                    $this->nightwatch->sensor->outgoingRequest(
                         $startMicrotime, $endMicrotime,
                         $request, $response,
                     );
                 } catch (Throwable $e) {
-                    Log::critical('[nightwatch] '.$e->getMessage());
+                    $this->nightwatch->report($e);
                 }
 
                 return $response;

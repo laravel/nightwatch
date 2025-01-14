@@ -5,19 +5,20 @@ namespace Laravel\Nightwatch\Hooks;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\SensorManager;
 use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 final class RequestLifecycleIsLongerThanHandler
 {
+    /**
+     * @param  Core<RequestState>  $nightwatch
+     */
     public function __construct(
-        private SensorManager $sensor,
-        private RequestState $requestState,
+        private Core $nightwatch,
         private Application $app,
     ) {
         //
@@ -26,15 +27,15 @@ final class RequestLifecycleIsLongerThanHandler
     public function __invoke(Carbon $startedAt, Request $request, Response $response): void
     {
         try {
-            $this->sensor->stage(ExecutionStage::End);
+            $this->nightwatch->sensor->stage(ExecutionStage::End);
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->report($e);
         }
 
         try {
-            $this->sensor->request($request, $response);
+            $this->nightwatch->sensor->request($request, $response);
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->report($e);
         }
 
         try {
@@ -43,9 +44,9 @@ final class RequestLifecycleIsLongerThanHandler
             /** @var LocalIngest */
             $ingest = $this->app->make(LocalIngest::class);
 
-            $ingest->write($this->requestState->records->flush());
+            $ingest->write($this->nightwatch->state->records->flush());
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->handleUnrecoverableException($e);
         }
     }
 }

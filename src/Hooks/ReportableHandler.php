@@ -2,31 +2,28 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Illuminate\Support\Facades\Log;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 final class ReportableHandler
 {
+    /**
+     * @param  Core<RequestState|CommandState>  $nightwatch
+     */
     public function __construct(
-        private SensorManager $sensor,
-        private RequestState|CommandState $executionState,
+        private Core $nightwatch,
     ) {
         //
     }
 
-    public function __invoke(Throwable $exception): void
+    public function __invoke(Throwable $e): void
     {
-        try {
-            if ($this->executionState->source === 'job') {
-                return;
-            }
-
-            $this->sensor->exception($exception);
-        } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+        if ($this->nightwatch->state->source === 'job') {
+            return;
         }
+
+        $this->nightwatch->report($e);
     }
 }
