@@ -20,7 +20,7 @@ final class ReportableHandler
     public function __invoke(Throwable $exception): void
     {
         try {
-            if ($this->executionState->source === 'job') {
+            if (in_array($this->executionState->source, ['job', 'schedule'], true)) {
                 return;
             }
 

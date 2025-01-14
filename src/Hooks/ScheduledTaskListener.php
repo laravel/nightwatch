@@ -27,6 +27,10 @@ final class ScheduledTaskListener
     public function __invoke(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
     {
         try {
+            if ($event instanceof ScheduledTaskFailed) {
+                $this->sensor->exception($event->exception);
+            }
+
             $this->sensor->scheduledTask($event);
 
             $this->ingest->write($this->executionState->records->flush());
