@@ -110,8 +110,8 @@ final class ScheduledTaskSensor
 
             return sprintf(
                 'Closure at: %s:%s',
-                // TODO: `app` will be accessible through the `Core` class.
-                str_replace($this->app->basePath().DIRECTORY_SEPARATOR, '', $function->getFileName() ?: ''),
+                // TODO: Replace with `$this->core->app->basePath()`.
+                str_replace(base_path().DIRECTORY_SEPARATOR, '', $function->getFileName() ?: ''),
                 $function->getStartLine()
             );
         }
