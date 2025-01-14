@@ -15,6 +15,7 @@ use Laravel\Nightwatch\State\CommandState;
 use ReflectionClass;
 use ReflectionFunction;
 
+use function base_path;
 use function hash;
 use function in_array;
 use function is_array;

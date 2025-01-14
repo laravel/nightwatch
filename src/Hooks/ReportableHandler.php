@@ -8,6 +8,8 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
+use function in_array;
+
 final class ReportableHandler
 {
     public function __construct(
