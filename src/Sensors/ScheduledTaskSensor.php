@@ -2,12 +2,18 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Closure;
+use Illuminate\Console\Application;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskSkipped;
+use Illuminate\Console\Scheduling\CallbackEvent;
+use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\ScheduledTask;
 use Laravel\Nightwatch\State\CommandState;
+use ReflectionClass;
+use ReflectionFunction;
 
 use function hash;
 use function round;
@@ -34,7 +40,7 @@ final class ScheduledTaskSensor
             server: $this->executionState->server,
             _group: hash('md5', "{$event->task->command},{$event->task->expression},{$event->task->timezone}"),
             trace_id: $this->executionState->trace,
-            name: $event->task->command, // TODO: Can be `command`, `description`, or `callback` depending on the event
+            name: $this->normalizeTaskName($event->task),
             cron: $event->task->expression,
             timezone: $event->task->timezone,
             without_overlapping: $event->task->withoutOverlapping,
@@ -61,5 +67,60 @@ final class ScheduledTaskSensor
             hydrated_models: $this->executionState->hydratedModels,
             peak_memory_usage: $this->executionState->peakMemory(),
         ));
+    }
+
+    private function normalizeTaskName(SchedulingEvent $event): string
+    {
+        $name = $event->command ?? '';
+
+        $name = str_replace([
+            Application::phpBinary(),
+            Application::artisanBinary(),
+        ], [
+            'php',
+            preg_replace("#['\"]#", '', Application::artisanBinary()),
+        ], $name);
+
+        if ($event instanceof CallbackEvent) {
+            $name = $event->getSummaryForDisplay();
+
+            if (in_array($name, ['Closure', 'Callback'])) {
+                $name = $this->getClosureLocation($event);
+            }
+        }
+
+        return $name;
+    }
+
+    /**
+     * Get the file and line number for the event closure.
+     */
+    private function getClosureLocation(CallbackEvent $event): string
+    {
+        $callback = (new ReflectionClass($event))->getProperty('callback')->getValue($event);
+
+        if ($callback instanceof Closure) {
+            $function = new ReflectionFunction($callback);
+
+            return sprintf(
+                'Closure at: %s:%s',
+                // TODO: `app` will be accessible through the `Core` class.
+                str_replace($this->app->basePath().DIRECTORY_SEPARATOR, '', $function->getFileName() ?: ''),
+                $function->getStartLine()
+            );
+        }
+
+        if (is_string($callback)) {
+            return $callback;
+        }
+
+        if (is_array($callback)) {
+            $className = is_string($callback[0]) ? $callback[0] : $callback[0]::class;
+
+            return sprintf('%s::%s', $className, $callback[1]);
+        }
+
+        // Invokable class
+        return $callback::class;
     }
 }
