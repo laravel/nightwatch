@@ -16,7 +16,13 @@ use ReflectionClass;
 use ReflectionFunction;
 
 use function hash;
+use function in_array;
+use function is_array;
+use function is_string;
+use function preg_replace;
 use function round;
+use function sprintf;
+use function str_replace;
 
 /**
  * @internal
@@ -84,7 +90,7 @@ final class ScheduledTaskSensor
         if ($event instanceof CallbackEvent) {
             $name = $event->getSummaryForDisplay();
 
-            if (in_array($name, ['Closure', 'Callback'])) {
+            if (in_array($name, ['Closure', 'Callback'], true)) {
                 $name = $this->getClosureLocation($event);
             }
         }
