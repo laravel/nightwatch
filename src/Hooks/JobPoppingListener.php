@@ -24,7 +24,7 @@ final class JobPoppingListener
     public function __invoke(JobPopping $event): void
     {
         try {
-            $this->nightwatch->state->prepareForNextExecution();
+            $this->nightwatch->state->reset();
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

@@ -80,7 +80,7 @@ final class RequestState
         return memory_get_peak_usage(true);
     }
 
-    public function prepareForNextExecution(): void
+    public function reset(): void
     {
         $this->exceptions = 0;
         $this->logs = 0;

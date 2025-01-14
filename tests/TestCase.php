@@ -21,6 +21,6 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function afterRefreshingDatabase()
     {
-        nightwatch()->state->prepareForNextExecution();
+        nightwatch()->state->reset();
     }
 }
