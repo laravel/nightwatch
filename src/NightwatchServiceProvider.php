@@ -336,15 +336,14 @@ final class NightwatchServiceProvider extends ServiceProvider
         // TODO resolve the kernel inline rather than in the listener.
 
         /**
+         * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Records\Request
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-         * @see \Laravel\Nightwatch\ExecutionStage::End
          */
         $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Action
-         * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
         $events->listen(RouteMatched::class, (new RouteMatchedListener($core))(...));
@@ -366,6 +365,8 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         /**
          * @see \Laravel\Nightwatch\State\RequestState::$user
+         *
+         * TODO handle this on the queue
          */
         $events->listen(Logout::class, (new LogoutListener($core))(...)); // @phpstan-ignore argument.type
     }
