@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Carbon\Carbon;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
@@ -18,7 +17,6 @@ final class RequestLifecycleIsLongerThanHandler
      */
     public function __construct(
         private Core $nightwatch,
-        private Application $app,
     ) {
         //
     }

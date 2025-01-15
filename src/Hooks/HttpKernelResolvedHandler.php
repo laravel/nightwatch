@@ -33,7 +33,7 @@ final class HttpKernelResolvedHandler
             // TODO Check this isn't a memory leak in Octane.
             // TODO Check if we can cache this handler between requests on Octane. Same goes for other
             // sub-handlers.
-            $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->nightwatch, $app));
+            $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->nightwatch));
         } catch (Throwable $e) {
             $this->nightwatch->handleUnrecoverableException($e);
         }
