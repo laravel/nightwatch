@@ -24,7 +24,7 @@ final class ReportableHandler
             if ($this->nightwatch->state->source === 'job') {
                 return;
             }
-        } catch (Throwable $exception) {
+        } catch (Throwable $exception) { // @phpstan-ignore catch.neverThrown
             $this->nightwatch->report($exception);
         }
 
