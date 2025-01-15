@@ -238,13 +238,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         ]);
     }
 
-    /**
-     * TODO Alternative approach to storing when not using Laravel's HTTP and
-     * console kernel. Also for custom exception handlers.
-     * TODO We had special ordering in Pulse to ensure our
-     * recorders were registered early but out ingest was registered last. This
-     * we used the `booted` callback.
-     */
     private function registerHooks(): void
     {
         $core = $this->core;
