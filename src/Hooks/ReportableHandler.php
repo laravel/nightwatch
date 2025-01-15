@@ -20,7 +20,13 @@ final class ReportableHandler
 
     public function __invoke(Throwable $e): void
     {
-        if ($this->nightwatch->state->source === 'job') {
+        try {
+            if ($this->nightwatch->state->source === 'job') {
+                return;
+            }
+        } catch (Throwable $exception) {
+            $this->nightwatch->report($exception);
+
             return;
         }
 

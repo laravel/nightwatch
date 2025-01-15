@@ -13,7 +13,6 @@ use Illuminate\Queue\Events\JobPopping;
 use Illuminate\Queue\Events\JobProcessing;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
-use RuntimeException;
 use Throwable;
 
 use function in_array;
@@ -86,10 +85,6 @@ final class CommandStartingListener
     private function registerCommandHooks(): void
     {
         if (! $this->kernel instanceof ConsoleKernel) {
-            $this->nightwatch->handleUnrecoverableException(
-                new RuntimeException('Command capturing is not possible when using a custom Console Kernel implementation.')
-            );
-
             return;
         }
 
@@ -97,6 +92,8 @@ final class CommandStartingListener
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
         $this->events->listen(CommandFinished::class, (new CommandFinishedListener($this->nightwatch))(...));
+
+        // TODO this is an unrecoverable error... it needs to be handled as such unlike other errors that might occur in this handler
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::End

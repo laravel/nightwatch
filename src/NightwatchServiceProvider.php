@@ -320,7 +320,6 @@ final class NightwatchServiceProvider extends ServiceProvider
             /** @var Core<CommandState> $core */
             $this->registerConsoleHooks($events, $core);
         }
-
     }
 
     /**
