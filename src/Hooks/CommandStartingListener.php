@@ -86,9 +86,15 @@ final class CommandStartingListener
             return;
         }
 
-        // TODO Check this isn't a memory leak in Octane.
-        // TODO Check if we can cache this handler between requests on Octane. Same goes for other
-        // sub-handlers.
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::End
+         * @see \Laravel\Nightwatch\Records\Command
+         * @see \Laravel\Nightwatch\Contracts\LocalIngest
+         *
+         * TODO Check this isn't a memory leak in Octane.
+         * TODO Check if we can cache this handler between requests on Octane. Same goes for other
+         * sub-handlers.
+         */
         $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->nightwatch));
     }
 }
