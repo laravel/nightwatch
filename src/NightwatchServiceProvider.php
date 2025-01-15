@@ -42,8 +42,10 @@ use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\Agent;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\AgentFactory;
-use Laravel\Nightwatch\Factories\LocalIngestFactory;
 use Laravel\Nightwatch\Factories\Logger;
+use Laravel\Nightwatch\Factories\LogIngestFactory;
+use Laravel\Nightwatch\Factories\NullLocalIngestFactory;
+use Laravel\Nightwatch\Factories\SocketIngestFactory;
 use Laravel\Nightwatch\Hooks\ArtisanStartingHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
@@ -67,6 +69,7 @@ use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 use function app;
@@ -162,7 +165,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $clock = new Clock;
 
         $this->app->instance(Core::class, $this->core = new Core(
-            ingest: $this->app->make(LocalIngest::class),
+            ingest: $this->localIngest(),
             sensor: new SensorManager(
                 executionState: $state,
                 clock: $clock = new Clock,
@@ -192,7 +195,6 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->registerLogger();
         $this->registerAgent();
-        $this->registerLocalIngest();
         $this->registerMiddleware();
         $this->registerCore();
     }
@@ -212,11 +214,6 @@ final class NightwatchServiceProvider extends ServiceProvider
     private function registerAgent(): void
     {
         $this->app->singleton(Agent::class, (new AgentFactory($this->nightwatchConfig))(...));
-    }
-
-    private function registerLocalIngest(): void
-    {
-        $this->app->singleton(LocalIngest::class, (new LocalIngestFactory($this->nightwatchConfig))(...));
     }
 
     private function registerMiddleware(): void
@@ -348,7 +345,6 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\Records\Request
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          * @see \Laravel\Nightwatch\ExecutionStage::End
-         * @see \Laravel\Nightwatch\Contracts\LocalIngest
          */
         $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($core))(...));
 
@@ -399,6 +395,20 @@ final class NightwatchServiceProvider extends ServiceProvider
         $kernel = $this->app->make(ConsoleKernelContract::class);
 
         $events->listen(CommandStarting::class, (new CommandStartingListener($core, $events, $kernel))(...));
+    }
+
+    private function localIngest(): LocalIngest
+    {
+        $name = $this->nightwatchConfig['local_ingest'] ?? 'socket';
+
+        $factory = match ($name) {
+            'null' => new NullLocalIngestFactory,
+            'log' => new LogIngestFactory($this->nightwatchConfig),
+            'socket' => new SocketIngestFactory($this->nightwatchConfig),
+            default => throw new RuntimeException("Unknown local ingest [{$name}]."),
+        };
+
+        return $factory($this->app);
     }
 
     private function executionState(): RequestState|CommandState
