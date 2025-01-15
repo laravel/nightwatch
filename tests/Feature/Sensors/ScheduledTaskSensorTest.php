@@ -6,7 +6,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
-use Illuminate\Support\Sleep;
 use Laravel\Nightwatch\Types\Str;
 
 use function Orchestra\Testbench\Pest\defineEnvironment;
@@ -31,6 +30,7 @@ beforeEach(function () {
 it('ingests processed tasks', function () {
     $line = __LINE__ + 1;
     $task = Schedule::call(fn () => travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
+    $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
 
     Artisan::call('schedule:run');
 
@@ -42,9 +42,9 @@ it('ingests processed tasks', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'scheduler-01',
-            '_group' => hash('md5', "{$task->command},{$task->expression},{$task->timezone}"),
+            '_group' => hash('md5', "{$name},{$task->expression},{$task->timezone}"),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'name' => "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}",
+            'name' => $name,
             'cron' => '* * * * *',
             'timezone' => 'UTC',
             'without_overlapping' => false,
@@ -75,6 +75,7 @@ it('ingests skipped tasks', function () {
     $task = Schedule::call(fn () => travelTo(now()->addMicroseconds(1_000_000)))
         ->skip(fn () => true)
         ->everyMinute();
+    $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
 
     Artisan::call('schedule:run');
 
@@ -86,9 +87,9 @@ it('ingests skipped tasks', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'scheduler-01',
-            '_group' => hash('md5', "{$task->command},{$task->expression},{$task->timezone}"),
+            '_group' => hash('md5', "{$name},{$task->expression},{$task->timezone}"),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'name' => "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}",
+            'name' => $name,
             'cron' => '* * * * *',
             'timezone' => 'UTC',
             'without_overlapping' => false,
@@ -118,6 +119,7 @@ it('ingests failed tasks', function () {
     $line = __LINE__ + 1;
     $task = Schedule::call(fn () => travelTo(now()->addMicroseconds(1_000_000)) & throw new Exception())
         ->everyMinute();
+    $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
 
     Artisan::call('schedule:run');
 
@@ -129,9 +131,9 @@ it('ingests failed tasks', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'scheduler-01',
-            '_group' => hash('md5', "{$task->command},{$task->expression},{$task->timezone}"),
+            '_group' => hash('md5', "{$name},{$task->expression},{$task->timezone}"),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'name' => "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}",
+            'name' => $name,
             'cron' => '* * * * *',
             'timezone' => 'UTC',
             'without_overlapping' => false,

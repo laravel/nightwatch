@@ -40,14 +40,15 @@ final class ScheduledTaskSensor
     public function __invoke(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
     {
         $now = $this->clock->microtime();
+        $name = $this->normalizeTaskName($event->task);
 
         $this->executionState->records->write(new ScheduledTask(
             timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', "{$event->task->command},{$event->task->expression},{$event->task->timezone}"),
+            _group: hash('md5', "{$name},{$event->task->expression},{$event->task->timezone}"),
             trace_id: $this->executionState->trace,
-            name: $this->normalizeTaskName($event->task),
+            name: $name,
             cron: $event->task->expression,
             timezone: $event->task->timezone,
             without_overlapping: $event->task->withoutOverlapping,
