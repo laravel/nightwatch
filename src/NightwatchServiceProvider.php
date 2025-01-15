@@ -373,6 +373,9 @@ final class NightwatchServiceProvider extends ServiceProvider
      */
     private function registerConsoleHooks(Dispatcher $events, Core $core): void
     {
+        /** @var ConsoleKernelContract */
+        $kernel = $this->app->make(ConsoleKernelContract::class);
+
         /**
          * @see \Laravel\Nightwatch\State\CommandState::$artisan
          */
@@ -382,9 +385,6 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\ExecutionStage::Action
          */
         $this->app->booted((new CommandBootedHandler($core))(...));
-
-        /** @var ConsoleKernelContract */
-        $kernel = $this->app->make(ConsoleKernelContract::class);
 
         $events->listen(CommandStarting::class, (new CommandStartingListener($core, $events, $kernel))(...));
     }
