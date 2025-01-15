@@ -158,30 +158,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->isRequest = ! $this->app->runningInConsole() || Env::get('NIGHTWATCH_FORCE_REQUEST');
     }
 
-    private function registerCore(): void
-    {
-        $this->app->instance(($state = $this->executionState())::class, $state);
-
-        $clock = new Clock;
-
-        $this->app->instance(Core::class, $this->core = new Core(
-            ingest: $this->localIngest(),
-            sensor: new SensorManager(
-                executionState: $state,
-                clock: $clock = new Clock,
-                location: new Location(
-                    basePath: $this->app->basePath(),
-                    publicPath: $this->app->publicPath(),
-                ),
-                config: $this->config,
-            ),
-            state: $state,
-            clock: $clock,
-            enabled: ($this->nightwatchConfig['enabled'] ?? true),
-            emergencyLoggerResolver: $this->emergencyLoggerResolver())
-        );
-    }
-
     private function registerAndCaptureConfig(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
@@ -196,7 +172,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->registerLogger();
         $this->registerAgent();
         $this->registerMiddleware();
-        $this->registerCore();
+        $this->buildAndRegisterCore();
     }
 
     private function registerLogger(): void
@@ -223,6 +199,29 @@ final class NightwatchServiceProvider extends ServiceProvider
         if (! class_exists(Terminating::class)) {
             $this->app->singleton(TerminatingMiddleware::class, fn () => new TerminatingMiddleware($this->core));
         }
+    }
+
+    private function buildAndRegisterCore(): void
+    {
+        $clock = new Clock;
+        $state = $this->executionState();
+
+        $this->app->instance(Core::class, $this->core = new Core(
+            ingest: $this->localIngest(),
+            sensor: new SensorManager(
+                executionState: $state,
+                clock: $clock = new Clock,
+                location: new Location(
+                    basePath: $this->app->basePath(),
+                    publicPath: $this->app->publicPath(),
+                ),
+                config: $this->config,
+            ),
+            state: $state,
+            clock: $clock,
+            enabled: ($this->nightwatchConfig['enabled'] ?? true),
+            emergencyLoggerResolver: $this->emergencyLoggerResolver())
+        );
     }
 
     private function registerPublications(): void
