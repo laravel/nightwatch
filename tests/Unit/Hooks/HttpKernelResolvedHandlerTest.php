@@ -84,7 +84,7 @@ it('gracefully handles exceptions thrown while ingesting', function () {
             return '';
         }
     });
-    $ingest = app()->instance(LocalIngest::class, new class implements LocalIngest
+    $ingest = nightwatch()->ingest = new class implements LocalIngest
     {
         public bool $thrown = false;
 
@@ -94,7 +94,7 @@ it('gracefully handles exceptions thrown while ingesting', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    });
+    };
     $handler = new HttpKernelResolvedHandler($nightwatch);
     $kernel = app(Kernel::class);
 

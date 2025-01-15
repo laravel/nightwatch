@@ -7,17 +7,12 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\Console\Input\StringInput;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\travelTo;
 
 uses(WithConsoleEvents::class);
 
 beforeAll(function () {
     forceCommandExecutionState();
-});
-
-defineEnvironment(function () {
-    $this->ingest = fakeIngest();
 });
 
 beforeEach(function () {
@@ -30,6 +25,7 @@ beforeEach(function () {
 });
 
 it('can ingest commands', function () {
+    $ingest = fakeIngest();
     Artisan::command('app:build {destination} {--force} {--compress}', function () {
         travelTo(now()->addMicroseconds(1234567));
 
@@ -40,8 +36,8 @@ it('can ingest commands', function () {
     Artisan::terminate($input, $status);
 
     expect($status)->toBe(3);
-    $this->ingest->assertWrittenTimes(1);
-    $this->ingest->assertLatestWrite([
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite([
         [
             'v' => 1,
             't' => 'command',
@@ -80,6 +76,7 @@ it('filters out the queue:work command')->todo();
 it('filters out the queue:listen command')->todo();
 
 it('modifies status code to value in range of 0-255', function () {
+    $ingest = fakeIngest();
     $status = [
         -1,
         0,
@@ -100,25 +97,26 @@ it('modifies status code to value in range of 0-255', function () {
     };
 
     expect($run())->toBe(-1);
-    $this->ingest->assertLatestWrite('command:0.exit_code', 255);
+    $ingest->assertLatestWrite('command:0.exit_code', 255);
 
     expect($run())->toBe(0);
-    $this->ingest->assertLatestWrite('command:0.exit_code', 0);
+    $ingest->assertLatestWrite('command:0.exit_code', 0);
 
     expect($run())->toBe(1);
-    $this->ingest->assertLatestWrite('command:0.exit_code', 1);
+    $ingest->assertLatestWrite('command:0.exit_code', 1);
 
     expect($run())->toBe(254);
-    $this->ingest->assertLatestWrite('command:0.exit_code', 254);
+    $ingest->assertLatestWrite('command:0.exit_code', 254);
 
     expect($run())->toBe(255);
-    $this->ingest->assertLatestWrite('command:0.exit_code', 255);
+    $ingest->assertLatestWrite('command:0.exit_code', 255);
 
     expect($run())->toBe(256);
-    $this->ingest->assertLatestWrite('command:0.exit_code', 255);
+    $ingest->assertLatestWrite('command:0.exit_code', 255);
 });
 
 it('only captures the first command that runs', function () {
+    $ingest = fakeIngest();
     Artisan::addCommands([ParentCommand::class]);
     Artisan::command('child', function () {
         return 99;
@@ -133,7 +131,7 @@ it('only captures the first command that runs', function () {
     };
 
     expect($run())->toBe(0);
-    $this->ingest->assertLatestWrite('command:*', [
+    $ingest->assertLatestWrite('command:*', [
         [
             'v' => 1,
             't' => 'command',
@@ -168,6 +166,7 @@ it('only captures the first command that runs', function () {
 });
 
 it('child commands do not progress the modify execution stage', function () {
+    $ingest = fakeIngest();
     Artisan::command('parent', function () {
         Artisan::call('child');
 
@@ -186,11 +185,12 @@ it('child commands do not progress the modify execution stage', function () {
     };
 
     expect($run())->toBe(0);
-    $this->ingest->assertLatestWrite('command:0.cache_events', 1);
-    $this->ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
+    $ingest->assertLatestWrite('command:0.cache_events', 1);
+    $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
 });
 
 it('child commands do not progress the modify execution stage when terminating event does not exist', function () {
+    $ingest = fakeIngest();
     Artisan::command('parent', function () {
         Artisan::call('child');
 
@@ -210,8 +210,8 @@ it('child commands do not progress the modify execution stage when terminating e
     };
 
     expect($run())->toBe(0);
-    $this->ingest->assertLatestWrite('command:0.cache_events', 1);
-    $this->ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
+    $ingest->assertLatestWrite('command:0.cache_events', 1);
+    $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
 });
 
 class ParentCommand extends Command

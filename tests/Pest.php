@@ -5,11 +5,9 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Support\Env;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\State\CommandState;
@@ -113,7 +111,7 @@ function setPhpVersion(string $version): void
 
 function fakeIngest(): FakeIngest
 {
-    return App::instance(LocalIngest::class, new FakeIngest);
+    return nightwatch()->ingest = new FakeIngest;
 }
 
 function prependListener(string $event, callable $listener): void

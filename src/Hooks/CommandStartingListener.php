@@ -11,7 +11,6 @@ use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobPopping;
 use Illuminate\Queue\Events\JobProcessing;
-use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
@@ -28,7 +27,6 @@ final class CommandStartingListener
      */
     public function __construct(
         private Core $nightwatch,
-        private LocalIngest $ingest,
         private Dispatcher $events,
         private ConsoleKernelContract $kernel,
     ) {
@@ -69,7 +67,7 @@ final class CommandStartingListener
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
          */
-        $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->nightwatch, $this->ingest))(...));
+        $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->nightwatch))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\Exception
@@ -91,6 +89,6 @@ final class CommandStartingListener
         // TODO Check this isn't a memory leak in Octane.
         // TODO Check if we can cache this handler between requests on Octane. Same goes for other
         // sub-handlers.
-        $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->nightwatch, $this->ingest));
+        $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->nightwatch));
     }
 }

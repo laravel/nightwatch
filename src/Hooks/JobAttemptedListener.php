@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Queue\Events\JobAttempted;
-use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
@@ -18,7 +17,6 @@ final class JobAttemptedListener
      */
     public function __construct(
         private Core $nightwatch,
-        private LocalIngest $ingest,
     ) {
         //
     }
@@ -31,10 +29,6 @@ final class JobAttemptedListener
             $this->nightwatch->report($e);
         }
 
-        try {
-            $this->ingest->write($this->nightwatch->state->records->flush());
-        } catch (Throwable $e) {
-            $this->nightwatch->handleUnrecoverableException($e);
-        }
+        $this->nightwatch->ingest();
     }
 }

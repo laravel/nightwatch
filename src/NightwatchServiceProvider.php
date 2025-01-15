@@ -162,6 +162,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $clock = new Clock;
 
         $this->app->instance(Core::class, $this->core = new Core(
+            ingest: $this->app->make(LocalIngest::class),
             sensor: new SensorManager(
                 executionState: $state,
                 clock: $clock = new Clock,
@@ -189,11 +190,11 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerBindings(): void
     {
-        $this->registerCore();
         $this->registerLogger();
         $this->registerAgent();
         $this->registerLocalIngest();
         $this->registerMiddleware();
+        $this->registerCore();
     }
 
     private function registerLogger(): void
@@ -394,13 +395,10 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->app->booted((new CommandBootedHandler($core))(...));
 
-        /** @var LocalIngest */
-        $ingest = $this->app->make(LocalIngest::class);
-
         /** @var ConsoleKernelContract */
         $kernel = $this->app->make(ConsoleKernelContract::class);
 
-        $events->listen(CommandStarting::class, (new CommandStartingListener($core, $ingest, $events, $kernel))(...));
+        $events->listen(CommandStarting::class, (new CommandStartingListener($core, $events, $kernel))(...));
     }
 
     private function executionState(): RequestState|CommandState

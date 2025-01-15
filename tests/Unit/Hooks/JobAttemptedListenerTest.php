@@ -3,7 +3,6 @@
 use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Jobs\FakeJob;
 use Laravel\Nightwatch\Hooks\JobAttemptedListener;
-use Laravel\Nightwatch\Ingests\Local\NullIngest;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
@@ -21,9 +20,7 @@ it('gracefully handles exceptions', function () {
         }
     });
 
-    $ingest = new NullIngest;
-
-    $handler = new JobAttemptedListener($nightwatch, $ingest);
+    $handler = new JobAttemptedListener($nightwatch);
 
     $handler(new JobAttempted('redis', new FakeJob));
 
