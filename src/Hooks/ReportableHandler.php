@@ -26,8 +26,6 @@ final class ReportableHandler
             }
         } catch (Throwable $exception) {
             $this->nightwatch->report($exception);
-
-            return;
         }
 
         $this->nightwatch->report($e);
