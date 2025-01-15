@@ -33,7 +33,7 @@ final class HttpKernelResolvedHandler
             /**
              * @see \Laravel\Nightwatch\ExecutionStage::End
              * @see \Laravel\Nightwatch\Records\Request
-             * @see \Laravel\Nightwatch\Contracts\LocalIngest
+             * @see \Laravel\Nightwatch\Core::ingest()
              *
              * TODO Check this isn't a memory leak in Octane.
              * TODO Check if we can cache this handler between requests on Octane. Same goes for other

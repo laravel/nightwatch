@@ -60,8 +60,15 @@ final class CommandStartingListener
     {
         $this->nightwatch->state->source = 'job';
 
+        /**
+         * @see \Laravel\Nightwatch\State\CommandState::reset()
+         */
         $this->events->listen(JobPopping::class, (new JobPoppingListener($this->nightwatch))(...));
 
+        /**
+         * @see \Laravel\Nightwatch\State\CommandState::$timestamp
+         * @see \Laravel\Nightwatch\State\CommandState::$id
+         */
         $this->events->listen(JobProcessing::class, (new JobProcessingListener($this->nightwatch))(...));
 
         /**
@@ -89,7 +96,7 @@ final class CommandStartingListener
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Records\Command
-         * @see \Laravel\Nightwatch\Contracts\LocalIngest
+         * @see \Laravel\Nightwatch\Core::ingest()
          *
          * TODO Check this isn't a memory leak in Octane.
          * TODO Check if we can cache this handler between requests on Octane. Same goes for other

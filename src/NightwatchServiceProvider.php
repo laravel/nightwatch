@@ -339,7 +339,7 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Records\Request
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-         * @see \Laravel\Nightwatch\Contracts\LocalIngest
+         * @see \Laravel\Nightwatch\Core::ingest()
          */
         $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($core))(...));
 
@@ -392,7 +392,20 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         /**
          * @see \Laravel\Nightwatch\State\CommandState::$name
+         *
+         * Commands...
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         * @see \Laravel\Nightwatch\ExecutionStage::End
+         * @see \Laravel\Nightwatch\Records\Command
+         * @see \Laravel\Nightwatch\Core::ingest()
+         *
+         * Jobs...
+         * @see \Laravel\Nightwatch\State\CommandState::$source
+         * @see \Laravel\Nightwatch\State\CommandState::reset()
+         * @see \Laravel\Nightwatch\State\CommandState::$timestamp
+         * @see \Laravel\Nightwatch\State\CommandState::$id
+         * @see \Laravel\Nightwatch\Records\JobAttempt
+         * @see \Laravel\Nightwatch\Records\Exception
          */
         $events->listen(CommandStarting::class, (new CommandStartingListener($events, $core, $kernel))(...));
     }
