@@ -12,6 +12,7 @@ use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\ScheduledTask;
 use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\Types\Str;
 use ReflectionClass;
 use ReflectionFunction;
 
@@ -39,6 +40,12 @@ final class ScheduledTaskSensor
 
     public function __invoke(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
     {
+        if ($event instanceof ScheduledTaskSkipped) {
+            $this->recordSkippedTask($event);
+
+            return;
+        }
+
         $now = $this->clock->microtime();
         $name = $this->normalizeTaskName($event->task);
 
@@ -128,5 +135,41 @@ final class ScheduledTaskSensor
 
         // Invokable class
         return $callback::class;
+    }
+
+    private function recordSkippedTask(ScheduledTaskSkipped $event): void
+    {
+        $now = $this->clock->microtime();
+        $name = $this->normalizeTaskName($event->task);
+
+        $this->executionState->records->write(new ScheduledTask(
+            timestamp: $now,
+            deploy: $this->executionState->deploy,
+            server: $this->executionState->server,
+            _group: hash('md5', "{$name},{$event->task->expression},{$event->task->timezone}"),
+            trace_id: (string) Str::uuid(),
+            name: $name,
+            cron: $event->task->expression,
+            timezone: $event->task->timezone,
+            without_overlapping: $event->task->withoutOverlapping,
+            on_one_server: $event->task->onOneServer,
+            run_in_background: $event->task->runInBackground,
+            even_in_maintenance_mode: $event->task->evenInMaintenanceMode,
+            status: 'skipped',
+            duration: 0,
+            exceptions: 0,
+            logs: 0,
+            queries: 0,
+            lazy_loads: 0,
+            jobs_queued: 0,
+            mail: 0,
+            notifications: 0,
+            outgoing_requests: 0,
+            files_read: 0,
+            files_written: 0,
+            cache_events: 0,
+            hydrated_models: 0,
+            peak_memory_usage: 0,
+        ));
     }
 }

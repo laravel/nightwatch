@@ -108,9 +108,9 @@ it('ingests skipped tasks', function () {
             'outgoing_requests' => 0,
             'files_read' => 0,
             'files_written' => 0,
-            'cache_events' => 1, // TODO: `ScheduledTaskStarting` event is not fired for skipped tasks and the counts are not reset.
+            'cache_events' => 0,
             'hydrated_models' => 0,
-            'peak_memory_usage' => 1234,
+            'peak_memory_usage' => 0,
         ],
     ]);
 });
@@ -158,10 +158,6 @@ it('ingests failed tasks', function () {
         ],
     ]);
 });
-
-it('resets trace ID and timestamp before each task run', function () {
-    //
-})->todo();
 
 describe('task name normalization', function () {
     it('normalizes task name for named closure', function () {
