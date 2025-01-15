@@ -386,7 +386,7 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->app->booted((new CommandBootedHandler($core))(...));
 
-        $events->listen(CommandStarting::class, (new CommandStartingListener($core, $events, $kernel))(...));
+        $events->listen(CommandStarting::class, (new CommandStartingListener($events, $core, $kernel))(...));
     }
 
     private function localIngest(): LocalIngest

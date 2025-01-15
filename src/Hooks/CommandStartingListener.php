@@ -26,8 +26,8 @@ final class CommandStartingListener
      * @param  Core<CommandState>  $nightwatch
      */
     public function __construct(
-        private Core $nightwatch,
         private Dispatcher $events,
+        private Core $nightwatch,
         private ConsoleKernelContract $kernel,
     ) {
         //
