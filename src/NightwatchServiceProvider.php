@@ -242,12 +242,12 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $core = $this->core;
 
+        /** @var Dispatcher */
+        $events = $this->app->make(Dispatcher::class);
+
         /** @var ContextRepository */
         $context = $this->app->make(ContextRepository::class);
         $context->addHidden('nightwatch_trace_id', $core->state->trace);
-
-        /** @var Dispatcher */
-        $events = $this->app->make(Dispatcher::class);
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
