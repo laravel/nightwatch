@@ -137,6 +137,10 @@ final class ScheduledTaskSensor
         return $callback::class;
     }
 
+    /**
+     * When a scheduled task is skipped, Laravel does not dispatch the `ScheduledTaskStarting` event.
+     * Therefore, we need to manually generate a timestamp and trace ID for these tasks.
+     */
     private function recordSkippedTask(ScheduledTaskSkipped $event): void
     {
         $now = $this->clock->microtime();
