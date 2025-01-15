@@ -333,6 +333,8 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->app->booted((new RequestBootedHandler($core))(...));
 
+        // TODO resolve the kernel inline rather than in the listener.
+
         /**
          * @see \Laravel\Nightwatch\Records\Request
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
