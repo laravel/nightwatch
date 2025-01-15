@@ -2,9 +2,12 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
+use Illuminate\Console\Events\ScheduledTaskFinished;
+use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schedule;
 use Laravel\Nightwatch\Types\Str;
 
@@ -157,6 +160,30 @@ it('ingests failed tasks', function () {
             'peak_memory_usage' => 1234,
         ],
     ]);
+});
+
+it('resets trace ID and timestamp on each task run', function () {
+    Schedule::call(fn () => travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
+
+    Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000001');
+    Artisan::call('schedule:run');
+
+    $this->ingest->assertWrittenTimes(1);
+    $this->ingest->assertLatestWrite('scheduled-task:0.trace_id', '00000000-0000-0000-0000-000000000001');
+    $this->ingest->assertLatestWrite('scheduled-task:0.timestamp', 946688523.456789);
+    $this->ingest->flush();
+
+    // The event listers registered in the previous run are still active in testing.
+    // We need to forget them to avoid duplicate writes. It doesn't happen in the real application.
+    Event::forget(ScheduledTaskStarting::class);
+    Event::forget(ScheduledTaskFinished::class);
+
+    Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000002');
+    Artisan::call('schedule:run');
+
+    $this->ingest->assertWrittenTimes(1);
+    $this->ingest->assertLatestWrite('scheduled-task:0.trace_id', '00000000-0000-0000-0000-000000000002');
+    $this->ingest->assertLatestWrite('scheduled-task:0.timestamp', 946688524.456789);
 });
 
 describe('task name normalization', function () {
