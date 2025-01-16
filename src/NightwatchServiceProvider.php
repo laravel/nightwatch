@@ -327,20 +327,19 @@ final class NightwatchServiceProvider extends ServiceProvider
      */
     private function registerRequestHooks(Dispatcher $events, Core $core): void
     {
+        // TODO resolve the kernel inline rather than in the listener.
+
+        /**
+         * @see \Laravel\Nightwatch\State\RequestState::$user
+         *
+         * TODO handle this on the queue
+         */
+        $events->listen(Logout::class, (new LogoutListener($core))(...)); // @phpstan-ignore argument.type
+
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
          */
         $this->app->booted((new RequestBootedHandler($core))(...));
-
-        // TODO resolve the kernel inline rather than in the listener.
-
-        /**
-         * @see \Laravel\Nightwatch\ExecutionStage::End
-         * @see \Laravel\Nightwatch\Records\Request
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-         * @see \Laravel\Nightwatch\Core::ingest()
-         */
-        $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Action
@@ -364,11 +363,12 @@ final class NightwatchServiceProvider extends ServiceProvider
         $events->listen(RequestHandled::class, (new RequestHandledListener($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\State\RequestState::$user
-         *
-         * TODO handle this on the queue
+         * @see \Laravel\Nightwatch\ExecutionStage::End
+         * @see \Laravel\Nightwatch\Records\Request
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         * @see \Laravel\Nightwatch\Core::ingest()
          */
-        $events->listen(Logout::class, (new LogoutListener($core))(...)); // @phpstan-ignore argument.type
+        $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($core))(...));
     }
 
     /**
