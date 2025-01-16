@@ -249,11 +249,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         $context = $this->app->make(ContextRepository::class);
         $context->addHidden('nightwatch_trace_id', $core->state->trace);
 
-        /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-         */
-        $events->listen(Terminating::class, (new TerminatingListener($core))(...));
-
         //
         // -------------------------------------------------------------------------
         // Sensor hooks
@@ -320,6 +315,11 @@ final class NightwatchServiceProvider extends ServiceProvider
             /** @var Core<CommandState> $core */
             $this->registerConsoleHooks($events, $core);
         }
+
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         */
+        $events->listen(Terminating::class, (new TerminatingListener($core))(...));
     }
 
     /**
