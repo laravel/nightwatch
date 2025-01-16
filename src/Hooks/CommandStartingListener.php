@@ -72,14 +72,15 @@ final class CommandStartingListener
         $this->events->listen(JobProcessing::class, (new JobProcessingListener($this->nightwatch))(...));
 
         /**
-         * @see \Laravel\Nightwatch\Records\JobAttempt
-         */
-        $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->nightwatch))(...));
-
-        /**
          * @see \Laravel\Nightwatch\Records\Exception
          */
         $this->events->listen(JobExceptionOccurred::class, (new JobExceptionOccurredListener($this->nightwatch))(...));
+
+        /**
+         * @see \Laravel\Nightwatch\Records\JobAttempt
+         * @see \Laravel\Nightwatch\Core::ingest()
+         */
+        $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->nightwatch))(...));
     }
 
     private function registerCommandHooks(): void
