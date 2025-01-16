@@ -316,6 +316,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerConsoleHooks($events, $core);
         }
 
+        /** @var Core<RequestState|CommandState> $core */
+
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
