@@ -40,14 +40,14 @@ final class ScheduledTaskSensor
 
     public function __invoke(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
     {
+        $now = $this->clock->microtime();
+        $name = $this->normalizeTaskName($event->task);
+
         if ($event instanceof ScheduledTaskSkipped) {
-            $this->recordSkippedTask($event);
+            $this->recordSkippedTask($event, $now, $name);
 
             return;
         }
-
-        $now = $this->clock->microtime();
-        $name = $this->normalizeTaskName($event->task);
 
         $this->executionState->records->write(new ScheduledTask(
             timestamp: $this->executionState->timestamp,
@@ -141,13 +141,10 @@ final class ScheduledTaskSensor
      * When a scheduled task is skipped, Laravel does not dispatch the `ScheduledTaskStarting` event.
      * Therefore, we need to manually generate a timestamp and trace ID for these tasks.
      */
-    private function recordSkippedTask(ScheduledTaskSkipped $event): void
+    private function recordSkippedTask(ScheduledTaskSkipped $event, float $timestamp, string $name): void
     {
-        $now = $this->clock->microtime();
-        $name = $this->normalizeTaskName($event->task);
-
         $this->executionState->records->write(new ScheduledTask(
-            timestamp: $now,
+            timestamp: $timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', "{$name},{$event->task->expression},{$event->task->timezone}"),
