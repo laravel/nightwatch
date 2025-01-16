@@ -247,7 +247,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         /** @var ContextRepository */
         $context = $this->app->make(ContextRepository::class);
-        $context->addHidden('nightwatch_trace_id', $core->state->trace);
+        $context->addHidden('nightwatch:trace', $core->state->trace);
 
         //
         // -------------------------------------------------------------------------
