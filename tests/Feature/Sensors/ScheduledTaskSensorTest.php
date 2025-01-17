@@ -124,7 +124,7 @@ it('ingests skipped tasks', function () {
 
 it('ingests failed tasks', function () {
     $line = __LINE__ + 1;
-    $task = Schedule::call(fn () => travelTo(now()->addMicroseconds(1_000_000)) & throw new Exception())
+    $task = Schedule::call(fn () => travelTo(now()->addMicroseconds(1_000_000)) & throw new Exception)
         ->everyMinute();
     $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
 
