@@ -7,6 +7,7 @@ use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
 /**

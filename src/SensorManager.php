@@ -199,7 +199,7 @@ class SensorManager
     public function scheduledTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
     {
         $sensor = $this->scheduledTaskSensor ??= new ScheduledTaskSensor(
-            executionState: $this->executionState,
+            executionState: $this->executionState, // @phpstan-ignore argument.type
             clock: $this->clock,
         );
 

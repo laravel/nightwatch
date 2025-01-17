@@ -26,7 +26,6 @@ beforeEach(function () {
     setServerName('scheduler-01');
     setPeakMemory(1234);
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
-    ignoreMigrationQueries();
     Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000000');
 });
 
