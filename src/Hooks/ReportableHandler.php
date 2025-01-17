@@ -26,7 +26,7 @@ final class ReportableHandler
             if (in_array($this->nightwatch->state->source, ['job', 'schedule'], true)) {
                 return;
             }
-        } catch (Throwable $exception) { // @phpstan-ignore catch.neverThrown
+        } catch (Throwable $exception) {
             $this->nightwatch->report($exception);
         }
 

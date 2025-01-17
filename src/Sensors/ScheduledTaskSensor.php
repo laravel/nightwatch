@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Closure;
+use DateTimeZone;
 use Illuminate\Console\Application;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
@@ -42,9 +43,10 @@ final class ScheduledTaskSensor
     {
         $now = $this->clock->microtime();
         $name = $this->normalizeTaskName($event->task);
+        $timezone = $event->task->timezone instanceof DateTimeZone ? $event->task->timezone->getName() : $event->task->timezone;
 
         if ($event instanceof ScheduledTaskSkipped) {
-            $this->recordSkippedTask($event, $now, $name);
+            $this->recordSkippedTask($event, $now, $name, $timezone);
 
             return;
         }
@@ -53,18 +55,17 @@ final class ScheduledTaskSensor
             timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', "{$name},{$event->task->expression},{$event->task->timezone}"),
+            _group: hash('md5', "{$name},{$event->task->expression},{$timezone}"),
             trace_id: $this->executionState->trace,
             name: $name,
             cron: $event->task->expression,
-            timezone: $event->task->timezone,
+            timezone: $timezone,
             without_overlapping: $event->task->withoutOverlapping,
             on_one_server: $event->task->onOneServer,
             run_in_background: $event->task->runInBackground,
             even_in_maintenance_mode: $event->task->evenInMaintenanceMode,
-            status: match ($event::class) {
+            status: match ($event::class) { // @phpstan-ignore-line match.unhandled
                 ScheduledTaskFinished::class => 'processed',
-                ScheduledTaskSkipped::class => 'skipped',
                 ScheduledTaskFailed::class => 'failed',
             },
             duration: (int) round(($now - $this->executionState->timestamp) * 1_000_000),
@@ -119,7 +120,6 @@ final class ScheduledTaskSensor
 
             return sprintf(
                 'Closure at: %s:%s',
-                // TODO: Replace with `$this->core->app->basePath()`.
                 str_replace(base_path().DIRECTORY_SEPARATOR, '', $function->getFileName() ?: ''),
                 $function->getStartLine()
             );
@@ -134,6 +134,7 @@ final class ScheduledTaskSensor
         }
 
         // Invokable class
+        // @phpstan-ignore-next-line classConstant.nonObject
         return $callback::class;
     }
 
@@ -141,17 +142,17 @@ final class ScheduledTaskSensor
      * When a scheduled task is skipped, Laravel does not dispatch the `ScheduledTaskStarting` event.
      * Therefore, we need to manually generate a timestamp and trace ID for these tasks.
      */
-    private function recordSkippedTask(ScheduledTaskSkipped $event, float $timestamp, string $name): void
+    private function recordSkippedTask(ScheduledTaskSkipped $event, float $timestamp, string $name, string $timezone): void
     {
         $this->executionState->records->write(new ScheduledTask(
             timestamp: $timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', "{$name},{$event->task->expression},{$event->task->timezone}"),
+            _group: hash('md5', "{$name},{$event->task->expression},{$timezone}"),
             trace_id: (string) Str::uuid(),
             name: $name,
             cron: $event->task->expression,
-            timezone: $event->task->timezone,
+            timezone: $timezone,
             without_overlapping: $event->task->withoutOverlapping,
             on_one_server: $event->task->onOneServer,
             run_in_background: $event->task->runInBackground,
