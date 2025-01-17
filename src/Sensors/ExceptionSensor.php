@@ -66,7 +66,7 @@ final class ExceptionSensor
             file: $file,
             line: $line ?? 0,
             message: $normalizedException->getMessage(),
-            code: $normalizedException->getCode(),
+            code: (string) $normalizedException->getCode(),
             trace: $this->serializeTrace($normalizedException),
             handled: $this->wasManuallyReported($normalizedException),
             php_version: $this->executionState->phpVersion,

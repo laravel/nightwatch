@@ -2,15 +2,11 @@
 
 use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Jobs\FakeJob;
-use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Hooks\JobAttemptedListener;
-use Laravel\Nightwatch\Ingests\Local\NullIngest;
 use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\Types\Str;
 
 it('gracefully handles exceptions', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -22,19 +18,9 @@ it('gracefully handles exceptions', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
+    });
 
-    $state = new CommandState(
-        timestamp: microtime(true),
-        trace: (string) Str::uuid(),
-        deploy: 'v1.0.0',
-        server: 'web-01',
-        currentExecutionStageStartedAtMicrotime: microtime(true),
-        clock: new Clock,
-    );
-    $ingest = new NullIngest;
-
-    $handler = new JobAttemptedListener($sensor, $state, $ingest);
+    $handler = new JobAttemptedListener($nightwatch);
 
     $handler(new JobAttempted('redis', new FakeJob));
 

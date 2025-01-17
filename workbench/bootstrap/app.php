@@ -11,9 +11,9 @@ return Application::configure(basePath: $APP_BASE_PATH ?? default_skeleton_path(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
     )
-    ->withMiddleware(function (Middleware $middleware) {
+    ->withMiddleware(static function (Middleware $middleware) {
         //
     })
-    ->withExceptions(function (Exceptions $exceptions) {
+    ->withExceptions(static function (Exceptions $exceptions) {
         //
     })->create();

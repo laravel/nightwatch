@@ -6,6 +6,7 @@ use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\Records\JobAttempt;
+use Laravel\Nightwatch\Records\Log;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\OutgoingRequest;
@@ -14,6 +15,7 @@ use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Records\Request;
 use Laravel\Nightwatch\Records\ScheduledTask;
 
+use function array_shift;
 use function count;
 use function json_encode;
 
@@ -23,12 +25,17 @@ use function json_encode;
 class RecordsBuffer
 {
     /**
-     * @var list<Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|JobAttempt|Mail|Notification|ScheduledTask>
+     * @var list<Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|JobAttempt|Mail|Notification|Log|ScheduledTask>
      */
     private array $records = [];
 
-    public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|JobAttempt|Mail|Notification|ScheduledTask $record): void
+    public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|JobAttempt|Mail|Notification|Log|ScheduledTask $record): void
     {
+        // TODO only for Forge
+        if (count($this->records) > 499) {
+            array_shift($this->records);
+        }
+
         $this->records[] = $record;
     }
 

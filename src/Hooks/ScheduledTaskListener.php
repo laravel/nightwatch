@@ -6,9 +6,7 @@ use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Support\Facades\Log;
-use Laravel\Nightwatch\Contracts\LocalIngest;
-use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\Core;
 use Throwable;
 
 /**
@@ -16,10 +14,11 @@ use Throwable;
  */
 final class ScheduledTaskListener
 {
+    /**
+     * @param  Core<CommandState>  $nightwatch
+     */
     public function __construct(
-        private SensorManager $sensor,
-        private CommandState $executionState,
-        private LocalIngest $ingest,
+        private Core $nightwatch,
     ) {
         //
     }
@@ -28,12 +27,11 @@ final class ScheduledTaskListener
     {
         try {
             if ($event instanceof ScheduledTaskFailed) {
-                $this->sensor->exception($event->exception);
+                $this->nightwatch->sensor->exception($event->exception);
             }
 
-            $this->sensor->scheduledTask($event);
-
-            $this->ingest->write($this->executionState->records->flush());
+            $this->nightwatch->sensor->scheduledTask($event);
+            $this->nightwatch->ingest();
         } catch (Throwable $e) {
             Log::critical('[nightwatch] '.$e->getMessage());
         }

@@ -4,13 +4,14 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Types\Str;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\get;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 
@@ -21,6 +22,9 @@ beforeEach(function () {
     setTraceId('00000000-0000-0000-0000-000000000000');
     setExecutionId('00000000-0000-0000-0000-000000000001');
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    app()->setBasePath($base = dirname(app()->basePath()));
+    nightwatch()->sensor->location->setBasePath($base);
+    nightwatch()->sensor->location->setPublicPath($base.'/public');
 
     setPhpVersion('8.4.1');
     setLaravelVersion('11.33.0');
@@ -62,7 +66,7 @@ it('can ingest thrown exceptions', function () {
             'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
             'line' => $line,
             'message' => 'Whoops!',
-            'code' => 0,
+            'code' => '0',
             'trace' => json_encode(array_map(fn ($frame) => [
                 'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
                 'source' => ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'].'('.implode(', ', array_map(fn ($arg) => match (gettype($arg)) {
@@ -91,7 +95,7 @@ it('captures the code', function () {
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exception:0._group', hash('md5', "MyException,999,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"));
-    $ingest->assertLatestWrite('exception:0.code', 999);
+    $ingest->assertLatestWrite('exception:0.code', '999');
 });
 
 it('can ingest reported exceptions', function () {
@@ -128,7 +132,7 @@ it('can ingest reported exceptions', function () {
             'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
             'line' => $line,
             'message' => 'Whoops!',
-            'code' => 0,
+            'code' => '0',
             'trace' => json_encode(array_map(fn ($frame) => [
                 'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
                 'source' => ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'].'('.implode(', ', array_map(fn ($arg) => match (gettype($arg)) {
@@ -175,7 +179,7 @@ it('handles view exceptions', function () {
     $ingest->assertLatestWrite('exception:0.file', 'workbench/resources/views/exception.blade.php');
     $ingest->assertLatestWrite('exception:0.class', 'Exception');
     $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
-    $ingest->assertLatestWrite('exception:0.code', 999);
+    $ingest->assertLatestWrite('exception:0.code', '999');
     $ingest->assertLatestWrite('exception:0._group', hash('md5', 'Exception,999,workbench/resources/views/exception.blade.php,'));
 });
 
@@ -194,7 +198,7 @@ it('handles spatie view exceptions', function () {
     $ingest->assertLatestWrite('exception:0.file', 'workbench/resources/views/exception.blade.php');
     $ingest->assertLatestWrite('exception:0.class', 'Exception');
     $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
-    $ingest->assertLatestWrite('exception:0.code', 999);
+    $ingest->assertLatestWrite('exception:0.code', '999');
     $ingest->assertLatestWrite('exception:0._group', hash('md5', 'Exception,999,workbench/resources/views/exception.blade.php,6'));
 });
 
@@ -514,6 +518,69 @@ it('strips base_path from trace files', function () {
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '"file":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Route.php:'));
+});
+
+it('can manually report exceptions', function () {
+    $ingest = fakeIngest();
+    $trace = null;
+    $line = null;
+    Route::get('/users', function () use (&$trace, &$line) {
+        $line = __LINE__ + 1;
+        $e = new MyException('Whoops!');
+
+        $trace = $e->getTrace();
+
+        Nightwatch::report($e);
+    });
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exception:*', [
+        [
+            'v' => 1,
+            't' => 'exception',
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            '_group' => hash('md5', "MyException,0,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"),
+            'trace_id' => '00000000-0000-0000-0000-000000000000',
+            'execution_source' => 'request',
+            'execution_id' => '00000000-0000-0000-0000-000000000001',
+            'execution_stage' => 'action',
+            'user' => '',
+            'class' => 'MyException',
+            'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
+            'line' => $line,
+            'message' => 'Whoops!',
+            'code' => '0',
+            'trace' => json_encode(array_map(fn ($frame) => [
+                'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
+                'source' => ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'].'('.implode(', ', array_map(fn ($arg) => match (gettype($arg)) {
+                    'object' => $arg::class,
+                    'string' => 'string',
+                    'array' => 'array',
+                }, $frame['args'])).')',
+            ], $trace)),
+            'handled' => false,
+            'php_version' => '8.4.1',
+            'laravel_version' => '11.33.0',
+        ],
+    ]);
+});
+
+it('handles PDOExceptions where the code is a string', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', function () use (&$trace, &$line) {
+        DB::table('__foo__')->get();
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('exception:0.code', 'HY000');
 });
 
 final class MyException extends RuntimeException

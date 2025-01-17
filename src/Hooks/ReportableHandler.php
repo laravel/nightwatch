@@ -2,8 +2,7 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Illuminate\Support\Facades\Log;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
@@ -12,23 +11,25 @@ use function in_array;
 
 final class ReportableHandler
 {
+    /**
+     * @param  Core<RequestState|CommandState>  $nightwatch
+     */
     public function __construct(
-        private SensorManager $sensor,
-        private RequestState|CommandState $executionState,
+        private Core $nightwatch,
     ) {
         //
     }
 
-    public function __invoke(Throwable $exception): void
+    public function __invoke(Throwable $e): void
     {
         try {
-            if (in_array($this->executionState->source, ['job', 'schedule'], true)) {
+            if (in_array($this->nightwatch->state->source, ['job', 'schedule'], true)) {
                 return;
             }
-
-            $this->sensor->exception($exception);
-        } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+        } catch (Throwable $exception) { // @phpstan-ignore catch.neverThrown
+            $this->nightwatch->report($exception);
         }
+
+        $this->nightwatch->report($e);
     }
 }

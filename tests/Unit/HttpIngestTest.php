@@ -1,23 +1,22 @@
 <?php
 
 use Laravel\Nightwatch\Ingests\Remote\HttpClient;
-use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
 use React\Http\Message\Response;
 use React\Promise\Deferred;
-use React\Promise\Promise;
 use React\Promise\PromiseInterface;
 
 it('limits the number of concurrent requests', function () {
-    $deferred = new Deferred();
-    $ingest = new HttpIngest(new class($deferred->promise()) extends HttpClient {
+    $deferred = new Deferred;
+    $ingest = new HttpIngest(new class($deferred->promise()) extends HttpClient
+    {
         public function __construct(private PromiseInterface $promise) {}
 
         public function send(string $payload): PromiseInterface
         {
             return $this->promise;
         }
-    }, new Clock(0), 5);
+    }, 5);
 
     $ingest->write('[]');
     $ingest->write('[]');
@@ -34,23 +33,24 @@ it('limits the number of concurrent requests', function () {
 
 it('tracks resolved requests when considering connection limit', function () {
     $deferredPromises = [
-        new Deferred(),
-        new Deferred(),
-        new Deferred(),
-        new Deferred(),
-        new Deferred(),
-        new Deferred(),
+        new Deferred,
+        new Deferred,
+        new Deferred,
+        new Deferred,
+        new Deferred,
+        new Deferred,
     ];
-    $ingest = new HttpIngest(new class($deferredPromises) extends HttpClient {
+    $ingest = new HttpIngest(new class($deferredPromises) extends HttpClient
+    {
         public function __construct(private array $deferredPromises) {}
 
         public function send(string $payload): PromiseInterface
         {
             return array_shift($this->deferredPromises)->promise();
         }
-    }, new Clock(0), 2);
+    }, 2);
 
-    $response = new Response();
+    $response = new Response;
     $ingest->write('[]');
     $deferredPromises[0]->resolve($response);
     $ingest->write('[]');

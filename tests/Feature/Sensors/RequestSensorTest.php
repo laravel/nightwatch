@@ -12,16 +12,14 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\State\RequestState;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;
 use function Pest\Laravel\get;
 use function Pest\Laravel\head;
 use function Pest\Laravel\travelTo;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 
@@ -111,9 +109,6 @@ it('gracefully handles response size for a streamed file that is deleted after s
     // Testing this normally is hard. Laravel does not call `send` for
     // responses so we need to handle is pretty manually in this test.
     $ingest = fakeIngest();
-    /** @var SensorManager */
-    $sensor = app(SensorManager::class);
-    $state = app(RequestState::class);
     $request = Request::create('http://localhost/users');
 
     $file = tmpfile();
@@ -124,8 +119,8 @@ it('gracefully handles response size for a streamed file that is deleted after s
     $response = response()->file(stream_get_meta_data($file)['uri'])->deleteFileAfterSend()->sendContent();
     ob_end_clean();
 
-    $sensor->request($request, $response);
-    $ingest->write($state->records->flush());
+    nightwatch()->sensor->request($request, $response);
+    $ingest->write(nightwatch()->state->records->flush());
 
     $ingest->assertLatestWrite('request:0.response_size', 0);
 });
@@ -155,8 +150,6 @@ it('captures the content-length when present on a streamed response of unknown s
 it('uses the content-length header as the response size when present on a streamed file response where the file is deleted after sending', function () {
     $ingest = fakeIngest();
     /** @var SensorManager */
-    $sensor = app(SensorManager::class);
-    $state = app(RequestState::class);
     $request = Request::create('http://localhost/users');
 
     $file = tmpfile();
@@ -167,8 +160,8 @@ it('uses the content-length header as the response size when present on a stream
     $response = response()->file(stream_get_meta_data($file)['uri'], headers: ['Content-length' => 17])->deleteFileAfterSend()->sendContent();
     ob_end_clean();
 
-    $sensor->request($request, $response);
-    $ingest->write($state->records->flush());
+    nightwatch()->sensor->request($request, $response);
+    $ingest->write(nightwatch()->state->records->flush());
 
     $ingest->assertLatestWrite('request:0.response_size', 17);
 });
@@ -379,11 +372,10 @@ it('gracefully handles non-string query string', function () {
 
 it('captures bootstrap execution stage', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
     Route::get('/users', fn () => []);
 
     // Simulating boot time.
-    $sensor->stage(ExecutionStage::Bootstrap);
+    nightwatch()->sensor->stage(ExecutionStage::Bootstrap);
     syncClock(now()->addMicroseconds(5));
     $response = get('/users');
 
@@ -395,7 +387,6 @@ it('captures bootstrap execution stage', function () {
 
 it('captures global before middleware duration', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
     Route::get('/users', fn () => []);
     App::instance('travel-before', function ($request, $next) {
         travelTo(now()->addMicroseconds(5));

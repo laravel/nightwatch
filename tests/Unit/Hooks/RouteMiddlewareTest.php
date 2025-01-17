@@ -7,7 +7,7 @@ use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 it('gracefully handles exceptions', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -19,8 +19,8 @@ it('gracefully handles exceptions', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
-    $middleware = new RouteMiddleware($sensor);
+    });
+    $middleware = new RouteMiddleware($nightwatch);
     $request = Request::create('/test');
     $nextCalledWith = null;
     $next = function ($request) use (&$nextCalledWith) {
@@ -37,7 +37,7 @@ it('gracefully handles exceptions', function () {
 });
 
 it('handles response types that laravel does not wrap', function () {
-    $sensor = new class extends SensorManager
+    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
     {
         public bool $thrown = false;
 
@@ -49,8 +49,8 @@ it('handles response types that laravel does not wrap', function () {
 
             throw new RuntimeException('Whoops!');
         }
-    };
-    $middleware = new RouteMiddleware($sensor);
+    });
+    $middleware = new RouteMiddleware($nightwatch);
     $request = Request::create('/test');
     $nextCalledWith = null;
     $next = function ($request) use (&$nextCalledWith) {

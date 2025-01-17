@@ -1,0 +1,42 @@
+name: facades
+
+on:
+  push:
+    branches:
+      - '*.x'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: true
+
+    name: Facade DocBlocks
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 5
+          max_attempts: 5
+          command: "composer config repositories.facade-documenter vcs git@github.com:laravel/facade-documenter.git && composer require --dev laravel/facade-documenter:dev-main"
+
+      - name: Update facade docblocks
+        run: php -f vendor/bin/facade.php -- Laravel\\Nightwatch\\Facades\\Nightwatch
+
+      - name: Commit facade docblocks
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Update facade docblocks
+          file_pattern: src/

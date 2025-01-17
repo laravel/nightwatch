@@ -3,9 +3,7 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Queue\Events\JobAttempted;
-use Illuminate\Support\Facades\Log;
-use Laravel\Nightwatch\Contracts\LocalIngest;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
@@ -14,10 +12,11 @@ use Throwable;
  */
 final class JobAttemptedListener
 {
+    /**
+     * @param  Core<CommandState>  $nightwatch
+     */
     public function __construct(
-        private SensorManager $sensor,
-        private CommandState $executionState,
-        private LocalIngest $ingest,
+        private Core $nightwatch,
     ) {
         //
     }
@@ -25,11 +24,11 @@ final class JobAttemptedListener
     public function __invoke(JobAttempted $event): void
     {
         try {
-            $this->sensor->jobAttempt($event);
-
-            $this->ingest->write($this->executionState->records->flush());
+            $this->nightwatch->sensor->jobAttempt($event);
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->report($e);
         }
+
+        $this->nightwatch->ingest();
     }
 }

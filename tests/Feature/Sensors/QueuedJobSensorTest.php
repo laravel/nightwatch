@@ -6,9 +6,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
-use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -18,16 +15,13 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\State\RequestState;
 use Ramsey\Uuid\Uuid;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 use function Pest\Laravel\withoutExceptionHandling;
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceRequestExecutionState();
 });
 
@@ -56,7 +50,6 @@ it('can ingest queued jobs', function () {
     Route::post('/users', function () {
         Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
         MyJob::dispatch();
-        Str::createUuidsNormally();
     });
 
     $response = post('/users');
@@ -81,6 +74,7 @@ it('can ingest queued jobs', function () {
             'name' => 'MyJob',
             'connection' => 'database',
             'queue' => 'default',
+            'duration' => 0,
         ],
     ]);
 });
@@ -177,13 +171,12 @@ it('captures queued mail', function () {
         'name' => 'MyQueuedMail',
         'connection' => 'database',
         'queue' => 'default',
+        'duration' => 0,
     ]);
 });
 
 it('normalizes sqs queue names', function () {
     $ingest = fakeIngest();
-    $sensor = app(SensorManager::class);
-    $state = app(RequestState::class);
     Config::set('queue.connections.my-sqs-queue', [
         'driver' => 'sqs',
         'prefix' => 'https://sqs.us-east-1.amazonaws.com/your-account-id',
@@ -191,7 +184,7 @@ it('normalizes sqs queue names', function () {
         'suffix' => '-production',
     ]);
 
-    $sensor->queuedJob(new JobQueued(
+    nightwatch()->sensor->queuedJob(new JobQueued(
         connectionName: 'my-sqs-queue',
         queue: 'https://sqs.us-east-1.amazonaws.com/your-account-id/queue-name-production',
         id: Str::uuid()->toString(),
@@ -199,7 +192,7 @@ it('normalizes sqs queue names', function () {
         payload: '{"uuid":"00000000-0000-0000-0000-000000000000"}',
         delay: 0,
     ));
-    $ingest->write($state->records->flush());
+    $ingest->write(nightwatch()->state->records->flush());
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('queued-job:0.queue', 'queue-name');
@@ -260,22 +253,5 @@ final class MyListenerWithViaQueue implements ShouldQueue
     public function viaQueue(object $event)
     {
         return 'custom_queue';
-    }
-}
-
-final class MyEvent
-{
-    use Dispatchable;
-}
-
-class MyQueuedMail extends Mailable
-{
-    public function content(): Content
-    {
-        travelTo(now()->addMicroseconds(2500));
-
-        return new Content(
-            view: 'mail',
-        );
     }
 }

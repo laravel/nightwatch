@@ -4,17 +4,18 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Exceptions\Handler;
-use Illuminate\Support\Facades\Log;
-use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 final class ExceptionHandlerResolvedHandler
 {
+    /**
+     * @param  Core<RequestState|CommandState>  $nightwatch
+     */
     public function __construct(
-        private SensorManager $sensor,
-        private RequestState|CommandState $executionState,
+        private Core $nightwatch,
     ) {
         //
     }
@@ -23,11 +24,15 @@ final class ExceptionHandlerResolvedHandler
     {
         try {
             if ($handler instanceof Handler) {
-                // TODO ensure this isn't a memory leak in Octane
-                $handler->reportable(new ReportableHandler($this->sensor, $this->executionState));
+                /**
+                 * @see \Laravel\Nightwatch\Records\Exception
+                 *
+                 * TODO ensure this isn't a memory leak in Octane
+                 */
+                $handler->reportable(new ReportableHandler($this->nightwatch));
             }
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->report($e);
         }
     }
 }
