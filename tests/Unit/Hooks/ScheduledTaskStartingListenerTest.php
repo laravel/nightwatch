@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\Schedule;
 use Laravel\Nightwatch\Hooks\ScheduledTaskStartingListener;
 use Laravel\Nightwatch\Types\Str;
 
+beforeAll(function () {
+    forceCommandExecutionState();
+});
+
 it('gracefully handles exceptions', function () {
     Str::createUuidsUsing(function () {
         throw new RuntimeException('Whoops!');
