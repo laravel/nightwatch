@@ -76,7 +76,7 @@ final class Agent extends Command
                 $this->evict($connection);
             });
 
-            $connection->on('timeout', function () use ($connection) {
+            $connection->on('timeout', static function () use ($connection) {
                 echo date('Y-m-d H:i:s').' ERROR: Connection timed out.'.PHP_EOL;
 
                 $connection->close();
@@ -89,7 +89,7 @@ final class Agent extends Command
             });
         });
 
-        $server->on('error', function (Throwable $e) {
+        $server->on('error', static function (Throwable $e) {
             echo date('Y-m-d H:i:s')."Server error. [{$e->getMessage()}].".PHP_EOL;
         });
 
