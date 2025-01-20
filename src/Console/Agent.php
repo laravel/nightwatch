@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Laravel\Nightwatch\Buffers\StreamBuffer;
 use Laravel\Nightwatch\Contracts\RemoteIngest;
 use Laravel\Nightwatch\Ingests\Remote\IngestSucceededResult;
-use React\EventLoop\LoopInterface;
+use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
 use React\Promise\PromiseInterface;
 use React\Socket\ConnectionInterface;
@@ -42,7 +42,6 @@ final class Agent extends Command
 
     public function __construct(
         private StreamBuffer $buffer,
-        private LoopInterface $loop,
         private int|float $timeout,
         private int $delay,
     ) {
@@ -88,12 +87,12 @@ final class Agent extends Command
         });
 
         echo date('Y-m-d H:i:s').' Nightwatch agent initiated.'.PHP_EOL;
-        $this->loop->run();
+        Loop::run();
     }
 
     private function accept(ConnectionInterface $connection): void
     {
-        $timeoutTimer = $this->loop->addTimer($this->timeout, function () use ($connection) {
+        $timeoutTimer = Loop::addTimer($this->timeout, function () use ($connection) {
             echo date('Y-m-d H:i:s').' ERROR: Connection timed out.'.PHP_EOL;
 
             $this->evict($connection);
@@ -123,7 +122,7 @@ final class Agent extends Command
         if ($timer !== null) {
             $connection->close();
 
-            $this->loop->cancelTimer($timer);
+            Loop::cancelTimer($timer);
 
             unset($this->connections[$connection]);
         }
@@ -138,13 +137,13 @@ final class Agent extends Command
             $records = $this->buffer->flush();
 
             if ($this->flushBufferAfterDelayTimer !== null) {
-                $this->loop->cancelTimer($this->flushBufferAfterDelayTimer);
+                Loop::cancelTimer($this->flushBufferAfterDelayTimer);
                 $this->flushBufferAfterDelayTimer = null;
             }
 
             $after($ingest->write($records));
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer($this->delay, function () use ($ingest, $after) {
+            $this->flushBufferAfterDelayTimer ??= Loop::addTimer($this->delay, function () use ($ingest, $after) {
                 $records = $this->buffer->flush();
 
                 $this->flushBufferAfterDelayTimer = null;
