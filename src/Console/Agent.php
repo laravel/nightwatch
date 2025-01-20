@@ -79,11 +79,11 @@ final class Agent extends Command
             $connection->on('timeout', static function () use ($connection) {
                 echo date('Y-m-d H:i:s').' ERROR: Connection timed out.'.PHP_EOL;
 
-                $connection->close();
+                $this->evict($connection);
             });
 
             $connection->on('error', function (Throwable $e) use ($connection) {
-                echo date('Y-m-d H:i:s')."Connection error. [{$e->getMessage()}].".PHP_EOL;
+                echo date('Y-m-d H:i:s')." ERROR: Connection error. [{$e->getMessage()}].".PHP_EOL;
 
                 $this->evict($connection);
             });
@@ -122,11 +122,15 @@ final class Agent extends Command
 
     private function evict(ConnectionInterface $connection): void
     {
-        $connection->close();
+        $timer = $this->connections[$connection][1] ?? null;
 
-        $this->loop->cancelTimer($this->connections[$connection][1]);
+        if ($timer !== null) {
+            $connection->close();
 
-        unset($this->connections[$connection]);
+            $this->loop->cancelTimer($timer);
+
+            unset($this->connections[$connection]);
+        }
     }
 
     /**
