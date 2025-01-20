@@ -115,7 +115,7 @@ final class Agent extends Command
     {
         $payload = $this->connections[$connection][0];
 
-        $this->connections[$connection][0] = '';
+        $this->evict($connection);
 
         return $payload;
     }
