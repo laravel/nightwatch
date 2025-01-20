@@ -47,7 +47,6 @@ it('can ingest requests', function () {
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('md5', 'GET|HEAD,,/users'),
-            'trace_source' => 'request',
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'user' => '',
             'method' => 'GET',
