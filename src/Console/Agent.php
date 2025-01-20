@@ -76,7 +76,7 @@ final class Agent extends Command
                 $this->evict($connection);
             });
 
-            $connection->on('timeout', static function () use ($connection) {
+            $connection->on('timeout', function () use ($connection) {
                 echo date('Y-m-d H:i:s').' ERROR: Connection timed out.'.PHP_EOL;
 
                 $this->evict($connection);
