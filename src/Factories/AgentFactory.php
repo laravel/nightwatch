@@ -46,6 +46,6 @@ final class AgentFactory
             (new RemoteIngestFactory($this->config, $debug))($app),
         ));
 
-        return new Agent(new StreamBuffer, ($this->config['ingests']['socket']['timeout'] ?? 0.5) + 10, $debug ? 1 : 10);
+        return new Agent(new StreamBuffer, $debug ? 1 : 10);
     }
 }

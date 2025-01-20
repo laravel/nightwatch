@@ -42,7 +42,6 @@ final class Agent extends Command
 
     public function __construct(
         private StreamBuffer $buffer,
-        private int|float $timeout,
         private int $delay,
     ) {
         parent::__construct();
