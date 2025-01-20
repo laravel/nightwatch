@@ -62,11 +62,13 @@ final class Agent extends Command
             $connection->on('end', function () use ($ingest, $connection) {
                 $this->buffer->write($this->flushConnectionBuffer($connection));
 
-                $this->queueOrPerformIngest($ingest, static function (PromiseInterface $response) {
-                    $response->then(static function (IngestSucceededResult $result) {
-                        echo date('Y-m-d H:i:s')." SUCCESS: Took [{$result->duration}]s.".PHP_EOL;
-                    }, static function (Throwable $e) {
-                        echo date('Y-m-d H:i:s')." ERROR: {$e->getMessage()}.".PHP_EOL;
+                Loop::futureTick(function () use ($ingest) {
+                    $this->queueOrPerformIngest($ingest, static function (PromiseInterface $response) {
+                        $response->then(static function (IngestSucceededResult $result) {
+                            echo date('Y-m-d H:i:s')." SUCCESS: Took [{$result->duration}]s.".PHP_EOL;
+                        }, static function (Throwable $e) {
+                            echo date('Y-m-d H:i:s')." ERROR: {$e->getMessage()}.".PHP_EOL;
+                        });
                     });
                 });
             });
