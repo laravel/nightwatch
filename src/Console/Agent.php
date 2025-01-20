@@ -99,7 +99,7 @@ final class Agent extends Command
 
     private function accept(ConnectionInterface $connection): void
     {
-        $timeoutTimer = $this->loop->addPeriodicTimer($this->timeout, static function () use ($connection) {
+        $timeoutTimer = $this->loop->addTimer($this->timeout, static function () use ($connection) {
             $connection->emit('timeout');
         });
 
