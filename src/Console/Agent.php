@@ -76,12 +76,6 @@ final class Agent extends Command
                 $this->evict($connection);
             });
 
-            $connection->on('timeout', function () use ($connection) {
-                echo date('Y-m-d H:i:s').' ERROR: Connection timed out.'.PHP_EOL;
-
-                $this->evict($connection);
-            });
-
             $connection->on('error', function (Throwable $e) use ($connection) {
                 echo date('Y-m-d H:i:s')." ERROR: Connection error. [{$e->getMessage()}].".PHP_EOL;
 
@@ -99,8 +93,10 @@ final class Agent extends Command
 
     private function accept(ConnectionInterface $connection): void
     {
-        $timeoutTimer = $this->loop->addTimer($this->timeout, static function () use ($connection) {
-            $connection->emit('timeout');
+        $timeoutTimer = $this->loop->addTimer($this->timeout, function () use ($connection) {
+            echo date('Y-m-d H:i:s').' ERROR: Connection timed out.'.PHP_EOL;
+
+            $this->evict($connection);
         });
 
         $this->connections[$connection] = ['', $timeoutTimer];
