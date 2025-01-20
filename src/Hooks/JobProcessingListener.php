@@ -26,7 +26,7 @@ final class JobProcessingListener
     {
         try {
             $this->nightwatch->state->timestamp = $this->nightwatch->clock->microtime();
-            $this->nightwatch->state->id = (string) Str::uuid();
+            $this->nightwatch->state->executionId = (string) Str::uuid();
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

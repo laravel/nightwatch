@@ -247,7 +247,8 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         /** @var ContextRepository */
         $context = $this->app->make(ContextRepository::class);
-        $context->addHidden('nightwatch_trace_id', $core->state->trace);
+        $context->addHidden('nightwatch_trace_id', $core->state->traceId);
+        $context->addHidden('nightwatch_trace_source', $core->state->traceSource);
 
         //
         // -------------------------------------------------------------------------
@@ -401,10 +402,10 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\Core::ingest()
          *
          * Jobs...
-         * @see \Laravel\Nightwatch\State\CommandState::$source
+         * @see \Laravel\Nightwatch\State\CommandState::$executionSource
          * @see \Laravel\Nightwatch\State\CommandState::reset()
          * @see \Laravel\Nightwatch\State\CommandState::$timestamp
-         * @see \Laravel\Nightwatch\State\CommandState::$id
+         * @see \Laravel\Nightwatch\State\CommandState::$executionId
          * @see \Laravel\Nightwatch\Records\JobAttempt
          * @see \Laravel\Nightwatch\Records\Exception
          */
@@ -433,7 +434,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             return new RequestState(
                 timestamp: $this->timestamp,
-                trace: (string) Str::uuid(),
+                traceId: (string) Str::uuid(),
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
                 server: $this->nightwatchConfig['server'] ?? '',
@@ -442,7 +443,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         } else {
             return new CommandState(
                 timestamp: $this->timestamp,
-                trace: (string) Str::uuid(),
+                traceId: (string) Str::uuid(),
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
                 server: $this->nightwatchConfig['server'] ?? '',

@@ -45,6 +45,7 @@ final class JobAttemptSensor
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', $name),
+            trace_source: Context::getHidden('nightwatch_trace_source'), // @phpstan-ignore argument.type
             trace_id: Context::getHidden('nightwatch_trace_id'), // @phpstan-ignore argument.type
             user: $this->executionState->user->id(),
             job_id: $event->job->uuid(), // @phpstan-ignore argument.type

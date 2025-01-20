@@ -85,13 +85,13 @@ function setServerName(string $server): void
 
 function setTraceId(string $traceId): void
 {
-    nightwatch()->state->trace = $traceId;
+    nightwatch()->state->traceId = $traceId;
     context()->addHidden('nightwatch_trace_id', $traceId);
 }
 
 function setExecutionId(string $executionId): void
 {
-    nightwatch()->state->id = $executionId;
+    nightwatch()->state->executionId = $executionId;
 }
 
 function setPeakMemory(int $value): void
