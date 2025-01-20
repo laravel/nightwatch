@@ -76,21 +76,21 @@ final class Agent extends Command
                 $this->evict($connection);
             });
 
-            $connection->on('timeout', function () use ($connection) {
-                $this->error('Connection timed out.');
+            $connection->on('timeout', static function () use ($connection) {
+                echo date('Y-m-d H:i:s').' ERROR: Connection timed out.'.PHP_EOL;
 
                 $connection->close();
             });
 
             $connection->on('error', function (Throwable $e) use ($connection) {
-                $this->error("Connection error. [{$e->getMessage()}].");
+                echo date('Y-m-d H:i:s')."Connection error. [{$e->getMessage()}].".PHP_EOL;
 
                 $this->evict($connection);
             });
         });
 
-        $server->on('error', function (Throwable $e) {
-            $this->error("Server error. [{$e->getMessage()}].");
+        $server->on('error', static function (Throwable $e) {
+            echo date('Y-m-d H:i:s')."Server error. [{$e->getMessage()}].".PHP_EOL;
         });
 
         echo date('Y-m-d H:i:s').' Nightwatch agent initiated.'.PHP_EOL;

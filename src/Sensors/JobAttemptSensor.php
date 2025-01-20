@@ -38,18 +38,19 @@ final class JobAttemptSensor
         }
 
         $now = $this->clock->microtime();
+        $name = $event->job->resolveName();
 
         $this->executionState->records->write(new JobAttempt(
             timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', $event->job->resolveName()),
-            trace_id: Context::getHidden('nightwatch:trace'), // @phpstan-ignore argument.type
+            _group: hash('md5', $name),
+            trace_id: Context::getHidden('nightwatch_trace_id'), // @phpstan-ignore argument.type
             user: $this->executionState->user->id(),
             job_id: $event->job->uuid(), // @phpstan-ignore argument.type
             attempt_id: (string) Str::uuid(),
             attempt: $event->job->attempts(),
-            name: $event->job->resolveName(),
+            name: $name,
             connection: $event->job->getConnectionName(),
             queue: $this->normalizeQueue($event->job->getConnectionName(), $event->job->getQueue()),
             status: match (true) {
