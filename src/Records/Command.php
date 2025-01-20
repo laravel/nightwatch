@@ -21,7 +21,6 @@ final class Command
         public string $deploy,
         public string $server,
         public string $_group,
-        public string $trace_source,
         public string $trace_id,
         // --- //
         public string $class,
