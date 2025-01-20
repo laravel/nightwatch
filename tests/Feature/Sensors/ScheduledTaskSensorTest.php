@@ -27,6 +27,7 @@ beforeEach(function () {
     setPeakMemory(1234);
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000000');
+    app()->setBasePath(dirname(app()->basePath()));
 });
 
 afterEach(function () {
