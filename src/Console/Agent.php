@@ -34,7 +34,7 @@ final class Agent extends Command
     protected $description = 'Start the Nightwatch agent.';
 
     /**
-     * @var WeakMap<ConnectionInterface, array{ 0: string, 1: TimerInterface }>
+     * @var WeakMap<ConnectionInterface, string>
      */
     private WeakMap $connections;
 
@@ -94,23 +94,17 @@ final class Agent extends Command
 
     private function accept(ConnectionInterface $connection): void
     {
-        $timeoutTimer = Loop::addTimer($this->timeout, function () use ($connection) {
-            echo date('Y-m-d H:i:s').' ERROR: Connection timed out.'.PHP_EOL;
-
-            $this->evict($connection);
-        });
-
-        $this->connections[$connection] = ['', $timeoutTimer];
+        $this->connections[$connection] = '';
     }
 
     private function bufferConnectionChunk(ConnectionInterface $connection, string $chunk): void
     {
-        $this->connections[$connection][0] .= $chunk;
+        $this->connections[$connection] .= $chunk;
     }
 
     private function flushConnectionBuffer(ConnectionInterface $connection): string
     {
-        $payload = $this->connections[$connection][0];
+        $payload = $this->connections[$connection];
 
         $this->evict($connection);
 
@@ -119,15 +113,9 @@ final class Agent extends Command
 
     private function evict(ConnectionInterface $connection): void
     {
-        $timer = $this->connections[$connection][1] ?? null;
+        $connection->close();
 
-        if ($timer !== null) {
-            $connection->close();
-
-            Loop::cancelTimer($timer);
-
-            unset($this->connections[$connection]);
-        }
+        unset($this->connections[$connection]);
     }
 
     /**
