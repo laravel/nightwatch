@@ -104,7 +104,7 @@ final class Agent extends Command
         // Renew the token 1 minute before it expires.
         $interval = max(1, $expiresIn - 60);
 
-        $this->loop->addTimer($interval, fn () => $this->authorizeEnvSecret());
+        $this->loop->addTimer($interval, fn () => $this->authenticate());
     }
 
     private function startServer(Server $server, RemoteIngest $ingest): void
