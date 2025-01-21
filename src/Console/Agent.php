@@ -6,8 +6,10 @@ use Illuminate\Console\Command;
 use Laravel\Nightwatch\Buffers\StreamBuffer;
 use Laravel\Nightwatch\Contracts\RemoteIngest;
 use Laravel\Nightwatch\Ingests\Remote\IngestSucceededResult;
+use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
+use React\Http\Browser;
 use React\Promise\PromiseInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\ServerInterface as Server;
@@ -38,11 +40,18 @@ final class Agent extends Command
      */
     private WeakMap $connections;
 
+    private string $jwt;
+
     private ?TimerInterface $flushBufferAfterDelayTimer;
+
+    private ?TimerInterface $tokenRenewalTimer;
 
     public function __construct(
         private StreamBuffer $buffer,
         private LoopInterface $loop,
+        private Browser $browser,
+        private string $envSecret,
+        private string $authUrl,
         private int|float $timeout,
         private int $delay,
     ) {
@@ -52,6 +61,48 @@ final class Agent extends Command
     }
 
     public function handle(Server $server, RemoteIngest $ingest): void
+    {
+        $this->authenticate()->then(function () use ($server, $ingest) {
+            $this->startServer($server, $ingest);
+        });
+
+        echo date('Y-m-d H:i:s').' Nightwatch agent initiated.'.PHP_EOL;
+        $this->loop->run();
+    }
+
+    private function authenticate(): PromiseInterface
+    {
+        return $this->browser->post($this->authUrl, [
+            'Content-Type' => 'application/json',
+        ], json_encode(['token' => $this->envSecret])
+        )->then(function (ResponseInterface $response) {
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            if (! isset($data['jwt']) || ! isset($data['expires_in'])) {
+                $this->fail('Invalid authorization response.');
+            }
+
+            $this->jwt = $data['jwt'];
+
+            $this->scheduleTokenRenewal($data['expires_in']);
+        }, function (Throwable $e) {
+            $this->fail("Failed to authorize the environment secret. [{$e->getMessage()}].");
+        });
+    }
+
+    private function scheduleTokenRenewal(int $expiresIn): void
+    {
+        if ($this->tokenRenewalTimer !== null) {
+            $this->loop->cancelTimer($this->tokenRenewalTimer);
+        }
+
+        // Renew the token 1 minute before it expires.
+        $interval = max(1, $expiresIn - 60);
+
+        $this->loop->addTimer($interval, fn () => $this->authorizeEnvSecret());
+    }
+
+    private function startServer(Server $server, RemoteIngest $ingest): void
     {
         $server->on('connection', function (ConnectionInterface $connection) use ($ingest) {
             $this->accept($connection);
@@ -92,9 +143,6 @@ final class Agent extends Command
         $server->on('error', function (Throwable $e) {
             $this->error("Server error. [{$e->getMessage()}].");
         });
-
-        echo date('Y-m-d H:i:s').' Nightwatch agent initiated.'.PHP_EOL;
-        $this->loop->run();
     }
 
     private function accept(ConnectionInterface $connection): void
