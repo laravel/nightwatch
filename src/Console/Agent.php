@@ -43,7 +43,7 @@ final class Agent extends Command
      */
     private WeakMap $connections;
 
-    private string $jwt;
+    private string $token;
 
     private ?TimerInterface $flushBufferAfterDelayTimer;
 
@@ -82,11 +82,11 @@ final class Agent extends Command
         )->then(function (ResponseInterface $response) {
             $data = json_decode($response->getBody()->getContents(), true);
 
-            if (! isset($data['jwt']) || ! isset($data['expires_in'])) {
+            if (! isset($data['token']) || ! isset($data['expires_in'])) {
                 $this->fail('Invalid authorization response.');
             }
 
-            $this->jwt = $data['jwt'];
+            $this->token = $data['token'];
 
             $this->scheduleTokenRenewal($data['expires_in']);
         }, function (Throwable $e) {
