@@ -45,9 +45,9 @@ final class Agent extends Command
 
     private string $token;
 
-    private ?TimerInterface $flushBufferAfterDelayTimer;
+    private ?TimerInterface $flushBufferAfterDelayTimer = null;
 
-    private ?TimerInterface $tokenRenewalTimer;
+    private ?TimerInterface $tokenRenewalTimer = null;
 
     public function __construct(
         private StreamBuffer $buffer,
@@ -69,8 +69,9 @@ final class Agent extends Command
             $this->startServer($server, $ingest);
 
             echo date('Y-m-d H:i:s').' Nightwatch agent initiated.'.PHP_EOL;
-            $this->loop->run();
         });
+
+        $this->loop->run();
     }
 
     private function authenticate(): PromiseInterface
