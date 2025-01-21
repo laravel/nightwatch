@@ -18,6 +18,9 @@ use Throwable;
 use WeakMap;
 
 use function date;
+use function json_decode;
+use function json_encode;
+use function max;
 
 /**
  * @internal
