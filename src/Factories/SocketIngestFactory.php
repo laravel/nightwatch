@@ -14,6 +14,7 @@ final class SocketIngestFactory
      *      enabled?: bool,
      *      env_id?: string,
      *      env_secret?: string,
+     *      auth_url?: string,
      *      deployment?: string,
      *      server?: string,
      *      local_ingest?: string,

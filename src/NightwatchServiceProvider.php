@@ -95,22 +95,23 @@ final class NightwatchServiceProvider extends ServiceProvider
     private Repository $config;
 
     /**
-     * @var array{
-     *     enabled?: bool,
-     *     env_id?: string,
-     *     env_secret?: string,
-     *     deployment?: string,
-     *     server?: string,
-     *     local_ingest?: string,
-     *     remote_ingest?: string,
-     *     buffer_threshold?: int,
-     *     error_log_channel?: string,
-     *     ingests: array{
-     *     socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
-     *     http?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
-     *     log?: array{ channel?: string },
-     *     }
-     *     }
+     * @param  array{
+     *      enabled?: bool,
+     *      env_id?: string,
+     *      env_secret?: string,
+     *      auth_url?: string,
+     *      deployment?: string,
+     *      server?: string,
+     *      local_ingest?: string,
+     *      remote_ingest?: string,
+     *      buffer_threshold?: int,
+     *      error_log_channel?: string,
+     *      ingests: array{
+     *          socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *          http?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *          log?: array{ channel?: string },
+     *      }
+     * }  $config
      */
     private array $nightwatchConfig;
 
