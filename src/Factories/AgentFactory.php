@@ -54,8 +54,8 @@ final class AgentFactory
             new StreamBuffer,
             $loop,
             new Browser($loop),
-            $this->config['env_secret'],
-            $this->config['auth_url'],
+            $this->config['env_secret'] ?? '',
+            $this->config['auth_url'] ?? '',
             $this->config['ingests']['socket']['timeout'] ?? 0.5,
             $debug ? 1 : 10
         );
