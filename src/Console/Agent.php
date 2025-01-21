@@ -67,10 +67,10 @@ final class Agent extends Command
     {
         $this->authenticate()->then(function () use ($server, $ingest) {
             $this->startServer($server, $ingest);
-        });
 
-        echo date('Y-m-d H:i:s').' Nightwatch agent initiated.'.PHP_EOL;
-        $this->loop->run();
+            echo date('Y-m-d H:i:s').' Nightwatch agent initiated.'.PHP_EOL;
+            $this->loop->run();
+        });
     }
 
     private function authenticate(): PromiseInterface
