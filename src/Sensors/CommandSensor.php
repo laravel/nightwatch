@@ -39,6 +39,7 @@ final class CommandSensor
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', $name),
+            trace_source: $this->executionState->traceSource,
             trace_id: $this->executionState->traceId,
             class: $class,
             name: $name,
