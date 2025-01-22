@@ -76,7 +76,6 @@ final class Agent extends Command
 
     private function authenticate(): PromiseInterface
     {
-        // TODO: Do not need to authenticate if `remote_ingest` config is set to `null`.
         return $this->browser->post($this->authUrl, [
             'Content-Type' => 'application/json',
         ], json_encode(['token' => $this->envSecret])
