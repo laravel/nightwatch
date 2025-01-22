@@ -96,7 +96,7 @@ final class Agent extends Command
             $this->token = $data['token'];
 
             $this->scheduleTokenRenewal($data['expires_in']);
-        }, function (Throwable $e) {
+        }, static function (Throwable $e) {
             throw new RuntimeException("Failed to authorize the environment secret. [{$e->getMessage()}].");
         });
     }
