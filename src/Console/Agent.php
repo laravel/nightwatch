@@ -90,14 +90,14 @@ final class Agent extends Command
             $data = json_decode($response->getBody()->getContents(), true);
 
             if (! isset($data['token'], $data['expires_in']) || ! $data['token'] || ! $data['expires_in']) {
-                throw new RuntimeException('Invalid authorization response.');
+                throw new RuntimeException('Invalid authentication response.');
             }
 
             $this->token = $data['token'];
 
             $this->scheduleTokenRenewal($data['expires_in']);
         }, static function (Throwable $e) {
-            throw new RuntimeException("Failed to authorize the environment secret. [{$e->getMessage()}].");
+            throw new RuntimeException("Failed to authenticate the environment secret. [{$e->getMessage()}].");
         });
     }
 
