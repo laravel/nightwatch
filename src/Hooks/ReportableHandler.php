@@ -21,7 +21,7 @@ final class ReportableHandler
     public function __invoke(Throwable $e): void
     {
         try {
-            if ($this->nightwatch->state->executionSource === 'job') {
+            if ($this->nightwatch->state->source === 'job') {
                 return;
             }
         } catch (Throwable $exception) { // @phpstan-ignore catch.neverThrown

@@ -39,8 +39,7 @@ final class CommandSensor
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', $name),
-            trace_source: $this->executionState->traceSource,
-            trace_id: $this->executionState->traceId,
+            trace_id: $this->executionState->trace,
             class: $class,
             name: $name,
             command: $input instanceof ArgvInput

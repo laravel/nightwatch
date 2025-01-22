@@ -13,7 +13,6 @@ it('only keeps 500 records in memory', function () {
             deploy: '',
             server: '',
             _group: '',
-            trace_source: '',
             trace_id: '',
             execution_source: '',
             execution_id: '',

@@ -23,7 +23,6 @@ final class QueuedJob
         public string $deploy,
         public string $server,
         public string $_group,
-        public string $trace_source,
         public string $trace_id,
         public string $execution_source,
         public string $execution_id,

@@ -58,7 +58,7 @@ final class CommandStartingListener
 
     private function registerJobHooks(): void
     {
-        $this->nightwatch->state->executionSource = 'job';
+        $this->nightwatch->state->source = 'job';
 
         /**
          * @see \Laravel\Nightwatch\State\CommandState::reset()
@@ -67,7 +67,7 @@ final class CommandStartingListener
 
         /**
          * @see \Laravel\Nightwatch\State\CommandState::$timestamp
-         * @see \Laravel\Nightwatch\State\CommandState::$executionId
+         * @see \Laravel\Nightwatch\State\CommandState::$id
          */
         $this->events->listen(JobProcessing::class, (new JobProcessingListener($this->nightwatch))(...));
 

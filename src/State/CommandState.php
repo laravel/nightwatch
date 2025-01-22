@@ -23,11 +23,9 @@ final class CommandState
 {
     public int $v = 1;
 
-    public string $executionId;
+    public string $id;
 
-    public string $traceSource = 'command';
-
-    public string $executionSource = 'command';
+    public string $source = 'command';
 
     /**
      * @var (Closure(): int)|null
@@ -41,7 +39,7 @@ final class CommandState
      */
     public function __construct(
         public float $timestamp,
-        public string $traceId,
+        public string $trace,
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
@@ -73,7 +71,7 @@ final class CommandState
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
-        $this->executionId = $traceId;
+        $this->id = $trace;
         $this->terminatingEventExists = class_exists(Terminating::class);
     }
 

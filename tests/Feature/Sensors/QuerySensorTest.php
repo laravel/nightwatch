@@ -60,7 +60,6 @@ it('can ingest queries', function () {
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('md5', $connection.',select * from "users"'),
-            'trace_source' => 'request',
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
