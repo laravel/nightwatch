@@ -15,6 +15,7 @@ final class JobAttempt
     public string $t = 'job-attempt';
 
     /**
+     * @param  string|LazyValue<string>  $trace_id
      * @param  string|LazyValue<string>  $user
      * @param  'processed'|'released'|'failed'  $status
      */
@@ -23,7 +24,7 @@ final class JobAttempt
         public string $deploy,
         public string $server,
         public string $_group,
-        public string $trace_id,
+        public string|LazyValue $trace_id,
         public string|LazyValue $user,
         // --- /
         public string $job_id,

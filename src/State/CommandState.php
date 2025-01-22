@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Events\Terminating;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\NullUserProvider;
 use Laravel\Nightwatch\Types\Str;
 
@@ -22,7 +23,10 @@ final class CommandState
 {
     public int $v = 1;
 
-    public string $id;
+    /**
+     * @var string|LazyValue<string>
+     */
+    public string|LazyValue $id;
 
     public string $source = 'command';
 
@@ -34,11 +38,12 @@ final class CommandState
     public bool $terminatingEventExists;
 
     /**
+     * @param  string|LazyValue<string>  $trace
      * @param  array<value-of<ExecutionStage>, int>  $stageDurations
      */
     public function __construct(
         public float $timestamp,
-        public string $trace,
+        public string|LazyValue $trace,
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
