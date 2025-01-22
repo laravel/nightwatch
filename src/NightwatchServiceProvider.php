@@ -95,7 +95,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     private Repository $config;
 
     /**
-     * @param  array{
+     * @var  array{
      *      enabled?: bool,
      *      env_id?: string,
      *      env_secret?: string,
@@ -111,7 +111,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      *          http?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
      *          log?: array{ channel?: string },
      *      }
-     * }  $config
+     * }
      */
     private array $nightwatchConfig;
 

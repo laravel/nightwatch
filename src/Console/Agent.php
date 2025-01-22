@@ -13,6 +13,7 @@ use React\Http\Browser;
 use React\Promise\PromiseInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\ServerInterface as Server;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 use WeakMap;
@@ -43,6 +44,7 @@ final class Agent extends Command
      */
     private WeakMap $connections;
 
+    // @phpstan-ignore-next-line: property.onlyWritten
     private string $token;
 
     private ?TimerInterface $flushBufferAfterDelayTimer = null;
@@ -74,23 +76,28 @@ final class Agent extends Command
         $this->loop->run();
     }
 
+    /**
+     * @return PromiseInterface<void>
+     */
     private function authenticate(): PromiseInterface
     {
+        $body = json_encode(['token' => $this->envSecret], JSON_THROW_ON_ERROR);
+
         return $this->browser->post($this->authUrl, [
             'Content-Type' => 'application/json',
-        ], json_encode(['token' => $this->envSecret])
-        )->then(function (ResponseInterface $response) {
+        ], $body)->then(function (ResponseInterface $response) {
+            /** @var array{token?: string, expires_in?: int} $data */
             $data = json_decode($response->getBody()->getContents(), true);
 
             if (! isset($data['token']) || ! isset($data['expires_in'])) {
-                $this->fail('Invalid authorization response.');
+                throw new RuntimeException('Invalid authorization response.');
             }
 
             $this->token = $data['token'];
 
             $this->scheduleTokenRenewal($data['expires_in']);
         }, function (Throwable $e) {
-            $this->fail("Failed to authorize the environment secret. [{$e->getMessage()}].");
+            throw new RuntimeException("Failed to authorize the environment secret. [{$e->getMessage()}].");
         });
     }
 
