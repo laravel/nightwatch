@@ -89,7 +89,7 @@ final class Agent extends Command
             /** @var array{token?: string, expires_in?: int} $data */
             $data = json_decode($response->getBody()->getContents(), true);
 
-            if (! isset($data['token']) || ! isset($data['expires_in'])) {
+            if (! isset($data['token'], $data['expires_in']) || ! $data['token'] || !$data['expires_in']) {
                 throw new RuntimeException('Invalid authorization response.');
             }
 
