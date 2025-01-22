@@ -12,7 +12,7 @@ final class LocalIngestFactory
      * @param  array{
      *      enabled?: bool,
      *      env_id?: string,
-     *      env_secret?: string,
+     *      token?: string,
      *      auth_url?: string,
      *      deployment?: string,
      *      server?: string,

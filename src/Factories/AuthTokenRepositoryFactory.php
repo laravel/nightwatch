@@ -3,12 +3,12 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
+use Laravel\Nightwatch\AuthTokenRepository;
 use React\EventLoop\LoopInterface;
-use React\Socket\LimitingServer;
-use React\Socket\ServerInterface;
-use React\Socket\TcpServer;
+use React\Http\Browser;
+use React\Socket\Connector;
 
-final class SocketServerFactory
+final class AuthTokenRepositoryFactory
 {
     /**
      * @param  array{
@@ -29,15 +29,26 @@ final class SocketServerFactory
      *      }
      * }  $config
      */
-    public function __construct(private LoopInterface $loop, private array $config)
-    {
+    public function __construct(
+        private LoopInterface $loop,
+        private array $config,
+    ) {
         //
     }
 
-    public function __invoke(Application $app): ServerInterface
+    public function __invoke(Application $app): AuthTokenRepository
     {
-        $server = new TcpServer($this->config['ingests']['socket']['uri'] ?? '', $this->loop);
+        $token = $this->config['token'] ?? '';
 
-        return new LimitingServer($server, $this->config['ingests']['socket']['connection_limit'] ?? 20);
+        $connector = new Connector(['timeout' => 5], $this->loop);
+
+        $browser = (new Browser($connector, $this->loop))
+            ->withTimeout(10)
+            ->withHeader('authorization', "Bearer {$token}")
+            ->withHeader('user-agent', 'NightwatchAgent/1')
+            ->withHeader('content-type', 'application/json')
+            ->withBase($this->config['auth_url'] ?? '');
+
+        return new AuthTokenRepository($browser);
     }
 }

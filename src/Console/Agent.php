@@ -3,24 +3,21 @@
 namespace Laravel\Nightwatch\Console;
 
 use Illuminate\Console\Command;
+use Laravel\Nightwatch\AuthToken;
+use Laravel\Nightwatch\AuthTokenRepository;
 use Laravel\Nightwatch\Buffers\StreamBuffer;
 use Laravel\Nightwatch\Contracts\RemoteIngest;
 use Laravel\Nightwatch\Ingests\Remote\IngestSucceededResult;
-use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
-use React\Http\Browser;
 use React\Promise\PromiseInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\ServerInterface as Server;
-use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 use WeakMap;
 
 use function date;
-use function json_decode;
-use function json_encode;
 use function max;
 
 /**
@@ -44,9 +41,6 @@ final class Agent extends Command
      */
     private WeakMap $connections;
 
-    // @phpstan-ignore-next-line: property.onlyWritten
-    private string $token;
-
     private ?TimerInterface $flushBufferAfterDelayTimer = null;
 
     private ?TimerInterface $tokenRenewalTimer = null;
@@ -54,9 +48,6 @@ final class Agent extends Command
     public function __construct(
         private StreamBuffer $buffer,
         private LoopInterface $loop,
-        private Browser $browser,
-        private string $envSecret,
-        private string $authUrl,
         private int|float $timeout,
         private int $delay,
     ) {
@@ -65,52 +56,43 @@ final class Agent extends Command
         $this->connections = new WeakMap;
     }
 
-    public function handle(Server $server, RemoteIngest $ingest): void
-    {
-        $this->authenticate()->then(function () use ($server, $ingest) {
-            $this->startServer($server, $ingest);
+    public function handle(
+        Server $server,
+        RemoteIngest $ingest,
+        AuthTokenRepository $auth,
+    ): void {
+        $this->authenticate($auth);
+        $this->startServer($server, $ingest);
 
-            echo date('Y-m-d H:i:s').' Nightwatch agent initiated.'.PHP_EOL;
-        });
-
+        echo date('Y-m-d H:i:s').' Nightwatch agent initiated.'.PHP_EOL;
         $this->loop->run();
     }
 
-    /**
-     * @return PromiseInterface<void>
-     */
-    private function authenticate(): PromiseInterface
+    private function authenticate(AuthTokenRepository $auth): void
     {
-        $body = json_encode(['token' => $this->envSecret], JSON_THROW_ON_ERROR);
+        $auth->refresh()->then(function (AuthToken $token) use ($auth) {
+            echo date('Y-m-d H:i:s').' Authenticated.'.PHP_EOL;
 
-        return $this->browser->post($this->authUrl, [
-            'Content-Type' => 'application/json',
-        ], $body)->then(function (ResponseInterface $response) {
-            /** @var array{token?: string, expires_in?: int} $data */
-            $data = json_decode($response->getBody()->getContents(), true);
+            // TODO set the new token on the ingest
 
-            if (! isset($data['token'], $data['expires_in']) || ! $data['token'] || ! $data['expires_in']) {
-                throw new RuntimeException('Invalid authentication response.');
-            }
-
-            $this->token = $data['token'];
-
-            $this->scheduleTokenRenewal($data['expires_in']);
+            $this->scheduleTokenRenewal($auth, $token);
         }, static function (Throwable $e) {
-            throw new RuntimeException("Failed to authenticate the environment secret. [{$e->getMessage()}].");
+            // TODO tell the ingest to stop sending data to the ingest.
+            // TODO retries
+            echo date('Y-m-d H:i:s')." ERROR: Failed to authenticate the environment token: [{$e->getMessage()}].".PHP_EOL;
         });
     }
 
-    private function scheduleTokenRenewal(int $expiresIn): void
+    private function scheduleTokenRenewal(AuthTokenRepository $auth, AuthToken $token): void
     {
         if ($this->tokenRenewalTimer !== null) {
             $this->loop->cancelTimer($this->tokenRenewalTimer);
         }
 
         // Renew the token 1 minute before it expires.
-        $interval = max(1, $expiresIn - 60);
+        $interval = max(60, $token->expiresIn - 60);
 
-        $this->loop->addTimer($interval, fn () => $this->authenticate());
+        $this->tokenRenewalTimer = $this->loop->addTimer($interval, fn () => $this->authenticate($auth));
     }
 
     private function startServer(Server $server, RemoteIngest $ingest): void

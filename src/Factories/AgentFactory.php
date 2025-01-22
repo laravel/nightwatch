@@ -7,7 +7,6 @@ use Illuminate\Support\Env;
 use Laravel\Nightwatch\Buffers\StreamBuffer;
 use Laravel\Nightwatch\Console\Agent;
 use React\EventLoop\StreamSelectLoop;
-use React\Http\Browser;
 
 final class AgentFactory
 {
@@ -15,7 +14,7 @@ final class AgentFactory
      * @param  array{
      *      enabled?: bool,
      *      env_id?: string,
-     *      env_secret?: string,
+     *      token?: string,
      *      auth_url?: string,
      *      deployment?: string,
      *      server?: string,
@@ -48,14 +47,12 @@ final class AgentFactory
         $app->bindMethod([Agent::class, 'handle'], fn (Agent $agent, Application $app) => $agent->handle(
             (new SocketServerFactory($loop, $this->config))($app),
             (new RemoteIngestFactory($loop, $this->config, $debug))($app),
+            (new AuthTokenRepositoryFactory($loop, $this->config))($app),
         ));
 
         return new Agent(
             new StreamBuffer,
             $loop,
-            new Browser($loop),
-            $this->config['env_secret'] ?? '',
-            $this->config['auth_url'] ?? '',
             $this->config['ingests']['socket']['timeout'] ?? 0.5,
             $debug ? 1 : 10
         );
