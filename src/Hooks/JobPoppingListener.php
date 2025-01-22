@@ -7,6 +7,8 @@ use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
+use function memory_reset_peak_usage;
+
 /**
  * @internal
  */
@@ -25,6 +27,7 @@ final class JobPoppingListener
     {
         try {
             $this->nightwatch->state->reset();
+            memory_reset_peak_usage();
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

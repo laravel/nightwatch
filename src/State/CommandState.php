@@ -14,7 +14,6 @@ use Laravel\Nightwatch\Types\Str;
 use function call_user_func;
 use function class_exists;
 use function memory_get_peak_usage;
-use function memory_reset_peak_usage;
 
 /**
  * @internal
@@ -99,7 +98,5 @@ final class CommandState
         $this->cacheEvents = 0;
         $this->hydratedModels = 0;
         $this->records->flush();
-
-        memory_reset_peak_usage();
     }
 }
