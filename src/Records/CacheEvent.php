@@ -17,7 +17,7 @@ final class CacheEvent
 
     /**
      * @param  string|LazyValue<string>  $trace_id
-     * @param  string|LazyValue<string>  $execution_id
+     * @param  LazyValue<string>  $execution_id
      * @param  string|LazyValue<string>  $user
      * @param  'hit'|'miss'|'write'|'write-failure'|'delete'|'delete-failure'  $type
      */
@@ -28,7 +28,7 @@ final class CacheEvent
         public string $_group,
         public string|LazyValue $trace_id,
         public string $execution_source,
-        public string|LazyValue $execution_id,
+        public LazyValue $execution_id,
         public ExecutionStage $execution_stage,
         public string|LazyValue $user,
         // --- //
