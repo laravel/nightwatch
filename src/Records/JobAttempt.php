@@ -17,6 +17,7 @@ final class JobAttempt
     /**
      * @param  string|LazyValue<string>  $trace_id
      * @param  string|LazyValue<string>  $user
+     * @param  string|LazyValue<string>  $attempt_id
      * @param  'processed'|'released'|'failed'  $status
      */
     public function __construct(
@@ -28,7 +29,7 @@ final class JobAttempt
         public string|LazyValue $user,
         // --- /
         public string $job_id,
-        public string $attempt_id,
+        public string|LazyValue $attempt_id,
         public int $attempt,
         public string $name,
         public string $connection,

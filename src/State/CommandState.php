@@ -39,7 +39,7 @@ final class CommandState
     public function __construct(
         public float $timestamp,
         public string|LazyValue $trace,
-        public string $id,
+        private string $id,
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
@@ -72,6 +72,19 @@ final class CommandState
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
         $this->terminatingEventExists = class_exists(Terminating::class);
+    }
+
+    /**
+     * @return LazyValue<string>
+     */
+    public function id(): LazyValue
+    {
+        return new LazyValue(fn () => $this->id);
+    }
+
+    public function setId(string $id): void
+    {
+        $this->id = $id;
     }
 
     public function peakMemory(): int

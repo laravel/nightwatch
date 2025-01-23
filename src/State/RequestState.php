@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Foundation\Application;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
 
@@ -33,7 +34,7 @@ final class RequestState
     public function __construct(
         public float $timestamp,
         public string $trace,
-        public string $id,
+        private string $id,
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
@@ -67,6 +68,19 @@ final class RequestState
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
+    }
+
+    /**
+     * @return LazyValue<string>
+     */
+    public function id(): LazyValue
+    {
+        return new LazyValue(fn () => $this->id);
+    }
+
+    public function setId(string $id): void
+    {
+        $this->id = $id;
     }
 
     public function peakMemory(): int
