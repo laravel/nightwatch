@@ -443,9 +443,6 @@ final class NightwatchServiceProvider extends ServiceProvider
                 user: new UserProvider($auth),
             );
         } else {
-            /** @var ContextRepository */
-            $context = $this->app->make(ContextRepository::class);
-
             return new CommandState(
                 timestamp: $this->timestamp,
                 trace: new LazyValue(function () {
