@@ -30,18 +30,29 @@ final class HttpKernelResolvedHandler
                 return;
             }
 
-            // TODO Check this isn't a memory leak in Octane.
-            // TODO Check if we can cache this handler between requests on Octane. Same goes for other
-            // sub-handlers.
-            $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->nightwatch, $app));
+            /**
+             * @see \Laravel\Nightwatch\ExecutionStage::End
+             * @see \Laravel\Nightwatch\Records\Request
+             * @see \Laravel\Nightwatch\Core::ingest()
+             *
+             * TODO Check this isn't a memory leak in Octane.
+             * TODO Check if we can cache this handler between requests on Octane. Same goes for other
+             * sub-handlers.
+             */
+            $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->nightwatch));
         } catch (Throwable $e) {
             $this->nightwatch->handleUnrecoverableException($e);
         }
 
         try {
             if (! class_exists(Terminating::class)) {
+                /**
+                 * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+                 *
+                 * TODO Check this isn't a memory leak in Octane.
+                 */
                 $kernel->setGlobalMiddleware([
-                    TerminatingMiddleware::class, // TODO Check this isn't a memory leak in Octane.
+                    TerminatingMiddleware::class,
                     ...$kernel->getGlobalMiddleware(),
                 ]);
             }

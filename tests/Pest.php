@@ -1,14 +1,13 @@
 <?php
 
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Events\MigrationsEnded;
-use Illuminate\Database\Events\QueryExecuted;
-use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
 use Illuminate\Support\Env;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
-use Laravel\Nightwatch\Contracts\LocalIngest;
+use Illuminate\Support\Str;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\State\CommandState;
@@ -16,9 +15,14 @@ use Laravel\Nightwatch\State\RequestState;
 use Tests\FakeIngest;
 
 use function Illuminate\Filesystem\join_paths;
+use function Orchestra\Testbench\Pest\tearDown;
 use function Pest\Laravel\travelTo;
 
 $_ENV['APP_BASE_PATH'] = realpath(__DIR__.'/../workbench/').'/';
+
+tearDown(function () {
+    Str::createUuidsNormally();
+});
 
 pest()->extends(Tests\TestCase::class)->beforeEach(function () {
     nightwatch()->clock->microtimeResolver = fn () => (float) now()->format('U.u');
@@ -28,6 +32,16 @@ pest()->extends(Tests\TestCase::class)->beforeEach(function () {
 function nightwatch(): Core
 {
     return app(Core::class);
+}
+
+function requestState(): RequestState
+{
+    return nightwatch()->state;
+}
+
+function commandState(): CommandState
+{
+    return nightwatch()->state;
 }
 
 function forceRequestExecutionState(): void
@@ -42,113 +56,91 @@ function forceCommandExecutionState(): void
     Env::getRepository()->clear('NIGHTWATCH_FORCE_REQUEST');
 }
 
-function executionState(): RequestState|CommandState
-{
-    return match (true) {
-        (bool) Env::get('NIGHTWATCH_FORCE_REQUEST') => app(RequestState::class),
-        (bool) Env::get('NIGHTWATCH_FORCE_COMMAND') => app(CommandState::class),
-        default => throw new RuntimeException('Unknown execution state type. Make sure to call the `forceRequestExecutionState` or `forceCommandExecutionState` function.')
-    };
-}
-
 function setExecutionStart(CarbonImmutable $timestamp): void
 {
-    match (executionState()::class) {
-        RequestState::class => setRequestStart($timestamp),
-        CommandState::class => setCommandStart($timestamp),
+    syncClock($timestamp);
+    nightwatch()->state->stageDurations[ExecutionStage::Bootstrap->value] = 0;
+    nightwatch()->state->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
+    nightwatch()->state->stage = match (nightwatch()->state::class) {
+        RequestState::class => ExecutionStage::BeforeMiddleware,
+        CommandState::class => ExecutionStage::Action,
     };
-}
-
-function setRequestStart(CarbonImmutable $timestamp): void
-{
-    syncClock($timestamp);
-    app(RequestState::class)->stageDurations[ExecutionStage::Bootstrap->value] = 0;
-    app(RequestState::class)->stage = ExecutionStage::BeforeMiddleware;
-    app(RequestState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
-}
-
-function setCommandStart(CarbonImmutable $timestamp): void
-{
-    syncClock($timestamp);
-    app(CommandState::class)->stageDurations[ExecutionStage::Bootstrap->value] = 0;
-    app(CommandState::class)->stage = ExecutionStage::Action;
-    app(CommandState::class)->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
 }
 
 function syncClock(DateTimeInterface $timestamp): void
 {
-    executionState()->timestamp = (float) $timestamp->format('U.u');
+    nightwatch()->state->timestamp = (float) $timestamp->format('U.u');
     travelTo($timestamp);
 }
 
 function setDeploy(string $deploy): void
 {
-    executionState()->deploy = $deploy;
+    nightwatch()->state->deploy = $deploy;
 }
 
 function setServerName(string $server): void
 {
-    executionState()->server = $server;
+    nightwatch()->state->server = $server;
 }
 
 function setTraceId(string $traceId): void
 {
-    executionState()->trace = $traceId;
+    nightwatch()->state->trace = $traceId;
+    context()->addHidden('nightwatch_trace_id', $traceId);
 }
 
 function setExecutionId(string $executionId): void
 {
-    executionState()->id = $executionId;
+    nightwatch()->state->setId($executionId);
 }
 
 function setPeakMemory(int $value): void
 {
-    executionState()->peakMemoryResolver = fn () => $value;
+    nightwatch()->state->peakMemoryResolver = fn () => $value;
 }
 
 function setLaravelVersion(string $version): void
 {
-    executionState()->laravelVersion = $version;
+    nightwatch()->state->laravelVersion = $version;
 }
 
 function setPhpVersion(string $version): void
 {
-    executionState()->phpVersion = $version;
+    nightwatch()->state->phpVersion = $version;
 }
 
 function fakeIngest(): FakeIngest
 {
-    return App::instance(LocalIngest::class, new FakeIngest);
-}
-
-function afterMigrations(Closure $callback)
-{
-    if (RefreshDatabaseState::$migrated) {
-        $callback();
-    } else {
-        Event::listen(MigrationsEnded::class, $callback);
-    }
+    return nightwatch()->ingest = new FakeIngest;
 }
 
 function prependListener(string $event, callable $listener): void
 {
-    $listeners = Event::getRawListeners()[$event];
+    $listeners = Event::getRawListeners()[$event] ?? [];
 
     Event::forget($event);
 
     collect([$listener, ...$listeners])->each(fn ($listener) => Event::listen($event, $listener));
 }
 
-function ignoreMigrationQueries()
-{
-    prependListener(QueryExecuted::class, function () {
-        if (! RefreshDatabaseState::$migrated) {
-            return false;
-        }
-    });
-}
-
 function fixturePath(string $path): string
 {
     return join_paths(__DIR__, 'fixtures', $path);
+}
+
+class MyEvent
+{
+    use Dispatchable;
+}
+
+class MyQueuedMail extends Mailable
+{
+    public function content(): Content
+    {
+        travelTo(now()->addMicroseconds(2500));
+
+        return new Content(
+            view: 'mail',
+        );
+    }
 }

@@ -4,11 +4,9 @@ use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
-use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
 use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\Response;
 
 beforeAll(function () {
@@ -40,8 +38,7 @@ it('gracefully handles exceptions in all three phases', function () {
             throw new RuntimeException('Whoops!');
         }
     });
-    $state = app(RequestState::class);
-    $state->records = new class extends RecordsBuffer
+    $nightwatch->state->records = new class extends RecordsBuffer
     {
         public $thrownInFlush = false;
 
@@ -63,48 +60,7 @@ it('gracefully handles exceptions in all three phases', function () {
 
     expect($sensor->thrownInStage)->toBeTrue();
     expect($sensor->thrownInRequest)->toBeTrue();
-    expect($state->records->thrownInFlush)->toBeTrue();
-});
-
-it('gracefully handles exceptions thrown while ingesting', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public function __construct() {}
-
-        public function stage(ExecutionStage $executionStage): void
-        {
-            //
-        }
-
-        public function request(Request $request, Response $response): void
-        {
-            //
-        }
-
-        public function flush(): string
-        {
-            return '';
-        }
-    });
-    $ingest = app()->instance(LocalIngest::class, new class implements LocalIngest
-    {
-        public bool $thrown = false;
-
-        public function write(string $payload): void
-        {
-            $this->thrown = true;
-
-            throw new RuntimeException('Whoops!');
-        }
-    });
-    $handler = new HttpKernelResolvedHandler($nightwatch);
-    $kernel = app(Kernel::class);
-
-    $handler($kernel, app());
-    $kernel->handle(Request::create('/test'));
-    $kernel->terminate(Request::create('/test'), new Response);
-
-    expect($ingest->thrown)->toBeTrue();
+    expect($nightwatch->state->records->thrownInFlush)->toBeTrue();
 });
 
 it('gracefully handles custom exception handlers', function () {

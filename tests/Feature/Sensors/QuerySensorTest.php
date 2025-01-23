@@ -29,13 +29,12 @@ beforeEach(function () {
 });
 
 it('can ingest queries', function () {
-    ignoreMigrationQueries();
     $ingest = fakeIngest();
-    afterMigrations(fn () => prependListener(QueryExecuted::class, function ($event) {
+    prependListener(QueryExecuted::class, function ($event) {
         $event->time = 4.321;
 
         travelTo(now()->addMicroseconds(4321));
-    }));
+    });
 
     $line = null;
     Route::get('/users', function () use (&$line) {
@@ -79,7 +78,6 @@ it('can ingest queries', function () {
 });
 
 it('can captures the line and file', function () {
-    ignoreMigrationQueries();
     $ingest = fakeIngest();
 
     $line = null;
@@ -98,7 +96,6 @@ it('can captures the line and file', function () {
 })->skip('We have temporarily disabled debug_backtrace to reduce the memory impact');
 
 it('captures aggregate query data on the request', function () {
-    ignoreMigrationQueries();
     $ingest = fakeIngest();
     prependListener(QueryExecuted::class, function (QueryExecuted $event) {
         $event->time = 4.321;
@@ -120,13 +117,12 @@ it('captures aggregate query data on the request', function () {
 });
 
 it('always uses current time minus execution time for the timestamp', function () {
-    ignoreMigrationQueries();
     $ingest = fakeIngest();
-    afterMigrations(fn () => prependListener(QueryExecuted::class, function (QueryExecuted $event) {
+    prependListener(QueryExecuted::class, function (QueryExecuted $event) {
         $event->time = 4.321;
 
         travelTo(now()->addMicroseconds(4321));
-    }));
+    });
     Route::get('/users', function () use (&$line) {
         travelTo(now()->addMicroseconds(9876));
 

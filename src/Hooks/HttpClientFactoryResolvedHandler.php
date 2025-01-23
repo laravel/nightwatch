@@ -22,7 +22,11 @@ final class HttpClientFactoryResolvedHandler
     public function __invoke(Factory $factory): void
     {
         try {
-            // TODO check this isn't a memory leak in octane
+            /**
+             * @see \Laravel\Nightwatch\Records\OutgoingRequest
+             *
+             * TODO check this isn't a memory leak in octane
+             */
             $factory->globalMiddleware(new GuzzleMiddleware($this->nightwatch));
         } catch (Throwable $e) {
             $this->nightwatch->report($e);

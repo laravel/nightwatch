@@ -199,7 +199,7 @@ it('child commands do not progress the modify execution stage when terminating e
     Artisan::command('child', function () {
         //
     });
-    executionState()->terminatingEventExists = false;
+    commandState()->terminatingEventExists = false;
 
     $run = function () {
         $status = Artisan::handle($input = new StringInput('parent'));

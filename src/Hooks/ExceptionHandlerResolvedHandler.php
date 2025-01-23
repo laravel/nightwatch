@@ -24,7 +24,11 @@ final class ExceptionHandlerResolvedHandler
     {
         try {
             if ($handler instanceof Handler) {
-                // TODO ensure this isn't a memory leak in Octane
+                /**
+                 * @see \Laravel\Nightwatch\Records\Exception
+                 *
+                 * TODO ensure this isn't a memory leak in Octane
+                 */
                 $handler->reportable(new ReportableHandler($this->nightwatch));
             }
         } catch (Throwable $e) {
