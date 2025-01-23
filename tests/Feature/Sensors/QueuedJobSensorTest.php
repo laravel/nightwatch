@@ -6,7 +6,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
-use Illuminate\Mail\Mailable;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -51,7 +50,6 @@ it('can ingest queued jobs', function () {
     Route::post('/users', function () {
         Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
         MyJob::dispatch();
-        Str::createUuidsNormally();
     });
 
     $response = post('/users');
@@ -256,14 +254,4 @@ final class MyListenerWithViaQueue implements ShouldQueue
     {
         return 'custom_queue';
     }
-}
-
-final class MyEvent
-{
-    use Dispatchable;
-}
-
-class MyQueuedMail extends Mailable implements ShouldQueue
-{
-    //
 }

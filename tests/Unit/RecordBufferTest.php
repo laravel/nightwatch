@@ -2,6 +2,7 @@
 
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Records\Mail;
 
 it('only keeps 500 records in memory', function () {
@@ -15,7 +16,7 @@ it('only keeps 500 records in memory', function () {
             _group: '',
             trace_id: '',
             execution_source: '',
-            execution_id: '',
+            execution_id: new LazyValue(fn () => ''),
             execution_stage: ExecutionStage::Action,
             user: '',
             mailer: '',

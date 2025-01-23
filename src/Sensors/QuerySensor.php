@@ -45,7 +45,7 @@ final class QuerySensor
             _group: $this->hash($event),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id,
+            execution_id: $this->executionState->id(),
             execution_stage: $this->executionState->stage,
             user: $this->executionState->user->id(),
             sql: $event->sql,

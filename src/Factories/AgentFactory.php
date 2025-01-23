@@ -6,7 +6,6 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Env;
 use Laravel\Nightwatch\Buffers\StreamBuffer;
 use Laravel\Nightwatch\Console\Agent;
-use React\EventLoop\StreamSelectLoop;
 
 final class AgentFactory
 {
@@ -37,7 +36,6 @@ final class AgentFactory
     public function __invoke(Application $app): Agent
     {
         $debug = (bool) Env::get('NIGHTWATCH_DEBUG');
-        $loop = new StreamSelectLoop;
 
         // Creating an instance of the `TcpServer` will automatically start the
         // server. To ensure we do not start the server when the command is
@@ -45,16 +43,11 @@ final class AgentFactory
         // command, we make sure to resolve the server only when actually
         // running the command.
         $app->bindMethod([Agent::class, 'handle'], fn (Agent $agent, Application $app) => $agent->handle(
-            (new SocketServerFactory($loop, $this->config))($app),
-            (new RemoteIngestFactory($loop, $this->config, $debug))($app),
-            (new AuthTokenRepositoryFactory($loop, $this->config))($app),
+            (new SocketServerFactory($this->config))($app),
+            (new RemoteIngestFactory($this->config, $debug))($app),
+            (new AuthTokenRepositoryFactory($this->config))($app),
         ));
 
-        return new Agent(
-            new StreamBuffer,
-            $loop,
-            $this->config['ingests']['socket']['timeout'] ?? 0.5,
-            $debug ? 1 : 10
-        );
+        return new Agent(new StreamBuffer, $debug ? 1 : 10);
     }
 }

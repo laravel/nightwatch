@@ -2,19 +2,19 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Support\Str;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 /**
  * @internal
  */
-final class JobQueuedListener
+final class JobProcessingListener
 {
     /**
-     * @param  Core<RequestState|CommandState>  $nightwatch
+     * @param  Core<CommandState>  $nightwatch
      */
     public function __construct(
         private Core $nightwatch,
@@ -22,10 +22,11 @@ final class JobQueuedListener
         //
     }
 
-    public function __invoke(JobQueued $event): void
+    public function __invoke(JobProcessing $event): void
     {
         try {
-            $this->nightwatch->sensor->queuedJob($event);
+            $this->nightwatch->state->timestamp = $this->nightwatch->clock->microtime();
+            $this->nightwatch->state->setId((string) Str::uuid());
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Events\CallQueuedListener;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Concerns\NormalizesQueue;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -14,8 +15,6 @@ use function hash;
 use function is_object;
 use function is_string;
 use function method_exists;
-use function preg_quote;
-use function preg_replace;
 use function property_exists;
 
 /**
@@ -23,12 +22,7 @@ use function property_exists;
  */
 final class QueuedJobSensor
 {
-    /**
-     * TODO memory leak?
-     *
-     * @var array<string, array<string, string>>
-     */
-    private array $normalizedQueues = [];
+    use NormalizesQueue;
 
     /**
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
@@ -59,13 +53,13 @@ final class QueuedJobSensor
             _group: hash('md5', $name),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id,
+            execution_id: $this->executionState->id(),
             execution_stage: $this->executionState->stage,
             user: $this->executionState->user->id(),
             job_id: $event->payload()['uuid'],
             name: $name,
             connection: $event->connectionName,
-            queue: $this->normalizeSqsQueue($event->connectionName, $this->resolveQueue($event)),
+            queue: $this->normalizeQueue($event->connectionName, $this->resolveQueue($event)),
             duration: 0, // TODO
         ));
     }
@@ -89,35 +83,6 @@ final class QueuedJobSensor
         }
 
         return $queue ?? $this->connectionConfig[$event->connectionName]['queue'] ?? '';
-    }
-
-    private function normalizeSqsQueue(string $connection, string $queue): string
-    {
-        $key = "{$connection}:{$queue}";
-
-        if (isset($this->normalizedQueues[$connection][$queue])) {
-            return $this->normalizedQueues[$connection][$queue];
-        }
-
-        $config = $this->connectionConfig[$connection] ?? [];
-
-        if (($config['driver'] ?? '') !== 'sqs') {
-            return $this->normalizedQueues[$connection][$key] = $queue;
-        }
-
-        if ($config['prefix'] ?? false) {
-            $prefix = preg_quote($config['prefix'], '#');
-
-            $queue = preg_replace("#^{$prefix}/#", '', $queue) ?? $queue;
-        }
-
-        if ($config['suffix'] ?? false) {
-            $suffix = preg_quote($config['suffix'], '#');
-
-            $queue = preg_replace("#{$suffix}$#", '', $queue) ?? $queue;
-        }
-
-        return $this->normalizedQueues[$connection][$key] = $queue;
     }
 
     private function resolveQueuedListenerQueue(CallQueuedListener $listener): ?string

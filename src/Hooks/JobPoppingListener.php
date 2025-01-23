@@ -2,19 +2,20 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Queue\Events\JobPopping;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\State\RequestState;
 use Throwable;
+
+use function memory_reset_peak_usage;
 
 /**
  * @internal
  */
-final class JobQueuedListener
+final class JobPoppingListener
 {
     /**
-     * @param  Core<RequestState|CommandState>  $nightwatch
+     * @param  Core<CommandState>  $nightwatch
      */
     public function __construct(
         private Core $nightwatch,
@@ -22,10 +23,11 @@ final class JobQueuedListener
         //
     }
 
-    public function __invoke(JobQueued $event): void
+    public function __invoke(JobPopping $event): void
     {
         try {
-            $this->nightwatch->sensor->queuedJob($event);
+            $this->nightwatch->state->reset();
+            memory_reset_peak_usage();
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

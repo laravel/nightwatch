@@ -8,16 +8,17 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class Command
+final class JobAttempt
 {
     public int $v = 1;
 
-    public string $t = 'command';
+    public string $t = 'job-attempt';
 
     /**
-     * TODO limit size of all int values across all record types.
-     *
      * @param  string|LazyValue<string>  $trace_id
+     * @param  string|LazyValue<string>  $user
+     * @param  string|LazyValue<string>  $attempt_id
+     * @param  'processed'|'released'|'failed'  $status
      */
     public function __construct(
         public float $timestamp,
@@ -25,16 +26,16 @@ final class Command
         public string $server,
         public string $_group,
         public string|LazyValue $trace_id,
-        // --- //
-        public string $class,
+        public string|LazyValue $user,
+        // --- /
+        public string $job_id,
+        public string|LazyValue $attempt_id,
+        public int $attempt,
         public string $name,
-        public string $command,
-        public int $exit_code,
+        public string $connection,
+        public string $queue,
+        public string $status,
         public int $duration,
-        public int $bootstrap,
-        public int $action,
-        public int $terminating,
-        // --- //
         public int $exceptions,
         public int $logs,
         public int $queries,
@@ -49,8 +50,8 @@ final class Command
         public int $hydrated_models,
         public int $peak_memory_usage,
     ) {
-        $this->class = Str::text($this->class);
         $this->name = Str::tinyText($this->name);
-        $this->command = Str::text($this->command);
+        $this->connection = Str::tinyText($this->connection);
+        $this->queue = Str::tinyText($this->queue);
     }
 }

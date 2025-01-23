@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
 use Laravel\Nightwatch\AuthTokenRepository;
-use React\EventLoop\LoopInterface;
 use React\Http\Browser;
 use React\Socket\Connector;
 
@@ -30,7 +29,6 @@ final class AuthTokenRepositoryFactory
      * }  $config
      */
     public function __construct(
-        private LoopInterface $loop,
         private array $config,
     ) {
         //
@@ -40,9 +38,9 @@ final class AuthTokenRepositoryFactory
     {
         $token = $this->config['token'] ?? '';
 
-        $connector = new Connector(['timeout' => 5], $this->loop);
+        $connector = new Connector(['timeout' => 5]);
 
-        $browser = (new Browser($connector, $this->loop))
+        $browser = (new Browser($connector))
             ->withTimeout(10)
             ->withHeader('authorization', "Bearer {$token}")
             ->withHeader('user-agent', 'NightwatchAgent/1')

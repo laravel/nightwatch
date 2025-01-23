@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
-use React\EventLoop\LoopInterface;
 use React\Socket\LimitingServer;
 use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
@@ -29,14 +28,14 @@ final class SocketServerFactory
      *      }
      * }  $config
      */
-    public function __construct(private LoopInterface $loop, private array $config)
+    public function __construct(private array $config)
     {
         //
     }
 
     public function __invoke(Application $app): ServerInterface
     {
-        $server = new TcpServer($this->config['ingests']['socket']['uri'] ?? '', $this->loop);
+        $server = new TcpServer($this->config['ingests']['socket']['uri'] ?? '');
 
         return new LimitingServer($server, $this->config['ingests']['socket']['connection_limit'] ?? 20);
     }

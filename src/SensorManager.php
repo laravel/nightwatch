@@ -8,10 +8,12 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSent;
+use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
+use Laravel\Nightwatch\Sensors\JobAttemptSensor;
 use Laravel\Nightwatch\Sensors\LogSensor;
 use Laravel\Nightwatch\Sensors\MailSensor;
 use Laravel\Nightwatch\Sensors\NotificationSensor;
@@ -48,6 +50,8 @@ class SensorManager
     private ?QuerySensor $querySensor;
 
     private ?QueuedJobSensor $queuedJobSensor;
+
+    private ?JobAttemptSensor $jobAttemptSensor;
 
     private ?NotificationSensor $notificationSensor;
 
@@ -169,6 +173,17 @@ class SensorManager
     {
         $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
             executionState: $this->executionState,
+            clock: $this->clock,
+            connectionConfig: $this->config->all()['queue']['connections'] ?? [],
+        );
+
+        $sensor($event);
+    }
+
+    public function jobAttempt(JobAttempted $event): void
+    {
+        $sensor = $this->jobAttemptSensor ??= new JobAttemptSensor(
+            executionState: $this->executionState, // @phpstan-ignore argument.type
             clock: $this->clock,
             connectionConfig: $this->config->all()['queue']['connections'] ?? [],
         );

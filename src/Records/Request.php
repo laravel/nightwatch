@@ -15,6 +15,7 @@ final class Request
     public string $t = 'request';
 
     /**
+     * @param  string|LazyValue<string>  $trace_id
      * @param  string|LazyValue<string>  $user
      * @param  list<string>  $route_methods
      */
@@ -23,7 +24,7 @@ final class Request
         public string $deploy,
         public string $server,
         public string $_group,
-        public string $trace_id,
+        public string|LazyValue $trace_id,
         public string|LazyValue $user,
         // --- //
         public string $method,

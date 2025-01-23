@@ -24,7 +24,7 @@ return [
             'uri' => env('NIGHTWATCH_SOCKET_INGEST_URI', '127.0.0.1:2407'),
             'connection_limit' => env('NIGHTWATCH_SOCKET_INGEST_CONNECTION_LIMIT', 20),
             'connection_timeout' => env('NIGHTWATCH_SOCKET_INGEST_CONNECTION_TIMEOUT', 0.5),
-            'timeout' => env('NIGHTWATCH_SOCKET_INGEST_CONNECTION_TIMEOUT', 0.5),
+            'timeout' => env('NIGHTWATCH_SOCKET_INGEST_TIMEOUT', 0.5),
         ],
 
         // TODO should this be "remote:http" || "local:http" etc. Will Vapor send directly via HTTP? What about local:log and remote:log?
