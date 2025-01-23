@@ -3,12 +3,11 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
-use Laravel\Nightwatch\Ingests\Remote\HttpClient;
-use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
+use Laravel\Nightwatch\AuthTokenRepository;
 use React\Http\Browser;
 use React\Socket\Connector;
 
-final class HttpIngestFactory
+final class AuthTokenRepositoryFactory
 {
     /**
      * @param  array{
@@ -31,30 +30,23 @@ final class HttpIngestFactory
      */
     public function __construct(
         private array $config,
-        private bool $debug,
     ) {
         //
     }
 
-    public function __invoke(Application $app): HttpIngest
+    public function __invoke(Application $app): AuthTokenRepository
     {
-        $connector = new Connector(['timeout' => $this->config['ingests']['http']['connection_timeout'] ?? 1.0]);
+        $token = $this->config['token'] ?? '';
+
+        $connector = new Connector(['timeout' => 5]);
 
         $browser = (new Browser($connector))
-            ->withTimeout($this->config['ingests']['http']['timeout'] ?? 3.0)
+            ->withTimeout(10)
+            ->withHeader('authorization', "Bearer {$token}")
             ->withHeader('user-agent', 'NightwatchAgent/1')
-            ->withHeader('content-type', 'application/octet-stream')
-            ->withHeader('content-encoding', 'gzip')
-            // TODO this should be "env" id
-            ->withHeader('nightwatch-app-id', $this->config['env_id'] ?? '')
-            ->withBase($this->config['ingests']['http']['uri'] ?? '');
+            ->withHeader('content-type', 'application/json')
+            ->withBase($this->config['auth_url'] ?? '');
 
-        if ($this->debug) {
-            $browser = $browser->withHeader('nightwatch-debug', '1');
-        }
-
-        $client = new HttpClient($browser);
-
-        return new HttpIngest($client, $this->config['ingests']['http']['connection_limit'] ?? 2);
+        return new AuthTokenRepository($browser);
     }
 }

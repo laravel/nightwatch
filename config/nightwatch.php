@@ -4,7 +4,9 @@ return [
     'enabled' => env('NIGHTWATCH_ENABLED', true),
 
     'env_id' => env('NIGHTWATCH_ENV_ID'),
-    'env_secret' => env('NIGHTWATCH_ENV_SECRET'),
+    'token' => env('NIGHTWATCH_TOKEN'),
+
+    'auth_url' => env('NIGHTWATCH_AUTH_URL', 'https://nightwatch.laravel.com/api/agent-auth'),
 
     'deployment' => env('NIGHTWATCH_DEPLOY'),
     'server' => env('NIGHTWATCH_SERVER', (string) gethostname()),

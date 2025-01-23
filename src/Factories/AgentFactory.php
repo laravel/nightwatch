@@ -13,7 +13,8 @@ final class AgentFactory
      * @param  array{
      *      enabled?: bool,
      *      env_id?: string,
-     *      env_secret?: string,
+     *      token?: string,
+     *      auth_url?: string,
      *      deployment?: string,
      *      server?: string,
      *      local_ingest?: string,
@@ -44,6 +45,7 @@ final class AgentFactory
         $app->bindMethod([Agent::class, 'handle'], fn (Agent $agent, Application $app) => $agent->handle(
             (new SocketServerFactory($this->config))($app),
             (new RemoteIngestFactory($this->config, $debug))($app),
+            (new AuthTokenRepositoryFactory($this->config))($app),
         ));
 
         return new Agent(new StreamBuffer, $debug ? 1 : 10);
