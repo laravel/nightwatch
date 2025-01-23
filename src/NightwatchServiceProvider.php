@@ -436,6 +436,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             return new RequestState(
                 timestamp: $this->timestamp,
                 trace: $trace,
+                id: $trace,
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
                 server: $this->nightwatchConfig['server'] ?? '',
@@ -464,6 +465,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
                     return $trace;
                 }),
+                id: $trace,
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
                 server: $this->nightwatchConfig['server'] ?? '',

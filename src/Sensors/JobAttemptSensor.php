@@ -7,7 +7,6 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
 use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\Types\Str;
 
 use function hash;
 use function round;
