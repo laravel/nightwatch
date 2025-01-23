@@ -168,7 +168,7 @@ it('ingests job failed job attempts', function () {
         ],
     ]);
     $ingest->assertLatestWrite('exception:0.execution_source', 'job');
-    $ingest->assertLatestWrite('exception:0.execution_id', $executionId);
+    $ingest->assertLatestWrite('exception:0.execution_id', $attemptId);
 });
 
 it('does not ingest jobs dispatched on the sync queue', function () {
@@ -333,7 +333,7 @@ it('captures queued mail', function () {
             '_group' => md5('MyQueuedMail'),
             'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
             'execution_source' => 'job',
-            'execution_id' => $executionId,
+            'execution_id' => $attemptId,
             'execution_stage' => 'action',
             'user' => '',
             'mailer' => 'log',

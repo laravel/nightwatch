@@ -47,7 +47,7 @@ final class JobAttemptSensor
             trace_id: $this->executionState->trace,
             user: $this->executionState->user->id(),
             job_id: $event->job->uuid(), // @phpstan-ignore argument.type
-            attempt_id: (string) Str::uuid(),
+            attempt_id: $this->executionState->id,
             attempt: $event->job->attempts(),
             name: $name,
             connection: $event->job->getConnectionName(),
