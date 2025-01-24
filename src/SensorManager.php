@@ -198,6 +198,7 @@ class SensorManager
     {
         $sensor = $this->userSensor ??= new UserSensor(
             requestState: $this->executionState, // @phpstan-ignore argument.type
+            clock: $this->clock,
         );
 
         $sensor();

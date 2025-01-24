@@ -12,6 +12,7 @@ final class User
     public string $t = 'user';
 
     public function __construct(
+        public float $timestamp,
         public string $id,
         public string $name,
         public string $username,
