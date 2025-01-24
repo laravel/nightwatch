@@ -42,7 +42,7 @@ final class IngestDetailsRepositoryFactory
 
         $browser = (new Browser($connector))
             ->withTimeout(10)
-            ->withHeader('x', "Bearer {$token}")
+            ->withHeader('authorization', "Bearer {$token}")
             ->withHeader('user-agent', 'NightwatchAgent/1')
             ->withHeader('content-type', 'application/json')
             ->withBase($this->config['auth_url'] ?? '');
