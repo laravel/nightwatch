@@ -2,11 +2,12 @@
 
 namespace Laravel\Nightwatch;
 
-final class AuthToken
+final class IngestDetails
 {
     public function __construct(
         public string $token,
         public int $expiresIn,
+        public string $ingestUrl,
     ) {
         //
     }
