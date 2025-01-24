@@ -30,6 +30,12 @@ final class RequestLifecycleIsLongerThanHandler
         }
 
         try {
+            $this->nightwatch->sensor->user();
+        } catch (Throwable $e) {
+            $this->nightwatch->report($e);
+        }
+
+        try {
             $this->nightwatch->sensor->request($request, $response);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
