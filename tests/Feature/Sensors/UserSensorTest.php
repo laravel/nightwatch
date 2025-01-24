@@ -5,6 +5,7 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\get;
 
 beforeAll(function () {
     forceRequestExecutionState();
@@ -52,4 +53,13 @@ it('handles non-eloquent user objects with no email or username', function () {
     ]]);
 });
 
-it('does not capture guests')->todo();
+it('does not capture guests', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', fn () => []);
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('user:*', []);
+});
