@@ -3,11 +3,11 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
-use Laravel\Nightwatch\AuthTokenRepository;
+use Laravel\Nightwatch\IngestDetailsRepository;
 use React\Http\Browser;
 use React\Socket\Connector;
 
-final class AuthTokenRepositoryFactory
+final class IngestDetailsRepositoryFactory
 {
     /**
      * @param  array{
@@ -34,7 +34,7 @@ final class AuthTokenRepositoryFactory
         //
     }
 
-    public function __invoke(Application $app): AuthTokenRepository
+    public function __invoke(Application $app): IngestDetailsRepository
     {
         $token = $this->config['token'] ?? '';
 
@@ -42,11 +42,11 @@ final class AuthTokenRepositoryFactory
 
         $browser = (new Browser($connector))
             ->withTimeout(10)
-            ->withHeader('authorization', "Bearer {$token}")
+            ->withHeader('x', "Bearer {$token}")
             ->withHeader('user-agent', 'NightwatchAgent/1')
             ->withHeader('content-type', 'application/json')
             ->withBase($this->config['auth_url'] ?? '');
 
-        return new AuthTokenRepository($browser);
+        return new IngestDetailsRepository($browser);
     }
 }
