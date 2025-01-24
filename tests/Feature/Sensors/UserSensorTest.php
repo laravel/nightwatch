@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Route;
 
@@ -9,6 +10,10 @@ use function Pest\Laravel\get;
 
 beforeAll(function () {
     forceRequestExecutionState();
+});
+
+beforeEach(function () {
+    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 });
 
 it('captures authenticated users', function () {
@@ -27,6 +32,7 @@ it('captures authenticated users', function () {
     $ingest->assertLatestWrite('user:*', [[
         'v' => 1,
         't' => 'user',
+        'timestamp' => 946688523.456789,
         'id' => '567',
         'name' => 'Tim MacDonald',
         'username' => 'tim@laravel.com',
@@ -47,6 +53,7 @@ it('handles non-eloquent user objects with no email or username', function () {
     $ingest->assertLatestWrite('user:*', [[
         'v' => 1,
         't' => 'user',
+        'timestamp' => 946688523.456789,
         'id' => '567',
         'name' => '',
         'username' => '',

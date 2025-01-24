@@ -2,13 +2,15 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\User;
 use Laravel\Nightwatch\State\RequestState;
 
 final class UserSensor
 {
     public function __construct(
-        public RequestState $requestState,
+        private RequestState $requestState,
+        public Clock $clock,
     ) {
         //
     }
@@ -22,6 +24,7 @@ final class UserSensor
         }
 
         $this->requestState->records->write(new User(
+            timestamp: $this->clock->microtime(),
             id: $details['id'],
             name: $details['name'],
             username: $details['username'],
