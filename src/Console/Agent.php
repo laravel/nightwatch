@@ -84,7 +84,7 @@ final class Agent extends Command
         }
 
         // Renew the token 1 minute before it expires.
-        $interval = max(60, $ingestDetails->get()->expiresIn - 60);
+        $interval = max(60, $ingestDetails->get()?->expiresIn - 60);
 
         $this->tokenRenewalTimer = Loop::addTimer($interval, fn () => $this->refresh($ingestDetails));
     }
