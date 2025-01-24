@@ -3,10 +3,9 @@
 namespace Laravel\Nightwatch\Console;
 
 use Illuminate\Console\Command;
-use Laravel\Nightwatch\AuthToken;
-use Laravel\Nightwatch\AuthTokenRepository;
 use Laravel\Nightwatch\Buffers\StreamBuffer;
 use Laravel\Nightwatch\Contracts\RemoteIngest;
+use Laravel\Nightwatch\IngestDetailsRepository;
 use Laravel\Nightwatch\Ingests\Remote\IngestSucceededResult;
 use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
@@ -57,40 +56,37 @@ final class Agent extends Command
     public function handle(
         Server $server,
         RemoteIngest $ingest,
-        AuthTokenRepository $auth,
+        IngestDetailsRepository $ingestDetails,
     ): void {
-        $this->authenticate($auth);
+        $this->refresh($ingestDetails);
         $this->startServer($server, $ingest);
 
         echo date('Y-m-d H:i:s').' Nightwatch agent initiated.'.PHP_EOL;
         Loop::run();
     }
 
-    private function authenticate(AuthTokenRepository $auth): void
+    private function refresh(IngestDetailsRepository $ingestDetails): void
     {
-        $auth->refresh()->then(function (AuthToken $token) use ($auth) {
+        $ingestDetails->refresh()->then(function () use ($ingestDetails) {
             echo date('Y-m-d H:i:s').' Authenticated.'.PHP_EOL;
 
-            // TODO set the new token on the ingest
-
-            $this->scheduleTokenRenewal($auth, $token);
+            $this->scheduleRefresh($ingestDetails);
         }, static function (Throwable $e) {
-            // TODO tell the ingest to stop sending data to the ingest.
             // TODO retries
             echo date('Y-m-d H:i:s')." ERROR: Failed to authenticate the environment token: [{$e->getMessage()}].".PHP_EOL;
         });
     }
 
-    private function scheduleTokenRenewal(AuthTokenRepository $auth, AuthToken $token): void
+    private function scheduleRefresh(IngestDetailsRepository $ingestDetails): void
     {
         if ($this->tokenRenewalTimer !== null) {
             Loop::cancelTimer($this->tokenRenewalTimer);
         }
 
         // Renew the token 1 minute before it expires.
-        $interval = max(60, $token->expiresIn - 60);
+        $interval = max(60, $ingestDetails->get()->expiresIn - 60);
 
-        $this->tokenRenewalTimer = Loop::addTimer($interval, fn () => $this->authenticate($auth));
+        $this->tokenRenewalTimer = Loop::addTimer($interval, fn () => $this->refresh($ingestDetails));
     }
 
     private function startServer(Server $server, RemoteIngest $ingest): void

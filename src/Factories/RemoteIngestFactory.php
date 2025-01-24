@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
 use Laravel\Nightwatch\Contracts\RemoteIngest;
+use Laravel\Nightwatch\IngestDetailsRepository;
 use RuntimeException;
 
 final class RemoteIngestFactory
@@ -29,6 +30,7 @@ final class RemoteIngestFactory
      */
     public function __construct(
         private array $config,
+        private IngestDetailsRepository $ingestDetails,
         private bool $debug,
     ) {
         //
@@ -44,7 +46,7 @@ final class RemoteIngestFactory
 
         $factory = match ($name) {
             'null' => new NullRemoteIngestFactory,
-            'http' => new HttpIngestFactory($this->config, $this->debug),
+            'http' => new HttpIngestFactory($this->config, $this->ingestDetails, $this->debug),
             default => throw new RuntimeException("Unknown remote ingest [{$name}]."),
         };
 
