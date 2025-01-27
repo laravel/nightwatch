@@ -14,7 +14,6 @@ final class HttpIngestFactory
     /**
      * @param  array{
      *      enabled?: bool,
-     *      env_id?: string,
      *      token?: string,
      *      auth_url?: string,
      *      deployment?: string,
@@ -25,7 +24,7 @@ final class HttpIngestFactory
      *      error_log_channel?: string,
      *      ingests: array{
      *          socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
-     *          http?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *          http?: array{ connection_limit?: int, connection_timeout?: float, timeout?: float },
      *          log?: array{ channel?: string },
      *      }
      * }  $config
@@ -46,9 +45,7 @@ final class HttpIngestFactory
             ->withTimeout($this->config['ingests']['http']['timeout'] ?? 3.0)
             ->withHeader('user-agent', 'NightwatchAgent/1')
             ->withHeader('content-type', 'application/octet-stream')
-            ->withHeader('content-encoding', 'gzip')
-            // TODO this should be "env" id
-            ->withHeader('nightwatch-app-id', $this->config['env_id'] ?? '');
+            ->withHeader('content-encoding', 'gzip');
 
         if ($this->debug) {
             $browser = $browser->withHeader('nightwatch-debug', '1');

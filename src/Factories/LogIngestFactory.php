@@ -11,7 +11,6 @@ final class LogIngestFactory
     /**
      * @param  array{
      *      enabled?: bool,
-     *      env_id?: string,
      *      token?: string,
      *      auth_url?: string,
      *      deployment?: string,
@@ -22,7 +21,7 @@ final class LogIngestFactory
      *      error_log_channel?: string,
      *      ingests: array{
      *          socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
-     *          http?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *          http?: array{ connection_limit?: int, connection_timeout?: float, timeout?: float },
      *          log?: array{ channel?: string },
      *      }
      * }  $config
