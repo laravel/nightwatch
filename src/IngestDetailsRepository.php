@@ -34,7 +34,13 @@ final class IngestDetailsRepository
         return $this->browser->post('')->then(function (ResponseInterface $response) {
             $data = json_decode($response->getBody()->getContents(), true, flags: JSON_THROW_ON_ERROR);
 
-            if (! is_array($data) || ! isset($data['token'], $data['expires_in'], $data['ingest_url']) || ! $data['token'] || ! $data['expires_in'] || ! $data['ingest_url']) {
+            if (
+                ! is_array($data) ||
+                ! isset($data['token'], $data['expires_in'], $data['ingest_url']) ||
+                ! $data['token'] ||
+                ! $data['expires_in'] ||
+                ! $data['ingest_url']
+            ) {
                 throw new RuntimeException("Invalid authentication response: [{$response->getBody()->getContents()}]");
             }
 
