@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
+use Laravel\Nightwatch\IngestDetailsRepository;
 use Laravel\Nightwatch\Ingests\Remote\HttpClient;
 use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
 use React\Http\Browser;
@@ -31,6 +32,7 @@ final class HttpIngestFactory
      */
     public function __construct(
         private array $config,
+        private IngestDetailsRepository $ingestDetails,
         private bool $debug,
     ) {
         //
@@ -46,14 +48,13 @@ final class HttpIngestFactory
             ->withHeader('content-type', 'application/octet-stream')
             ->withHeader('content-encoding', 'gzip')
             // TODO this should be "env" id
-            ->withHeader('nightwatch-app-id', $this->config['env_id'] ?? '')
-            ->withBase($this->config['ingests']['http']['uri'] ?? '');
+            ->withHeader('nightwatch-app-id', $this->config['env_id'] ?? '');
 
         if ($this->debug) {
             $browser = $browser->withHeader('nightwatch-debug', '1');
         }
 
-        $client = new HttpClient($browser);
+        $client = new HttpClient($browser, $this->ingestDetails);
 
         return new HttpIngest($client, $this->config['ingests']['http']['connection_limit'] ?? 2);
     }

@@ -37,6 +37,8 @@ final class AgentFactory
     {
         $debug = (bool) Env::get('NIGHTWATCH_DEBUG');
 
+        $ingestDetails = (new IngestDetailsRepositoryFactory($this->config))($app);
+
         // Creating an instance of the `TcpServer` will automatically start the
         // server. To ensure we do not start the server when the command is
         // constructed, which will happen when running the `php artisan list`
@@ -44,8 +46,8 @@ final class AgentFactory
         // running the command.
         $app->bindMethod([Agent::class, 'handle'], fn (Agent $agent, Application $app) => $agent->handle(
             (new SocketServerFactory($this->config))($app),
-            (new RemoteIngestFactory($this->config, $debug))($app),
-            (new AuthTokenRepositoryFactory($this->config))($app),
+            (new RemoteIngestFactory($this->config, $ingestDetails, $debug))($app),
+            $ingestDetails,
         ));
 
         return new Agent(new StreamBuffer, $debug ? 1 : 10);
