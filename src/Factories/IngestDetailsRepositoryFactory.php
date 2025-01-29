@@ -3,11 +3,11 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
-use React\Socket\LimitingServer;
-use React\Socket\ServerInterface;
-use React\Socket\TcpServer;
+use Laravel\Nightwatch\IngestDetailsRepository;
+use React\Http\Browser;
+use React\Socket\Connector;
 
-final class SocketServerFactory
+final class IngestDetailsRepositoryFactory
 {
     /**
      * @param  array{
@@ -27,15 +27,25 @@ final class SocketServerFactory
      *      }
      * }  $config
      */
-    public function __construct(private array $config)
-    {
+    public function __construct(
+        private array $config,
+    ) {
         //
     }
 
-    public function __invoke(Application $app): ServerInterface
+    public function __invoke(Application $app): IngestDetailsRepository
     {
-        $server = new TcpServer($this->config['ingests']['socket']['uri'] ?? '');
+        $token = $this->config['token'] ?? '';
 
-        return new LimitingServer($server, $this->config['ingests']['socket']['connection_limit'] ?? 20);
+        $connector = new Connector(['timeout' => 5]);
+
+        $browser = (new Browser($connector))
+            ->withTimeout(10)
+            ->withHeader('authorization', "Bearer {$token}")
+            ->withHeader('user-agent', 'NightwatchAgent/1')
+            ->withHeader('content-type', 'application/json')
+            ->withBase($this->config['auth_url'] ?? '');
+
+        return new IngestDetailsRepository($browser);
     }
 }

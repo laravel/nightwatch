@@ -98,8 +98,8 @@ final class NightwatchServiceProvider extends ServiceProvider
     /**
      * @var array{
      *     enabled?: bool,
-     *     env_id?: string,
-     *     env_secret?: string,
+     *     token?: string,
+     *     auth_url?: string,
      *     deployment?: string,
      *     server?: string,
      *     local_ingest?: string,
@@ -107,11 +107,11 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     buffer_threshold?: int,
      *     error_log_channel?: string,
      *     ingests: array{
-     *     socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
-     *     http?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
-     *     log?: array{ channel?: string },
+     *         socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *         http?: array{ connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *         log?: array{ channel?: string },
      *     }
-     *     }
+     * }
      */
     private array $nightwatchConfig;
 
@@ -244,10 +244,6 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         /** @var Dispatcher */
         $events = $this->app->make(Dispatcher::class);
-
-        /** @var ContextRepository */
-        $context = $this->app->make(ContextRepository::class);
-        $context->addHidden('nightwatch_trace_id', $core->state->trace);
 
         //
         // -------------------------------------------------------------------------
@@ -427,13 +423,20 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function executionState(): RequestState|CommandState
     {
+        $trace = (string) Str::uuid();
+
+        /** @var ContextRepository */
+        $context = $this->app->make(ContextRepository::class);
+        $context->addHidden('nightwatch_trace_id', $trace);
+
         if ($this->isRequest) {
             /** @var AuthManager */
             $auth = $this->app->make(AuthManager::class);
 
             return new RequestState(
                 timestamp: $this->timestamp,
-                trace: (string) Str::uuid(),
+                trace: $trace,
+                id: $trace,
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
                 server: $this->nightwatchConfig['server'] ?? '',
@@ -442,7 +445,24 @@ final class NightwatchServiceProvider extends ServiceProvider
         } else {
             return new CommandState(
                 timestamp: $this->timestamp,
-                trace: (string) Str::uuid(),
+                trace: new LazyValue(function () {
+                    // Context needs to be re-resolved here to ensure
+                    // we are using the latest scoped instance.
+                    /** @var ContextRepository */
+                    $context = $this->app->make(ContextRepository::class);
+                    $trace = $context->getHidden('nightwatch_trace_id');
+
+                    if (is_string($trace)) {
+                        return $trace;
+                    }
+
+                    $trace = (string) Str::uuid();
+
+                    $context->addHidden('nightwatch_trace_id', $trace);
+
+                    return $trace;
+                }),
+                id: $trace,
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
                 server: $this->nightwatchConfig['server'] ?? '',

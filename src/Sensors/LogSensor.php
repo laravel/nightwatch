@@ -30,7 +30,7 @@ final class LogSensor
             server: $this->executionState->server,
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id,
+            execution_id: $this->executionState->id(),
             execution_stage: $this->executionState->stage,
             user: $this->executionState->user->id(),
             level: $record->level->toPsrLogLevel(),

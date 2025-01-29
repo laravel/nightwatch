@@ -32,7 +32,6 @@ it('ingests processed job attempts', function () {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
-        $executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
         $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
     ]);
     ProcessedJob::dispatch();
@@ -79,7 +78,6 @@ it('ingests job released job attempts', function () {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
-        $executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
         $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
     ]);
     ReleasedJob::dispatch();
@@ -126,7 +124,6 @@ it('ingests job failed job attempts', function () {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
-        $executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
         $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
     ]);
     FailedJob::dispatch();
@@ -168,7 +165,7 @@ it('ingests job failed job attempts', function () {
         ],
     ]);
     $ingest->assertLatestWrite('exception:0.execution_source', 'job');
-    $ingest->assertLatestWrite('exception:0.execution_id', $executionId);
+    $ingest->assertLatestWrite('exception:0.execution_id', $attemptId);
 });
 
 it('does not ingest jobs dispatched on the sync queue', function () {
@@ -182,7 +179,6 @@ it('captures closure job', function () {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
-        $executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
         $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
     ]);
     $line = __LINE__ + 1;
@@ -232,7 +228,6 @@ it('captures queued event listener', function () {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
-        $executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
         $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
     ]);
     Event::listen(MyEvent::class, MyEventListener::class);
@@ -280,7 +275,6 @@ it('captures queued mail', function () {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
-        $executionId = '3f45e448-0901-4782-aaec-5ec37305f442',
         $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
     ]);
     Config::set('mail.default', 'log');
@@ -333,7 +327,7 @@ it('captures queued mail', function () {
             '_group' => md5('MyQueuedMail'),
             'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
             'execution_source' => 'job',
-            'execution_id' => $executionId,
+            'execution_id' => $attemptId,
             'execution_stage' => 'action',
             'user' => '',
             'mailer' => 'log',

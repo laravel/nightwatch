@@ -91,7 +91,7 @@ function setTraceId(string $traceId): void
 
 function setExecutionId(string $executionId): void
 {
-    nightwatch()->state->id = $executionId;
+    nightwatch()->state->setId($executionId);
 }
 
 function setPeakMemory(int $value): void

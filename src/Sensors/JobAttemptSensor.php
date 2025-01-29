@@ -3,12 +3,10 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Queue\Events\JobAttempted;
-use Illuminate\Support\Facades\Context;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
 use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\Types\Str;
 
 use function hash;
 use function round;
@@ -45,10 +43,10 @@ final class JobAttemptSensor
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
             _group: hash('md5', $name),
-            trace_id: Context::getHidden('nightwatch_trace_id'), // @phpstan-ignore argument.type
+            trace_id: $this->executionState->trace,
             user: $this->executionState->user->id(),
             job_id: $event->job->uuid(), // @phpstan-ignore argument.type
-            attempt_id: (string) Str::uuid(),
+            attempt_id: $this->executionState->id(),
             attempt: $event->job->attempts(),
             name: $name,
             connection: $event->job->getConnectionName(),

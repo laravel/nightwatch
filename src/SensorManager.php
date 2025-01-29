@@ -26,6 +26,7 @@ use Laravel\Nightwatch\Sensors\QueuedJobSensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
 use Laravel\Nightwatch\Sensors\ScheduledTaskSensor;
 use Laravel\Nightwatch\Sensors\StageSensor;
+use Laravel\Nightwatch\Sensors\UserSensor;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Monolog\LogRecord;
@@ -59,6 +60,8 @@ class SensorManager
     private ?NotificationSensor $notificationSensor;
 
     private ?MailSensor $mailSensor;
+
+    private ?UserSensor $userSensor;
 
     private ?StageSensor $stageSensor;
 
@@ -204,6 +207,16 @@ class SensorManager
         );
 
         $sensor($event);
+    }
+
+    public function user(): void
+    {
+        $sensor = $this->userSensor ??= new UserSensor(
+            requestState: $this->executionState, // @phpstan-ignore argument.type
+            clock: $this->clock,
+        );
+
+        $sensor();
     }
 
     public function prepareForNextInvocation(): void

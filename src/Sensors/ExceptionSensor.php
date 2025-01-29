@@ -59,7 +59,7 @@ final class ExceptionSensor
             _group: hash('md5', $normalizedException::class.','.$normalizedException->getCode().','.$file.','.$line),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id,
+            execution_id: $this->executionState->id(),
             execution_stage: $this->executionState->stage,
             user: $this->executionState->user->id(),
             class: $normalizedException::class,

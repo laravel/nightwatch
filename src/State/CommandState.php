@@ -6,16 +6,15 @@ use Closure;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Events\Terminating;
-use Illuminate\Support\Facades\Context;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\NullUserProvider;
 use Laravel\Nightwatch\Types\Str;
 
 use function call_user_func;
 use function class_exists;
 use function memory_get_peak_usage;
-use function memory_reset_peak_usage;
 
 /**
  * @internal
@@ -23,8 +22,6 @@ use function memory_reset_peak_usage;
 final class CommandState
 {
     public int $v = 1;
-
-    public string $id;
 
     public string $source = 'command';
 
@@ -36,11 +33,13 @@ final class CommandState
     public bool $terminatingEventExists;
 
     /**
+     * @param  string|LazyValue<string>  $trace
      * @param  array<value-of<ExecutionStage>, int>  $stageDurations
      */
     public function __construct(
         public float $timestamp,
-        public string $trace,
+        public string|LazyValue $trace,
+        private string $id,
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
@@ -72,8 +71,20 @@ final class CommandState
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
-        $this->id = $trace;
         $this->terminatingEventExists = class_exists(Terminating::class);
+    }
+
+    /**
+     * @return LazyValue<string>
+     */
+    public function id(): LazyValue
+    {
+        return new LazyValue(fn () => $this->id);
+    }
+
+    public function setId(string $id): void
+    {
+        $this->id = $id;
     }
 
     public function peakMemory(): int
@@ -100,14 +111,5 @@ final class CommandState
         $this->cacheEvents = 0;
         $this->hydratedModels = 0;
         $this->records->flush();
-
-        memory_reset_peak_usage();
-    }
-
-    public function resetTraceId(): void
-    {
-        $this->trace = (string) Str::uuid();
-
-        Context::addHidden('nightwatch:trace', $this->trace);
     }
 }
