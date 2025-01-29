@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Types\Str;
 
 /**
@@ -14,6 +15,7 @@ final class ScheduledTask
     public string $t = 'scheduled-task';
 
     /**
+     * @param  string|LazyValue<string>  $trace_id
      * @param  'processed'|'skipped'|'failed'  $status
      */
     public function __construct(
@@ -21,7 +23,7 @@ final class ScheduledTask
         public string $deploy,
         public string $server,
         public string $_group,
-        public string $trace_id,
+        public string|LazyValue $trace_id,
         // --- //
         public string $name,
         public string $cron,
