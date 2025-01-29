@@ -8,17 +8,16 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use Laravel\Nightwatch\Types\Str;
 
-use function Orchestra\Testbench\Pest\defineEnvironment;
 use function Pest\Laravel\travelTo;
 
 uses(WithConsoleEvents::class);
 
-defineEnvironment(function () {
+beforeAll(function () {
     forceCommandExecutionState();
-    $this->ingest = fakeIngest();
 });
 
 beforeEach(function () {
+    $this->ingest = fakeIngest();
     setDeploy('v1.2.3');
     setServerName('scheduler-01');
     setPeakMemory(1234);
