@@ -98,7 +98,6 @@ final class NightwatchServiceProvider extends ServiceProvider
     /**
      * @var array{
      *     enabled?: bool,
-     *     env_id?: string,
      *     token?: string,
      *     auth_url?: string,
      *     deployment?: string,
@@ -108,11 +107,11 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     buffer_threshold?: int,
      *     error_log_channel?: string,
      *     ingests: array{
-     *     socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
-     *     http?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
-     *     log?: array{ channel?: string },
+     *         socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *         http?: array{ connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *         log?: array{ channel?: string },
      *     }
-     *     }
+     * }
      */
     private array $nightwatchConfig;
 
