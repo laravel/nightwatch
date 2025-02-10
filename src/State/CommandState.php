@@ -118,6 +118,6 @@ final class CommandState
     {
         $this->trace = (string) Str::uuid();
 
-        Context::addHidden('nightwatch:trace', $this->trace);
+        Context::addHidden('nightwatch_trace_id', $this->trace);
     }
 }
