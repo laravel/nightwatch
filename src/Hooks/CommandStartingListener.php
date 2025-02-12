@@ -4,6 +4,10 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
+use Illuminate\Console\Events\ScheduledTaskFailed;
+use Illuminate\Console\Events\ScheduledTaskFinished;
+use Illuminate\Console\Events\ScheduledTaskSkipped;
+use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -14,8 +18,6 @@ use Illuminate\Queue\Events\JobProcessing;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
-
-use function in_array;
 
 /**
  * @internal
@@ -46,11 +48,11 @@ final class CommandStartingListener
         }
 
         try {
-            if (in_array($event->command, ['queue:work', 'queue:listen'], true)) {
-                $this->registerJobHooks();
-            } else {
-                $this->registerCommandHooks();
-            }
+            match ($event->command) {
+                'queue:work', 'queue:listen' => $this->registerJobHooks(),
+                'schedule:run', 'schedule:work' => $this->registerScheduledTaskHooks(),
+                default => $this->registerCommandHooks(),
+            };
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
@@ -81,6 +83,19 @@ final class CommandStartingListener
          * @see \Laravel\Nightwatch\Core::ingest()
          */
         $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->nightwatch))(...));
+    }
+
+    private function registerScheduledTaskHooks(): void
+    {
+        $this->nightwatch->state->source = 'schedule';
+
+        $this->events->listen(ScheduledTaskStarting::class, (new ScheduledTaskStartingListener($this->nightwatch))(...));
+
+        $this->events->listen([
+            ScheduledTaskFinished::class,
+            ScheduledTaskSkipped::class,
+            ScheduledTaskFailed::class,
+        ], (new ScheduledTaskListener($this->nightwatch))(...));
     }
 
     private function registerCommandHooks(): void
