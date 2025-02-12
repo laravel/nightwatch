@@ -26,6 +26,10 @@ beforeEach(function () {
     setTraceId('00000000-0000-0000-0000-000000000000');
     setExecutionId('00000000-0000-0000-0000-000000000001');
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+
+    app()->setBasePath($base = dirname(app()->basePath()));
+    nightwatch()->sensor->location->setBasePath($base);
+    nightwatch()->sensor->location->setPublicPath($base.'/public');
 });
 
 it('can ingest queries', function () {
@@ -66,11 +70,8 @@ it('can ingest queries', function () {
             'execution_stage' => 'action',
             'user' => '',
             'sql' => 'select * from "users"',
-            // We have temporarily disabled debug_backtrace to reduce the memory impact
-            // 'file' => 'tests/Feature/Sensors/QuerySensorTest.php',
-            // 'line' => $line,
-            'file' => '',
-            'line' => 0,
+            'file' => 'tests/Feature/Sensors/QuerySensorTest.php',
+            'line' => $line,
             'duration' => 4321,
             'connection' => $connection,
         ],
@@ -93,7 +94,7 @@ it('can captures the line and file', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('query:0.file', 'tests/Feature/Sensors/QuerySensorTest.php');
     $ingest->assertLatestWrite('query:0.line', $line);
-})->skip('We have temporarily disabled debug_backtrace to reduce the memory impact');
+});
 
 it('captures aggregate query data on the request', function () {
     $ingest = fakeIngest();
