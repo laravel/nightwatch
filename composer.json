@@ -3,7 +3,7 @@
     "description": "The official Laravel Nightwatch package.",
     "keywords": ["laravel", "monitoring", "insights"],
     "homepage": "https://nightwatch.laravel.com",
-    "license": "MIT",
+    "license": "AGPL-3.0-or-later",
     "support": {
         "docs": "https://nightwatch.laravel.com/docs",
         "issues": "https://github.com/laravel/nightwatch/issues",
