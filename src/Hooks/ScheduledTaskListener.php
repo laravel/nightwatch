@@ -27,8 +27,10 @@ final class ScheduledTaskListener
     public function __invoke(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
     {
         try {
+            // We report the exception here because the scheduler handles it after the task has finished and the data is ingested.
+            // This ensures that the exception is captured in the scheduled task record.
             if ($event instanceof ScheduledTaskFailed) {
-                $this->nightwatch->sensor->exception($event->exception);
+                $this->nightwatch->report($event->exception);
             }
 
             $this->nightwatch->sensor->scheduledTask($event);
