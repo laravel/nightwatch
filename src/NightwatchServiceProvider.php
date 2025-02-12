@@ -36,7 +36,6 @@ use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Env;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\Agent;
@@ -162,9 +161,9 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nightwatch.php', 'nightwatch');
 
-        $this->config = $this->app->make(Repository::class); // @phpstan-ignore assign.propertyType
+        $this->config = $this->app->make(Repository::class);
 
-        $this->nightwatchConfig = $this->config->all()['nightwatch'] ?? []; // @phpstan-ignore method.nonObject
+        $this->nightwatchConfig = $this->config->all()['nightwatch'] ?? [];
     }
 
     private function registerBindings(): void

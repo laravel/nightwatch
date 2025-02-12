@@ -7,6 +7,8 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
+use function in_array;
+
 final class ReportableHandler
 {
     /**
@@ -21,10 +23,10 @@ final class ReportableHandler
     public function __invoke(Throwable $e): void
     {
         try {
-            if ($this->nightwatch->state->source === 'job') {
+            if (in_array($this->nightwatch->state->source, ['job', 'schedule'], true)) {
                 return;
             }
-        } catch (Throwable $exception) { // @phpstan-ignore catch.neverThrown
+        } catch (Throwable $exception) {
             $this->nightwatch->report($exception);
         }
 
