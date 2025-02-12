@@ -1,9 +1,13 @@
-name: lint
+name: coding standards
 
-on: [push]
+on:
+  push:
+    branches:
+      - '*.x'
+  pull_request:
 
 jobs:
-  lint:
+  coding-standards:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,7 +31,7 @@ jobs:
       - name: Run Pint
         run: vendor/bin/pint
 
-      - name: Commit linted files
+      - name: Commit formatted files
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Fix code styling"
