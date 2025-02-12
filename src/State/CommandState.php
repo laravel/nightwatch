@@ -6,7 +6,6 @@ use Closure;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Events\Terminating;
-use Illuminate\Support\Facades\Context;
 use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\LazyValue;
@@ -112,12 +111,5 @@ final class CommandState
         $this->cacheEvents = 0;
         $this->hydratedModels = 0;
         $this->records->flush();
-    }
-
-    public function resetTraceId(): void
-    {
-        $this->trace = (string) Str::uuid();
-
-        Context::addHidden('nightwatch_trace_id', $this->trace);
     }
 }
