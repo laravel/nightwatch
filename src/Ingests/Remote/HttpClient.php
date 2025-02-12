@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Ingests\Remote;
 
+use Laravel\Nightwatch\IngestDetailsRepository;
 use Psr\Http\Message\ResponseInterface;
 use React\Http\Browser;
 use React\Promise\Internal\RejectedPromise;
@@ -17,7 +18,7 @@ class HttpClient
 {
     public function __construct(
         private Browser $browser,
-        private string $path,
+        private IngestDetailsRepository $ingestDetails,
     ) {
         //
     }
@@ -27,6 +28,12 @@ class HttpClient
      */
     public function send(string $payload): PromiseInterface
     {
+        $details = $this->ingestDetails->get();
+
+        if ($details === null) {
+            return new RejectedPromise(new RuntimeException('Agent is not authenticated.'));
+        }
+
         // TODO determine what level to allow here.
         $payload = gzencode($payload);
 
@@ -34,6 +41,8 @@ class HttpClient
             return new RejectedPromise(new RuntimeException('Unable to compress payload.'));
         }
 
-        return $this->browser->post($this->path, body: $payload);
+        return $this->browser->post($details->ingestUrl, headers: [
+            'authorization' => "Bearer {$details->token}",
+        ], body: $payload);
     }
 }

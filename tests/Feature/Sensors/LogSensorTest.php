@@ -186,11 +186,35 @@ it('falls back to "single" log channel when error log is set to "nightwatch"', f
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('logs:*', []);
+    $ingest->assertLatestWrite('log:*', []);
     expect($logs)->toHaveCount(1);
     expect($logs[0]->level)->toBe('critical');
     expect($logs[0]->message)->toBe('[nightwatch] Whoops!');
     expect($logs[0]->context)->toBe([
         'exception' => $e,
     ]);
+});
+
+it('normalizes context and extra', function () {
+    $ingest = fakeIngest();
+    $e = new RuntimeException('Whoops!');
+    Config::set('nightwatch.error_log_channel', 'nightwatch');
+    Route::get('/', function () {
+        Context::add('o', (object) [
+            'hello' => 'again',
+        ]);
+
+        Log::channel('nightwatch')->info('Whoops!', [
+            'o' => (object) [
+                'hello' => 'world',
+            ],
+        ]);
+    });
+
+    $response = get('/');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('log:0.context', '{"o":{"stdClass":{"hello":"world"}}}');
+    $ingest->assertLatestWrite('log:0.extra', '{"o":{"stdClass":{"hello":"again"}}}');
 });

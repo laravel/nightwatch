@@ -5,8 +5,9 @@ namespace Laravel\Nightwatch\Console;
 use Illuminate\Console\Command;
 use Laravel\Nightwatch\Buffers\StreamBuffer;
 use Laravel\Nightwatch\Contracts\RemoteIngest;
+use Laravel\Nightwatch\IngestDetailsRepository;
 use Laravel\Nightwatch\Ingests\Remote\IngestSucceededResult;
-use React\EventLoop\LoopInterface;
+use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
 use React\Promise\PromiseInterface;
 use React\Socket\ConnectionInterface;
@@ -16,6 +17,7 @@ use Throwable;
 use WeakMap;
 
 use function date;
+use function max;
 
 /**
  * @internal
@@ -34,16 +36,16 @@ final class Agent extends Command
     protected $description = 'Start the Nightwatch agent.';
 
     /**
-     * @var WeakMap<ConnectionInterface, array{ 0: string, 1: TimerInterface }>
+     * @var WeakMap<ConnectionInterface, string>
      */
     private WeakMap $connections;
 
-    private ?TimerInterface $flushBufferAfterDelayTimer;
+    private ?TimerInterface $flushBufferAfterDelayTimer = null;
+
+    private ?TimerInterface $tokenRenewalTimer = null;
 
     public function __construct(
         private StreamBuffer $buffer,
-        private LoopInterface $loop,
-        private int|float $timeout,
         private int $delay,
     ) {
         parent::__construct();
@@ -51,7 +53,43 @@ final class Agent extends Command
         $this->connections = new WeakMap;
     }
 
-    public function handle(Server $server, RemoteIngest $ingest): void
+    public function handle(
+        Server $server,
+        RemoteIngest $ingest,
+        IngestDetailsRepository $ingestDetails,
+    ): void {
+        $this->refresh($ingestDetails);
+        $this->startServer($server, $ingest);
+
+        echo date('Y-m-d H:i:s').' Nightwatch agent initiated.'.PHP_EOL;
+        Loop::run();
+    }
+
+    private function refresh(IngestDetailsRepository $ingestDetails): void
+    {
+        $ingestDetails->refresh()->then(function () use ($ingestDetails) {
+            echo date('Y-m-d H:i:s').' Authenticated.'.PHP_EOL;
+
+            $this->scheduleRefresh($ingestDetails);
+        }, static function (Throwable $e) {
+            // TODO retries
+            echo date('Y-m-d H:i:s')." ERROR: Failed to authenticate the environment token: [{$e->getMessage()}].".PHP_EOL;
+        });
+    }
+
+    private function scheduleRefresh(IngestDetailsRepository $ingestDetails): void
+    {
+        if ($this->tokenRenewalTimer !== null) {
+            Loop::cancelTimer($this->tokenRenewalTimer);
+        }
+
+        // Renew the token 1 minute before it expires.
+        $interval = max(60, $ingestDetails->get()?->expiresIn - 60);
+
+        $this->tokenRenewalTimer = Loop::addTimer($interval, fn () => $this->refresh($ingestDetails));
+    }
+
+    private function startServer(Server $server, RemoteIngest $ingest): void
     {
         $server->on('connection', function (ConnectionInterface $connection) use ($ingest) {
             $this->accept($connection);
@@ -63,11 +101,13 @@ final class Agent extends Command
             $connection->on('end', function () use ($ingest, $connection) {
                 $this->buffer->write($this->flushConnectionBuffer($connection));
 
-                $this->queueOrPerformIngest($ingest, static function (PromiseInterface $response) {
-                    $response->then(static function (IngestSucceededResult $result) {
-                        echo date('Y-m-d H:i:s')." SUCCESS: Took [{$result->duration}]s.".PHP_EOL;
-                    }, static function (Throwable $e) {
-                        echo date('Y-m-d H:i:s')." ERROR: {$e->getMessage()}.".PHP_EOL;
+                Loop::futureTick(function () use ($ingest) {
+                    $this->queueOrPerformIngest($ingest, static function (PromiseInterface $response) {
+                        $response->then(static function (IngestSucceededResult $result) {
+                            echo date('Y-m-d H:i:s')." SUCCESS: Took [{$result->duration}]s.".PHP_EOL;
+                        }, static function (Throwable $e) {
+                            echo date('Y-m-d H:i:s')." ERROR: {$e->getMessage()}.".PHP_EOL;
+                        });
                     });
                 });
             });
@@ -76,46 +116,33 @@ final class Agent extends Command
                 $this->evict($connection);
             });
 
-            $connection->on('timeout', function () use ($connection) {
-                $this->error('Connection timed out.');
-
-                $connection->close();
-            });
-
             $connection->on('error', function (Throwable $e) use ($connection) {
-                $this->error("Connection error. [{$e->getMessage()}].");
+                echo date('Y-m-d H:i:s')." ERROR: Connection error. [{$e->getMessage()}].".PHP_EOL;
 
                 $this->evict($connection);
             });
         });
 
-        $server->on('error', function (Throwable $e) {
-            $this->error("Server error. [{$e->getMessage()}].");
+        $server->on('error', static function (Throwable $e) {
+            echo date('Y-m-d H:i:s')."Server error. [{$e->getMessage()}].".PHP_EOL;
         });
-
-        echo date('Y-m-d H:i:s').' Nightwatch agent initiated.'.PHP_EOL;
-        $this->loop->run();
     }
 
     private function accept(ConnectionInterface $connection): void
     {
-        $timeoutTimer = $this->loop->addPeriodicTimer($this->timeout, static function () use ($connection) {
-            $connection->emit('timeout');
-        });
-
-        $this->connections[$connection] = ['', $timeoutTimer];
+        $this->connections[$connection] = '';
     }
 
     private function bufferConnectionChunk(ConnectionInterface $connection, string $chunk): void
     {
-        $this->connections[$connection][0] .= $chunk;
+        $this->connections[$connection] .= $chunk;
     }
 
     private function flushConnectionBuffer(ConnectionInterface $connection): string
     {
-        $payload = $this->connections[$connection][0];
+        $payload = $this->connections[$connection];
 
-        $this->connections[$connection][0] = '';
+        $this->evict($connection);
 
         return $payload;
     }
@@ -123,8 +150,6 @@ final class Agent extends Command
     private function evict(ConnectionInterface $connection): void
     {
         $connection->close();
-
-        $this->loop->cancelTimer($this->connections[$connection][1]);
 
         unset($this->connections[$connection]);
     }
@@ -138,13 +163,13 @@ final class Agent extends Command
             $records = $this->buffer->flush();
 
             if ($this->flushBufferAfterDelayTimer !== null) {
-                $this->loop->cancelTimer($this->flushBufferAfterDelayTimer);
+                Loop::cancelTimer($this->flushBufferAfterDelayTimer);
                 $this->flushBufferAfterDelayTimer = null;
             }
 
             $after($ingest->write($records));
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer($this->delay, function () use ($ingest, $after) {
+            $this->flushBufferAfterDelayTimer ??= Loop::addTimer($this->delay, function () use ($ingest, $after) {
                 $records = $this->buffer->flush();
 
                 $this->flushBufferAfterDelayTimer = null;

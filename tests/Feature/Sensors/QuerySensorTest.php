@@ -26,16 +26,19 @@ beforeEach(function () {
     setTraceId('00000000-0000-0000-0000-000000000000');
     setExecutionId('00000000-0000-0000-0000-000000000001');
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+
+    app()->setBasePath($base = dirname(app()->basePath()));
+    nightwatch()->sensor->location->setBasePath($base);
+    nightwatch()->sensor->location->setPublicPath($base.'/public');
 });
 
 it('can ingest queries', function () {
-    ignoreMigrationQueries();
     $ingest = fakeIngest();
-    afterMigrations(fn () => prependListener(QueryExecuted::class, function ($event) {
+    prependListener(QueryExecuted::class, function ($event) {
         $event->time = 4.321;
 
         travelTo(now()->addMicroseconds(4321));
-    }));
+    });
 
     $line = null;
     Route::get('/users', function () use (&$line) {
@@ -67,11 +70,8 @@ it('can ingest queries', function () {
             'execution_stage' => 'action',
             'user' => '',
             'sql' => 'select * from "users"',
-            // We have temporarily disabled debug_backtrace to reduce the memory impact
-            // 'file' => 'tests/Feature/Sensors/QuerySensorTest.php',
-            // 'line' => $line,
-            'file' => '',
-            'line' => 0,
+            'file' => 'tests/Feature/Sensors/QuerySensorTest.php',
+            'line' => $line,
             'duration' => 4321,
             'connection' => $connection,
         ],
@@ -79,7 +79,6 @@ it('can ingest queries', function () {
 });
 
 it('can captures the line and file', function () {
-    ignoreMigrationQueries();
     $ingest = fakeIngest();
 
     $line = null;
@@ -95,10 +94,9 @@ it('can captures the line and file', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('query:0.file', 'tests/Feature/Sensors/QuerySensorTest.php');
     $ingest->assertLatestWrite('query:0.line', $line);
-})->skip('We have temporarily disabled debug_backtrace to reduce the memory impact');
+});
 
 it('captures aggregate query data on the request', function () {
-    ignoreMigrationQueries();
     $ingest = fakeIngest();
     prependListener(QueryExecuted::class, function (QueryExecuted $event) {
         $event->time = 4.321;
@@ -120,13 +118,12 @@ it('captures aggregate query data on the request', function () {
 });
 
 it('always uses current time minus execution time for the timestamp', function () {
-    ignoreMigrationQueries();
     $ingest = fakeIngest();
-    afterMigrations(fn () => prependListener(QueryExecuted::class, function (QueryExecuted $event) {
+    prependListener(QueryExecuted::class, function (QueryExecuted $event) {
         $event->time = 4.321;
 
         travelTo(now()->addMicroseconds(4321));
-    }));
+    });
     Route::get('/users', function () use (&$line) {
         travelTo(now()->addMicroseconds(9876));
 

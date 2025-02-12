@@ -12,8 +12,8 @@ final class SocketIngestFactory
     /**
      * @param  array{
      *      enabled?: bool,
-     *      env_id?: string,
-     *      env_secret?: string,
+     *      token?: string,
+     *      auth_url?: string,
      *      deployment?: string,
      *      server?: string,
      *      local_ingest?: string,
@@ -22,7 +22,7 @@ final class SocketIngestFactory
      *      error_log_channel?: string,
      *      ingests: array{
      *          socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
-     *          http?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *          http?: array{ connection_limit?: int, connection_timeout?: float, timeout?: float },
      *          log?: array{ channel?: string },
      *      }
      * }  $config

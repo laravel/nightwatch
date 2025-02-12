@@ -59,7 +59,7 @@ final class ExceptionSensor
             _group: hash('md5', $normalizedException::class.','.$normalizedException->getCode().','.$file.','.$line),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id,
+            execution_id: $this->executionState->id(),
             execution_stage: $this->executionState->stage,
             user: $this->executionState->user->id(),
             class: $normalizedException::class,
@@ -76,16 +76,13 @@ final class ExceptionSensor
 
     private function wasManuallyReported(Throwable $e): bool
     {
+        foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 20) as $frame) {
+            if ($frame['function'] === 'report' && ! isset($frame['type'])) {
+                return true;
+            }
+        }
+
         return false;
-
-        // We have temporarily disabled debug_backtrace to reduce the memory impact
-        // foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 20) as $frame) {
-        //     if ($frame['function'] === 'report' && ! isset($frame['type'])) {
-        //         return true;
-        //     }
-        // }
-
-        // return false;
     }
 
     /**

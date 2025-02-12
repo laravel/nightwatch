@@ -16,6 +16,7 @@ arch()->expect('Laravel\Nightwatch')
 arch()->expect('Laravel\Nightwatch')
     ->toBeFinal()
     ->ignoring([
+        'Laravel\Nightwatch\Concerns',
         'Laravel\Nightwatch\Contracts',
         Laravel\Nightwatch\Buffers\RecordsBuffer::class,
         Laravel\Nightwatch\Ingests\Remote\HttpClient::class,

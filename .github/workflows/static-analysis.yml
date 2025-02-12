@@ -6,9 +6,24 @@ on:
       - '*.x'
   pull_request:
 
-permissions:
-  contents: read
-
 jobs:
-  tests:
-    uses: laravel/.github/.github/workflows/static-analysis.yml@main
+  static-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+          extensions: json, dom, curl, libxml, mbstring
+          coverage: none
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan --verbose

@@ -3,15 +3,20 @@
 namespace Laravel\Nightwatch;
 
 use Illuminate\Cache\Events\CacheEvent;
+use Illuminate\Console\Events\ScheduledTaskFailed;
+use Illuminate\Console\Events\ScheduledTaskFinished;
+use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSent;
+use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
+use Laravel\Nightwatch\Sensors\JobAttemptSensor;
 use Laravel\Nightwatch\Sensors\LogSensor;
 use Laravel\Nightwatch\Sensors\MailSensor;
 use Laravel\Nightwatch\Sensors\NotificationSensor;
@@ -19,10 +24,11 @@ use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
 use Laravel\Nightwatch\Sensors\QuerySensor;
 use Laravel\Nightwatch\Sensors\QueuedJobSensor;
 use Laravel\Nightwatch\Sensors\RequestSensor;
+use Laravel\Nightwatch\Sensors\ScheduledTaskSensor;
 use Laravel\Nightwatch\Sensors\StageSensor;
+use Laravel\Nightwatch\Sensors\UserSensor;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\Types\Str;
 use Monolog\LogRecord;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -49,16 +55,22 @@ class SensorManager
 
     private ?QueuedJobSensor $queuedJobSensor;
 
+    private ?JobAttemptSensor $jobAttemptSensor;
+
     private ?NotificationSensor $notificationSensor;
 
     private ?MailSensor $mailSensor;
 
+    private ?UserSensor $userSensor;
+
     private ?StageSensor $stageSensor;
+
+    private ?ScheduledTaskSensor $scheduledTaskSensor;
 
     public function __construct(
         private RequestState|CommandState $executionState,
         private Clock $clock,
-        private Location $location,
+        public Location $location,
         private Repository $config,
     ) {
         //
@@ -174,6 +186,37 @@ class SensorManager
         );
 
         $sensor($event);
+    }
+
+    public function jobAttempt(JobAttempted $event): void
+    {
+        $sensor = $this->jobAttemptSensor ??= new JobAttemptSensor(
+            executionState: $this->executionState, // @phpstan-ignore argument.type
+            clock: $this->clock,
+            connectionConfig: $this->config->all()['queue']['connections'] ?? [],
+        );
+
+        $sensor($event);
+    }
+
+    public function scheduledTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
+    {
+        $sensor = $this->scheduledTaskSensor ??= new ScheduledTaskSensor(
+            executionState: $this->executionState, // @phpstan-ignore argument.type
+            clock: $this->clock,
+        );
+
+        $sensor($event);
+    }
+
+    public function user(): void
+    {
+        $sensor = $this->userSensor ??= new UserSensor(
+            requestState: $this->executionState, // @phpstan-ignore argument.type
+            clock: $this->clock,
+        );
+
+        $sensor();
     }
 
     public function prepareForNextInvocation(): void

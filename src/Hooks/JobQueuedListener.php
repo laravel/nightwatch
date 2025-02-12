@@ -2,11 +2,11 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Exception;
 use Illuminate\Queue\Events\JobQueued;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Throwable;
 
 /**
  * @internal
@@ -26,7 +26,7 @@ final class JobQueuedListener
     {
         try {
             $this->nightwatch->sensor->queuedJob($event);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
     }

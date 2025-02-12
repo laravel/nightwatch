@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Types\Str;
 
 /**
@@ -15,13 +16,15 @@ final class Command
 
     /**
      * TODO limit size of all int values across all record types.
+     *
+     * @param  string|LazyValue<string>  $trace_id
      */
     public function __construct(
         public float $timestamp,
         public string $deploy,
         public string $server,
         public string $_group,
-        public string $trace_id,
+        public string|LazyValue $trace_id,
         // --- //
         public string $class,
         public string $name,
