@@ -36,7 +36,6 @@ use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Env;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\Agent;

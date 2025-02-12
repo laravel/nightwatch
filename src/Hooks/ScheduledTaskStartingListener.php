@@ -6,7 +6,6 @@ use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\Types\Str;
 use Throwable;
 
 use function memory_reset_peak_usage;
@@ -34,7 +33,7 @@ final class ScheduledTaskStartingListener
         try {
             $this->nightwatch->state->reset();
             $this->nightwatch->state->resetTraceId();
-            $this->nightwatch->state->setId((string) Str::uuid());
+            $this->nightwatch->state->setId($this->nightwatch->state->trace);
             $this->nightwatch->state->timestamp = $this->nightwatch->clock->microtime();
             memory_reset_peak_usage();
         } catch (Throwable $e) {
