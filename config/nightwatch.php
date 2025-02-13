@@ -25,8 +25,8 @@ return [
         ],
 
         'http' => [
-            'connection_timeout' => env('NIGHTWATCH_HTTP_INGEST_CONNECTION_TIMEOUT', 1.0),
-            'timeout' => env('NIGHTWATCH_HTTP_INGEST_TIMEOUT', 3.0),
+            'connection_timeout' => env('NIGHTWATCH_HTTP_INGEST_CONNECTION_TIMEOUT', 5),
+            'timeout' => env('NIGHTWATCH_HTTP_INGEST_TIMEOUT', 10),
         ],
 
         'log' => [
