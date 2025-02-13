@@ -41,10 +41,10 @@ final class HttpIngestFactory
 
     public function __invoke(Application $app): HttpIngest
     {
-        $connector = new Connector(['timeout' => $this->config['ingests']['http']['connection_timeout'] ?? 1.0]);
+        $connector = new Connector(['timeout' => $this->config['ingests']['http']['connection_timeout'] ?? 5]);
 
         $browser = (new Browser($connector))
-            ->withTimeout($this->config['ingests']['http']['timeout'] ?? 3.0)
+            ->withTimeout($this->config['ingests']['http']['timeout'] ?? 10)
             ->withHeader('user-agent', 'NightwatchAgent/1')
             ->withHeader('content-type', 'application/octet-stream')
             ->withHeader('content-encoding', 'gzip');
