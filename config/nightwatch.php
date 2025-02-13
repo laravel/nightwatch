@@ -2,10 +2,7 @@
 
 return [
     'enabled' => env('NIGHTWATCH_ENABLED', true),
-
     'token' => env('NIGHTWATCH_TOKEN'),
-    'auth_url' => env('NIGHTWATCH_AUTH_URL', 'https://nightwatch.laravel.com/api/agent-auth'),
-
     'deployment' => env('NIGHTWATCH_DEPLOY'),
     'server' => env('NIGHTWATCH_SERVER', (string) gethostname()),
 

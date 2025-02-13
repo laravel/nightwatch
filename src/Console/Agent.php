@@ -28,7 +28,7 @@ final class Agent extends Command
     /**
      * @var string
      */
-    protected $signature = 'nightwatch:agent';
+    protected $signature = 'nightwatch:agent {--base-url=}';
 
     /**
      * @var string

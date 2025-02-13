@@ -16,7 +16,6 @@ final class SocketIngestFactory
      * @param  array{
      *      enabled?: bool,
      *      token?: string,
-     *      auth_url?: string,
      *      deployment?: string,
      *      server?: string,
      *      local_ingest?: string,
