@@ -16,7 +16,6 @@ final class IngestDetailsRepositoryFactory
      * @param  array{
      *      enabled?: bool,
      *      token?: string,
-     *      auth_url?: string,
      *      deployment?: string,
      *      server?: string,
      *      local_ingest?: string,
@@ -32,6 +31,7 @@ final class IngestDetailsRepositoryFactory
      */
     public function __construct(
         private array $config,
+        private string $base,
     ) {
         //
     }
@@ -47,7 +47,7 @@ final class IngestDetailsRepositoryFactory
             ->withHeader('authorization', "Bearer {$token}")
             ->withHeader('user-agent', 'NightwatchAgent/1')
             ->withHeader('content-type', 'application/json')
-            ->withBase($this->config['auth_url'] ?? '');
+            ->withBase("{$this->base}/api/agent-auth");
 
         return new IngestDetailsRepository($browser);
     }
