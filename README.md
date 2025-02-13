@@ -20,4 +20,4 @@ Please review [our security policy](https://github.com/laravel/nightwatch/securi
 
 ## License
 
-Laravel Nightwatch is open-sourced software licensed under the [MIT license](LICENSE.md).
+Laravel Nightwatch is open-sourced software licensed under the [AGPL-3.0 license](LICENSE.md).
