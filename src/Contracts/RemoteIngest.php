@@ -5,6 +5,9 @@ namespace Laravel\Nightwatch\Contracts;
 use Laravel\Nightwatch\Ingests\Remote\IngestSucceededResult;
 use React\Promise\PromiseInterface;
 
+/**
+ * @internal
+ */
 interface RemoteIngest
 {
     /**

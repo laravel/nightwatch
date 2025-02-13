@@ -8,6 +8,9 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
+/**
+ * @internal
+ */
 final class LogoutListener
 {
     /**

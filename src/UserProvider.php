@@ -14,8 +14,9 @@ final class UserProvider
     // TODO we need to reset this state between executions.
     private ?Authenticatable $rememberedUser = null;
 
-    public function __construct(private AuthManager $auth)
-    {
+    public function __construct(
+        private AuthManager $auth,
+    ) {
         //
     }
 

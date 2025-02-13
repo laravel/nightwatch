@@ -7,6 +7,9 @@ use React\Socket\LimitingServer;
 use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
 
+/**
+ * @internal
+ */
 final class SocketServerFactory
 {
     /**
@@ -27,8 +30,9 @@ final class SocketServerFactory
      *      }
      * }  $config
      */
-    public function __construct(private array $config)
-    {
+    public function __construct(
+        private array $config,
+    ) {
         //
     }
 

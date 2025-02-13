@@ -12,6 +12,9 @@ use Throwable;
 
 use function class_exists;
 
+/**
+ * @internal
+ */
 final class HttpKernelResolvedHandler
 {
     /**

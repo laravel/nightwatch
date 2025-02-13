@@ -7,6 +7,9 @@ use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
+/**
+ * @internal
+ */
 final class ArtisanStartingHandler
 {
     /**

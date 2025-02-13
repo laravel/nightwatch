@@ -9,6 +9,9 @@ use Throwable;
 
 use function in_array;
 
+/**
+ * @internal
+ */
 final class ReportableHandler
 {
     /**

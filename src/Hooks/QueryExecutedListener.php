@@ -10,6 +10,9 @@ use Throwable;
 
 use function debug_backtrace;
 
+/**
+ * @internal
+ */
 final class QueryExecutedListener
 {
     /**

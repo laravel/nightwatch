@@ -32,7 +32,7 @@ class RecordsBuffer
 
     public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|JobAttempt|Mail|Notification|Log|User|ScheduledTask $record): void
     {
-        // TODO only for Forge
+        // TODO temporary limit
         if (count($this->records) > 499) {
             array_shift($this->records);
         }

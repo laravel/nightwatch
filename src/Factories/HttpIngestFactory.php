@@ -9,6 +9,9 @@ use Laravel\Nightwatch\Ingests\Remote\HttpIngest;
 use React\Http\Browser;
 use React\Socket\Connector;
 
+/**
+ * @internal
+ */
 final class HttpIngestFactory
 {
     /**

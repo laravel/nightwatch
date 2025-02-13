@@ -10,8 +10,9 @@ use Psr\Log\LoggerInterface;
  */
 final class LogIngest implements LocalIngest
 {
-    public function __construct(private LoggerInterface $log)
-    {
+    public function __construct(
+        private LoggerInterface $log,
+    ) {
         //
     }
 

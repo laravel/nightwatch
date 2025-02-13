@@ -8,6 +8,9 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
+/**
+ * @internal
+ */
 final class CommandFinishedListener
 {
     /**

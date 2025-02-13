@@ -7,6 +7,9 @@ use Laravel\Nightwatch\IngestDetailsRepository;
 use React\Http\Browser;
 use React\Socket\Connector;
 
+/**
+ * @internal
+ */
 final class IngestDetailsRepositoryFactory
 {
     /**

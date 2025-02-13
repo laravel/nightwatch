@@ -25,7 +25,6 @@ return [
             'timeout' => env('NIGHTWATCH_SOCKET_INGEST_TIMEOUT', 0.5),
         ],
 
-        // TODO should this be "remote:http" || "local:http" etc. Will Vapor send directly via HTTP? What about local:log and remote:log?
         'http' => [
             // TODO should remote http ingest connnection limit be configurable? Probably not.
             'connection_limit' => env('NIGHTWATCH_HTTP_INGEST_CONNECTION_LIMIT', 2),

@@ -218,20 +218,4 @@ class SensorManager
 
         $sensor();
     }
-
-    public function prepareForNextInvocation(): void
-    {
-        // $this->clock->executionStartInMicrotime = $this->clock->microtime();
-        // // $this->executionState = new RequestState(
-        // //     traceId: $traceId = (string) Str::uuid(),
-        // //     executionId: $traceId,
-        // // );
-
-        // $this->cacheEventSensor = null;
-        // $this->exceptionSensor = null;
-        // $this->outgoingRequestSensor = null;
-        // $this->querySensor = null;
-        // $this->queuedJobSensor = null;
-        // // ...
-    }
 }
