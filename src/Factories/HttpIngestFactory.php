@@ -27,7 +27,7 @@ final class HttpIngestFactory
      *      error_log_channel?: string,
      *      ingests: array{
      *          socket?: array{ uri?: string, connection_timeout?: float, timeout?: float },
-     *          http?: array{ connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *          http?: array{ connection_timeout?: float, timeout?: float },
      *          log?: array{ channel?: string },
      *      }
      * }  $config
@@ -56,6 +56,6 @@ final class HttpIngestFactory
 
         $client = new HttpClient($browser, $this->ingestDetails);
 
-        return new HttpIngest($client, $this->config['ingests']['http']['connection_limit'] ?? 2);
+        return new HttpIngest($client, 2);
     }
 }

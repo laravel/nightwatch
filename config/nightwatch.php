@@ -25,8 +25,6 @@ return [
         ],
 
         'http' => [
-            // TODO should remote http ingest connnection limit be configurable? Probably not.
-            'connection_limit' => env('NIGHTWATCH_HTTP_INGEST_CONNECTION_LIMIT', 2),
             'connection_timeout' => env('NIGHTWATCH_HTTP_INGEST_CONNECTION_TIMEOUT', 1.0),
             'timeout' => env('NIGHTWATCH_HTTP_INGEST_TIMEOUT', 3.0),
         ],
