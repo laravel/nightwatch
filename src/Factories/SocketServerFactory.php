@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
-use React\Socket\LimitingServer;
 use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
 
@@ -24,7 +23,7 @@ final class SocketServerFactory
      *      buffer_threshold?: int,
      *      error_log_channel?: string,
      *      ingests: array{
-     *          socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *          socket?: array{ uri?: string, connection_timeout?: float, timeout?: float },
      *          http?: array{ connection_limit?: int, connection_timeout?: float, timeout?: float },
      *          log?: array{ channel?: string },
      *      }
@@ -38,8 +37,6 @@ final class SocketServerFactory
 
     public function __invoke(Application $app): ServerInterface
     {
-        $server = new TcpServer($this->config['ingests']['socket']['uri'] ?? '');
-
-        return new LimitingServer($server, $this->config['ingests']['socket']['connection_limit'] ?? 20);
+        return new TcpServer($this->config['ingests']['socket']['uri'] ?? '');
     }
 }
