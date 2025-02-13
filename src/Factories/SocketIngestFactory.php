@@ -24,7 +24,7 @@ final class SocketIngestFactory
      *      buffer_threshold?: int,
      *      error_log_channel?: string,
      *      ingests: array{
-     *          socket?: array{ uri?: string, connection_limit?: int, connection_timeout?: float, timeout?: float },
+     *          socket?: array{ uri?: string, connection_timeout?: float, timeout?: float },
      *          http?: array{ connection_limit?: int, connection_timeout?: float, timeout?: float },
      *          log?: array{ channel?: string },
      *      }
