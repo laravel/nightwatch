@@ -9,6 +9,9 @@ use Laravel\Nightwatch\State\CommandState;
 use Symfony\Component\Console\Input\InputInterface;
 use Throwable;
 
+/**
+ * @internal
+ */
 final class CommandLifecycleIsLongerThanHandler
 {
     /**

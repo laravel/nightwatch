@@ -7,8 +7,9 @@ namespace Laravel\Nightwatch\Ingests\Remote;
  */
 final class IngestSucceededResult
 {
-    public function __construct(public float $duration)
-    {
+    public function __construct(
+        public float $duration,
+    ) {
         //
     }
 }

@@ -11,6 +11,9 @@ use Throwable;
 use function array_unshift;
 use function class_exists;
 
+/**
+ * @internal
+ */
 final class RouteMatchedListener
 {
     /**

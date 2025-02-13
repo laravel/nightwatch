@@ -14,8 +14,9 @@ final class LazyValue implements JsonSerializable
     /**
      * @param  (callable(): TValue)  $callback
      */
-    public function __construct(private $callback)
-    {
+    public function __construct(
+        private $callback,
+    ) {
         //
     }
 

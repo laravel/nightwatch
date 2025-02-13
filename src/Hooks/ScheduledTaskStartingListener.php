@@ -20,8 +20,9 @@ final class ScheduledTaskStartingListener
     /**
      * @param  Core<CommandState>  $nightwatch
      */
-    public function __construct(private Core $nightwatch)
-    {
+    public function __construct(
+        private Core $nightwatch,
+    ) {
         //
     }
 

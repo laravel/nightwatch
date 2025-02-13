@@ -10,6 +10,9 @@ use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
+/**
+ * @internal
+ */
 final class RequestLifecycleIsLongerThanHandler
 {
     /**

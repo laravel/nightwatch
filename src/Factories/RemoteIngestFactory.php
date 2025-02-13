@@ -7,6 +7,9 @@ use Laravel\Nightwatch\Contracts\RemoteIngest;
 use Laravel\Nightwatch\IngestDetailsRepository;
 use RuntimeException;
 
+/**
+ * @internal
+ */
 final class RemoteIngestFactory
 {
     /**

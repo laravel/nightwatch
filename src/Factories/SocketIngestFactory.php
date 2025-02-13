@@ -7,6 +7,9 @@ use Laravel\Nightwatch\Ingests\Local\SocketIngest;
 use React\Socket\TcpConnector;
 use React\Socket\TimeoutConnector;
 
+/**
+ * @internal
+ */
 final class SocketIngestFactory
 {
     /**
@@ -27,14 +30,14 @@ final class SocketIngestFactory
      *      }
      * }  $config
      */
-    public function __construct(private array $config)
-    {
+    public function __construct(
+        private array $config,
+    ) {
         //
     }
 
     public function __invoke(Application $app): SocketIngest
     {
-        // TODO confirm this timeout is working.
         $connector = new TcpConnector(context: ['timeout' => $this->config['ingests']['socket']['timeout'] ?? 0.5]);
 
         $connector = new TimeoutConnector($connector, $this->config['ingests']['socket']['connection_timeout'] ?? 0.5);

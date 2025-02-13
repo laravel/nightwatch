@@ -6,6 +6,9 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Log\LogManager;
 use Laravel\Nightwatch\Ingests\Local\LogIngest;
 
+/**
+ * @internal
+ */
 final class LogIngestFactory
 {
     /**
@@ -26,8 +29,9 @@ final class LogIngestFactory
      *      }
      * }  $config
      */
-    public function __construct(private array $config)
-    {
+    public function __construct(
+        private array $config,
+    ) {
         //
     }
 

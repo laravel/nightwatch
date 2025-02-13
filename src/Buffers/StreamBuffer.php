@@ -12,8 +12,9 @@ final class StreamBuffer
 {
     private string $buffer = '';
 
-    public function __construct(private int $threshold = 8_000_000)
-    {
+    public function __construct(
+        private int $threshold = 8_000_000,
+    ) {
         //
     }
 

@@ -14,8 +14,10 @@ final class IngestFailedException extends RuntimeException
 {
     public ?ResponseInterface $response;
 
-    public function __construct(public float $duration, Throwable $previous)
-    {
+    public function __construct(
+        public float $duration,
+        Throwable $previous,
+    ) {
         if ($previous instanceof ResponseException) {
             $this->response = $previous->getResponse();
 

@@ -8,6 +8,9 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
+/**
+ * @internal
+ */
 final class RequestHandledListener
 {
     /**

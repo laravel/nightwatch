@@ -7,6 +7,9 @@ use Illuminate\Support\Env;
 use Laravel\Nightwatch\Buffers\StreamBuffer;
 use Laravel\Nightwatch\Console\Agent;
 
+/**
+ * @internal
+ */
 final class AgentFactory
 {
     /**
@@ -27,8 +30,9 @@ final class AgentFactory
      *      }
      * }  $config
      */
-    public function __construct(private array $config)
-    {
+    public function __construct(
+        private array $config,
+    ) {
         //
     }
 
