@@ -43,7 +43,7 @@ final class NotificationSensor
         }
 
         if ($this->startTime === null) {
-            throw new RuntimeException('No start time found for ['.$event->notifiable::class.'].');
+            throw new RuntimeException('No start time found for ['.$event->notifiable::class.'].'); // @phpstan-ignore classConstant.nonObject
         }
 
         if (str_contains($event->notification::class, "@anonymous\0")) {
