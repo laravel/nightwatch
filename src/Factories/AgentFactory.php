@@ -5,7 +5,7 @@ namespace Laravel\Nightwatch\Factories;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Env;
 use Laravel\Nightwatch\Buffers\StreamBuffer;
-use Laravel\Nightwatch\Console\Agent;
+use Laravel\Nightwatch\Console\AgentCommand;
 
 use function is_string;
 use function rtrim;
@@ -38,7 +38,7 @@ final class AgentFactory
         //
     }
 
-    public function __invoke(Application $app): Agent
+    public function __invoke(Application $app): AgentCommand
     {
         $debug = (bool) Env::get('NIGHTWATCH_DEBUG');
 
@@ -47,7 +47,7 @@ final class AgentFactory
         // constructed, which will happen when running the `php artisan list`
         // command, we make sure to resolve the server only when actually
         // running the command.
-        $app->bindMethod([Agent::class, 'handle'], function (Agent $agent, Application $app) use ($debug): void {
+        $app->bindMethod([AgentCommand::class, 'handle'], function (AgentCommand $agent, Application $app) use ($debug): void {
             $base = $agent->option('base-url');
 
             if (! is_string($base)) {
@@ -65,6 +65,6 @@ final class AgentFactory
             );
         });
 
-        return new Agent(new StreamBuffer, $debug ? 1 : 10);
+        return new AgentCommand(new StreamBuffer, $debug ? 1 : 10);
     }
 }
