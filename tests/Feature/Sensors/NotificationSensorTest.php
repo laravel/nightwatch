@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\post;
+use function Pest\Laravel\travelTo;
 
 beforeAll(function () {
     forceRequestExecutionState();
@@ -56,7 +57,7 @@ it('ingests on-demand notifications', function () {
         [
             'v' => 1,
             't' => 'notification',
-            'timestamp' => 946688523.456789,
+            'timestamp' => 946688523.459289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('md5', 'MyNotification'),
@@ -67,7 +68,7 @@ it('ingests on-demand notifications', function () {
             'user' => '',
             'channel' => 'mail',
             'class' => 'MyNotification',
-            'duration' => 0,
+            'duration' => 2500,
             'failed' => false,
         ],
     ]);
@@ -98,7 +99,7 @@ it('ingests notifications for notifiables', function () {
         [
             'v' => 1,
             't' => 'notification',
-            'timestamp' => 946688523.456789,
+            'timestamp' => 946688523.459289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('md5', 'MyNotification@anonymous'),
@@ -109,13 +110,13 @@ it('ingests notifications for notifiables', function () {
             'user' => '',
             'channel' => 'mail',
             'class' => 'MyNotification@anonymous',
-            'duration' => 0,
+            'duration' => 2500,
             'failed' => false,
         ],
         [
             'v' => 1,
             't' => 'notification',
-            'timestamp' => 946688523.456789,
+            'timestamp' => 946688523.461789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('md5', 'MyNotification@anonymous'),
@@ -126,13 +127,13 @@ it('ingests notifications for notifiables', function () {
             'user' => '',
             'channel' => 'mail',
             'class' => 'MyNotification@anonymous',
-            'duration' => 0,
+            'duration' => 2500,
             'failed' => false,
         ],
         [
             'v' => 1,
             't' => 'notification',
-            'timestamp' => 946688523.456789,
+            'timestamp' => 946688523.464289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('md5', 'MyNotification@anonymous'),
@@ -143,7 +144,7 @@ it('ingests notifications for notifiables', function () {
             'user' => '',
             'channel' => 'mail',
             'class' => 'MyNotification@anonymous',
-            'duration' => 0,
+            'duration' => 2500,
             'failed' => false,
         ],
     ]);
@@ -166,6 +167,8 @@ class MyNotification extends Notification
 
     public function toMail(object $notifiable)
     {
+        travelTo(now()->addMicroseconds(2500));
+
         return (new Illuminate\Mail\Mailable)
             ->subject('Hello World')
             ->to('dummy@example.com')
