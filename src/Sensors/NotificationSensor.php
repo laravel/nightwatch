@@ -52,7 +52,7 @@ final class NotificationSensor
             $class = $event->notification::class;
         }
 
-        $this->duration ??= (int) round(($now - $this->startTime) * 1_000_000);
+        $this->duration = (int) round(($now - $this->startTime) * 1_000_000);
         $this->executionState->notifications++;
 
         $this->executionState->records->write(new Notification(
