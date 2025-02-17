@@ -1,8 +1,9 @@
 <?php
 
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\SentMessage;
-use Laravel\Nightwatch\Hooks\MessageSentListener;
+use Laravel\Nightwatch\Hooks\MailListener;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\Mailer\Envelope;
 use Symfony\Component\Mailer\SentMessage as MailerSentMessage;
@@ -16,7 +17,7 @@ it('gracefully handles exceptions', function () {
 
         public function __construct() {}
 
-        public function mail(MessageSent $event): void
+        public function mail(MessageSending|MessageSent $event): void
         {
             $this->thrown = true;
 
@@ -26,7 +27,7 @@ it('gracefully handles exceptions', function () {
     $event = new MessageSent(new SentMessage(new MailerSentMessage(
         new RawMessage('Hello world'), new Envelope(new Address('nightwatch@laravel.com'), [new Address('tim@laravel.com')])
     )));
-    $handler = new MessageSentListener($nightwatch);
+    $handler = new MailListener($nightwatch);
 
     $handler($event);
 

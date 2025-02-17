@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
@@ -11,7 +12,7 @@ use Throwable;
 /**
  * @internal
  */
-final class MessageSentListener
+final class MailListener
 {
     /**
      * @param  Core<RequestState|CommandState>  $nightwatch
@@ -22,7 +23,7 @@ final class MessageSentListener
         //
     }
 
-    public function __invoke(MessageSent $event): void
+    public function __invoke(MessageSending|MessageSent $event): void
     {
         try {
             $this->nightwatch->sensor->mail($event);

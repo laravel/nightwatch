@@ -2,20 +2,27 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use RuntimeException;
 
 use function count;
 use function hash;
+use function round;
 
 /**
  * @internal
  */
 final class MailSensor
 {
+    private ?float $startTime = null;
+
+    private ?int $duration = null;
+
     public function __construct(
         private RequestState|CommandState $executionState,
         private Clock $clock,
@@ -23,16 +30,28 @@ final class MailSensor
         //
     }
 
-    public function __invoke(MessageSent $event): void
+    public function __invoke(MessageSending|MessageSent $event): void
     {
+        if (isset($event->data['__laravel_notification'])) {
+            return;
+        }
+
         $now = $this->clock->microtime();
 
-        if (isset($event->data['__laravel_notification'])) {
+        if ($event instanceof MessageSending) {
+            $this->startTime = $now;
+            $this->duration = null;
+
             return;
         }
 
         $class = $event->data['__laravel_mailable'] ?? '';
 
+        if ($this->startTime === null) {
+            throw new RuntimeException('No start time found for ['.$class.'].'); // @phpstan-ignore classConstant.nonObject
+        }
+
+        $this->duration ??= (int) round(($now - $this->startTime) * 1_000_000);
         $this->executionState->mail++;
 
         $this->executionState->records->write(new Mail(
@@ -52,8 +71,8 @@ final class MailSensor
             cc: count($event->message->getCc()),
             bcc: count($event->message->getBcc()),
             attachments: count($event->message->getAttachments()),
-            duration: 0, // TODO
-            failed: false, // TODO
+            duration: $this->duration,
+            failed: false, // TODO: The framework doesn't dispatch a failed event.
         ));
     }
 }

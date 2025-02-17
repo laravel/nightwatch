@@ -29,6 +29,7 @@ use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Log\Context\Repository as ContextRepository;
 use Illuminate\Log\LogManager;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Queue\Events\JobQueued;
@@ -54,7 +55,7 @@ use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
 use Laravel\Nightwatch\Hooks\JobQueuedListener;
 use Laravel\Nightwatch\Hooks\LogoutListener;
-use Laravel\Nightwatch\Hooks\MessageSentListener;
+use Laravel\Nightwatch\Hooks\MailListener;
 use Laravel\Nightwatch\Hooks\NotificationSentListener;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
@@ -294,7 +295,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\Records\Mail
          */
-        $events->listen(MessageSent::class, (new MessageSentListener($core))(...));
+        $events->listen([MessageSending::class, MessageSent::class], (new MailListener($core))(...));
 
         //
         // -------------------------------------------------------------------------
