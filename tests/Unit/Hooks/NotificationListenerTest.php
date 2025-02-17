@@ -1,7 +1,8 @@
 <?php
 
+use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
-use Laravel\Nightwatch\Hooks\NotificationSentListener;
+use Laravel\Nightwatch\Hooks\NotificationListener;
 use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
@@ -11,7 +12,7 @@ it('gracefully handles exceptions', function () {
 
         public function __construct() {}
 
-        public function notification(NotificationSent $event): void
+        public function notification(NotificationSending|NotificationSent $event): void
         {
             $this->thrown = true;
 
@@ -21,7 +22,7 @@ it('gracefully handles exceptions', function () {
 
     $event = new NotificationSent(new stdClass, new stdClass, 'broadcast');
 
-    $handler = new NotificationSentListener($nightwatch);
+    $handler = new NotificationListener($nightwatch);
 
     $handler($event);
 

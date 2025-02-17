@@ -11,6 +11,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
+use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobQueued;
@@ -139,7 +140,7 @@ class SensorManager
         $sensor($event);
     }
 
-    public function notification(NotificationSent $event): void
+    public function notification(NotificationSending|NotificationSent $event): void
     {
         $sensor = $this->notificationSensor ??= new NotificationSensor(
             executionState: $this->executionState,
