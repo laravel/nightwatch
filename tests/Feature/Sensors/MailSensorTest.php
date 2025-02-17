@@ -2,15 +2,18 @@
 
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\post;
+use function Pest\Laravel\travelTo;
 
 beforeAll(function () {
     forceRequestExecutionState();
@@ -42,6 +45,10 @@ it('ingests mails', function () {
         ])->send((new MyTestMail)->html('')->subject('Welcome!')->attachData('hunter2', 'password.txt'));
     });
 
+    Event::listen(MessageSending::class, function ($event) {
+        travelTo(now()->addMicroseconds(2500));
+    });
+
     $response = post('/users');
 
     $response->assertOk();
@@ -51,7 +58,7 @@ it('ingests mails', function () {
         [
             'v' => 1,
             't' => 'mail',
-            'timestamp' => 946688523.456789,
+            'timestamp' => 946688523.459289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => md5('MyTestMail'),
@@ -67,7 +74,7 @@ it('ingests mails', function () {
             'cc' => 2,
             'bcc' => 1,
             'attachments' => 1,
-            'duration' => 0,
+            'duration' => 2500,
             'failed' => false,
         ],
     ]);

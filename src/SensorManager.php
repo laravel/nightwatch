@@ -9,6 +9,7 @@ use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
@@ -129,7 +130,7 @@ class SensorManager
         $sensor($event);
     }
 
-    public function mail(MessageSent $event): void
+    public function mail(MessageSending|MessageSent $event): void
     {
         $sensor = $this->mailSensor ??= new MailSensor(
             executionState: $this->executionState,

@@ -29,6 +29,7 @@ use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Log\Context\Repository as ContextRepository;
 use Illuminate\Log\LogManager;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
@@ -55,7 +56,7 @@ use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
 use Laravel\Nightwatch\Hooks\JobQueuedListener;
 use Laravel\Nightwatch\Hooks\LogoutListener;
-use Laravel\Nightwatch\Hooks\MessageSentListener;
+use Laravel\Nightwatch\Hooks\MailListener;
 use Laravel\Nightwatch\Hooks\NotificationListener;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
@@ -271,6 +272,11 @@ final class NightwatchServiceProvider extends ServiceProvider
         $events->listen([NotificationSending::class, NotificationSent::class], (new NotificationListener($core))(...));
 
         /**
+         * @see \Laravel\Nightwatch\Records\Mail
+         */
+        $events->listen([MessageSending::class, MessageSent::class], (new MailListener($core))(...));
+
+        /**
          * @see \Laravel\Nightwatch\Records\OutgoingRequest
          */
         $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($core))(...));
@@ -291,11 +297,6 @@ final class NightwatchServiceProvider extends ServiceProvider
             KeyForgotten::class,
             KeyForgetFailed::class,
         ], (new CacheEventListener($core))(...));
-
-        /**
-         * @see \Laravel\Nightwatch\Records\Mail
-         */
-        $events->listen(MessageSent::class, (new MessageSentListener($core))(...));
 
         //
         // -------------------------------------------------------------------------
