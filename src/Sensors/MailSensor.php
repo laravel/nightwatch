@@ -48,7 +48,7 @@ final class MailSensor
         $class = $event->data['__laravel_mailable'] ?? '';
 
         if ($this->startTime === null) {
-            throw new RuntimeException('No start time found for ['.$class.'].'); // @phpstan-ignore classConstant.nonObject
+            throw new RuntimeException("No start time found for [{$class}].");
         }
 
         $this->duration = (int) round(($now - $this->startTime) * 1_000_000);
