@@ -51,7 +51,7 @@ final class MailSensor
             throw new RuntimeException('No start time found for ['.$class.'].'); // @phpstan-ignore classConstant.nonObject
         }
 
-        $this->duration ??= (int) round(($now - $this->startTime) * 1_000_000);
+        $this->duration = (int) round(($now - $this->startTime) * 1_000_000);
         $this->executionState->mail++;
 
         $this->executionState->records->write(new Mail(
