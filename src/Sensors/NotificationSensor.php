@@ -37,7 +37,6 @@ final class NotificationSensor
 
         if ($event instanceof NotificationSending) {
             $this->startTime = $now;
-            $this->duration = null;
 
             return;
         }

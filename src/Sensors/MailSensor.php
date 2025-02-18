@@ -40,7 +40,6 @@ final class MailSensor
 
         if ($event instanceof MessageSending) {
             $this->startTime = $now;
-            $this->duration = null;
 
             return;
         }
