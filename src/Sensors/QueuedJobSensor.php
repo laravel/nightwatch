@@ -29,8 +29,6 @@ final class QueuedJobSensor
 
     private ?float $startTime = null;
 
-    private ?int $duration = null;
-
     /**
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
      */
@@ -62,7 +60,6 @@ final class QueuedJobSensor
             throw new RuntimeException("No start time found for [{$name}].");
         }
 
-        $this->duration = (int) round(($now - $this->startTime) * 1_000_000);
         $this->executionState->jobsQueued++;
 
         $this->executionState->records->write(new QueuedJob(
@@ -79,7 +76,7 @@ final class QueuedJobSensor
             name: $name,
             connection: $event->connectionName,
             queue: $this->normalizeQueue($event->connectionName, $this->resolveQueue($event)),
-            duration: $this->duration,
+            duration: (int) round(($now - $this->startTime) * 1_000_000)
         ));
     }
 

@@ -21,8 +21,6 @@ final class MailSensor
 {
     private ?float $startTime = null;
 
-    private ?int $duration = null;
-
     public function __construct(
         private RequestState|CommandState $executionState,
         private Clock $clock,
@@ -50,7 +48,6 @@ final class MailSensor
             throw new RuntimeException("No start time found for [{$class}].");
         }
 
-        $this->duration = (int) round(($now - $this->startTime) * 1_000_000);
         $this->executionState->mail++;
 
         $this->executionState->records->write(new Mail(
@@ -70,7 +67,7 @@ final class MailSensor
             cc: count($event->message->getCc()),
             bcc: count($event->message->getBcc()),
             attachments: count($event->message->getAttachments()),
-            duration: $this->duration,
+            duration: (int) round(($now - $this->startTime) * 1_000_000),
             failed: false, // TODO: The framework doesn't dispatch a failed event.
         ));
     }
