@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.0.1...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.0.2...1.x)
+
+## [v1.0.2](https://github.com/laravel/nightwatch/compare/v1.0.1...v1.0.2) - 2025-02-18
+
+### What's Changed
+
+* Capture notification duration by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/104
+* Mail duration by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/105
+* Capture job dispatch duration by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/106
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.0.1...v1.0.2
 
 ## [v1.0.1](https://github.com/laravel/nightwatch/compare/v1.0.0...v1.0.1) - 2025-02-14
 
