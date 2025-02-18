@@ -7,6 +7,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Bus;
@@ -74,7 +75,7 @@ it('can ingest queued jobs', function () {
             'name' => 'MyJob',
             'connection' => 'database',
             'queue' => 'default',
-            'duration' => 0,
+            'duration' => 5200,
         ],
     ]);
 });
@@ -183,6 +184,14 @@ it('normalizes sqs queue names', function () {
         'queue' => 'queue-name',
         'suffix' => '-production',
     ]);
+
+    nightwatch()->sensor->queuedJob(new JobQueueing(
+        connectionName: 'my-sqs-queue',
+        queue: 'https://sqs.us-east-1.amazonaws.com/your-account-id/queue-name-production',
+        job: 'MyJobClass',
+        payload: '{"uuid":"00000000-0000-0000-0000-000000000000"}',
+        delay: 0,
+    ));
 
     nightwatch()->sensor->queuedJob(new JobQueued(
         connectionName: 'my-sqs-queue',

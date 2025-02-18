@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Queue\Events\JobQueueing;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -11,7 +12,7 @@ use Throwable;
 /**
  * @internal
  */
-final class JobQueuedListener
+final class QueuedJobListener
 {
     /**
      * @param  Core<RequestState|CommandState>  $nightwatch
@@ -22,7 +23,7 @@ final class JobQueuedListener
         //
     }
 
-    public function __invoke(JobQueued $event): void
+    public function __invoke(JobQueueing|JobQueued $event): void
     {
         try {
             $this->nightwatch->sensor->queuedJob($event);

@@ -22,8 +22,6 @@ final class NotificationSensor
 {
     private ?float $startTime = null;
 
-    private ?int $duration = null;
-
     public function __construct(
         private RequestState|CommandState $executionState,
         private Clock $clock,
@@ -37,7 +35,6 @@ final class NotificationSensor
 
         if ($event instanceof NotificationSending) {
             $this->startTime = $now;
-            $this->duration = null;
 
             return;
         }
@@ -52,7 +49,6 @@ final class NotificationSensor
             $class = $event->notification::class;
         }
 
-        $this->duration = (int) round(($now - $this->startTime) * 1_000_000);
         $this->executionState->notifications++;
 
         $this->executionState->records->write(new Notification(
@@ -67,7 +63,7 @@ final class NotificationSensor
             user: $this->executionState->user->id(),
             channel: $event->channel,
             class: $class,
-            duration: $this->duration,
+            duration: (int) round(($now - $this->startTime) * 1_000_000),
             failed: false, // TODO: The framework doesn't dispatch the `NotificationFailed` event.
         ));
     }
