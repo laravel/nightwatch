@@ -3,7 +3,7 @@
 namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
-use Laravel\Nightwatch\Ingests\Local\SocketIngest;
+use Laravel\Nightwatch\Ingests\SocketIngest;
 use React\Socket\TcpConnector;
 use React\Socket\TimeoutConnector;
 

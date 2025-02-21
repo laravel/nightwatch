@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Factories;
 
-use Laravel\Nightwatch\Ingests\Local\NullIngest;
+use Laravel\Nightwatch\Ingests\NullIngest;
 
 /**
  * @internal

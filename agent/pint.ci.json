@@ -1,0 +1,8 @@
+{
+    "rules": {
+        "static_lambda": true
+    },
+    "exclude": [
+        "tests/"
+    ]
+}

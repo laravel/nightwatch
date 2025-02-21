@@ -4,9 +4,9 @@ namespace Laravel\Nightwatch\State;
 
 use Closure;
 use Illuminate\Foundation\Application;
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\LazyValue;
+use Laravel\Nightwatch\RecordsBuffer;
 use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
 

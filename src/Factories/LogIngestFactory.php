@@ -4,7 +4,7 @@ namespace Laravel\Nightwatch\Factories;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Log\LogManager;
-use Laravel\Nightwatch\Ingests\Local\LogIngest;
+use Laravel\Nightwatch\Ingests\LogIngest;
 
 /**
  * @internal

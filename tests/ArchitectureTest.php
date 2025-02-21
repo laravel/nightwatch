@@ -18,8 +18,7 @@ arch()->expect('Laravel\Nightwatch')
     ->ignoring([
         'Laravel\Nightwatch\Concerns',
         'Laravel\Nightwatch\Contracts',
-        Laravel\Nightwatch\Buffers\RecordsBuffer::class,
-        Laravel\Nightwatch\Ingests\Remote\HttpClient::class,
+        Laravel\Nightwatch\RecordsBuffer::class,
         Laravel\Nightwatch\ExecutionStage::class,
         Laravel\Nightwatch\SensorManager::class,
     ]);
