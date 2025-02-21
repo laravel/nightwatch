@@ -31,7 +31,7 @@ final class AgentCommand extends Command
     public function __construct(
         #[SensitiveParameter] private ?string $token,
     ) {
-        //
+        parent::__construct();
     }
 
     public function handle(): void
