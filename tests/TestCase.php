@@ -3,11 +3,12 @@
 namespace Tests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Nightwatch\Core;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
+use function app;
 use function env;
-use function nightwatch;
 use function touch;
 
 abstract class TestCase extends OrchestraTestCase
@@ -21,6 +22,6 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function afterRefreshingDatabase()
     {
-        nightwatch()->state->reset();
+        app(Core::class)->state->reset();
     }
 }

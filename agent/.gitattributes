@@ -11,11 +11,11 @@
 /.gitattributes export-ignore
 /.github export-ignore
 /.gitignore export-ignore
-/art export-ignore
+/box.json.dist export-ignore
 /phpstan.neon.dist export-ignore
 /phpunit.xml.dist export-ignore
 /pint.ci.json export-ignore
 /pint.json export-ignore
-/testbench.yaml export-ignore
+/scoper.inc.php export-ignore
+/src export-ignore
 /tests export-ignore
-/workbench export-ignore

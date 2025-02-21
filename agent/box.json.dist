@@ -1,0 +1,13 @@
+{
+    "main": "src/agent.php",
+    "output": "build/agent.phar",
+    "alias": "nightwatch-agent.phar",
+    "timestamp": "2025-01-01T00:00:00+00:00",
+    "check-requirements": false,
+    "banner": false,
+    "shebang": false,
+    "compactors": [
+        "KevinGH\\Box\\Compactor\\Php",
+        "KevinGH\\Box\\Compactor\\PhpScoper"
+    ]
+}

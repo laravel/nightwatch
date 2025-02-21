@@ -3,9 +3,9 @@
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Http\Request;
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
+use Laravel\Nightwatch\RecordsBuffer;
 use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\Response;
 

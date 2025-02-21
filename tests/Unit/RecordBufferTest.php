@@ -1,9 +1,9 @@
 <?php
 
-use Laravel\Nightwatch\Buffers\RecordsBuffer;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Records\Mail;
+use Laravel\Nightwatch\RecordsBuffer;
 
 it('only keeps 500 records in memory', function () {
     $buffer = new RecordsBuffer;
