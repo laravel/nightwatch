@@ -26,7 +26,6 @@
         "react/socket": "^1.16"
     },
     "require-dev": {
-        "ext-pcntl": "*",
         "laravel/pint": "1.21.0",
         "pestphp/pest": "^3.7.4",
         "phpstan/phpstan": "^2.1.5",
