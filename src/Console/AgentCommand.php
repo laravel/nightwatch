@@ -3,7 +3,7 @@
 namespace Laravel\Nightwatch\Console;
 
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Config\Repository as Config;
+use SensitiveParameter;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
@@ -28,28 +28,15 @@ final class AgentCommand extends Command
      */
     protected $description = 'Run the Nightwatch agent.';
 
-    public function handle(Config $config): void
-    {
-        /**
-         * @var array{
-         *     enabled?: bool,
-         *     token?: string,
-         *     deployment?: string,
-         *     server?: string,
-         *     local_ingest?: string,
-         *     remote_ingest?: string,
-         *     buffer_threshold?: int,
-         *     error_log_channel?: string,
-         *     ingests: array{
-         *         socket?: array{ uri?: string, connection_timeout?: float, timeout?: float },
-         *         http?: array{ connection_timeout?: float, timeout?: float },
-         *         log?: array{ channel?: string },
-         *     }
-         *  } $c
-         */
-        $c = $config->all()['nightwatch'] ?? [];
+    public function __construct(
+        #[SensitiveParameter] private ?string $token,
+    ) {
+        parent::__construct();
+    }
 
-        $refreshToken = $c['token'] ?? null;
+    public function handle(): void
+    {
+        $refreshToken = $this->token;
 
         $baseUrl = $this->option('base-url');
 

@@ -41,6 +41,7 @@ use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Env;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Nightwatch\Console\AgentCommand;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\Logger;
 use Laravel\Nightwatch\Factories\LogIngestFactory;
@@ -170,6 +171,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->registerLogger();
         $this->registerMiddleware();
+        $this->registerAgentCommand();
         $this->buildAndRegisterCore();
     }
 
@@ -192,6 +194,11 @@ final class NightwatchServiceProvider extends ServiceProvider
         if (! class_exists(Terminating::class)) {
             $this->app->singleton(TerminatingMiddleware::class, fn () => new TerminatingMiddleware($this->core));
         }
+    }
+
+    private function registerAgentCommand(): void
+    {
+        $this->app->singleton(AgentCommand::class, fn () => new AgentCommand($this->nightwatchConfig['token'] ?? null));
     }
 
     private function buildAndRegisterCore(): void
