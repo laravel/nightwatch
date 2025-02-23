@@ -1,0 +1,6 @@
+/.box_dump
+/.phpunit.result.cache
+/box.json
+/phpstan.neon
+/phpunit.xml
+/vendor

@@ -199,12 +199,12 @@ final class NoReadStream implements StreamInterface
         //
     }
 
-    public function getSize()
+    public function getSize(): ?int
     {
         return $this->size;
     }
 
-    public function read($length)
+    public function read($length): string
     {
         throw new RuntimeException('This stream should not be read!');
     }
@@ -224,12 +224,12 @@ final class NoReadStream implements StreamInterface
         throw new RuntimeException('This stream should not be read!');
     }
 
-    public function isSeekable()
+    public function isSeekable(): bool
     {
         return true;
     }
 
-    public function getContents()
+    public function getContents(): string
     {
         throw new RuntimeException('This stream should not be read!');
     }

@@ -1,0 +1,13 @@
+{
+    "main": "src/client.php",
+    "output": "build/client.phar",
+    "alias": "nightwatch-client.phar",
+    "timestamp": "2025-01-01T00:00:00+00:00",
+    "check-requirements": false,
+    "banner": false,
+    "shebang": false,
+    "compactors": [
+        "KevinGH\\Box\\Compactor\\Php",
+        "KevinGH\\Box\\Compactor\\PhpScoper"
+    ]
+}

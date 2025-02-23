@@ -1,20 +1,16 @@
 <?php
 
-namespace Laravel\Nightwatch\Ingests;
+namespace Laravel\NightwatchClient;
 
-use Laravel\Nightwatch\Contracts\LocalIngest;
 use React\Socket\ConnectorInterface;
 
 use function React\Async\await;
 
-/**
- * @internal
- */
-final class SocketIngest implements LocalIngest
+class Ingest
 {
     public function __construct(
         private ConnectorInterface $connector,
-        private string $uri,
+        private string $transmitTo,
     ) {
         //
     }
@@ -22,7 +18,7 @@ final class SocketIngest implements LocalIngest
     public function write(string $payload): void
     {
         if ($payload !== '') {
-            await($this->connector->connect($this->uri))->end($payload);
+            await($this->connector->connect($this->transmitTo))->end($payload);
         }
     }
 }

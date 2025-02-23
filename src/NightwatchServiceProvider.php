@@ -42,11 +42,7 @@ use Illuminate\Support\Env;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\AgentCommand;
-use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Factories\Logger;
-use Laravel\Nightwatch\Factories\LogIngestFactory;
-use Laravel\Nightwatch\Factories\NullLocalIngestFactory;
-use Laravel\Nightwatch\Factories\SocketIngestFactory;
 use Laravel\Nightwatch\Hooks\ArtisanStartingHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
@@ -70,7 +66,6 @@ use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 
 use function app;
@@ -102,16 +97,9 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     token?: string,
      *     deployment?: string,
      *     server?: string,
-     *     local_ingest?: string,
-     *     remote_ingest?: string,
-     *     buffer_threshold?: int,
+     *     ingest?: array{ uri?: string, timeout?: float|int, connection_timeout?: float|int },
      *     error_log_channel?: string,
-     *     ingests: array{
-     *         socket?: array{ uri?: string, connection_timeout?: float, timeout?: float },
-     *         http?: array{ connection_timeout?: float, timeout?: float },
-     *         log?: array{ channel?: string },
-     *     }
-     * }
+     *  }
      */
     private array $nightwatchConfig;
 
@@ -207,7 +195,11 @@ final class NightwatchServiceProvider extends ServiceProvider
         $state = $this->executionState();
 
         $this->app->instance(Core::class, $this->core = new Core(
-            ingest: $this->localIngest(),
+            ingest: new Ingest(
+                transmitTo: $this->nightwatchConfig['ingest']['uri'] ?? null,
+                ingestTimeout: $this->nightwatchConfig['ingest']['timeout'] ?? null,
+                ingestConnectionTimeout: $this->nightwatchConfig['ingest']['connection_timeout'] ?? null,
+            ),
             sensor: new SensorManager(
                 executionState: $state,
                 clock: $clock = new Clock,
@@ -405,20 +397,6 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\Records\Exception
          */
         $events->listen(CommandStarting::class, (new CommandStartingListener($events, $core, $kernel))(...));
-    }
-
-    private function localIngest(): LocalIngest
-    {
-        $name = $this->nightwatchConfig['local_ingest'] ?? 'socket';
-
-        $factory = match ($name) {
-            'null' => new NullLocalIngestFactory,
-            'log' => new LogIngestFactory($this->nightwatchConfig),
-            'socket' => new SocketIngestFactory($this->nightwatchConfig),
-            default => throw new RuntimeException("Unknown local ingest [{$name}]."),
-        };
-
-        return $factory($this->app);
     }
 
     private function executionState(): RequestState|CommandState
