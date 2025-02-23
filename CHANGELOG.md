@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.0.2...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.0.3...1.x)
+
+## [v1.0.3](https://github.com/laravel/nightwatch/compare/v1.0.2...v1.0.3) - 2025-02-23
+
+### What's Changed
+
+* Build agent by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/107
+* Remove unneeded extension dependency by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/108
+* Pass agent token directly by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/110
+* Build client by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/109
+* Rename facade workflow by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/111
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.0.2...v1.0.3
 
 ## [v1.0.2](https://github.com/laravel/nightwatch/compare/v1.0.1...v1.0.2) - 2025-02-18
 
