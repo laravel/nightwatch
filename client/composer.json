@@ -1,8 +1,8 @@
 {
-    "name": "laravel/nightwatch-agent",
+    "name": "laravel/nightwatch-client",
     "version": "0.0.0",
     "type": "project",
-    "description": "The official Laravel Nightwatch agent.",
+    "description": "The official Laravel Nightwatch client.",
     "keywords": ["laravel", "monitoring", "insights"],
     "homepage": "https://nightwatch.laravel.com",
     "license": "AGPL-3.0-or-later",
@@ -19,11 +19,7 @@
     ],
     "require": {
         "php": "^8.2",
-        "ext-zlib": "*",
-        "psr/http-message": "^1.1",
-        "react/event-loop": "^1.5",
-        "react/http": "^1.11",
-        "react/promise": "^3.2",
+        "react/async": "^4.3",
         "react/socket": "^1.16"
     },
     "require-dev": {
@@ -35,7 +31,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Laravel\\NightwatchAgent\\": "src/"
+            "Laravel\\NightwatchClient\\": "src/"
         }
     },
     "autoload-dev": {
