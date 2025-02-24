@@ -11,7 +11,12 @@
 /.gitattributes export-ignore
 /.github export-ignore
 /.gitignore export-ignore
+/agent/composer.json
+/agent/composer.lock
 /art export-ignore
+/client/composer.json
+/client/composer.lock
+/composer-dependency-analyser.php export-ignore
 /phpstan.neon.dist export-ignore
 /phpunit.xml.dist export-ignore
 /pint.ci.json export-ignore

@@ -12,6 +12,7 @@
 /.github export-ignore
 /.gitignore export-ignore
 /box.json.dist export-ignore
+/composer-dependency-analyser.php export-ignore
 /phpstan.neon.dist export-ignore
 /phpunit.xml.dist export-ignore
 /pint.ci.json export-ignore
