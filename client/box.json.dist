@@ -1,4 +1,5 @@
 {
+    "$schema": "https://raw.githubusercontent.com/box-project/box/refs/heads/main/res/schema.json",
     "main": "src/client.php",
     "output": "build/client.phar",
     "alias": "nightwatch-client.phar",
