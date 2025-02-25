@@ -44,7 +44,7 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true
         },
-        "autoloader-suffix": "AppChecksum"
+        "autoloader-suffix": "XxO1QeBIKrkR2oWT"
     },
     "minimum-stability": "stable",
     "prefer-stable": true
