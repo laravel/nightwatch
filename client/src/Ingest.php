@@ -15,7 +15,7 @@ class Ingest
         //
     }
 
-    public function write(string $payload): void
+    public function __invoke(string $payload): void
     {
         if ($payload !== '') {
             await($this->connector->connect($this->transmitTo))->end($payload);
