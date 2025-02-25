@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.0.3...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.0.4...1.x)
+
+## [v1.0.4](https://github.com/laravel/nightwatch/compare/v1.0.3...v1.0.4) - 2025-02-25
+
+### What's Changed
+
+* Improve exported git attributes by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/113
+* Ensure client can be included multiple times by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/112
+* Improve gitattributes by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/114
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.0.3...v1.0.4
 
 ## [v1.0.3](https://github.com/laravel/nightwatch/compare/v1.0.2...v1.0.3) - 2025-02-23
 
