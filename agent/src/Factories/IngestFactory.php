@@ -5,6 +5,7 @@ namespace Laravel\NightwatchAgent\Factories;
 use Closure;
 use Laravel\NightwatchAgent\Ingest;
 use Laravel\NightwatchAgent\IngestDetailsRepository;
+use Laravel\NightwatchAgent\PackageVersionRepository;
 use Laravel\NightwatchAgent\StreamBuffer;
 use Psr\Http\Message\ResponseInterface;
 use React\Http\Browser;
@@ -25,6 +26,7 @@ class IngestFactory
         int $threshold,
         int $concurrentRequestLimit,
         int $maxBufferDurationInSeconds,
+        PackageVersionRepository $packageVersion,
         Closure $onIngestSuccess,
         Closure $onIngestError,
     ): Ingest {
@@ -32,7 +34,6 @@ class IngestFactory
 
         $browser = (new Browser($connector))
             ->withTimeout($timeout)
-            ->withHeader('user-agent', 'NightwatchAgent/1')
             ->withHeader('content-type', 'application/octet-stream')
             ->withHeader('content-encoding', 'gzip');
 
@@ -48,6 +49,7 @@ class IngestFactory
             buffer: $buffer,
             concurrentRequestLimit: $concurrentRequestLimit,
             maxBufferDurationInSeconds: $debug ? 1 : $maxBufferDurationInSeconds,
+            packageVersion: $packageVersion,
             onIngestSuccess: $onIngestSuccess,
             onIngestError: $onIngestError,
         );

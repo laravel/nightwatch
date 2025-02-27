@@ -31,6 +31,7 @@ class Ingest
         private StreamBuffer $buffer,
         private int $concurrentRequestLimit,
         private int $maxBufferDurationInSeconds,
+        private PackageVersionRepository $packageVersion,
         private Closure $onIngestSuccess,
         private Closure $onIngestError,
     ) {
@@ -90,7 +91,10 @@ class Ingest
 
             return $this->browser->post(
                 url: $ingestDetails->ingestUrl,
-                headers: ['authorization' => "Bearer {$ingestDetails->token}"],
+                headers: [
+                    'authorization' => "Bearer {$ingestDetails->token}",
+                    'user-agent' => 'NightwatchAgent/'.$this->packageVersion->get(),
+                ],
                 body: $payload,
             )->then(
                 function (ResponseInterface $response) use ($start): void {
