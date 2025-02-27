@@ -370,6 +370,9 @@ jobs:
           key: ${{ runner.os }}-package-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-package-composer
 
+      - name: Require Laravel Version
+        run: composer require laravel/framework:^${{ matrix.laravel }} --no-update
+
       - name: Install dependencies
         run: COMPOSER_PREFER_LOWEST=${{ matrix.prefer-lowest }} composer install --prefer-dist --no-interaction --no-progress
 
