@@ -111,6 +111,7 @@ class IngestDetailsRepository
         $seconds = max($this->minRefreshDurationInSeconds, $seconds);
 
         Loop::addTimer($seconds, function (): void {
+            // TODO must not throw an exception
             $this->refresh()->then(function (?IngestDetails $ingestDetails): void {
                 $this->ingestDetails = resolve($ingestDetails);
             });

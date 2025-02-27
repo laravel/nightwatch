@@ -11,6 +11,7 @@ use Throwable;
 
 use function date;
 use function round;
+use function str_replace;
 
 require __DIR__.'/../vendor/react/promise/src/functions_include.php';
 require __DIR__.'/../vendor/autoload.php';
@@ -41,6 +42,7 @@ $ingestTimeout ??= 10;
  */
 
 $debug = (bool) ($_SERVER['NIGHTWATCH_DEBUG'] ?? false);
+$basePath = str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
 
 /*
  * Logging helpers...
@@ -64,8 +66,8 @@ $ingestDetails = (new IngestDetailsRepositoryFactory)(
     timeout: $authenticationTimeout,
     preemptivelyRefreshInSeconds: 60,
     minRefreshDurationInSeconds: 60,
-    onAuthenticationSuccess: static fn (IngestDetails $ingestDetails, float $duration) => $info('Authentication successful ['.round($duration, 3).'s]'),
-    onAuthenticationError: static fn (Throwable $e, float $duration) => $info('Authentication failed ['.round($duration, 3).'s]: '.$e->getMessage()),
+    onAuthenticationSuccess: static fn (IngestDetails $ingestDetails, float $duration) => $info('Authentication successful against ['.$baseUrl.'] ['.round($duration, 3).'s]'),
+    onAuthenticationError: static fn (Throwable $e, float $duration) => $info('Authentication failed against ['.$baseUrl.'] ['.round($duration, 3).'s]: '.$e->getMessage()),
 );
 
 $ingest = (new IngestFactory)(
@@ -82,15 +84,27 @@ $ingest = (new IngestFactory)(
 
 $server = (new ServerFactory)(
     listenOn: $listenOn,
-    onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]."),
+    onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]"),
     onServerError: static fn (Throwable $e) => $error("Server error: {$e->getMessage()}"),
     onConnectionError: static fn (Throwable $e) => $error("Connection error: {$e->getMessage()}"),
     onPayloadReceived: $ingest->write(...),
 );
 
+$signature = new Signature(
+    path: $basePath.'/signature.txt',
+    verificationIntervalInSeconds: 5,
+    onChange: static function (string $before, string $after) use ($info) {
+        $info("Restarting the agent as the signature has changed [{$before}] [{$after}]");
+
+        Loop::stop();
+    },
+);
+
 /*
  * Get things rolling...
  */
+
+$signature->capture();
 
 $server->start();
 
