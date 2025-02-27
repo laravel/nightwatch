@@ -11,6 +11,7 @@ use Throwable;
 
 use function date;
 use function round;
+use function str_replace;
 
 require __DIR__.'/../vendor/react/promise/src/functions_include.php';
 require __DIR__.'/../vendor/autoload.php';
@@ -41,6 +42,7 @@ $ingestTimeout ??= 10;
  */
 
 $debug = (bool) ($_SERVER['NIGHTWATCH_DEBUG'] ?? false);
+$basePath = str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
 
 /*
  * Logging helpers...
@@ -57,6 +59,10 @@ $error = static function (string $message): void {
  * Initialize services...
  */
 
+$packageVersion = new PackageVersionRepository(
+    path: $basePath.'/../../version.txt',
+);
+
 $ingestDetails = (new IngestDetailsRepositoryFactory)(
     baseUrl: $baseUrl,
     refreshToken: $refreshToken,
@@ -64,6 +70,7 @@ $ingestDetails = (new IngestDetailsRepositoryFactory)(
     timeout: $authenticationTimeout,
     preemptivelyRefreshInSeconds: 60,
     minRefreshDurationInSeconds: 60,
+    packageVersion: $packageVersion,
     onAuthenticationSuccess: static fn (IngestDetails $ingestDetails, float $duration) => $info('Authentication successful ['.round($duration, 3).'s]'),
     onAuthenticationError: static fn (Throwable $e, float $duration) => $info('Authentication failed ['.round($duration, 3).'s]: '.$e->getMessage()),
 );
@@ -76,6 +83,7 @@ $ingest = (new IngestFactory)(
     threshold: 6_000_000,
     concurrentRequestLimit: 2,
     maxBufferDurationInSeconds: 10,
+    packageVersion: $packageVersion,
     onIngestSuccess: static fn (ResponseInterface $response, float $duration) => $info('Ingest successful ['.round($duration, 3).'s]'),
     onIngestError: static fn (Throwable $e, float $duration) => $info('Ingest failed ['.round($duration, 3).'s]: '.$e->getMessage()),
 );

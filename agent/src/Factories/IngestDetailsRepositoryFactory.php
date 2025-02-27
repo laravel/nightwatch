@@ -5,6 +5,7 @@ namespace Laravel\NightwatchAgent\Factories;
 use Closure;
 use Laravel\NightwatchAgent\IngestDetails;
 use Laravel\NightwatchAgent\IngestDetailsRepository;
+use Laravel\NightwatchAgent\PackageVersionRepository;
 use React\Http\Browser;
 use React\Socket\Connector;
 use Throwable;
@@ -24,6 +25,7 @@ class IngestDetailsRepositoryFactory
         float $timeout,
         int $preemptivelyRefreshInSeconds,
         int $minRefreshDurationInSeconds,
+        PackageVersionRepository $packageVersion,
         Closure $onAuthenticationSuccess,
         Closure $onAuthenticationError,
     ): IngestDetailsRepository {
@@ -32,7 +34,6 @@ class IngestDetailsRepositoryFactory
         $browser = (new Browser($connector))
             ->withTimeout($timeout)
             ->withHeader('authorization', "Bearer {$refreshToken}")
-            ->withHeader('user-agent', 'NightwatchAgent/1')
             ->withHeader('content-type', 'application/json')
             ->withBase(rtrim($baseUrl, '/').'/api/agent-auth');
 
@@ -40,6 +41,7 @@ class IngestDetailsRepositoryFactory
             browser: $browser,
             preemptivelyRefreshInSeconds: $preemptivelyRefreshInSeconds,
             minRefreshDurationInSeconds: $minRefreshDurationInSeconds,
+            packageVersion: $packageVersion,
             onAuthenticationSuccess: $onAuthenticationSuccess,
             onAuthenticationError: $onAuthenticationError,
         );
