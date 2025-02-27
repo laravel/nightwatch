@@ -45,7 +45,7 @@ jobs:
           restore-keys: ${{ runner.os }}-package-composer
 
       - name: Install dependencies
-        run: composer update --prefer-dist --no-interaction --no-progress
+        run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Check platform
         run: composer check-platform-reqs
@@ -370,7 +370,7 @@ jobs:
           restore-keys: ${{ runner.os }}-package-composer
 
       - name: Install dependencies
-        run: composer update --prefer-dist --no-interaction --no-progress
+        run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
         run: vendor/bin/pest --coverage --min=80
