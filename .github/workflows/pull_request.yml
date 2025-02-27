@@ -341,6 +341,7 @@ jobs:
       matrix:
         php: [8.2, 8.3]
         laravel: [10, 11]
+        prefer-lowest: ['0', '1']
 
     name: Test package [PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }}]
 
@@ -370,7 +371,7 @@ jobs:
           restore-keys: ${{ runner.os }}-package-composer
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+        run: COMPOSER_PREFER_LOWEST=${{ matrix.prefer-lowest }} composer install --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
         run: vendor/bin/pest --coverage --min=80
