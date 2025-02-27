@@ -340,7 +340,7 @@ jobs:
     strategy:
       matrix:
         php: [8.2, 8.3]
-        laravel: [11]
+        laravel: [10, 11]
 
     name: Test package [PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }}]
 
