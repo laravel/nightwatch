@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.0.4...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.0.5...1.x)
+
+## [v1.0.5](https://github.com/laravel/nightwatch/compare/v1.0.4...v1.0.5) - 2025-02-27
+
+### What's Changed
+
+* Use more performant hashing algorithm by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/116
+* Improve deterministic builds by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/117
+* Send package version in the user agent header by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/118
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.0.4...v1.0.5
 
 ## [v1.0.4](https://github.com/laravel/nightwatch/compare/v1.0.3...v1.0.4) - 2025-02-25
 
