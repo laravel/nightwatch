@@ -59,7 +59,7 @@ final class QuerySensor
     private function hash(QueryExecuted $event): string
     {
         if (! in_array($event->connection->getDriverName(), ['mariadb', 'mysql', 'pgsql', 'sqlite', 'sqlsrv'], true)) {
-            return hash('md5', "{$event->connectionName},{$event->sql}");
+            return hash('xxh128', "{$event->connectionName},{$event->sql}");
         }
 
         $sql = preg_replace('/in \([\d?\s,]+\)/', 'in (...?)', $event->sql) ?? $event->sql;
@@ -68,6 +68,6 @@ final class QuerySensor
             $sql = preg_replace('/values [(?,\s)]+/', 'values ...', $sql) ?? $sql;
         }
 
-        return hash('md5', "{$event->connectionName},{$sql}");
+        return hash('xxh128', "{$event->connectionName},{$sql}");
     }
 }

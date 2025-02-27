@@ -54,7 +54,7 @@ final class MailSensor
             timestamp: $now,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', $class),
+            _group: hash('xxh128', $class),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id(),

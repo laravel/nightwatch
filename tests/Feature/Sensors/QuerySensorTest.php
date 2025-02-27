@@ -63,7 +63,7 @@ it('can ingest queries', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('md5', $connection.',select * from "users"'),
+            '_group' => hash('xxh128', $connection.',select * from "users"'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
@@ -152,32 +152,32 @@ test('group hash collapses variadic "where in" binding placeholders and raw inte
 })->with([
     'mysql' => [
         'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
-        hash('md5', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
+        hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
         new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql']),
     ],
     'mariadb' => [
         'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
-        hash('md5', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
+        hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
         new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
     ],
     'pgsql' => [
         'select * from "users" where "users"."id" in (1, 2, 3) and "id" in (?, ?, ?)',
-        hash('md5', 'foo,select * from "users" where "users"."id" in (...?) and "id" in (...?)'),
+        hash('xxh128', 'foo,select * from "users" where "users"."id" in (...?) and "id" in (...?)'),
         new PostgresConnection('test', config: ['name' => 'foo', 'driver' => 'pgsql']),
     ],
     'sqlite' => [
         'select * from "users" where "users"."id" in (1, 2, 3) and "id" in (?, ?, ?)',
-        hash('md5', 'foo,select * from "users" where "users"."id" in (...?) and "id" in (...?)'),
+        hash('xxh128', 'foo,select * from "users" where "users"."id" in (...?) and "id" in (...?)'),
         new SQLiteConnection('test', config: ['name' => 'foo', 'driver' => 'sqlite']),
     ],
     'sqlsrv' => [
         'select * from [users] where [users].[id] in (1, 2, 3) and [id] in (?, ?, ?)',
-        hash('md5', 'foo,select * from [users] where [users].[id] in (...?) and [id] in (...?)'),
+        hash('xxh128', 'foo,select * from [users] where [users].[id] in (...?) and [id] in (...?)'),
         new SqlServerConnection('test', config: ['name' => 'foo', 'driver' => 'sqlsrv']),
     ],
     'mongodb' => [
         'some mongo query in (1, 2, 3) and [id] in (?, ?, ?)',
-        hash('md5', 'foo,some mongo query in (1, 2, 3) and [id] in (?, ?, ?)'),
+        hash('xxh128', 'foo,some mongo query in (1, 2, 3) and [id] in (?, ?, ?)'),
         new MongoDbConnection(['name' => 'foo', 'driver' => 'mongodb', 'host' => 'localhost', 'database' => 'test']),
     ],
 ]);
@@ -197,42 +197,42 @@ test('group hash collapses insert rows', function ($sql, $expected, $connection)
 })->with([
     'mysql one row' => [
         'insert into `users` (`id`, `name`) values (?, ?)',
-        hash('md5', 'foo,insert into `users` (`id`, `name`) values ...'),
+        hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
         new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql']),
     ],
     'mysql multiple rows' => [
         'insert into `users` (`id`, `name`) values (?, ?), (?, ?)',
-        hash('md5', 'foo,insert into `users` (`id`, `name`) values ...'),
+        hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
         new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql']),
     ],
     'mysql trailing stuff' => [
         'insert into `users` (`id`, `name`) values (?, ?), (?, ?) on duplicate key update `name` = ?',
-        hash('md5', 'foo,insert into `users` (`id`, `name`) values ...on duplicate key update `name` = ?'),
+        hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...on duplicate key update `name` = ?'),
         new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql']),
     ],
     'mariadb' => [
         'insert into `users` (`id`, `name`) values (?, ?), (?, ?)',
-        hash('md5', 'foo,insert into `users` (`id`, `name`) values ...'),
+        hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
         new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
     ],
     'pgsql' => [
         'insert into "users" ("id", "name") values (?, ?), (?, ?)',
-        hash('md5', 'foo,insert into "users" ("id", "name") values ...'),
+        hash('xxh128', 'foo,insert into "users" ("id", "name") values ...'),
         new PostgresConnection('test', config: ['name' => 'foo', 'driver' => 'pgsql']),
     ],
     'sqlite' => [
         'insert into "users" ("id", "name") values (?, ?), (?, ?)',
-        hash('md5', 'foo,insert into "users" ("id", "name") values ...'),
+        hash('xxh128', 'foo,insert into "users" ("id", "name") values ...'),
         new SQLiteConnection('test', config: ['name' => 'foo', 'driver' => 'sqlite']),
     ],
     'sqlsrv' => [
         'insert into [users] ([id], [name]) values (?, ?), (?, ?)',
-        hash('md5', 'foo,insert into [users] ([id], [name]) values ...'),
+        hash('xxh128', 'foo,insert into [users] ([id], [name]) values ...'),
         new SqlServerConnection('test', config: ['name' => 'foo', 'driver' => 'sqlsrv']),
     ],
     'mongodb' => [
         'insert some mongo query values (?, ?), (?, ?)',
-        hash('md5', 'foo,insert some mongo query values (?, ?), (?, ?)'),
+        hash('xxh128', 'foo,insert some mongo query values (?, ?), (?, ?)'),
         new MongoDbConnection(['name' => 'foo', 'driver' => 'mongodb', 'host' => 'localhost', 'database' => 'test']),
     ],
 ]);

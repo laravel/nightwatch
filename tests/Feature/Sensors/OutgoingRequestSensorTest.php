@@ -51,7 +51,7 @@ it('ingests outgoing requests', function () {
             'timestamp' => 946688523.459289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => md5('laravel.com'),
+            '_group' => hash('xxh128', 'laravel.com'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',

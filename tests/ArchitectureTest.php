@@ -11,7 +11,7 @@ arch()->expect('Laravel\Nightwatch')
         // This rule can be removed if it doesn't work out well in practice.
         \Exception::class,
     ])
-    ->not->toUse(['dd', 'ddd', 'dump', 'env', 'ray']);
+    ->not->toUse(['dd', 'ddd', 'dump', 'env', 'ray', 'md5', 'md5_file']);
 
 arch()->expect('Laravel\Nightwatch')
     ->toBeFinal()
