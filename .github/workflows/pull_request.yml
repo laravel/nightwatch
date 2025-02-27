@@ -349,7 +349,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP ${{ matrix.php }} and tooling
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -399,7 +399,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP ${{ matrix.php }} and tooling
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -449,7 +449,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP ${{ matrix.php }} and tooling
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
