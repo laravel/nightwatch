@@ -56,7 +56,7 @@ final class ExceptionSensor
             timestamp: $nowMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', $normalizedException::class.','.$normalizedException->getCode().','.$file.','.$line),
+            _group: hash('xxh128', $normalizedException::class.','.$normalizedException->getCode().','.$file.','.$line),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id(),

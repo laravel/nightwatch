@@ -35,7 +35,7 @@ final class OutgoingRequestSensor
             timestamp: $startMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', $uri->getHost()),
+            _group: hash('xxh128', $uri->getHost()),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id(),

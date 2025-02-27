@@ -42,7 +42,7 @@ final class JobAttemptSensor
             timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', $name),
+            _group: hash('xxh128', $name),
             trace_id: $this->executionState->trace,
             user: $this->executionState->user->id(),
             job_id: $event->job->uuid(), // @phpstan-ignore argument.type

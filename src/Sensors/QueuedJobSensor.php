@@ -66,7 +66,7 @@ final class QueuedJobSensor
             timestamp: $now,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', $name),
+            _group: hash('xxh128', $name),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id(),

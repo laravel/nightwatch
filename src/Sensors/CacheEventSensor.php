@@ -80,7 +80,7 @@ final class CacheEventSensor
             timestamp: $this->startTime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('md5', "{$event->storeName},{$event->key}"),
+            _group: hash('xxh128', "{$event->storeName},{$event->key}"),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id(),
