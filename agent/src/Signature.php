@@ -39,7 +39,10 @@ class Signature
 
         $this->signature = $signature;
 
-        Loop::addPeriodicTimer($this->verificationIntervalInSeconds, $this->verify(...));
+        Loop::addPeriodicTimer($this->verificationIntervalInSeconds, function () {
+            // TODO must not throw an exception
+            $this->verify(...);
+        });
     }
 
     private function verify(): void

@@ -53,6 +53,7 @@ class Ingest
             $this->ingest($records);
         } elseif ($this->buffer->isNotEmpty()) {
             $this->flushBufferAfterDelayTimer ??= Loop::addTimer($this->maxBufferDurationInSeconds, function (): void {
+                // TODO Must not throw an exception
                 $records = $this->buffer->flush();
 
                 $this->flushBufferAfterDelayTimer = null;
