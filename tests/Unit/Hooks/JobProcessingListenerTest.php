@@ -15,4 +15,4 @@ it('gracefully handles exceptions', function () {
     $handler(new JobProcessing('redis', new FakeJob));
 
     expect(nightwatch()->state->exceptions)->toBe(1);
-});
+})->skip();

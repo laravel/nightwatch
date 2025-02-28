@@ -33,7 +33,9 @@ final class TerminatingMiddleware
     public function terminate(Request $request, Response $response): void
     {
         try {
-            $this->nightwatch->sensor->stage(ExecutionStage::Terminating);
+            if ($this->nightwatch->state->stage !== ExecutionStage::Terminating) {
+                $this->nightwatch->sensor->stage(ExecutionStage::Terminating);
+            }
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

@@ -45,7 +45,7 @@ jobs:
           restore-keys: ${{ runner.os }}-package-composer
 
       - name: Install dependencies
-        run: composer update --prefer-dist --no-interaction --no-progress
+        run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Check platform
         run: composer check-platform-reqs
@@ -183,7 +183,7 @@ jobs:
           restore-keys: ${{ runner.os }}-package-composer
 
       - name: Install dependencies
-        run: composer update --prefer-dist --no-interaction --no-progress
+        run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Run Pint (CI only)
         run: vendor/bin/pint --config=pint.ci.json
@@ -340,7 +340,8 @@ jobs:
     strategy:
       matrix:
         php: [8.2, 8.3]
-        laravel: [11]
+        laravel: [10, 11]
+        prefer-lowest: ['0', '1']
 
     name: Test package [PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }}]
 
@@ -348,7 +349,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP ${{ matrix.php }} and tooling
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -369,8 +370,11 @@ jobs:
           key: ${{ runner.os }}-package-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-package-composer
 
+      - name: Require Laravel Version
+        run: composer require laravel/framework:^${{ matrix.laravel }} --no-update
+
       - name: Install dependencies
-        run: composer update --prefer-dist --no-interaction --no-progress
+        run: COMPOSER_PREFER_LOWEST=${{ matrix.prefer-lowest }} composer install --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
         run: vendor/bin/pest --coverage --min=80
@@ -395,7 +399,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP ${{ matrix.php }} and tooling
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -445,7 +449,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP ${{ matrix.php }} and tooling
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}

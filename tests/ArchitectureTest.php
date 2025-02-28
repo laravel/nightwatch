@@ -1,6 +1,6 @@
 <?php
 
-arch()->expect('Laravel\Nightwatch')
+arch('disallowed classes and functions')->expect('Laravel\Nightwatch')
     ->not->toUse([
         // We should always reference \Symfony\HttpFoundation\Response as not all
         // responses are converted or wrapped in Laravel's response class, e.g.,
@@ -13,7 +13,7 @@ arch()->expect('Laravel\Nightwatch')
     ])
     ->not->toUse(['dd', 'ddd', 'dump', 'env', 'ray', 'md5', 'md5_file']);
 
-arch()->expect('Laravel\Nightwatch')
+arch('final classes')->expect('Laravel\Nightwatch')
     ->toBeFinal()
     ->ignoring([
         'Laravel\Nightwatch\Concerns',

@@ -70,7 +70,6 @@ use Throwable;
 
 use function app;
 use function call_user_func;
-use function class_exists;
 use function defined;
 use function is_string;
 use function microtime;
@@ -127,6 +126,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 return;
             }
 
+            Support::boot();
             $this->registerHooks();
         } catch (Throwable $e) {
             $this->handleUnrecoverableException($e);
@@ -179,7 +179,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(RouteMiddleware::class, fn () => new RouteMiddleware($this->core)); // @phpstan-ignore argument.type
 
-        if (! class_exists(Terminating::class)) {
+        if (! Support::$terminatingEventExists) {
             $this->app->singleton(TerminatingMiddleware::class, fn () => new TerminatingMiddleware($this->core));
         }
     }
@@ -305,11 +305,12 @@ final class NightwatchServiceProvider extends ServiceProvider
         }
 
         /** @var Core<RequestState|CommandState> $core */
-
-        /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-         */
-        $events->listen(Terminating::class, (new TerminatingListener($core))(...));
+        if (Support::$terminatingEventExists) {
+            /**
+             * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+             */
+            $events->listen(Terminating::class, (new TerminatingListener($core))(...));
+        }
     }
 
     /**
@@ -404,8 +405,9 @@ final class NightwatchServiceProvider extends ServiceProvider
         $trace = (string) Str::uuid();
 
         /** @var ContextRepository */
-        $context = $this->app->make(ContextRepository::class);
-        $context->addHidden('nightwatch_trace_id', $trace);
+        // TODO
+        // $context = $this->app->make(ContextRepository::class);
+        // $context->addHidden('nightwatch_trace_id', $trace);
 
         if ($this->isRequest) {
             /** @var AuthManager */
@@ -423,12 +425,15 @@ final class NightwatchServiceProvider extends ServiceProvider
         } else {
             return new CommandState(
                 timestamp: $this->timestamp,
-                trace: new LazyValue(function () {
+                trace: new LazyValue(static function () {
                     // Context needs to be re-resolved here to ensure
                     // we are using the latest scoped instance.
                     /** @var ContextRepository */
-                    $context = $this->app->make(ContextRepository::class);
-                    $trace = $context->getHidden('nightwatch_trace_id');
+                    // TODO
+                    // $context = $this->app->make(ContextRepository::class);
+                    // $trace = $context->getHidden('nightwatch_trace_id');
+                    // TODO
+                    $trace = (string) Str::uuid();
 
                     if (is_string($trace)) {
                         return $trace;

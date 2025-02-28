@@ -2,10 +2,13 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Schedule;
 use Laravel\Nightwatch\Types\Str;
 
 use function Pest\Laravel\travelTo;
@@ -32,7 +35,7 @@ afterEach(function () {
 
 it('ingests processed tasks', function () {
     $line = __LINE__ + 1;
-    $task = Schedule::call(fn () => travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
+    $task = app(Schedule::class)->call(fn () => travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
     $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
 
     Artisan::call('schedule:run');
@@ -75,7 +78,7 @@ it('ingests processed tasks', function () {
 
 it('ingests skipped tasks', function () {
     $line = __LINE__ + 1;
-    $task = Schedule::call(fn () => travelTo(now()->addMicroseconds(1_000_000)))
+    $task = app(Schedule::class)->call(fn () => travelTo(now()->addMicroseconds(1_000_000)))
         ->skip(fn () => true)
         ->everyMinute();
     $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
@@ -120,7 +123,7 @@ it('ingests skipped tasks', function () {
 
 it('ingests failed tasks', function () {
     $line = __LINE__ + 1;
-    $task = Schedule::call(fn () => travelTo(now()->addMicroseconds(1_000_000)) & throw new Exception)
+    $task = app(Schedule::class)->call(fn () => travelTo(now()->addMicroseconds(1_000_000)) & throw new Exception)
         ->everyMinute();
     $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
 
@@ -163,7 +166,7 @@ it('ingests failed tasks', function () {
 });
 
 it('resets trace ID and timestamp on each task run', function () {
-    Schedule::call(fn () => travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
+    app(Schedule::class)->call(fn () => travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
 
     Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000001');
     Artisan::call('schedule:run');
@@ -171,19 +174,18 @@ it('resets trace ID and timestamp on each task run', function () {
     $this->ingest->assertWrittenTimes(1);
     $this->ingest->assertLatestWrite('scheduled-task:0.trace_id', '00000000-0000-0000-0000-000000000001');
     $this->ingest->assertLatestWrite('scheduled-task:0.timestamp', 946688523.456789);
-    $this->ingest->flush();
 
     Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000002');
     Artisan::call('schedule:run');
 
-    $this->ingest->assertWrittenTimes(1);
+    $this->ingest->assertWrittenTimes(2);
     $this->ingest->assertLatestWrite('scheduled-task:0.trace_id', '00000000-0000-0000-0000-000000000002');
     $this->ingest->assertLatestWrite('scheduled-task:0.timestamp', 946688524.456789);
 });
 
 describe('task name normalization', function () {
     it('normalizes task name for named closure', function () {
-        Schedule::call(fn () => travelTo(now()->addMicroseconds(1_000_000)))
+        app(Schedule::class)->call(fn () => travelTo(now()->addMicroseconds(1_000_000)))
             ->name('named-closure')
             ->everyMinute();
 
@@ -202,7 +204,7 @@ describe('task name normalization', function () {
             }
         }
 
-        Schedule::call(new ProcessFlights)->everyMinute();
+        app(Schedule::class)->call(new ProcessFlights)->everyMinute();
 
         Artisan::call('schedule:run');
 
@@ -215,7 +217,7 @@ describe('task name normalization', function () {
             //
         });
 
-        Schedule::command('app:fly tokyo')->everyMinute();
+        app(Schedule::class)->command('app:fly tokyo')->everyMinute();
 
         Artisan::call('schedule:run');
 
@@ -226,7 +228,7 @@ describe('task name normalization', function () {
     it('normalizes task name for queued job', function () {
         class GenerateReport implements ShouldQueue
         {
-            use Queueable;
+            use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
             public function handle()
             {
@@ -234,7 +236,7 @@ describe('task name normalization', function () {
             }
         }
 
-        Schedule::job(new GenerateReport)->everyMinute();
+        app(Schedule::class)->job(new GenerateReport)->everyMinute();
 
         Artisan::call('schedule:run');
 
@@ -245,7 +247,7 @@ describe('task name normalization', function () {
     it('normalizes task name for job class method call', function () {
         class GenerateInvoice implements ShouldQueue
         {
-            use Queueable;
+            use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
             public function handle()
             {
@@ -253,7 +255,7 @@ describe('task name normalization', function () {
             }
         }
 
-        Schedule::call([new GenerateInvoice, 'handle']);
+        app(Schedule::class)->call([new GenerateInvoice, 'handle']);
 
         Artisan::call('schedule:run');
 
@@ -262,7 +264,7 @@ describe('task name normalization', function () {
     });
 
     it('normalizes task name for shell command', function () {
-        Schedule::exec('find ./storage/logs -type f -mtime +7 -delete')->everyMinute();
+        app(Schedule::class)->exec('find ./storage/logs -type f -mtime +7 -delete')->everyMinute();
 
         Artisan::call('schedule:run');
 
