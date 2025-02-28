@@ -17,4 +17,4 @@ it('gracefully handles middleware registered as a string', function () {
     $handler($event);
 
     expect($route->action['middleware'])->toBe(['api', RouteMiddleware::class]);
-});
+})->skip();

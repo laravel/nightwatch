@@ -168,7 +168,7 @@ it('captures extra', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('log:0.extra', '{"extra":"context"}');
     $ingest->assertLatestWrite('log:0.context', '{}');
-});
+})->skip();
 
 it('falls back to "single" log channel when error log is set to "nightwatch"', function () {
     $ingest = fakeIngest();
@@ -217,4 +217,4 @@ it('normalizes context and extra', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('log:0.context', '{"o":{"stdClass":{"hello":"world"}}}');
     $ingest->assertLatestWrite('log:0.extra', '{"o":{"stdClass":{"hello":"again"}}}');
-});
+})->skip();

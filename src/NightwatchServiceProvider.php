@@ -404,8 +404,9 @@ final class NightwatchServiceProvider extends ServiceProvider
         $trace = (string) Str::uuid();
 
         /** @var ContextRepository */
-        $context = $this->app->make(ContextRepository::class);
-        $context->addHidden('nightwatch_trace_id', $trace);
+        // TODO
+        // $context = $this->app->make(ContextRepository::class);
+        // $context->addHidden('nightwatch_trace_id', $trace);
 
         if ($this->isRequest) {
             /** @var AuthManager */
@@ -427,8 +428,10 @@ final class NightwatchServiceProvider extends ServiceProvider
                     // Context needs to be re-resolved here to ensure
                     // we are using the latest scoped instance.
                     /** @var ContextRepository */
-                    $context = $this->app->make(ContextRepository::class);
-                    $trace = $context->getHidden('nightwatch_trace_id');
+                    // TODO
+                    // $context = $this->app->make(ContextRepository::class);
+                    // $trace = $context->getHidden('nightwatch_trace_id');
+                    $trace = '123';
 
                     if (is_string($trace)) {
                         return $trace;

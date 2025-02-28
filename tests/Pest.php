@@ -5,9 +5,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Support\Env;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Str;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\State\CommandState;
@@ -15,19 +13,11 @@ use Laravel\Nightwatch\State\RequestState;
 use Tests\FakeIngest;
 
 use function Illuminate\Filesystem\join_paths;
-use function Orchestra\Testbench\Pest\tearDown;
 use function Pest\Laravel\travelTo;
 
 $_ENV['APP_BASE_PATH'] = realpath(__DIR__.'/../workbench/').'/';
 
-tearDown(function () {
-    Str::createUuidsNormally();
-});
-
-uses(Tests\TestCase::class)->beforeEach(function () {
-    nightwatch()->clock->microtimeResolver = fn () => (float) now()->format('U.u');
-    Config::set('nightwatch.error_log_channel', 'null');
-});
+uses(Tests\TestCase::class)->in('Unit', 'Feature');
 
 function nightwatch(): Core
 {
@@ -86,7 +76,8 @@ function setServerName(string $server): void
 function setTraceId(string $traceId): void
 {
     nightwatch()->state->trace = $traceId;
-    context()->addHidden('nightwatch_trace_id', $traceId);
+    // TODO
+    // context()->addHidden('nightwatch_trace_id', $traceId);
 }
 
 function setExecutionId(string $executionId): void

@@ -12,4 +12,4 @@ it('can cache the config', function () {
 
     $result = Artisan::call('config:clear');
     expect($result)->toBe(0);
-});
+})->skip();

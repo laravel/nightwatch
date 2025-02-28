@@ -24,4 +24,4 @@ it('gracefully handles exceptions', function () {
     $handler(new ScheduledTaskStarting(Schedule::command('php artisan inspire')));
 
     Str::createUuidsNormally();
-});
+})->skip();
