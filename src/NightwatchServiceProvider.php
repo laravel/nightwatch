@@ -72,6 +72,7 @@ use function app;
 use function call_user_func;
 use function class_exists;
 use function defined;
+use function dump;
 use function is_string;
 use function microtime;
 
@@ -431,7 +432,8 @@ final class NightwatchServiceProvider extends ServiceProvider
                     // TODO
                     // $context = $this->app->make(ContextRepository::class);
                     // $trace = $context->getHidden('nightwatch_trace_id');
-                    $trace = '123';
+                    // TODO
+                    $trace = (string) Str::uuid();
 
                     if (is_string($trace)) {
                         return $trace;
