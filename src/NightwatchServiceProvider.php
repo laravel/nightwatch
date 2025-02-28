@@ -424,7 +424,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         } else {
             return new CommandState(
                 timestamp: $this->timestamp,
-                trace: new LazyValue(function () {
+                trace: new LazyValue(static function () {
                     // Context needs to be re-resolved here to ensure
                     // we are using the latest scoped instance.
                     /** @var ContextRepository */
