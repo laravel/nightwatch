@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Hooks\RouteMatchedListener;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
+use Laravel\Nightwatch\Supports;
 
 it('gracefully handles middleware registered as a string', function () {
     $request = Request::create('/users');
@@ -18,7 +18,7 @@ it('gracefully handles middleware registered as a string', function () {
 
     $handler($event);
 
-    if (class_exists(Terminating::class)) {
+    if (Supports::$terminatingEvent) {
         expect($route->action['middleware'])->toBe(['api', RouteMiddleware::class]);
     } else {
         expect($route->action['middleware'])->toBe([TerminatingMiddleware::class, 'api', RouteMiddleware::class]);

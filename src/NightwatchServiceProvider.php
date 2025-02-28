@@ -70,7 +70,6 @@ use Throwable;
 
 use function app;
 use function call_user_func;
-use function class_exists;
 use function defined;
 use function is_string;
 use function microtime;
@@ -127,6 +126,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 return;
             }
 
+            Supports::boot();
             $this->registerHooks();
         } catch (Throwable $e) {
             $this->handleUnrecoverableException($e);
@@ -179,7 +179,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(RouteMiddleware::class, fn () => new RouteMiddleware($this->core)); // @phpstan-ignore argument.type
 
-        if (! class_exists(Terminating::class)) {
+        if (! Supports::$terminatingEvent) {
             $this->app->singleton(TerminatingMiddleware::class, fn () => new TerminatingMiddleware($this->core));
         }
     }
@@ -305,11 +305,12 @@ final class NightwatchServiceProvider extends ServiceProvider
         }
 
         /** @var Core<RequestState|CommandState> $core */
-
-        /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-         */
-        $events->listen(Terminating::class, (new TerminatingListener($core))(...));
+        if (Supports::$terminatingEvent) {
+            /**
+             * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+             */
+            $events->listen(Terminating::class, (new TerminatingListener($core))(...));
+        }
     }
 
     /**

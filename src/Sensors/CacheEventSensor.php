@@ -14,6 +14,7 @@ use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
+use Illuminate\Foundation\Application;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\State\CommandState;
@@ -23,6 +24,7 @@ use RuntimeException;
 use function hash;
 use function in_array;
 use function round;
+use function version_compare;
 
 /**
  * @internal
@@ -31,7 +33,9 @@ final class CacheEventSensor
 {
     private ?float $startTime = null;
 
-    private ?int $duration = null;
+    private bool $supportsDuration;
+
+    private bool $supportsStoreName;
 
     private const START_EVENTS = [
         RetrievingKey::class,
@@ -45,25 +49,36 @@ final class CacheEventSensor
         private Clock $clock,
         private RequestState|CommandState $executionState,
     ) {
-        //
+        $this->supportsDuration = version_compare(Application::VERSION, '11.0.0', '>=');
+        $this->supportsStoreName = version_compare(Application::VERSION, '11.0.0', '>=');
     }
 
     public function __invoke(CacheEvent $event): void
     {
         $now = $this->clock->microtime();
 
-        if (in_array($event::class, self::START_EVENTS, strict: true)) {
-            $this->startTime = $now;
-            $this->duration = null;
+        if ($this->supportsDuration) {
+            if (in_array($event::class, self::START_EVENTS, strict: true)) {
+                $this->startTime = $now;
 
-            return;
+                return;
+            }
+
+            if ($this->startTime === null) {
+                throw new RuntimeException('No start time found for ['.$event::class."] event with key [{$event->key}].");
+            }
+
+            $duration = (int) round(($now - $this->startTime) * 1_000_000);
+        } else {
+            $duration = 0;
         }
 
-        if ($this->startTime === null) {
-            throw new RuntimeException('No start time found for ['.$event::class."] event with key [{$event->key}].");
+        if ($this->supportsStoreName) {
+            $storeName = $event->storeName;
+        } else {
+            $storeName = '';
         }
 
-        $this->duration ??= (int) round(($now - $this->startTime) * 1_000_000);
         $this->executionState->cacheEvents++;
 
         $type = match ($event::class) {
@@ -80,16 +95,16 @@ final class CacheEventSensor
             timestamp: $this->startTime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
-            _group: hash('xxh128', "{$event->storeName},{$event->key}"),
+            _group: hash('xxh128', "{$storeName},{$event->key}"),
             trace_id: $this->executionState->trace,
             execution_source: $this->executionState->source,
             execution_id: $this->executionState->id(),
             execution_stage: $this->executionState->stage,
             user: $this->executionState->user->id(),
-            store: $event->storeName ?? '',
+            store: $storeName,
             key: $event->key,
             type: $type,
-            duration: $this->duration,
+            duration: $duration,
             ttl: in_array($event::class, [KeyWritten::class, KeyWriteFailed::class], true) ? ($event->seconds ?? 0) : 0,
         ));
     }

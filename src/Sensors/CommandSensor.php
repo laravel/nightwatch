@@ -5,14 +5,12 @@ namespace Laravel\Nightwatch\Sensors;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\State\CommandState;
-use ReflectionProperty;
+use Laravel\Nightwatch\Supports;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 
 use function array_sum;
 use function hash;
-use function implode;
-use function method_exists;
 
 /**
  * @internal
@@ -37,10 +35,7 @@ final class CommandSensor
         }
 
         $command = match (true) {
-            $input instanceof ArgvInput => match (true) {
-                method_exists($input, 'getRawTokens') => $input->getRawTokens(),
-                default => implode(' ', (new ReflectionProperty(ArgvInput::class, 'tokens'))->getValue($input)),
-            },
+            $input instanceof ArgvInput => Supports::parseCommand($input),
             default => (string) $input,
         };
 

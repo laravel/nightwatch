@@ -5,7 +5,6 @@ namespace Laravel\Nightwatch\State;
 use Closure;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Events\Terminating;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\NullUserProvider;
@@ -13,7 +12,6 @@ use Laravel\Nightwatch\RecordsBuffer;
 use Laravel\Nightwatch\Types\Str;
 
 use function call_user_func;
-use function class_exists;
 use function memory_get_peak_usage;
 
 /**
@@ -29,8 +27,6 @@ final class CommandState
      * @var (Closure(): int)|null
      */
     public ?Closure $peakMemoryResolver = null;
-
-    public bool $terminatingEventExists;
 
     /**
      * @param  string|LazyValue<string>  $trace
@@ -71,7 +67,6 @@ final class CommandState
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
-        $this->terminatingEventExists = class_exists(Terminating::class);
     }
 
     /**

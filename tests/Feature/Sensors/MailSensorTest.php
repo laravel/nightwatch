@@ -54,7 +54,7 @@ it('ingests mails', function () {
 
     // Laravel 10 does not currently support capturing the
     // mail class.
-    $class = version_compare(Application::VERSION, '11.0.0', '>')
+    $class = version_compare(Application::VERSION, '11.0.0', '>=')
         ? 'MyTestMail'
         : '';
 
@@ -98,7 +98,7 @@ it('ingests markdown mailables', function () {
 
     // Laravel 10 does not currently support capturing the
     // mail class.
-    $class = version_compare(Application::VERSION, '11.0.0', '>')
+    $class = version_compare(Application::VERSION, '11.0.0', '>=')
         ? 'MyTestMarkdownMail'
         : '';
 

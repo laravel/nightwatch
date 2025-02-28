@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeAll(function () {
     forceRequestExecutionState();
@@ -25,12 +26,14 @@ beforeEach(function () {
 
 it('ingests on-demand notifications', function () {
     $ingest = fakeIngest();
+    // NotificationFacade::fake();
     Route::post('/users', function () {
         NotificationFacade::route('broadcast', [new Channel('test-channel')])
             ->route('mail', 'phillip@laravel.com')
             ->notify(new MyNotification);
     });
 
+    withoutExceptionHandling();
     $response = post('/users');
 
     $response->assertOk();

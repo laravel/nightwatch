@@ -4,6 +4,7 @@ use Illuminate\Foundation\Events\Terminating;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\SensorManager;
+use Laravel\Nightwatch\Supports;
 
 it('gracefully handles exceptions', function () {
     $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
@@ -25,4 +26,4 @@ it('gracefully handles exceptions', function () {
     $listener($event);
 
     expect($sensor->thrown)->toBeTrue();
-})->skip(! class_exists(Terminating::class), 'The termiating class does not exist');
+})->skip(fn () => ! Supports::$terminatingEvent, 'The terminating event does not exist');
