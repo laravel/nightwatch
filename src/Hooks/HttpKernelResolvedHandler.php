@@ -54,10 +54,7 @@ final class HttpKernelResolvedHandler
                  *
                  * TODO Check this isn't a memory leak in Octane.
                  */
-                $kernel->setGlobalMiddleware([
-                    TerminatingMiddleware::class,
-                    ...$kernel->getGlobalMiddleware(),
-                ]);
+                $kernel->prependMiddleware(TerminatingMiddleware::class);
             }
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
