@@ -6,7 +6,7 @@ use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Routing\Events\RouteMatched;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\Supports;
+use Laravel\Nightwatch\Support;
 use Throwable;
 
 use function array_unshift;
@@ -40,7 +40,7 @@ final class RouteMatchedListener
              */
             $middleware[] = RouteMiddleware::class;
 
-            if (! Supports::$terminatingEvent) {
+            if (! Support::$terminatingEventExists) {
                 /**
                  * @see \Laravel\Nightwatch\ExecutionStage::Terminating
                  *

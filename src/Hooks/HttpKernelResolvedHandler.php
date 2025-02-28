@@ -8,7 +8,7 @@ use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Kernel;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\Supports;
+use Laravel\Nightwatch\Support;
 use Throwable;
 
 /**
@@ -47,7 +47,7 @@ final class HttpKernelResolvedHandler
         }
 
         try {
-            if (! Supports::$terminatingEvent) {
+            if (! Support::$terminatingEventExists) {
                 /**
                  * @see \Laravel\Nightwatch\ExecutionStage::Terminating
                  *

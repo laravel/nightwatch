@@ -5,7 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\Supports;
+use Laravel\Nightwatch\Support;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -35,7 +35,7 @@ final class CommandSensor
         }
 
         $command = match (true) {
-            $input instanceof ArgvInput => Supports::parseCommand($input),
+            $input instanceof ArgvInput => Support::parseCommand($input),
             default => (string) $input,
         };
 

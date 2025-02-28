@@ -5,6 +5,7 @@ use Illuminate\Console\Command;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Laravel\Nightwatch\Support;
 use Symfony\Component\Console\Input\StringInput;
 
 use function Pest\Laravel\travelTo;
@@ -199,7 +200,7 @@ it('child commands do not progress the modify execution stage when terminating e
     Artisan::command('child', function () {
         //
     });
-    commandState()->terminatingEventExists = false;
+    Support::$terminatingEventExists = false;
 
     $run = function () {
         $status = Artisan::handle($input = new StringInput('parent'));

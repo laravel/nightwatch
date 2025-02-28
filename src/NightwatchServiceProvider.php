@@ -126,7 +126,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 return;
             }
 
-            Supports::boot();
+            Support::boot();
             $this->registerHooks();
         } catch (Throwable $e) {
             $this->handleUnrecoverableException($e);
@@ -179,7 +179,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(RouteMiddleware::class, fn () => new RouteMiddleware($this->core)); // @phpstan-ignore argument.type
 
-        if (! Supports::$terminatingEvent) {
+        if (! Support::$terminatingEventExists) {
             $this->app->singleton(TerminatingMiddleware::class, fn () => new TerminatingMiddleware($this->core));
         }
     }
@@ -305,7 +305,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         }
 
         /** @var Core<RequestState|CommandState> $core */
-        if (Supports::$terminatingEvent) {
+        if (Support::$terminatingEventExists) {
             /**
              * @see \Laravel\Nightwatch\ExecutionStage::Terminating
              */

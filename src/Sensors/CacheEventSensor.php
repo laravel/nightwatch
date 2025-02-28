@@ -18,7 +18,7 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\Supports;
+use Laravel\Nightwatch\Support;
 use RuntimeException;
 
 use function hash;
@@ -51,7 +51,7 @@ final class CacheEventSensor
     {
         $now = $this->clock->microtime();
 
-        if (Supports::$cacheDuration) {
+        if (Support::$cacheDurationCapturable) {
             if (in_array($event::class, self::START_EVENTS, strict: true)) {
                 $this->startTime = $now;
 
@@ -67,7 +67,7 @@ final class CacheEventSensor
             $duration = 0;
         }
 
-        if (Supports::$cacheStoreName) {
+        if (Support::$cacheStoreNameCapturable) {
             $storeName = $event->storeName;
         } else {
             $storeName = '';
