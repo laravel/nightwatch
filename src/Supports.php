@@ -36,4 +36,3 @@ class Supports
         return implode(' ', (new ReflectionProperty(ArgvInput::class, 'tokens'))->getValue($input));
     }
 }
-
