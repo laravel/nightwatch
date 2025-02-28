@@ -45,4 +45,4 @@ Artisan::command('kitchen-sink', function () {
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote')->hourly();
+})->purpose('Display an inspiring quote');
