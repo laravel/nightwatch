@@ -72,7 +72,6 @@ use function app;
 use function call_user_func;
 use function class_exists;
 use function defined;
-use function dump;
 use function is_string;
 use function microtime;
 
