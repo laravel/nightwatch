@@ -117,10 +117,10 @@ it('modifies status code to value in range of 0-255', function () {
 
 it('only captures the first command that runs', function () {
     $ingest = fakeIngest();
-    Artisan::addCommands([ParentCommand::class]);
     Artisan::command('child', function () {
         return 99;
     });
+    Artisan::registerCommand(app(ParentCommand::class));
 
     $run = function () {
         $status = Artisan::handle($input = new StringInput('parent'));
