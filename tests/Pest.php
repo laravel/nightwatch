@@ -24,7 +24,7 @@ tearDown(function () {
     Str::createUuidsNormally();
 });
 
-pest()->extends(Tests\TestCase::class)->beforeEach(function () {
+uses(Tests\TestCase::class)->beforeEach(function () {
     nightwatch()->clock->microtimeResolver = fn () => (float) now()->format('U.u');
     Config::set('nightwatch.error_log_channel', 'null');
 });

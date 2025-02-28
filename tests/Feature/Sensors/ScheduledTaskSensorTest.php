@@ -1,7 +1,6 @@
 <?php
 
 use Carbon\CarbonImmutable;
-use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
@@ -226,7 +225,7 @@ describe('task name normalization', function () {
     it('normalizes task name for queued job', function () {
         class GenerateReport implements ShouldQueue
         {
-            use Queueable;
+            use Dispatchable, InteractsWithQueue, QueueableByBus, SerializesModels;
 
             public function handle()
             {
@@ -245,7 +244,7 @@ describe('task name normalization', function () {
     it('normalizes task name for job class method call', function () {
         class GenerateInvoice implements ShouldQueue
         {
-            use Queueable;
+            use Dispatchable, InteractsWithQueue, QueueableByBus, SerializesModels;
 
             public function handle()
             {
