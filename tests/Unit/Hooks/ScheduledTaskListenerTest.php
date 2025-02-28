@@ -3,7 +3,7 @@
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskSkipped;
-use Illuminate\Support\Facades\Schedule;
+use Illuminate\Console\Scheduling\Schedule;
 use Laravel\Nightwatch\Hooks\ScheduledTaskListener;
 use Laravel\Nightwatch\SensorManager;
 
@@ -25,9 +25,9 @@ it('gracefully handles exceptions', function () {
     $handler = new ScheduledTaskListener($nightwatch);
 
     $handler(new ScheduledTaskFinished(
-        task: Schedule::command('php artisan inspire'),
+        task: app(Schedule::class)->command('php artisan inspire'),
         runtime: 10.0,
     ));
 
     expect($sensor->thrown)->toBeTrue();
-})->skip();
+});
