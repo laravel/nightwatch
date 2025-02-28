@@ -14,17 +14,16 @@ use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
-use Illuminate\Foundation\Application;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Supports;
 use RuntimeException;
 
 use function hash;
 use function in_array;
 use function round;
-use function version_compare;
 
 /**
  * @internal
@@ -32,10 +31,6 @@ use function version_compare;
 final class CacheEventSensor
 {
     private ?float $startTime = null;
-
-    private bool $supportsDuration;
-
-    private bool $supportsStoreName;
 
     private const START_EVENTS = [
         RetrievingKey::class,
@@ -49,15 +44,14 @@ final class CacheEventSensor
         private Clock $clock,
         private RequestState|CommandState $executionState,
     ) {
-        $this->supportsDuration = version_compare(Application::VERSION, '11.0.0', '>=');
-        $this->supportsStoreName = version_compare(Application::VERSION, '11.0.0', '>=');
+        //
     }
 
     public function __invoke(CacheEvent $event): void
     {
         $now = $this->clock->microtime();
 
-        if ($this->supportsDuration) {
+        if (Supports::$cacheDuration) {
             if (in_array($event::class, self::START_EVENTS, strict: true)) {
                 $this->startTime = $now;
 
@@ -73,7 +67,7 @@ final class CacheEventSensor
             $duration = 0;
         }
 
-        if ($this->supportsStoreName) {
+        if (Supports::$cacheStoreName) {
             $storeName = $event->storeName;
         } else {
             $storeName = '';

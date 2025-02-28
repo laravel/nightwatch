@@ -14,6 +14,10 @@ class Supports
 {
     public static bool $terminatingEvent = true;
 
+    public static bool $cacheDuration = true;
+
+    public static bool $cacheStoreName = true;
+
     public static function boot(): void
     {
         /**
@@ -21,6 +25,18 @@ class Supports
          * @see https://github.com/laravel/framework/releases/tag/v11.18.0
          */
         self::$terminatingEvent = version_compare(Application::VERSION, '11.18.0', '>=');
+
+        /**
+         * @see https://github.com/laravel/framework/pull/51560
+         * @see https://github.com/laravel/framework/releases/tag/v11.11.0
+         */
+        self::$cacheDuration = version_compare(Application::VERSION, '11.11.0', '>=');
+
+        /**
+         * @see https://github.com/laravel/framework/pull/49754
+         * @see https://github.com/laravel/framework/releases/tag/v11.0.0
+         */
+        self::$cacheStoreName = version_compare(Application::VERSION, '11.0.0', '>=');
     }
 
     /**
