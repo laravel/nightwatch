@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Foundation\Application;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
+use function Pest\Laravel\withoutExceptionHandling;
 
 beforeAll(function () {
     forceRequestExecutionState();
@@ -51,6 +53,12 @@ it('ingests mails', function () {
 
     $response = post('/users');
 
+    // Laravel 10 does not currently support capturing the
+    // mail class.
+    $class = version_compare(Application::VERSION, '11.0.0', '>')
+        ? 'MyTestMail'
+        : '';
+
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('request:0.mail', 1);
@@ -61,14 +69,14 @@ it('ingests mails', function () {
             'timestamp' => 946688523.459289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('xxh128', 'MyTestMail'),
+            '_group' => hash('xxh128', $class),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
             'mailer' => 'array',
-            'class' => 'MyTestMail',
+            'class' => $class,
             'subject' => 'Welcome!',
             'to' => 3,
             'cc' => 2,
@@ -89,6 +97,12 @@ it('ingests markdown mailables', function () {
     $response = post('/users');
     $response->assertOk();
 
+    // Laravel 10 does not currently support capturing the
+    // mail class.
+    $class = version_compare(Application::VERSION, '11.0.0', '>')
+        ? 'MyTestMarkdownMail'
+        : '';
+
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('request:0.mail', 1);
     $ingest->assertLatestWrite('mail:*', [
@@ -98,14 +112,14 @@ it('ingests markdown mailables', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('xxh128', 'MyTestMarkdownMail'),
+            '_group' => hash('xxh128', $class),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
             'mailer' => 'array',
-            'class' => 'MyTestMarkdownMail',
+            'class' => $class,
             'subject' => 'My Test Markdown Mail',
             'to' => 1,
             'cc' => 0,
