@@ -25,4 +25,4 @@ it('gracefully handles exceptions', function () {
     $listener($event);
 
     expect($sensor->thrown)->toBeTrue();
-})->skip();
+})->skip(! class_exists(Terminating::class), 'The termiating class does not exist');

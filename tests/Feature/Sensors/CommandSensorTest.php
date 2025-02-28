@@ -4,7 +4,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\Console\Input\StringInput;
 
 use function Pest\Laravel\travelTo;
@@ -170,7 +170,7 @@ it('child commands do not progress the modify execution stage', function () {
     Artisan::command('parent', function () {
         Artisan::call('child');
 
-        Cache::get('foo');
+        DB::table('users')->get();
     });
     Artisan::command('child', function () {
         //
@@ -185,8 +185,8 @@ it('child commands do not progress the modify execution stage', function () {
     };
 
     expect($run())->toBe(0);
-    $ingest->assertLatestWrite('command:0.cache_events', 1);
-    $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
+    $ingest->assertLatestWrite('command:0.queries', 1);
+    $ingest->assertLatestWrite('query:0.execution_stage', 'action');
 });
 
 it('child commands do not progress the modify execution stage when terminating event does not exist', function () {
@@ -194,7 +194,7 @@ it('child commands do not progress the modify execution stage when terminating e
     Artisan::command('parent', function () {
         Artisan::call('child');
 
-        Cache::get('foo');
+        DB::table('users')->get();
     });
     Artisan::command('child', function () {
         //
@@ -210,8 +210,8 @@ it('child commands do not progress the modify execution stage when terminating e
     };
 
     expect($run())->toBe(0);
-    $ingest->assertLatestWrite('command:0.cache_events', 1);
-    $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
+    $ingest->assertLatestWrite('command:0.queries', 1);
+    $ingest->assertLatestWrite('query:0.execution_stage', 'action');
 });
 
 class ParentCommand extends Command
