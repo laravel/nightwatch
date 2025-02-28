@@ -393,10 +393,7 @@ it('captures global before middleware duration', function () {
 
         return $next($request);
     });
-    app(Kernel::class)->setGlobalMiddleware([
-        ...app(Kernel::class)->getGlobalMiddleware(),
-        'travel-before',
-    ]);
+    app(Kernel::class)->pushMiddleware('travel-before');
 
     $response = get('/users');
 
@@ -484,10 +481,7 @@ it('captures global after middleware duration', function () {
             travelTo(now()->addMicroseconds(5));
         });
     });
-    app(Kernel::class)->setGlobalMiddleware([
-        ...app(Kernel::class)->getGlobalMiddleware(),
-        'travel-after',
-    ]);
+    app(Kernel::class)->pushMiddleware('travel-after');
 
     $response = get('/users');
 
@@ -532,10 +526,7 @@ it('captures global middleware terminating duration', function () {
             travelTo(now()->addMicroseconds(5));
         }
     });
-    app(Kernel::class)->setGlobalMiddleware([
-        ...app(Kernel::class)->getGlobalMiddleware(),
-        'terminable',
-    ]);
+    app(Kernel::class)->pushMiddleware('terminable');
 
     $response = get('/users');
 
@@ -608,10 +599,7 @@ it('captures middleware duration for unknown routes and collapses "after" middle
             travelTo(now()->addMicroseconds(2));
         });
     });
-    app(Kernel::class)->setGlobalMiddleware([
-        ...app(Kernel::class)->getGlobalMiddleware(),
-        'global-middleware',
-    ]);
+    app(Kernel::class)->pushMiddleware('global-middleware');
 
     $response = get('/unknown');
 
@@ -636,11 +624,8 @@ it('captures middleware durations for global middleware that return a response a
             travelTo(now()->addMicroseconds(3));
         });
     });
-    app(Kernel::class)->setGlobalMiddleware([
-        ...app(Kernel::class)->getGlobalMiddleware(),
-        'global-middleware-progress-time',
-        'global-middleware-change-response',
-    ]);
+    app(Kernel::class)->pushMiddleware('global-middleware-progress-time');
+    app(Kernel::class)->pushMiddleware('global-middleware-change-response');
     Route::get('/users', fn () => []);
 
     $response = get('/users');

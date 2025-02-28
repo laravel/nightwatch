@@ -156,11 +156,13 @@ test('group hash collapses variadic "where in" binding placeholders and raw inte
         hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
         new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql']),
     ],
-    'mariadb' => fn () => [
-        'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
-        hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
-        new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
-    ],
+    ...class_exists(MariaDbConnection::class) ? [
+        'mariadb' => fn () => [
+            'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
+            hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
+            new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
+        ],
+    ] : [],
     'pgsql' => fn () => [
         'select * from "users" where "users"."id" in (1, 2, 3) and "id" in (?, ?, ?)',
         hash('xxh128', 'foo,select * from "users" where "users"."id" in (...?) and "id" in (...?)'),
@@ -211,11 +213,13 @@ test('group hash collapses insert rows', function (string $sql, string $expected
         hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...on duplicate key update `name` = ?'),
         new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql']),
     ],
-    'mariadb' => fn () => [
-        'insert into `users` (`id`, `name`) values (?, ?), (?, ?)',
-        hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
-        new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
-    ],
+    ...class_exists(MariaDbConnection::class) ? [
+        'mariadb' => fn () => [
+            'insert into `users` (`id`, `name`) values (?, ?), (?, ?)',
+            hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
+            new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
+        ],
+    ] : [],
     'pgsql' => fn () => [
         'insert into "users" ("id", "name") values (?, ?), (?, ?)',
         hash('xxh128', 'foo,insert into "users" ("id", "name") values ...'),
