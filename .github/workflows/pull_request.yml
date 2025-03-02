@@ -232,7 +232,7 @@ jobs:
           php-version: ${{ env.minimum_supported_php_version }}
           extensions: ${{ env.agent_extensions }}
           ini-values: error_reporting=E_ALL
-          tools: composer:v2, box:4
+          tools: composer:v2, box:4.6.3
           coverage: none
 
       # See: https://github.com/shivammathur/setup-php#cache-composer-dependencies
@@ -299,7 +299,7 @@ jobs:
           php-version: ${{ env.minimum_supported_php_version }}
           extensions: ${{ env.client_extensions }}
           ini-values: error_reporting=E_ALL
-          tools: composer:v2, box:4
+          tools: composer:v2, box:4.6.3
           coverage: none
 
       # See: https://github.com/shivammathur/setup-php#cache-composer-dependencies
