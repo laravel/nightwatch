@@ -35,7 +35,6 @@ class IngestDetailsRepository
         private Browser $browser,
         private int $preemptivelyRefreshInSeconds,
         private int $minRefreshDurationInSeconds,
-        private string $payload,
         private PackageVersionRepository $packageVersion,
         private Closure $onAuthenticationSuccess,
         private Closure $onAuthenticationError,
@@ -63,7 +62,7 @@ class IngestDetailsRepository
     {
         $start = microtime(true);
 
-        return $this->browser->post($this->payload, headers: [
+        return $this->browser->post('', headers: [
             'user-agent' => 'NightwatchAgent/'.$this->packageVersion->get(),
         ])->then(function (ResponseInterface $response) use ($start): IngestDetails {
             $duration = microtime(true) - $start;

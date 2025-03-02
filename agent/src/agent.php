@@ -87,6 +87,7 @@ $ingest = (new IngestFactory)(
     threshold: 6_000_000,
     concurrentRequestLimit: 2,
     maxBufferDurationInSeconds: 10,
+    server: $server,
     packageVersion: $packageVersion,
     onIngestSuccess: static fn (ResponseInterface $response, float $duration) => $info('Ingest successful ['.round($duration, 3).'s]'),
     onIngestError: static fn (Throwable $e, float $duration) => $info('Ingest failed ['.round($duration, 3).'s]: '.$e->getMessage()),

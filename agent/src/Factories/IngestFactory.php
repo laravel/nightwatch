@@ -26,6 +26,7 @@ class IngestFactory
         int $threshold,
         int $concurrentRequestLimit,
         int $maxBufferDurationInSeconds,
+        string $server,
         PackageVersionRepository $packageVersion,
         Closure $onIngestSuccess,
         Closure $onIngestError,
@@ -35,7 +36,8 @@ class IngestFactory
         $browser = (new Browser($connector))
             ->withTimeout($timeout)
             ->withHeader('content-type', 'application/octet-stream')
-            ->withHeader('content-encoding', 'gzip');
+            ->withHeader('content-encoding', 'gzip')
+            ->withHeader('nightwatch-server', $server);
 
         if ($debug) {
             $browser = $browser->withHeader('nightwatch-debug', '1');

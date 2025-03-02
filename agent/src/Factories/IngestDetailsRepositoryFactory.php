@@ -10,7 +10,6 @@ use React\Http\Browser;
 use React\Socket\Connector;
 use Throwable;
 
-use function json_encode;
 use function rtrim;
 
 class IngestDetailsRepositoryFactory
@@ -37,15 +36,13 @@ class IngestDetailsRepositoryFactory
             ->withTimeout($timeout)
             ->withHeader('authorization', "Bearer {$refreshToken}")
             ->withHeader('content-type', 'application/json')
+            ->withHeader('nightwatch-server', $server)
             ->withBase(rtrim($baseUrl, '/').'/api/agent-auth');
-
-        $payload = json_encode(['server' => $server], flags: JSON_THROW_ON_ERROR);
 
         return new IngestDetailsRepository(
             browser: $browser,
             preemptivelyRefreshInSeconds: $preemptivelyRefreshInSeconds,
             minRefreshDurationInSeconds: $minRefreshDurationInSeconds,
-            payload: $payload,
             packageVersion: $packageVersion,
             onAuthenticationSuccess: $onAuthenticationSuccess,
             onAuthenticationError: $onAuthenticationError,
