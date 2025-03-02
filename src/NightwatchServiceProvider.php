@@ -186,7 +186,10 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerAgentCommand(): void
     {
-        $this->app->singleton(AgentCommand::class, fn () => new AgentCommand($this->nightwatchConfig['token'] ?? null));
+        $this->app->singleton(AgentCommand::class, fn () => new AgentCommand(
+            token: $this->nightwatchConfig['token'] ?? null,
+            server: $this->nightwatchConfig['server'] ?? null,
+        ));
     }
 
     private function buildAndRegisterCore(): void

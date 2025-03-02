@@ -21,6 +21,7 @@ final class AgentCommand extends Command
         {--auth-timeout=}
         {--ingest-connection-timeout=}
         {--ingest-timeout=}
+        {--server=}
         {--base-url=}';
 
     /**
@@ -30,6 +31,7 @@ final class AgentCommand extends Command
 
     public function __construct(
         #[SensitiveParameter] private ?string $token,
+        private ?string $server,
     ) {
         parent::__construct();
     }
@@ -49,6 +51,8 @@ final class AgentCommand extends Command
         $ingestConnectionTimeout = $this->option('ingest-connection-timeout');
 
         $ingestTimeout = $this->option('ingest-timeout');
+
+        $server = $this->option('server') ?? $this->server;
 
         require __DIR__.'/../../agent/build/agent.phar';
     }
