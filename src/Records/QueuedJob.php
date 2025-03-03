@@ -37,7 +37,7 @@ final class QueuedJob
         public string $queue,
         public int $duration,
     ) {
-        $this->name = Str::tinyText($this->name);
+        $this->name = Str::text($this->name);
         $this->connection = Str::tinyText($this->connection);
         $this->queue = Str::tinyText($this->queue);
     }

@@ -1,6 +1,23 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.0.5...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.0.7...1.x)
+
+## [v1.0.7](https://github.com/laravel/nightwatch/compare/v1.0.6...v1.0.7) - 2025-03-03
+
+### What's Changed
+
+* Fix class declaration by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/123
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.0.6...v1.0.7
+
+## [v1.0.6](https://github.com/laravel/nightwatch/compare/v1.0.5...v1.0.6) - 2025-03-03
+
+### What's Changed
+
+* Improve deterministic builds by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/121
+* Allow longer job names by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/122
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.0.5...v1.0.6
 
 ## [v1.0.5](https://github.com/laravel/nightwatch/compare/v1.0.4...v1.0.5) - 2025-02-27
 

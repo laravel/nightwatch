@@ -50,7 +50,7 @@ final class JobAttempt
         public int $hydrated_models,
         public int $peak_memory_usage,
     ) {
-        $this->name = Str::tinyText($this->name);
+        $this->name = Str::text($this->name);
         $this->connection = Str::tinyText($this->connection);
         $this->queue = Str::tinyText($this->queue);
     }
