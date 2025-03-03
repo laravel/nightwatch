@@ -9,7 +9,7 @@ return [
         // is only ever required once to fix this issue manually.
         static function (string $filePath, string $prefix, string $content): string {
             if ($filePath === 'vendor/composer/InstalledVersions.php') {
-                $content = str_replace('class InstalledVersions', "\nif (class_exists(InstalledVersions::class, autoload: false)) { return; }\n\nclass InstalledVersions", $content);
+                $content = str_replace('class InstalledVersions', "\nif (! class_exists(InstalledVersions::class, autoload: false)) {\nclass InstalledVersions", $content).'}'.PHP_EOL;
             }
 
             return $content;
