@@ -45,6 +45,8 @@ final class RouteMatchedListener
                  * @see \Laravel\Nightwatch\ExecutionStage::Terminating
                  *
                  * TODO check this isn't a memory leak in octane.
+                 * TODO should we be adding this to routes when we already add it globally? We introduced a conditional
+                 * into the middleware, which makes me think we might be hitting it twice. Need to investigate.
                  */
                 array_unshift($middleware, TerminatingMiddleware::class);
             }
