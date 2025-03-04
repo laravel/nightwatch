@@ -69,6 +69,7 @@ final class CacheEventSensor
             $duration = 0;
         }
 
+        /** @var string $storeName */
         if (Support::$cacheStoreNameCapturable) {
             $storeName = $event->storeName;
         } else {
