@@ -71,7 +71,7 @@ final class CacheEventSensor
 
         /** @var string */
         $storeName = Support::$cacheStoreNameCapturable
-            ? $event->storeName
+            ? ($event->storeName ?? '')
             : '';
 
         $this->executionState->cacheEvents++;
