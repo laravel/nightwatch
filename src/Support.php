@@ -76,7 +76,7 @@ final class Support
         if (! self::$contextExists) {
             Queue::createPayloadUsing(static fn ($c, $q, array $payload) => [
                 ...$payload,
-                ...self::$context,
+                'nightwatch' => self::$context,
             ]);
 
             /** @var Dispatcher */
