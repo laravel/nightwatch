@@ -35,7 +35,7 @@ abstract class TestCase extends OrchestraTestCase
         Str::createUuidsNormally();
     }
 
-    protected function beforeRefreshingDatabase()
+    protected function beforeRefreshingDatabase(): void
     {
         touch(env('DB_DATABASE'));
     }
