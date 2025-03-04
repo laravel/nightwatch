@@ -143,7 +143,7 @@ it('can ingest cache hits and misses with multiple keys', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => Support::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+            '_group' => Support::$cacheStoreNameCapturable ? hash('xxh128', ',users:345') : hash('xxh128', ',users:345'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
