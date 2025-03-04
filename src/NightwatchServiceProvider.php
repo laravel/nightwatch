@@ -424,7 +424,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             return new CommandState(
                 timestamp: $this->timestamp,
                 trace: new LazyValue(static function () {
-                    $trace = Support::getHiddenContext('trace_id');
+                    $trace = Support::getHiddenContext('nightwatch_trace_id');
 
                     if (is_string($trace)) {
                         return $trace;
@@ -432,7 +432,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
                     $trace = (string) Str::uuid();
 
-                    Support::addHiddenContext('trace_id', $trace);
+                    Support::addHiddenContext('nightwatch_trace_id', $trace);
 
                     return $trace;
                 }),

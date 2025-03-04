@@ -37,7 +37,7 @@ final class ScheduledTaskStartingListener
             $this->nightwatch->state->reset();
 
             $trace = (string) Str::uuid();
-            Support::addHiddenContext('trace_id', $trace);
+            Support::addHiddenContext('nightwatch_trace_id', $trace);
             $this->nightwatch->state->trace = $trace;
             $this->nightwatch->state->setId($trace);
             $this->nightwatch->state->timestamp = $this->nightwatch->clock->microtime();
