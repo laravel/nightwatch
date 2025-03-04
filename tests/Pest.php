@@ -10,6 +10,7 @@ use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Support;
 use Tests\FakeIngest;
 
 use function Illuminate\Filesystem\join_paths;
@@ -76,8 +77,7 @@ function setServerName(string $server): void
 function setTraceId(string $traceId): void
 {
     nightwatch()->state->trace = $traceId;
-    // TODO
-    // context()->addHidden('nightwatch_trace_id', $traceId);
+    Support::addHiddenContext('nightwatch_trace_id', $traceId);
 }
 
 function setExecutionId(string $executionId): void
