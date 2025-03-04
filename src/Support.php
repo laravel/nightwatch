@@ -91,12 +91,10 @@ final class Support
      */
     public static function parseCommand(ArgvInput $input): string
     {
-        if (method_exists($input, 'getRawTokens')) {
-            return $input->getRawTokens();
-        }
-
         /** @var array<string> */
-        $tokens = (new ReflectionProperty(ArgvInput::class, 'tokens'))->getValue($input);
+        $tokens = method_exists($input, 'getRawTokens')
+            ? $input->getRawTokens()
+            : (new ReflectionProperty(ArgvInput::class, 'tokens'))->getValue($input);
 
         return implode(' ', $tokens);
     }
