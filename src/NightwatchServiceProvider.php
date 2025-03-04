@@ -407,6 +407,8 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $trace = (string) Str::uuid();
 
+        Support::addHiddenContext('nightwatch_trace_id', $trace);
+
         if ($this->isRequest) {
             /** @var AuthManager */
             $auth = $this->app->make(AuthManager::class);
