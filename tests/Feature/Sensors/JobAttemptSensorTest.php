@@ -3,6 +3,7 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Queue\InteractsWithQueue;
@@ -29,7 +30,7 @@ beforeEach(function () {
 
     setTraceId('0d3ca349-e222-4982-ac23-2343692de258');
     Config::set('queue.default', 'database');
-});
+})->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');
 
 it('ingests processed job attempts', function () {
     $ingest = fakeIngest();

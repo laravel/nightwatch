@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Foundation\Application;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Jobs\FakeJob;
 use Laravel\Nightwatch\Clock;
@@ -15,4 +16,4 @@ it('gracefully handles exceptions', function () {
     $handler(new JobProcessing('redis', new FakeJob));
 
     expect(nightwatch()->state->exceptions)->toBe(1);
-});
+})->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');
