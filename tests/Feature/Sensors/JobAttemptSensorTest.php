@@ -1,9 +1,12 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
@@ -355,7 +358,7 @@ it('captures multiple job attempts', function () {
 
 final class ProcessedJob implements ShouldQueue
 {
-    use Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function handle()
     {
@@ -365,7 +368,7 @@ final class ProcessedJob implements ShouldQueue
 
 final class ReleasedJob implements ShouldQueue
 {
-    use Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function handle()
     {
@@ -377,7 +380,7 @@ final class ReleasedJob implements ShouldQueue
 
 final class FailedJob implements ShouldQueue
 {
-    use Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function handle()
     {

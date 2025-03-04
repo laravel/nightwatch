@@ -3,9 +3,9 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use Monolog\LogRecord;
 
 use function Pest\Laravel\get;
 
@@ -135,11 +135,8 @@ it('does not mutate the date objects', function () {
     expect($carbonImmutable->getTimezone()->getName())->toBe('Australia/Melbourne');
 });
 
-it('captures context', function () {
+it('captures log context', function () {
     $ingest = fakeIngest();
-    Log::shareContext([
-        'shared' => 'context',
-    ]);
     Route::get('/users', function () {
         Log::channel('nightwatch')->info('Hello world!', [
             'context' => 'value',
@@ -151,13 +148,32 @@ it('captures context', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('log:0.context', '{"shared":"context","context":"value","date":"2000-01-01 01:02:03.456789+00:00"}');
+    $ingest->assertLatestWrite('log:0.context', '{"context":"value","date":"2000-01-01 01:02:03.456789+00:00"}');
+    $ingest->assertLatestWrite('log:0.extra', '{}');
+});
+
+it('captures shared log context', function () {
+    $ingest = fakeIngest();
+    Log::shareContext([
+        'shared' => 'context',
+    ]);
+    Route::get('/users', function () {
+        Log::channel('nightwatch')->info('Hello world!');
+    });
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('log:0.context', '{"shared":"context"}');
     $ingest->assertLatestWrite('log:0.extra', '{}');
 });
 
 it('captures extra', function () {
     $ingest = fakeIngest();
-    Context::add('extra', 'context');
+    Log::channel('nightwatch')->pushProcessor(fn (LogRecord $record) => $record->with(extra: [
+        'extra' => 'context',
+    ]));
     Route::get('/users', function () {
         Log::channel('nightwatch')->info('Hello world!');
     });
@@ -195,15 +211,11 @@ it('falls back to "single" log channel when error log is set to "nightwatch"', f
     ]);
 });
 
-it('normalizes context and extra', function () {
+it('normalizes context', function () {
     $ingest = fakeIngest();
     $e = new RuntimeException('Whoops!');
     Config::set('nightwatch.error_log_channel', 'nightwatch');
     Route::get('/', function () {
-        Context::add('o', (object) [
-            'hello' => 'again',
-        ]);
-
         Log::channel('nightwatch')->info('Whoops!', [
             'o' => (object) [
                 'hello' => 'world',
@@ -216,5 +228,23 @@ it('normalizes context and extra', function () {
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('log:0.context', '{"o":{"stdClass":{"hello":"world"}}}');
-    $ingest->assertLatestWrite('log:0.extra', '{"o":{"stdClass":{"hello":"again"}}}');
+});
+
+it('normalizes extra', function () {
+    $ingest = fakeIngest();
+    $e = new RuntimeException('Whoops!');
+    Log::channel('nightwatch')->pushProcessor(fn (LogRecord $record) => $record->with(extra: [
+        'o' => (object) [
+            'hello' => 'world',
+        ],
+    ]));
+    Route::get('/', function () {
+        Log::channel('nightwatch')->info('Whoops!');
+    });
+
+    $response = get('/');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('log:0.extra', '{"o":{"stdClass":{"hello":"world"}}}');
 });

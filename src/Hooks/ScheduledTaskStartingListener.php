@@ -3,10 +3,10 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Console\Events\ScheduledTaskStarting;
-use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\Support;
 use Laravel\Nightwatch\Types\Str;
 use Throwable;
 
@@ -37,7 +37,7 @@ final class ScheduledTaskStartingListener
             $this->nightwatch->state->reset();
 
             $trace = (string) Str::uuid();
-            Context::addHidden('nightwatch_trace_id', $trace);
+            Support::addHiddenContext('trace_id', $trace);
             $this->nightwatch->state->trace = $trace;
             $this->nightwatch->state->setId($trace);
             $this->nightwatch->state->timestamp = $this->nightwatch->clock->microtime();

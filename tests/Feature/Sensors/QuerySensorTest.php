@@ -1,6 +1,7 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Connection;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Database\MariaDbConnection;
 use Illuminate\Database\MySqlConnection;
@@ -137,7 +138,7 @@ it('always uses current time minus execution time for the timestamp', function (
     $ingest->assertLatestWrite('query:0.timestamp', 946688523.466665);
 });
 
-test('group hash collapses variadic "where in" binding placeholders and raw integer values', function ($sql, $expected, $connection) {
+test('group hash collapses variadic "where in" binding placeholders and raw integer values', function (string $sql, string $expected, Connection $connection) {
     $ingest = fakeIngest();
     Route::get('/users', function () use ($sql, $connection) {
         Event::dispatch(new QueryExecuted($sql, [], 1, $connection));
@@ -150,39 +151,41 @@ test('group hash collapses variadic "where in" binding placeholders and raw inte
     $ingest->assertLatestWrite('query:0.sql', $sql);
     $ingest->assertLatestWrite('query:0._group', $expected);
 })->with([
-    'mysql' => [
+    'mysql' => fn () => [
         'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
         hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
         new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql']),
     ],
-    'mariadb' => [
-        'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
-        hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
-        new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
-    ],
-    'pgsql' => [
+    ...class_exists(MariaDbConnection::class) ? [
+        'mariadb' => fn () => [
+            'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
+            hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
+            new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
+        ],
+    ] : [],
+    'pgsql' => fn () => [
         'select * from "users" where "users"."id" in (1, 2, 3) and "id" in (?, ?, ?)',
         hash('xxh128', 'foo,select * from "users" where "users"."id" in (...?) and "id" in (...?)'),
         new PostgresConnection('test', config: ['name' => 'foo', 'driver' => 'pgsql']),
     ],
-    'sqlite' => [
+    'sqlite' => fn () => [
         'select * from "users" where "users"."id" in (1, 2, 3) and "id" in (?, ?, ?)',
         hash('xxh128', 'foo,select * from "users" where "users"."id" in (...?) and "id" in (...?)'),
         new SQLiteConnection('test', config: ['name' => 'foo', 'driver' => 'sqlite']),
     ],
-    'sqlsrv' => [
+    'sqlsrv' => fn () => [
         'select * from [users] where [users].[id] in (1, 2, 3) and [id] in (?, ?, ?)',
         hash('xxh128', 'foo,select * from [users] where [users].[id] in (...?) and [id] in (...?)'),
         new SqlServerConnection('test', config: ['name' => 'foo', 'driver' => 'sqlsrv']),
     ],
-    'mongodb' => [
+    'mongodb' => fn () => [
         'some mongo query in (1, 2, 3) and [id] in (?, ?, ?)',
         hash('xxh128', 'foo,some mongo query in (1, 2, 3) and [id] in (?, ?, ?)'),
         new MongoDbConnection(['name' => 'foo', 'driver' => 'mongodb', 'host' => 'localhost', 'database' => 'test']),
     ],
 ]);
 
-test('group hash collapses insert rows', function ($sql, $expected, $connection) {
+test('group hash collapses insert rows', function (string $sql, string $expected, Connection $connection) {
     $ingest = fakeIngest();
     Route::get('/users', function () use ($sql, $connection) {
         Event::dispatch(new QueryExecuted($sql, [], 1, $connection));
@@ -195,42 +198,44 @@ test('group hash collapses insert rows', function ($sql, $expected, $connection)
     $ingest->assertLatestWrite('query:0.sql', $sql);
     $ingest->assertLatestWrite('query:0._group', $expected);
 })->with([
-    'mysql one row' => [
+    'mysql one row' => fn () => [
         'insert into `users` (`id`, `name`) values (?, ?)',
         hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
         new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql']),
     ],
-    'mysql multiple rows' => [
+    'mysql multiple rows' => fn () => [
         'insert into `users` (`id`, `name`) values (?, ?), (?, ?)',
         hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
         new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql']),
     ],
-    'mysql trailing stuff' => [
+    'mysql trailing stuff' => fn () => [
         'insert into `users` (`id`, `name`) values (?, ?), (?, ?) on duplicate key update `name` = ?',
         hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...on duplicate key update `name` = ?'),
         new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql']),
     ],
-    'mariadb' => [
-        'insert into `users` (`id`, `name`) values (?, ?), (?, ?)',
-        hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
-        new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
-    ],
-    'pgsql' => [
+    ...class_exists(MariaDbConnection::class) ? [
+        'mariadb' => fn () => [
+            'insert into `users` (`id`, `name`) values (?, ?), (?, ?)',
+            hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
+            new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
+        ],
+    ] : [],
+    'pgsql' => fn () => [
         'insert into "users" ("id", "name") values (?, ?), (?, ?)',
         hash('xxh128', 'foo,insert into "users" ("id", "name") values ...'),
         new PostgresConnection('test', config: ['name' => 'foo', 'driver' => 'pgsql']),
     ],
-    'sqlite' => [
+    'sqlite' => fn () => [
         'insert into "users" ("id", "name") values (?, ?), (?, ?)',
         hash('xxh128', 'foo,insert into "users" ("id", "name") values ...'),
         new SQLiteConnection('test', config: ['name' => 'foo', 'driver' => 'sqlite']),
     ],
-    'sqlsrv' => [
+    'sqlsrv' => fn () => [
         'insert into [users] ([id], [name]) values (?, ?), (?, ?)',
         hash('xxh128', 'foo,insert into [users] ([id], [name]) values ...'),
         new SqlServerConnection('test', config: ['name' => 'foo', 'driver' => 'sqlsrv']),
     ],
-    'mongodb' => [
+    'mongodb' => fn () => [
         'insert some mongo query values (?, ?), (?, ?)',
         hash('xxh128', 'foo,insert some mongo query values (?, ?), (?, ?)'),
         new MongoDbConnection(['name' => 'foo', 'driver' => 'mongodb', 'host' => 'localhost', 'database' => 'test']),

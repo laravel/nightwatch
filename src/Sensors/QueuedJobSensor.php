@@ -10,6 +10,7 @@ use Laravel\Nightwatch\Concerns\NormalizesQueue;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Support;
 use ReflectionClass;
 use RuntimeException;
 
@@ -82,6 +83,10 @@ final class QueuedJobSensor
 
     private function resolveQueue(JobQueued $event): string
     {
+        if (! Support::$queueNameCapturable) {
+            return '';
+        }
+
         $queue = $event->queue;
 
         if ($queue !== null) {

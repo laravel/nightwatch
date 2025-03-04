@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Support;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
@@ -61,14 +62,14 @@ it('ingests mails', function () {
             'timestamp' => 946688523.459289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('xxh128', 'MyTestMail'),
+            '_group' => Support::$mailableClassNameCapturable ? hash('xxh128', 'MyTestMail') : hash('xxh128', ''),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
             'mailer' => 'array',
-            'class' => 'MyTestMail',
+            'class' => Support::$mailableClassNameCapturable ? 'MyTestMail' : '',
             'subject' => 'Welcome!',
             'to' => 3,
             'cc' => 2,
@@ -98,14 +99,14 @@ it('ingests markdown mailables', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('xxh128', 'MyTestMarkdownMail'),
+            '_group' => Support::$mailableClassNameCapturable ? hash('xxh128', 'MyTestMarkdownMail') : hash('xxh128', ''),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
             'mailer' => 'array',
-            'class' => 'MyTestMarkdownMail',
+            'class' => Support::$mailableClassNameCapturable ? 'MyTestMarkdownMail' : '',
             'subject' => 'My Test Markdown Mail',
             'to' => 1,
             'cc' => 0,

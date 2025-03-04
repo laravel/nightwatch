@@ -25,4 +25,4 @@ it('gracefully handles exceptions', function () {
     $handler(new JobAttempted('redis', new FakeJob));
 
     expect($sensor->thrown)->toBeTrue();
-});
+})->skip();

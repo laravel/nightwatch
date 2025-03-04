@@ -27,7 +27,7 @@ beforeEach(function () {
 it('ingests outgoing requests', function () {
     $ingest = fakeIngest();
     Route::post('/users', function () {
-        travelTo(now()->addMilliseconds(2.5));
+        travelTo(now()->addMilliseconds(2));
 
         Http::withBody(str_repeat('b', 2000))->post('https://laravel.com');
     });
@@ -48,7 +48,7 @@ it('ingests outgoing requests', function () {
         [
             'v' => 1,
             't' => 'outgoing-request',
-            'timestamp' => 946688523.459289,
+            'timestamp' => 946688523.458789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('xxh128', 'laravel.com'),
