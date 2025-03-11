@@ -15,10 +15,10 @@ use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\Support;
 use RuntimeException;
 
 use function hash;
@@ -51,7 +51,7 @@ final class CacheEventSensor
     {
         $now = $this->clock->microtime();
 
-        if (Support::$cacheDurationCapturable) {
+        if (Compatibility::$cacheDurationCapturable) {
             if (in_array($event::class, self::START_EVENTS, strict: true)) {
                 $this->startTime = $now;
 
@@ -70,7 +70,7 @@ final class CacheEventSensor
         }
 
         /** @var string */
-        $storeName = Support::$cacheStoreNameCapturable
+        $storeName = Compatibility::$cacheStoreNameCapturable
             ? ($event->storeName ?? '')
             : '';
 

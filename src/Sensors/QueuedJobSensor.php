@@ -6,11 +6,11 @@ use Illuminate\Events\CallQueuedListener;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\Support;
 use ReflectionClass;
 use RuntimeException;
 
@@ -83,7 +83,7 @@ final class QueuedJobSensor
 
     private function resolveQueue(JobQueued $event): string
     {
-        if (! Support::$queueNameCapturable) {
+        if (! Compatibility::$queueNameCapturable) {
             return '';
         }
 

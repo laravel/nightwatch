@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\Support;
+use Laravel\Nightwatch\Compatibility;
 use Ramsey\Uuid\Uuid;
 
 use function Pest\Laravel\post;
@@ -75,7 +75,7 @@ it('can ingest queued jobs', function () {
             'job_id' => '00000000-0000-0000-0000-000000000000',
             'name' => 'MyJob',
             'connection' => 'database',
-            'queue' => Support::$queueNameCapturable ? 'default' : '',
+            'queue' => Compatibility::$queueNameCapturable ? 'default' : '',
             'duration' => 5200,
         ],
     ]);
@@ -93,7 +93,7 @@ it('falls back to the connections default queue', function () {
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('queued-job:0.queue', 'connection-default');
-})->skip(fn () => ! Support::$queueNameCapturable, 'Requires a more recent framework version');
+})->skip(fn () => ! Compatibility::$queueNameCapturable, 'Requires a more recent framework version');
 
 it('does not ingest jobs dispatched on the sync queue', function () {
     $ingest = fakeIngest();
@@ -136,7 +136,7 @@ it('captures queued event queue name', function () {
     $ingest->assertLatestWrite('queued-job:0.queue', 'custom_queue');
     $ingest->assertLatestWrite('queued-job:1.queue', 'custom_queue');
     $ingest->assertLatestWrite('queued-job:2.queue', 'custom_queue');
-})->skip(fn () => ! Support::$queueNameCapturable, 'Requires a more recent framework version');
+})->skip(fn () => ! Compatibility::$queueNameCapturable, 'Requires a more recent framework version');
 
 it('captures queued mail', function () {
     $ingest = fakeIngest();
@@ -172,7 +172,7 @@ it('captures queued mail', function () {
         'job_id' => '00000000-0000-0000-0000-000000000002',
         'name' => 'MyQueuedMail',
         'connection' => 'database',
-        'queue' => Support::$queueNameCapturable ? 'default' : '',
+        'queue' => Compatibility::$queueNameCapturable ? 'default' : '',
         'duration' => 0,
     ]);
 });
@@ -206,7 +206,7 @@ it('normalizes sqs queue names', function () {
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('queued-job:0.queue', 'queue-name');
-})->skip(fn () => ! Support::$queueNameCapturable, 'Requires a more recent framework version');
+})->skip(fn () => ! Compatibility::$queueNameCapturable, 'Requires a more recent framework version');
 
 it('handles missing queue value', function () {
     $ingest = fakeIngest();
@@ -227,7 +227,7 @@ it('handles missing queue value', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('queued-job:0.queue', 'default');
     $ingest->assertLatestWrite('queued-job:1.queue', 'foobar');
-})->skip(fn () => ! Support::$queueNameCapturable, 'Requires a more recent framework version');
+})->skip(fn () => ! Compatibility::$queueNameCapturable, 'Requires a more recent framework version');
 
 final class MyJob implements ShouldQueue
 {

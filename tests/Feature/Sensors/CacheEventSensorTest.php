@@ -5,7 +5,7 @@ use Illuminate\Cache\ArrayStore;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\Support;
+use Laravel\Nightwatch\Compatibility;
 
 use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
@@ -41,13 +41,13 @@ it('can ingest cache misses', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => Support::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+            '_group' => Compatibility::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
-            'store' => Support::$cacheStoreNameCapturable ? 'array' : '',
+            'store' => Compatibility::$cacheStoreNameCapturable ? 'array' : '',
             'key' => 'users:345',
             'type' => 'miss',
             'duration' => 0,
@@ -75,13 +75,13 @@ it('can ingest cache hits', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => Support::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+            '_group' => Compatibility::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'before_middleware',
             'user' => '',
-            'store' => Support::$cacheStoreNameCapturable ? 'array' : '',
+            'store' => Compatibility::$cacheStoreNameCapturable ? 'array' : '',
             'key' => 'users:345',
             'type' => 'write',
             'duration' => 0,
@@ -93,13 +93,13 @@ it('can ingest cache hits', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => Support::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+            '_group' => Compatibility::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
-            'store' => Support::$cacheStoreNameCapturable ? 'array' : '',
+            'store' => Compatibility::$cacheStoreNameCapturable ? 'array' : '',
             'key' => 'users:345',
             'type' => 'hit',
             'duration' => 0,
@@ -158,7 +158,7 @@ it('can ingest cache hits and misses with multiple keys', function () {
         [
             'v' => 1,
             't' => 'cache-event',
-            'timestamp' => Support::$cacheDurationCapturable ? 946688523.456789 : 946688523.459289,
+            'timestamp' => Compatibility::$cacheDurationCapturable ? 946688523.456789 : 946688523.459289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('xxh128', ',users:345'),
@@ -170,13 +170,13 @@ it('can ingest cache hits and misses with multiple keys', function () {
             'store' => '',
             'key' => 'users:345',
             'type' => 'hit',
-            'duration' => Support::$cacheDurationCapturable ? 2500 : 0,
+            'duration' => Compatibility::$cacheDurationCapturable ? 2500 : 0,
             'ttl' => 0,
         ],
         [
             'v' => 1,
             't' => 'cache-event',
-            'timestamp' => Support::$cacheDurationCapturable ? 946688523.456789 : 946688523.459289,
+            'timestamp' => Compatibility::$cacheDurationCapturable ? 946688523.456789 : 946688523.459289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('xxh128', ',users:678'),
@@ -188,7 +188,7 @@ it('can ingest cache hits and misses with multiple keys', function () {
             'store' => '',
             'key' => 'users:678',
             'type' => 'miss',
-            'duration' => Support::$cacheDurationCapturable ? 2500 : 0,
+            'duration' => Compatibility::$cacheDurationCapturable ? 2500 : 0,
             'ttl' => 0,
         ],
     ]);
@@ -208,16 +208,16 @@ it('can ingest cache writes', function () {
         [
             'v' => 1,
             't' => 'cache-event',
-            'timestamp' => Support::$cacheDurationCapturable ? 946688523.456789 : 946688523.456789,
+            'timestamp' => Compatibility::$cacheDurationCapturable ? 946688523.456789 : 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => Support::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+            '_group' => Compatibility::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
-            'store' => Support::$cacheStoreNameCapturable ? 'array' : '',
+            'store' => Compatibility::$cacheStoreNameCapturable ? 'array' : '',
             'key' => 'users:345',
             'type' => 'write',
             'duration' => 0,
@@ -270,7 +270,7 @@ it('can ingest cache write failures', function () {
             'ttl' => 60,
         ],
     ]);
-})->skip(fn () => ! Support::$cacheFailuresCapturable, 'Requires a more recent framework version');
+})->skip(fn () => ! Compatibility::$cacheFailuresCapturable, 'Requires a more recent framework version');
 
 it('can ingest cache writes with multiple keys', function () {
     $ingest = fakeIngest();
@@ -303,7 +303,7 @@ it('can ingest cache writes with multiple keys', function () {
         [
             'v' => 1,
             't' => 'cache-event',
-            'timestamp' => Support::$cacheDurationCapturable ? 946688523.456789 : 946688523.459289,
+            'timestamp' => Compatibility::$cacheDurationCapturable ? 946688523.456789 : 946688523.459289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('xxh128', ',users:345'),
@@ -315,13 +315,13 @@ it('can ingest cache writes with multiple keys', function () {
             'store' => '',
             'key' => 'users:345',
             'type' => 'write',
-            'duration' => Support::$cacheDurationCapturable ? 2500 : 0,
+            'duration' => Compatibility::$cacheDurationCapturable ? 2500 : 0,
             'ttl' => 60,
         ],
         [
             'v' => 1,
             't' => 'cache-event',
-            'timestamp' => Support::$cacheDurationCapturable ? 946688523.456789 : 946688523.459289,
+            'timestamp' => Compatibility::$cacheDurationCapturable ? 946688523.456789 : 946688523.459289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
             '_group' => hash('xxh128', ',users:678'),
@@ -333,7 +333,7 @@ it('can ingest cache writes with multiple keys', function () {
             'store' => '',
             'key' => 'users:678',
             'type' => 'write',
-            'duration' => Support::$cacheDurationCapturable ? 2500 : 0,
+            'duration' => Compatibility::$cacheDurationCapturable ? 2500 : 0,
             'ttl' => 60,
         ],
     ]);
@@ -358,13 +358,13 @@ it('can ingest cache deletes', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => Support::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+            '_group' => Compatibility::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
-            'store' => Support::$cacheStoreNameCapturable ? 'array' : '',
+            'store' => Compatibility::$cacheStoreNameCapturable ? 'array' : '',
             'key' => 'users:345',
             'type' => 'write',
             'duration' => 0,
@@ -376,13 +376,13 @@ it('can ingest cache deletes', function () {
             'timestamp' => 946688523.456789,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => Support::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+            '_group' => Compatibility::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
             'execution_stage' => 'action',
             'user' => '',
-            'store' => Support::$cacheStoreNameCapturable ? 'array' : '',
+            'store' => Compatibility::$cacheStoreNameCapturable ? 'array' : '',
             'key' => 'users:345',
             'type' => 'delete',
             'duration' => 0,
@@ -435,7 +435,7 @@ it('can ingest cache delete failures', function () {
             'ttl' => 0,
         ],
     ]);
-})->skip(fn () => ! Support::$cacheFailuresCapturable, 'Requires a more recent framework version');
+})->skip(fn () => ! Compatibility::$cacheFailuresCapturable, 'Requires a more recent framework version');
 
 it('handles cache drivers with no store configured', function () {
     $ingest = fakeIngest();
@@ -495,4 +495,4 @@ it('captures duration in microseconds', function () {
             'ttl' => 0,
         ],
     ]);
-})->skip(fn () => ! Support::$cacheDurationCapturable, 'Requires a more recent framework version');
+})->skip(fn () => ! Compatibility::$cacheDurationCapturable, 'Requires a more recent framework version');

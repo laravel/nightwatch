@@ -106,7 +106,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         try {
             $this->captureTimestamp();
-            Support::boot($this->app);
+            Compatibility::boot($this->app);
             $this->captureExecutionType();
             $this->registerAndCaptureConfig();
             $this->registerBindings();
@@ -179,7 +179,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(RouteMiddleware::class, fn () => new RouteMiddleware($this->core)); // @phpstan-ignore argument.type
 
-        if (! Support::$terminatingEventExists) {
+        if (! Compatibility::$terminatingEventExists) {
             $this->app->singleton(TerminatingMiddleware::class, fn () => new TerminatingMiddleware($this->core));
         }
     }
@@ -308,7 +308,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         }
 
         /** @var Core<RequestState|CommandState> $core */
-        if (Support::$terminatingEventExists) {
+        if (Compatibility::$terminatingEventExists) {
             /**
              * @see \Laravel\Nightwatch\ExecutionStage::Terminating
              */
@@ -407,7 +407,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $trace = (string) Str::uuid();
 
-        Support::addHiddenContext('nightwatch_trace_id', $trace);
+        Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
 
         if ($this->isRequest) {
             /** @var AuthManager */
@@ -426,7 +426,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             return new CommandState(
                 timestamp: $this->timestamp,
                 trace: new LazyValue(static function () {
-                    $trace = Support::getHiddenContext('nightwatch_trace_id');
+                    $trace = Compatibility::getHiddenContext('nightwatch_trace_id');
 
                     if (is_string($trace)) {
                         return $trace;
@@ -434,7 +434,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
                     $trace = (string) Str::uuid();
 
-                    Support::addHiddenContext('nightwatch_trace_id', $trace);
+                    Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
 
                     return $trace;
                 }),

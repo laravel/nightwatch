@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Foundation\Events\Terminating;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\SensorManager;
-use Laravel\Nightwatch\Support;
 
 it('gracefully handles exceptions', function () {
     $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
@@ -26,4 +26,4 @@ it('gracefully handles exceptions', function () {
     $listener($event);
 
     expect($sensor->thrown)->toBeTrue();
-})->skip(fn () => ! Support::$terminatingEventExists, 'Requires a more recent framework version');
+})->skip(fn () => ! Compatibility::$terminatingEventExists, 'Requires a more recent framework version');

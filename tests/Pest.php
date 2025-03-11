@@ -6,11 +6,11 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Event;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\Support;
 use Tests\FakeIngest;
 
 use function Illuminate\Filesystem\join_paths;
@@ -77,7 +77,7 @@ function setServerName(string $server): void
 function setTraceId(string $traceId): void
 {
     nightwatch()->state->trace = $traceId;
-    Support::addHiddenContext('nightwatch_trace_id', $traceId);
+    Compatibility::addHiddenContext('nightwatch_trace_id', $traceId);
 }
 
 function setExecutionId(string $executionId): void

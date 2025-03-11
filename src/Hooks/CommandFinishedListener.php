@@ -3,10 +3,10 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Console\Events\CommandFinished;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\Support;
 use Throwable;
 
 /**
@@ -26,7 +26,7 @@ final class CommandFinishedListener
     public function __invoke(CommandFinished $event): void
     {
         try {
-            if ($event->command === $this->nightwatch->state->name && ! Support::$terminatingEventExists) {
+            if ($event->command === $this->nightwatch->state->name && ! Compatibility::$terminatingEventExists) {
                 $this->nightwatch->sensor->stage(ExecutionStage::Terminating);
             }
         } catch (Throwable $e) {

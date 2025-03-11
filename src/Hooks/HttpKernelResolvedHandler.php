@@ -6,9 +6,9 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Kernel;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\Support;
 use Throwable;
 
 /**
@@ -47,7 +47,7 @@ final class HttpKernelResolvedHandler
         }
 
         try {
-            if (! Support::$terminatingEventExists) {
+            if (! Compatibility::$terminatingEventExists) {
                 /**
                  * @see \Laravel\Nightwatch\ExecutionStage::Terminating
                  *

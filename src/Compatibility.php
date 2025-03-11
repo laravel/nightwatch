@@ -14,7 +14,7 @@ use function implode;
 use function method_exists;
 use function version_compare;
 
-final class Support
+final class Compatibility
 {
     public static Application $app;
 
