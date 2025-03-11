@@ -556,6 +556,7 @@ it('captures route middleware terminating duration', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('request:0.exceptions', 0);
     $ingest->assertLatestWrite('request:0.terminating', 5);
     $ingest->assertLatestWrite('request:0.duration', 5);
 });

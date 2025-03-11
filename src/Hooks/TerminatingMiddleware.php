@@ -16,6 +16,8 @@ use Throwable;
  */
 final class TerminatingMiddleware
 {
+    private bool $hasRun = false;
+
     /**
      * @param  Core<RequestState|CommandState>  $nightwatch
      */
@@ -32,10 +34,14 @@ final class TerminatingMiddleware
 
     public function terminate(Request $request, Response $response): void
     {
+        if ($this->hasRun) {
+            return;
+        }
+
+        $this->hasRun = true;
+
         try {
-            if ($this->nightwatch->state->stage !== ExecutionStage::Terminating) {
-                $this->nightwatch->sensor->stage(ExecutionStage::Terminating);
-            }
+            $this->nightwatch->sensor->stage(ExecutionStage::Terminating);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

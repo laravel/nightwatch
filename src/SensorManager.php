@@ -35,6 +35,7 @@ use Laravel\Nightwatch\State\RequestState;
 use Monolog\LogRecord;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -81,6 +82,10 @@ class SensorManager
 
     public function stage(ExecutionStage $executionStage): void
     {
+        if ($this->executionState->stage === $executionStage) {
+            throw new RuntimeException("Cannot transition to the same stage [{$executionStage->value}].");
+        }
+
         $sensor = $this->stageSensor ??= new StageSensor(
             clock: $this->clock,
             executionState: $this->executionState,

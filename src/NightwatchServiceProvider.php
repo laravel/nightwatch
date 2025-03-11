@@ -180,7 +180,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->app->singleton(RouteMiddleware::class, fn () => new RouteMiddleware($this->core)); // @phpstan-ignore argument.type
 
         if (! Compatibility::$terminatingEventExists) {
-            $this->app->singleton(TerminatingMiddleware::class, fn () => new TerminatingMiddleware($this->core));
+            $this->app->scoped(TerminatingMiddleware::class, fn () => new TerminatingMiddleware($this->core));
         }
     }
 
