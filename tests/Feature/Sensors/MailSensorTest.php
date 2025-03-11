@@ -120,6 +120,7 @@ it('ingests markdown mailables', function () {
 });
 
 it('ignores notifications sent as MailMessages', function () {
+    // If this test fails, try clearing `workbench/storage/framework/views/*`
     $ingest = fakeIngest();
     Route::post('/users', function () {
         NotificationFacade::send([
