@@ -87,6 +87,15 @@ final class QueuedJobSensor
             return '';
         }
 
+        /**
+         * This property has not always had the correct type. It was missing,
+         * added, removed, and re-added through time. We will force the type
+         * here so we know what we are dealing with across all versions.
+         *
+         * @see https://github.com/laravel/framework/pull/55058
+         *
+         * @var string|null $queue
+         */
         $queue = $event->queue;
 
         if ($queue !== null) {
