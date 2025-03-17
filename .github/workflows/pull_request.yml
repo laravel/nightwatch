@@ -340,7 +340,7 @@ jobs:
     strategy:
       matrix:
         php: [8.2, 8.3]
-        laravel: [10, 11]
+        laravel: [10, 11, 12]
         prefer-lowest: ['0', '1']
 
     name: Test package [PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }}]
