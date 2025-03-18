@@ -49,7 +49,7 @@ final class CommandStartingListener
 
         try {
             match ($event->command) {
-                'queue:work', 'queue:listen' => $this->registerJobHooks(),
+                'queue:work', 'queue:listen', 'horizon:work' => $this->registerJobHooks(),
                 'schedule:run', 'schedule:work' => $this->registerScheduledTaskHooks(),
                 default => $this->registerCommandHooks(),
             };
