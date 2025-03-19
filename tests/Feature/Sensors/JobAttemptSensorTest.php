@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 
 use function Pest\Laravel\travelTo;
@@ -30,9 +31,22 @@ beforeEach(function () {
 
     setTraceId('0d3ca349-e222-4982-ac23-2343692de258');
     Config::set('queue.default', 'database');
+    Redis::command('FLUSHALL');
 })->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');
 
-it('ingests processed job attempts', function () {
+$workCommands = [
+    'queue:work',
+    'horizon:work',
+];
+
+$workOptions = [
+    '--max-jobs' => 1,
+    '--sleep' => 0,
+    '--stop-when-empty' => true,
+    '--tries' => 1,
+];
+
+it('ingests processed job attempts', function ($workCommand) use ($workOptions) {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -40,7 +54,7 @@ it('ingests processed job attempts', function () {
     ]);
     ProcessedJob::dispatch();
 
-    Artisan::call('queue:work', ['--max-jobs' => 1, '--stop-when-empty' => true, '--sleep' => 0]);
+    Artisan::call($workCommand, $workOptions);
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
@@ -76,9 +90,9 @@ it('ingests processed job attempts', function () {
             'peak_memory_usage' => 1234,
         ],
     ]);
-});
+})->with($workCommands);
 
-it('ingests job released job attempts', function () {
+it('ingests job released job attempts', function ($workCommand) use ($workOptions) {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -86,7 +100,7 @@ it('ingests job released job attempts', function () {
     ]);
     ReleasedJob::dispatch();
 
-    Artisan::call('queue:work', ['--max-jobs' => 1, '--stop-when-empty' => true, '--sleep' => 0]);
+    Artisan::call($workCommand, $workOptions);
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
@@ -122,9 +136,9 @@ it('ingests job released job attempts', function () {
             'peak_memory_usage' => 1234,
         ],
     ]);
-});
+})->with($workCommands);
 
-it('ingests job failed job attempts', function () {
+it('ingests job failed job attempts', function ($workCommand) use ($workOptions) {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -132,7 +146,7 @@ it('ingests job failed job attempts', function () {
     ]);
     FailedJob::dispatch();
 
-    Artisan::call('queue:work', ['--max-jobs' => 1, '--stop-when-empty' => true, '--sleep' => 0]);
+    Artisan::call($workCommand, $workOptions);
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
@@ -170,7 +184,7 @@ it('ingests job failed job attempts', function () {
     ]);
     $ingest->assertLatestWrite('exception:0.execution_source', 'job');
     $ingest->assertLatestWrite('exception:0.execution_id', $attemptId);
-});
+})->with($workCommands);
 
 it('does not ingest jobs dispatched on the sync queue', function () {
     $ingest = fakeIngest();
@@ -179,7 +193,7 @@ it('does not ingest jobs dispatched on the sync queue', function () {
     $ingest->assertWrittenTimes(0);
 });
 
-it('captures closure job', function () {
+it('captures closure job', function ($workCommand) use ($workOptions) {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -190,7 +204,7 @@ it('captures closure job', function () {
         travelTo(now()->addMicroseconds(2500));
     });
 
-    Artisan::call('queue:work', ['--max-jobs' => 1, '--stop-when-empty' => true, '--sleep' => 0]);
+    Artisan::call($workCommand, $workOptions);
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
@@ -226,9 +240,9 @@ it('captures closure job', function () {
             'peak_memory_usage' => 1234,
         ],
     ]);
-});
+})->with($workCommands);
 
-it('captures queued event listener', function () {
+it('captures queued event listener', function ($workCommand) use ($workOptions) {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -237,7 +251,7 @@ it('captures queued event listener', function () {
     Event::listen(MyEvent::class, MyEventListener::class);
     Event::dispatch(new MyEvent);
 
-    Artisan::call('queue:work', ['--max-jobs' => 1, '--stop-when-empty' => true, '--sleep' => 0]);
+    Artisan::call($workCommand, $workOptions);
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
@@ -273,9 +287,9 @@ it('captures queued event listener', function () {
             'peak_memory_usage' => 1234,
         ],
     ]);
-});
+})->with($workCommands);
 
-it('captures queued mail', function () {
+it('captures queued mail', function ($workCommand) use ($workOptions) {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -285,7 +299,7 @@ it('captures queued mail', function () {
 
     Mail::to('tim@laravel.com')->queue(new MyQueuedMail);
 
-    Artisan::call('queue:work', ['--max-jobs' => 1, '--stop-when-empty' => true, '--sleep' => 0]);
+    Artisan::call($workCommand, $workOptions);
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
@@ -345,17 +359,17 @@ it('captures queued mail', function () {
             'failed' => false,
         ],
     ]);
-});
+})->with($workCommands);
 
-it('captures multiple job attempts', function () {
+it('captures multiple job attempts', function ($workCommand) use ($workOptions) {
     $ingest = fakeIngest();
     FailedJob::dispatch();
 
-    Artisan::call('queue:work', ['--max-jobs' => 2, '--tries' => 2, '--stop-when-empty' => true, '--sleep' => 0]);
+    Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 2, '--tries' => 2]);
 
     $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:0.attempt', 2);
-});
+})->with($workCommands);
 
 final class ProcessedJob implements ShouldQueue
 {
