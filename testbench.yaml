@@ -1,6 +1,5 @@
 providers:
   - Laravel\Nightwatch\NightwatchServiceProvider
-  - App\Providers\AppServiceProvider
 
 workbench:
   start: '/'
