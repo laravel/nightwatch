@@ -9,7 +9,7 @@ concurrency:
 
 env:
   minimum_supported_php_version: "8.2"
-  package_extensions: none, mbstring, curl, ctype, tokenizer, mongodb, xml, pdo, fileinfo, dom, xmlwriter, simplexml, sqlite3, pdo_sqlite
+  package_extensions: none, mbstring, curl, ctype, tokenizer, mongodb, xml, pdo, fileinfo, dom, xmlwriter, simplexml, sqlite3, pdo_sqlite, posix
   agent_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter
   client_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter
 
