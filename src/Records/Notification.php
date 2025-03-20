@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\LazyValue;
+use Laravel\Nightwatch\Types\Str;
 
 /**
  * @internal
@@ -35,6 +36,7 @@ final class Notification
         public int $duration,
         public bool $failed,
     ) {
-        //
+        $this->class = Str::tinyText($this->class);
+        $this->channel = Str::tinyText($this->channel);
     }
 }

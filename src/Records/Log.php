@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\LazyValue;
+use Laravel\Nightwatch\Types\Str;
 
 /**
  * @internal
@@ -34,6 +35,9 @@ final class Log
         public string $context,
         public string $extra,
     ) {
-        //
+        $this->level = Str::tinyText($this->level);
+        $this->message = Str::text($this->message);
+        $this->context = Str::mediumText($this->context);
+        $this->extra = Str::mediumText($this->extra);
     }
 }

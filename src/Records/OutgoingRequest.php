@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\LazyValue;
+use Laravel\Nightwatch\Types\Str;
 
 /**
  * @internal
@@ -40,6 +41,8 @@ final class OutgoingRequest
         public int $response_size,
         public int $status_code,
     ) {
-        //
+        $this->host = Str::tinyText($this->host);
+        $this->method = Str::tinyText($this->method);
+        $this->url = Str::text($this->url);
     }
 }

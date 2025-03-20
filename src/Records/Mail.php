@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Records;
 
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\LazyValue;
+use Laravel\Nightwatch\Types\Str;
 
 /**
  * @internal
@@ -40,6 +41,8 @@ final class Mail
         public int $duration,
         public bool $failed,
     ) {
-        //
+        $this->mailer = Str::tinyText($this->mailer);
+        $this->class = Str::tinyText($this->class);
+        $this->subject = Str::tinyText($this->subject);
     }
 }
