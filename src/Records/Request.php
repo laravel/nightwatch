@@ -65,7 +65,7 @@ final class Request
         $this->method = Str::tinyText($this->method);
         $this->url = Str::text($this->url);
         $this->route_name = Str::tinyText($this->route_name);
-        $this->route_methods = array_map(fn ($method) => Str::tinyText($method), $this->route_methods);
+        $this->route_methods = array_map(static fn ($method) => Str::tinyText($method), $this->route_methods);
         $this->route_domain = Str::tinyText($this->route_domain);
         $this->route_path = Str::text($this->route_path);
         $this->route_action = Str::text($this->route_action);
