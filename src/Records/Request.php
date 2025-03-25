@@ -61,6 +61,7 @@ final class Request
         public int $cache_events,
         public int $hydrated_models,
         public int $peak_memory_usage,
+        public string $exception_preview,
     ) {
         $this->method = Str::tinyText($this->method);
         $this->url = Str::text($this->url);
@@ -69,5 +70,6 @@ final class Request
         $this->route_domain = Str::tinyText($this->route_domain);
         $this->route_path = Str::text($this->route_path);
         $this->route_action = Str::text($this->route_action);
+        $this->exception_preview = Str::text($this->exception_preview);
     }
 }

@@ -97,6 +97,7 @@ final class RequestSensor
             cache_events: $this->requestState->cacheEvents,
             hydrated_models: $this->requestState->hydratedModels,
             peak_memory_usage: $this->requestState->peakMemory(),
+            exception_preview: $this->requestState->exceptionPreview,
         ));
     }
 

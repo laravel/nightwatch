@@ -64,9 +64,11 @@ final class CommandState
         public ?Artisan $artisan = null,
         public ?string $name = null,
         public NullUserProvider $user = new NullUserProvider,
+        public string $exceptionPreview = '',
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
+        $this->exceptionPreview = Str::text($this->exceptionPreview);
     }
 
     /**

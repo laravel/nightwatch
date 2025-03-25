@@ -68,6 +68,7 @@ it('can ingest commands', function () {
             'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
+            'exception_preview' => '',
         ],
     ]);
 });
@@ -163,6 +164,7 @@ it('only captures the first command that runs', function () {
             'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
+            'exception_preview' => '',
         ],
     ]);
 });

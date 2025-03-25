@@ -81,6 +81,7 @@ it('can ingest requests', function () {
             'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
+            'exception_preview' => '',
         ],
     ]);
 });
@@ -294,6 +295,38 @@ it('captures the duration in microseconds', function () {
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('request:0.duration', 5);
+});
+
+it('captures exceptions', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', function () {
+        report(new Exception('Handled error'));
+
+        throw new Exception('Unhandled error');
+    });
+
+    $response = get('/users');
+
+    $response->assertServerError();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('request:0.exceptions', 2);
+    $ingest->assertLatestWrite('request:0.exception_preview', 'Unhandled error');
+});
+
+it('doesn\'t capture the exception preview for handled exceptions', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', function () {
+        report(new Exception('Handled error'));
+
+        return [];
+    });
+
+    $response = get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('request:0.exceptions', 1);
+    $ingest->assertLatestWrite('request:0.exception_preview', '');
 });
 
 it('consistently sorts the route methods', function () {

@@ -49,9 +49,11 @@ final class JobAttempt
         public int $cache_events,
         public int $hydrated_models,
         public int $peak_memory_usage,
+        public string $exception_preview,
     ) {
         $this->name = Str::text($this->name);
         $this->connection = Str::tinyText($this->connection);
         $this->queue = Str::tinyText($this->queue);
+        $this->exception_preview = Str::text($this->exception_preview);
     }
 }

@@ -65,9 +65,11 @@ final class RequestState
         public RecordsBuffer $records = new RecordsBuffer,
         public string $phpVersion = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION.'.'.PHP_RELEASE_VERSION,
         public string $laravelVersion = Application::VERSION,
+        public string $exceptionPreview = '',
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
+        $this->exceptionPreview = Str::text($this->exceptionPreview);
     }
 
     /**

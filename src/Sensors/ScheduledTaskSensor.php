@@ -82,6 +82,7 @@ final class ScheduledTaskSensor
             cache_events: $this->executionState->cacheEvents,
             hydrated_models: $this->executionState->hydratedModels,
             peak_memory_usage: $this->executionState->peakMemory(),
+            exception_preview: $this->executionState->exceptionPreview,
         ));
     }
 
@@ -172,6 +173,7 @@ final class ScheduledTaskSensor
             cache_events: 0,
             hydrated_models: 0,
             peak_memory_usage: 0,
+            exception_preview: '',
         ));
     }
 }

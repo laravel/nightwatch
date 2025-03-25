@@ -72,6 +72,7 @@ it('ingests processed tasks', function () {
             'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
+            'exception_preview' => '',
         ],
     ]);
 });
@@ -117,13 +118,14 @@ it('ingests skipped tasks', function () {
             'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 0,
+            'exception_preview' => '',
         ],
     ]);
 });
 
 it('ingests failed tasks', function () {
     $line = __LINE__ + 1;
-    $task = app(Schedule::class)->call(fn () => travelTo(now()->addMicroseconds(1_000_000)) & throw new Exception)
+    $task = app(Schedule::class)->call(fn () => travelTo(now()->addMicroseconds(1_000_000)) & throw new Exception('Unhandled error'))
         ->everyMinute();
     $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
 
@@ -161,6 +163,7 @@ it('ingests failed tasks', function () {
             'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
+            'exception_preview' => 'Unhandled error',
         ],
     ]);
 });

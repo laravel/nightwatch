@@ -88,6 +88,7 @@ it('ingests processed job attempts', function ($workCommand) use ($workOptions) 
             'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
+            'exception_preview' => '',
         ],
     ]);
 })->with($workCommands);
@@ -134,6 +135,7 @@ it('ingests job released job attempts', function ($workCommand) use ($workOption
             'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
+            'exception_preview' => '',
         ],
     ]);
 })->with($workCommands);
@@ -180,6 +182,7 @@ it('ingests job failed job attempts', function ($workCommand) use ($workOptions)
             'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
+            'exception_preview' => 'Job failed',
         ],
     ]);
     $ingest->assertLatestWrite('exception:0.execution_source', 'job');
@@ -238,6 +241,7 @@ it('captures closure job', function ($workCommand) use ($workOptions) {
             'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
+            'exception_preview' => '',
         ],
     ]);
 })->with($workCommands);
@@ -285,6 +289,7 @@ it('captures queued event listener', function ($workCommand) use ($workOptions) 
             'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
+            'exception_preview' => '',
         ],
     ]);
 })->with($workCommands);
@@ -333,6 +338,7 @@ it('captures queued mail', function ($workCommand) use ($workOptions) {
             'cache_events' => 0,
             'hydrated_models' => 0,
             'peak_memory_usage' => 1234,
+            'exception_preview' => '',
         ],
     ]);
     $ingest->assertLatestWrite('mail:*', [

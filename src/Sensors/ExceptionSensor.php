@@ -50,7 +50,12 @@ final class ExceptionSensor
             },
         };
 
+        $handled = $this->wasManuallyReported($normalizedException);
+
         $this->executionState->exceptions++;
+        if (! $handled) {
+            $this->executionState->exceptionPreview = $normalizedException->getMessage();
+        }
 
         $this->executionState->records->write(new Exception(
             timestamp: $nowMicrotime,
@@ -68,7 +73,7 @@ final class ExceptionSensor
             message: $normalizedException->getMessage(),
             code: (string) $normalizedException->getCode(),
             trace: $this->serializeTrace($normalizedException),
-            handled: $this->wasManuallyReported($normalizedException),
+            handled: $handled,
             php_version: $this->executionState->phpVersion,
             laravel_version: $this->executionState->laravelVersion,
         ));

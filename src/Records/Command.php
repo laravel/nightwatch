@@ -48,9 +48,11 @@ final class Command
         public int $cache_events,
         public int $hydrated_models,
         public int $peak_memory_usage,
+        public string $exception_preview,
     ) {
         $this->class = Str::text($this->class);
         $this->name = Str::tinyText($this->name);
         $this->command = Str::text($this->command);
+        $this->exception_preview = Str::text($this->exception_preview);
     }
 }
