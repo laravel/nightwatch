@@ -18,6 +18,7 @@ final class Query
     /**
      * @param  string|LazyValue<string>  $trace_id
      * @param  LazyValue<string>  $execution_id
+     * @param  LazyValue<string>  $execution_preview
      * @param  string|LazyValue<string>  $user
      */
     public function __construct(
@@ -28,6 +29,7 @@ final class Query
         public string|LazyValue $trace_id,
         public string $execution_source,
         public LazyValue $execution_id,
+        public LazyValue $execution_preview,
         public ExecutionStage $execution_stage,
         public string|LazyValue $user,
         // --- //
