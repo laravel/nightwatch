@@ -69,7 +69,6 @@ final class RequestState
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);
-        $this->exceptionPreview = Str::text($this->exceptionPreview);
     }
 
     /**
