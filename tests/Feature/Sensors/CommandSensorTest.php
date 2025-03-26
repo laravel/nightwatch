@@ -5,6 +5,7 @@ use Illuminate\Console\Command;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Laravel\Nightwatch\Compatibility;
 use Symfony\Component\Console\Input\StringInput;
 
@@ -28,6 +29,8 @@ beforeEach(function () {
 it('can ingest commands', function () {
     $ingest = fakeIngest();
     Artisan::command('app:build {destination} {--force} {--compress}', function () {
+        DB::table('users')->get();
+
         travelTo(now()->addMicroseconds(1234567));
 
         return 3;
@@ -38,7 +41,7 @@ it('can ingest commands', function () {
 
     expect($status)->toBe(3);
     $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite([
+    $ingest->assertLatestWrite('command:*', [
         [
             'v' => 1,
             't' => 'command',
@@ -57,7 +60,7 @@ it('can ingest commands', function () {
             'terminating' => 0,
             'exceptions' => 0,
             'logs' => 0,
-            'queries' => 0,
+            'queries' => 1,
             'lazy_loads' => 0,
             'jobs_queued' => 0,
             'mail' => 0,
@@ -71,6 +74,7 @@ it('can ingest commands', function () {
             'exception_preview' => '',
         ],
     ]);
+    $ingest->assertLatestWrite('query:0.execution_preview', 'app:build');
 });
 
 it('filters out the list command')->todo();
