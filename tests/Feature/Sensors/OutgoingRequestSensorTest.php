@@ -55,6 +55,7 @@ it('ingests outgoing requests', function () {
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
+            'execution_preview' => 'POST /users',
             'execution_stage' => 'action',
             'user' => '',
             'host' => 'laravel.com',

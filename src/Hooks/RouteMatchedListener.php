@@ -46,7 +46,7 @@ final class RouteMatchedListener
                  *
                  * TODO check this isn't a memory leak in octane.
                  */
-                array_unshift($middleware, TerminatingMiddleware::class);
+                array_unshift($middleware, GlobalMiddleware::class);
             }
 
             $event->route->action['middleware'] = $middleware;

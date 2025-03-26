@@ -17,6 +17,7 @@ it('only keeps 500 records in memory', function () {
             trace_id: '',
             execution_source: '',
             execution_id: new LazyValue(fn () => ''),
+            execution_preview: new LazyValue(fn () => ''),
             execution_stage: ExecutionStage::Action,
             user: '',
             mailer: '',

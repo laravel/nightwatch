@@ -46,6 +46,7 @@ it('ingests logs', function () {
             'trace_id' => '00000000-0000-0000-0000-000000000000',
             'execution_source' => 'request',
             'execution_id' => '00000000-0000-0000-0000-000000000001',
+            'execution_preview' => 'GET /users',
             'execution_stage' => 'action',
             'user' => '',
             'level' => 'info',

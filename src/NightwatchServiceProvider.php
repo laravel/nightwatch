@@ -62,7 +62,7 @@ use Laravel\Nightwatch\Hooks\ResponsePreparedListener;
 use Laravel\Nightwatch\Hooks\RouteMatchedListener;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
-use Laravel\Nightwatch\Hooks\TerminatingMiddleware;
+use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Psr\Log\LoggerInterface;
@@ -180,7 +180,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->app->singleton(RouteMiddleware::class, fn () => new RouteMiddleware($this->core)); // @phpstan-ignore argument.type
 
         if (! Compatibility::$terminatingEventExists) {
-            $this->app->scoped(TerminatingMiddleware::class, fn () => new TerminatingMiddleware($this->core));
+            $this->app->scoped(GlobalMiddleware::class, fn () => new GlobalMiddleware($this->core));
         }
     }
 
