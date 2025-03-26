@@ -45,7 +45,7 @@ final class CommandStartingListener
             } else {
                 return;
             }
-        } catch (Throwable $e) { // @phpstan-ignore catch.neverThrown
+        } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
 
