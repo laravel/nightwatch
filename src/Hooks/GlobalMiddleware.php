@@ -31,9 +31,13 @@ final class GlobalMiddleware
 
     public function handle(Request $request, Closure $next): mixed
     {
-        $this->nightwatch->state->executionPreview = Str::tinyText(
-            $request->getMethod().' '.$request->getBaseUrl().$request->getPathInfo()
-        );
+        try {
+            $this->nightwatch->state->executionPreview = Str::tinyText(
+                $request->getMethod().' '.$request->getBaseUrl().$request->getPathInfo()
+            );
+        } catch (Throwable $e) {
+            $this->nightwatch->report($e);
+        }
 
         return $next($request);
     }
