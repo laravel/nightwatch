@@ -352,6 +352,7 @@ it('captures queued mail', function ($workCommand) use ($workOptions) {
             'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
             'execution_source' => 'job',
             'execution_id' => $attemptId,
+            'execution_preview' => 'MyQueuedMail',
             'execution_stage' => 'action',
             'user' => '',
             'mailer' => 'log',

@@ -6,6 +6,7 @@ use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\Types\Str as StrType;
 use Throwable;
 
 /**
@@ -27,6 +28,7 @@ final class JobProcessingListener
         try {
             $this->nightwatch->state->timestamp = $this->nightwatch->clock->microtime();
             $this->nightwatch->state->setId((string) Str::uuid());
+            $this->nightwatch->state->executionPreview = StrType::tinyText($event->job->resolveName());
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
