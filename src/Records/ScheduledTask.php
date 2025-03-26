@@ -51,6 +51,6 @@ final class ScheduledTask
         public string $exception_preview,
     ) {
         $this->name = Str::tinyText($this->name);
-        $this->exception_preview = Str::text($this->exception_preview);
+        $this->exception_preview = Str::tinyText($this->exception_preview);
     }
 }

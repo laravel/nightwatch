@@ -54,6 +54,6 @@ final class JobAttempt
         $this->name = Str::text($this->name);
         $this->connection = Str::tinyText($this->connection);
         $this->queue = Str::tinyText($this->queue);
-        $this->exception_preview = Str::text($this->exception_preview);
+        $this->exception_preview = Str::tinyText($this->exception_preview);
     }
 }

@@ -53,6 +53,6 @@ final class Command
         $this->class = Str::text($this->class);
         $this->name = Str::tinyText($this->name);
         $this->command = Str::text($this->command);
-        $this->exception_preview = Str::text($this->exception_preview);
+        $this->exception_preview = Str::tinyText($this->exception_preview);
     }
 }

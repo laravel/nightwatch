@@ -70,6 +70,6 @@ final class Request
         $this->route_domain = Str::tinyText($this->route_domain);
         $this->route_path = Str::text($this->route_path);
         $this->route_action = Str::text($this->route_action);
-        $this->exception_preview = Str::text($this->exception_preview);
+        $this->exception_preview = Str::tinyText($this->exception_preview);
     }
 }
