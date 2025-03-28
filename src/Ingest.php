@@ -26,6 +26,10 @@ final class Ingest implements LocalIngest
 
     public function write(string $payload): void
     {
+        if ($payload === '[]') {
+            return;
+        }
+
         if ($this->ingest === null) {
             /** @var (callable(string|null $transmitTo, float|null $ingestTimeout, float|null $ingestConnectionTimeout): (callable(string $payload): void)) */
             $factory = require __DIR__.'/../client/entry.php';

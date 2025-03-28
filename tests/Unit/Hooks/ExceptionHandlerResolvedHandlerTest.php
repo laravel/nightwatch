@@ -1,43 +1,36 @@
 <?php
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
-use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $thrown = false;
-
-        public function __construct() {}
-
-        public function exception(Throwable $e): void
-        {
-            $this->thrown = true;
-
-            throw new RuntimeException('Whoops!');
-        }
+    $exceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
     });
+    $thrownInExceptionSensor = false;
+    nightwatch()->sensor->exceptionSensor = function () use (&$thrownInExceptionSensor) {
+        $thrownInExceptionSensor = true;
+
+        throw new RuntimeException('Whoops!');
+    };
+
     $exceptionHandler = app(ExceptionHandler::class);
-    $handler = new ExceptionHandlerResolvedHandler($nightwatch);
+    $handler = new ExceptionHandlerResolvedHandler(nightwatch());
     $handler($exceptionHandler);
+
     $exceptionHandler->report(new RuntimeException('Test'));
 
-    expect($sensor->thrown)->toBeTrue();
+    expect($thrownInExceptionSensor)->toBeTrue();
 });
 
 it('gracefully handles custom exception handlers', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $captured = false;
+    $exceptions = [];
+    nightwatch()->sensor->exceptionSensor = function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
+    };
 
-        public function __construct() {}
-
-        public function exception(Throwable $e): void
-        {
-            $this->captured = true;
-        }
-    });
     $exceptionHandler = new class implements ExceptionHandler
     {
         public function report(Throwable $e)
@@ -60,9 +53,10 @@ it('gracefully handles custom exception handlers', function () {
             //
         }
     };
-    $handler = new ExceptionHandlerResolvedHandler($nightwatch);
+
+    $handler = new ExceptionHandlerResolvedHandler(nightwatch());
     $handler($exceptionHandler);
     $exceptionHandler->report(new RuntimeException('Test'));
 
-    expect($sensor->captured)->toBeFalse();
+    expect($exceptions)->toBe([]);
 });

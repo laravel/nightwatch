@@ -4,26 +4,20 @@ use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\RequestHandledListener;
-use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $thrown = false;
+    $thrownInStageSensor = false;
+    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+        $thrownInStageSensor = true;
 
-        public function __construct() {}
+        throw new RuntimeException('Whoops!');
+    };
+    nightwatch()->state->stage = ExecutionStage::Bootstrap;
 
-        public function stage(ExecutionStage $executionStage): void
-        {
-            $this->thrown = true;
-
-            throw new RuntimeException('Whoops!');
-        }
-    });
-    $listener = new RequestHandledListener($nightwatch);
     $event = new RequestHandled(Request::create('/tests'), response(''));
 
+    $listener = new RequestHandledListener(nightwatch());
     $listener($event);
 
-    expect($sensor->thrown)->toBeTrue();
+    expect($thrownInStageSensor)->toBeTrue();
 });

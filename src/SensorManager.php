@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
+use Closure;
 use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
@@ -47,29 +48,31 @@ use Throwable;
  */
 class SensorManager
 {
-    private ?CacheEventSensor $cacheEventSensor;
+    public Closure|null|CacheEventSensor $cacheEventSensor;
 
-    private ?ExceptionSensor $exceptionSensor;
+    public Closure|null|ExceptionSensor $exceptionSensor;
 
-    private ?LogSensor $logSensor;
+    public Closure|null|LogSensor $logSensor;
 
-    private ?OutgoingRequestSensor $outgoingRequestSensor;
+    public Closure|null|OutgoingRequestSensor $outgoingRequestSensor;
 
-    private ?QuerySensor $querySensor;
+    public Closure|null|QuerySensor $querySensor;
 
-    private ?QueuedJobSensor $queuedJobSensor;
+    public Closure|null|RequestSensor $requestSensor;
 
-    private ?JobAttemptSensor $jobAttemptSensor;
+    public Closure|null|QueuedJobSensor $queuedJobSensor;
 
-    private ?NotificationSensor $notificationSensor;
+    public Closure|null|JobAttemptSensor $jobAttemptSensor;
 
-    private ?MailSensor $mailSensor;
+    public Closure|null|NotificationSensor $notificationSensor;
 
-    private ?UserSensor $userSensor;
+    public Closure|null|MailSensor $mailSensor;
 
-    private ?StageSensor $stageSensor;
+    public Closure|null|UserSensor $userSensor;
 
-    private ?ScheduledTaskSensor $scheduledTaskSensor;
+    public Closure|null|StageSensor $stageSensor;
+
+    public Closure|null|ScheduledTaskSensor $scheduledTaskSensor;
 
     public function __construct(
         private RequestState|CommandState $executionState,
@@ -96,7 +99,7 @@ class SensorManager
 
     public function request(Request $request, Response $response): void
     {
-        $sensor = new RequestSensor(
+        $sensor = $this->requestSensor ??= new RequestSensor(
             requestState: $this->executionState, // @phpstan-ignore argument.type
         );
 

@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch;
 
-use Closure;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\Events\CacheHit;
@@ -27,7 +26,6 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Client\Factory as Http;
-use Illuminate\Log\LogManager;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSending;
@@ -42,6 +40,7 @@ use Illuminate\Support\Env;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\AgentCommand;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Factories\Logger;
 use Laravel\Nightwatch\Hooks\ArtisanStartingHandler;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
@@ -65,11 +64,8 @@ use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Psr\Log\LoggerInterface;
 use Throwable;
 
-use function app;
-use function call_user_func;
 use function defined;
 use function is_string;
 use function microtime;
@@ -97,10 +93,11 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     deployment?: string,
      *     server?: string,
      *     ingest?: array{ uri?: string, timeout?: float|int, connection_timeout?: float|int },
-     *     error_log_channel?: string,
      *  }
      */
     private array $nightwatchConfig;
+
+    private ?Throwable $registerException = null;
 
     public function register(): void
     {
@@ -111,13 +108,15 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerAndCaptureConfig();
             $this->registerBindings();
         } catch (Throwable $e) {
-            $this->handleUnrecoverableException($e);
+            $this->registerException = $e;
         }
     }
 
     public function boot(): void
     {
         try {
+            $this->handleAndClearRegisterException();
+
             if ($this->app->runningInConsole()) {
                 $this->registerPublications();
                 $this->registerCommands();
@@ -129,7 +128,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             $this->registerHooks();
         } catch (Throwable $e) {
-            $this->handleUnrecoverableException($e);
+            Nightwatch::unrecoverableExceptionOccurred($e);
         }
     }
 
@@ -215,8 +214,16 @@ final class NightwatchServiceProvider extends ServiceProvider
             state: $state,
             clock: $clock,
             enabled: ($this->nightwatchConfig['enabled'] ?? true),
-            emergencyLoggerResolver: $this->emergencyLoggerResolver())
-        );
+        ));
+    }
+
+    private function handleAndClearRegisterException(): void
+    {
+        if ($this->registerException) {
+            Nightwatch::unrecoverableExceptionOccurred($this->registerException);
+
+            $this->registerException = null;
+        }
     }
 
     private function registerPublications(): void
@@ -444,39 +451,5 @@ final class NightwatchServiceProvider extends ServiceProvider
                 server: $this->nightwatchConfig['server'] ?? '',
             );
         }
-    }
-
-    private function handleUnrecoverableException(Throwable $e): void
-    {
-        try {
-            $logger = call_user_func($this->emergencyLoggerResolver());
-
-            $logger->critical('[nightwatch] '.$e->getMessage(), [
-                'exception' => $e,
-            ]);
-        } catch (Throwable $e) {
-            //
-        }
-    }
-
-    /**
-     * @return (Closure(): LoggerInterface)
-     */
-    private function emergencyLoggerResolver(): Closure
-    {
-        return static function () {
-            /** @var LogManager */
-            $log = app('log');
-            /** @var Repository */
-            $config = app('config');
-
-            $channel = $config->get('nightwatch.error_log_channel');
-
-            if (! is_string($channel) || ! $channel || $channel === 'nightwatch') {
-                $channel = 'single';
-            }
-
-            return $log->channel($channel);
-        };
     }
 }

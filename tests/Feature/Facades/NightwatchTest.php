@@ -15,6 +15,7 @@ it('resolves to bound singleton instance of the Core class', function () {
 });
 
 it('silently discards unrecoverable exceptions by default', function () {
+    (new ReflectionClass(Nightwatch::class))->getProperty('handleUnrecoverableExceptionsUsing')->setValue(null);
     $calls = 0;
     Log::listen(function () use (&$calls) {
         $calls++;

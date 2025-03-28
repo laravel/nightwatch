@@ -1,27 +1,19 @@
 <?php
 
 use Illuminate\Queue\Events\JobQueued;
-use Illuminate\Queue\Events\JobQueueing;
 use Laravel\Nightwatch\Hooks\QueuedJobListener;
-use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $thrown = false;
+    $thrownInQueuedJobSensor = false;
+    nightwatch()->sensor->queuedJobSensor = function () use (&$thrownInQueuedJobSensor) {
+        $thrownInQueuedJobSensor = true;
 
-        public function __construct() {}
+        throw new RuntimeException('Whoops!');
+    };
+    $event = new JobQueued('redis', 'default', '1', fn () => null, '{}', 0);
 
-        public function queuedJob(JobQueueing|JobQueued $event): void
-        {
-            $this->thrown = true;
+    $handler = new QueuedJobListener(nightwatch());
+    $handler($event);
 
-            throw new RuntimeException('Whoops!');
-        }
-    });
-    $handler = new QueuedJobListener($nightwatch);
-
-    $handler(new JobQueued('redis', 'default', '1', fn () => null, '{}', 0));
-
-    expect($sensor->thrown)->toBeTrue();
+    expect($thrownInQueuedJobSensor)->toBeTrue();
 });

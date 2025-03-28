@@ -12,10 +12,10 @@ it('gracefully handles middleware registered as a string', function () {
     $request = Request::create('/users');
     $route = new Route(['GET'], '/users', ['middleware' => 'api']);
     $event = new RouteMatched($route, $request);
-    $handler = new RouteMatchedListener(nightwatch());
 
     expect($route->action['middleware'])->toBe('api');
 
+    $handler = new RouteMatchedListener(nightwatch());
     $handler($event);
 
     if (Compatibility::$terminatingEventExists) {

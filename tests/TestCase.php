@@ -2,10 +2,10 @@
 
 namespace Tests;
 
-use Illuminate\Config\Repository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
@@ -25,7 +25,7 @@ abstract class TestCase extends OrchestraTestCase
         $core->state->reset();
         $core->clock->microtimeResolver = fn () => (float) now()->format('U.u');
 
-        $this->app->make(Repository::class)->set('nightwatch.error_log_channel', 'null');
+        Nightwatch::handleUnrecoverableExceptionsUsing(fn ($e) => throw $e);
     }
 
     protected function tearDown(): void

@@ -7,13 +7,18 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Hooks\JobProcessingListener;
 
 it('gracefully handles exceptions', function () {
-    nightwatch()->clock = tap(new Clock, function ($clock) {
-        $clock->microtimeResolver = fn () => throw new RuntimeException('Whoops!');
+    $thrownInMicrotimeResolver = false;
+    nightwatch()->clock = tap(new Clock, function ($clock) use (&$thrownInMicrotimeResolver) {
+        $clock->microtimeResolver = function () use (&$thrownInMicrotimeResolver) {
+            $thrownInMicrotimeResolver = true;
+
+            throw new RuntimeException('Whoops!');
+        };
     });
+    $event = new JobProcessing('redis', new FakeJob);
 
     $handler = new JobProcessingListener(nightwatch());
+    $handler($event);
 
-    $handler(new JobProcessing('redis', new FakeJob));
-
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect($thrownInMicrotimeResolver)->toBeTrue();
 })->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');
