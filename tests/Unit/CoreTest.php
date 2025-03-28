@@ -4,7 +4,10 @@ use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Facades\Nightwatch;
 
 it('gracefully handles exceptions thrown while ingesting', function () {
-    Nightwatch::handleUnrecoverableExceptionsUsing(fn () => null);
+    $exceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
+    });
     nightwatch()->ingest = new class implements LocalIngest
     {
         public bool $thrown = false;
@@ -20,4 +23,6 @@ it('gracefully handles exceptions thrown while ingesting', function () {
     nightwatch()->ingest();
 
     expect(nightwatch()->ingest->thrown)->toBeTrue();
+    expect($exceptions)->toHaveCount(1);
+    expect($exceptions[0]->getMessage())->toBe('Whoops!');
 });
