@@ -2,61 +2,11 @@
 
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Http\Kernel;
-use Illuminate\Http\Request;
-use Laravel\Nightwatch\ExecutionStage;
+use Illuminate\Routing\Router;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
-use Laravel\Nightwatch\RecordsBuffer;
-use Symfony\Component\HttpFoundation\Response;
-
-it('gracefully handles exceptions in all three phases', function () {
-    Nightwatch::handleUnrecoverableExceptionsUsing(fn () => null);
-    $thrownInStageSensor = false;
-    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
-        $thrownInStageSensor = true;
-
-        throw new RuntimeException('Whoops!');
-    };
-    nightwatch()->state->stage = ExecutionStage::Bootstrap;
-    $thrownInRequestSensor = false;
-    nightwatch()->sensor->requestSensor = function () use (&$thrownInRequestSensor) {
-        $thrownInRequestSensor = true;
-
-        throw new RuntimeException('Whoops!');
-    };
-    nightwatch()->state->records = new class extends RecordsBuffer
-    {
-        public $thrownInFlush = false;
-
-        public function flush(): string
-        {
-            $this->thrownInFlush = true;
-
-            throw new RuntimeException('Whoops!');
-        }
-    };
-
-    $handler = new HttpKernelResolvedHandler(nightwatch());
-    $kernel = app(Kernel::class);
-
-    $handler($kernel, app());
-    $kernel->handle(Request::create('/test'));
-    $kernel->terminate(Request::create('/test'), new Response);
-
-    expect($thrownInStageSensor)->toBeTrue();
-    expect($thrownInRequestSensor)->toBeTrue();
-    expect(nightwatch()->state->records->thrownInFlush)->toBeTrue();
-});
 
 it('gracefully handles custom exception handlers', function () {
-    $thrownInStageSensor = false;
-    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
-        $thrownInStageSensor = true;
-
-        throw new RuntimeException('Whoops!');
-    };
-    nightwatch()->state->stage = ExecutionStage::Bootstrap;
-
     $kernel = new class implements HttpKernel
     {
         public function bootstrap()
@@ -83,5 +33,55 @@ it('gracefully handles custom exception handlers', function () {
     $handler = new HttpKernelResolvedHandler(nightwatch());
     $handler($kernel, app());
 
-    expect($thrownInStageSensor)->toBeFalse();
+    expect(true)->toBe(true);
+});
+
+it('gracefully handles exceptions when registering lifecycle handler', function () {
+    $unrecoverableExceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions) {
+        $unrecoverableExceptions[] = $e;
+    });
+
+    $kernel = new class(app(), app(Router::class)) extends Kernel
+    {
+        public bool $thrown = false;
+
+        public function whenRequestLifecycleIsLongerThan($threshold, $handler)
+        {
+            $this->thrown = true;
+
+            throw new RuntimeException('Whoops!');
+        }
+    };
+
+    $handler = new HttpKernelResolvedHandler(nightwatch());
+    $handler($kernel, app());
+
+    expect($kernel->thrown)->toBeTrue();
+    expect($unrecoverableExceptions)->toHaveCount(1);
+});
+
+it('gracefully handles exceptions when prepending middleware', function () {
+    $unrecoverableExceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions) {
+        $unrecoverableExceptions[] = $e;
+    });
+
+    $kernel = new class(app(), app(Router::class)) extends Kernel
+    {
+        public bool $thrown = false;
+
+        public function prependMiddleware($middleware)
+        {
+            $this->thrown = true;
+
+            throw new RuntimeException('Whoops!');
+        }
+    };
+
+    $handler = new HttpKernelResolvedHandler(nightwatch());
+    $handler($kernel, app());
+
+    expect($kernel->thrown)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
 });

@@ -24,3 +24,15 @@ it('gracefully handles middleware registered as a string', function () {
         expect($route->action['middleware'])->toBe([GlobalMiddleware::class, 'api', RouteMiddleware::class]);
     }
 });
+
+it('gracefully handles exceptions', function () {
+    $request = Request::create('/users');
+    $route = new Route(['GET'], '/users', []);
+    $route->action = 5;
+    $event = new RouteMatched($route, $request);
+
+    $handler = new RouteMatchedListener(nightwatch());
+    $handler($event);
+
+    expect(nightwatch()->state->exceptions)->toBe(1);
+});

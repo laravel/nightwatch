@@ -1,9 +1,31 @@
 <?php
 
+use Illuminate\Http\Request;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+
+it('gracefully handles exceptions when execution preview', function () {
+    $request = new class extends Request
+    {
+        public bool $thrown = false;
+
+        public function getMethod(): string
+        {
+            $this->thrown = true;
+
+            throw new RuntimeException('Whoops!');
+        }
+    };
+    $next = fn () => response('response');
+
+    $middleware = new GlobalMiddleware(nightwatch());
+    $response = $middleware->handle($request, $next);
+
+    expect($request->thrown)->toBeTrue();
+    expect($response->content())->toBe('response');
+});
 
 it('gracefully handles exceptions when the terminating event doesn\'t exist', function () {
     Compatibility::$terminatingEventExists = false;
