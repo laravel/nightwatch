@@ -58,8 +58,6 @@ class SensorManager
 
     public Closure|null|QuerySensor $querySensor;
 
-    public Closure|null|RequestSensor $requestSensor;
-
     public Closure|null|QueuedJobSensor $queuedJobSensor;
 
     public Closure|null|JobAttemptSensor $jobAttemptSensor;
@@ -73,6 +71,10 @@ class SensorManager
     public Closure|null|StageSensor $stageSensor;
 
     public Closure|null|ScheduledTaskSensor $scheduledTaskSensor;
+
+    public Closure|null|RequestSensor $requestSensor;
+
+    public Closure|null|CommandSensor $commandSensor;
 
     public function __construct(
         private RequestState|CommandState $executionState,
@@ -108,7 +110,7 @@ class SensorManager
 
     public function command(InputInterface $input, int $status): void
     {
-        $sensor = new CommandSensor(
+        $sensor = $this->commandSensor ??= new CommandSensor(
             executionState: $this->executionState, // @phpstan-ignore argument.type
         );
 

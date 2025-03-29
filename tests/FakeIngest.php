@@ -40,8 +40,12 @@ final class FakeIngest implements LocalIngest
         return $this;
     }
 
-    public function assertLatestWrite(string|array $key, mixed $expected = null): self
+    public function assertLatestWrite(string|array|Closure $key, mixed $expected = null): self
     {
+        if ($key instanceof Closure) {
+            [$key, $expected] = ['*', $key];
+        }
+
         expect(count($this->writes))->toBeGreaterThan(0, 'Expected to have writes. None found.');
 
         $latestWrite = $this->latestWrite();
