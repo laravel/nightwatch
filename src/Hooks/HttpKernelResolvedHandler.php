@@ -43,7 +43,7 @@ final class HttpKernelResolvedHandler
              */
             $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->nightwatch));
         } catch (Throwable $e) {
-            Nightwatch::handleUnrecoverableExceptionsUsing($e);
+            Nightwatch::unrecoverableExceptionOccurred($e);
         }
 
         try {
