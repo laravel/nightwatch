@@ -20,8 +20,8 @@ it('gracefully handles exceptions', function () {
         throw new RuntimeException('Whoops!');
     };
 
-    $hook = new CommandLifecycleIsLongerThanHandler(nightwatch());
-    $hook(now(), new StringInput('app:command'), 3);
+    $handler = new CommandLifecycleIsLongerThanHandler(nightwatch());
+    $handler(now(), new StringInput('app:command'), 3);
 
     expect($thrownInStageSensor)->toBeTrue();
     expect($thrownInCommandSensor)->toBeTrue();
