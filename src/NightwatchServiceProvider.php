@@ -16,6 +16,7 @@ use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Illuminate\Console\Application as Artisan;
+use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
@@ -42,7 +43,7 @@ use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\AgentCommand;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Factories\Logger;
-use Laravel\Nightwatch\Hooks\ArtisanStartingHandler;
+use Laravel\Nightwatch\Hooks\ArtisanStartingListener;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
 use Laravel\Nightwatch\Hooks\CommandStartingListener;
@@ -383,7 +384,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\State\CommandState::$artisan
          */
-        Artisan::starting((new ArtisanStartingHandler($core))(...));
+        $events->listen(ArtisanStarting::class, (new ArtisanStartingListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Action
