@@ -1,28 +1,27 @@
 <?php
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
-use Laravel\Nightwatch\Facades\Nightwatch;
+use Illuminate\Foundation\Exceptions\Handler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 
 it('gracefully handles exceptions', function () {
-    $exceptions = [];
-    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
-        $exceptions[] = $e;
-    });
-    $thrownInExceptionSensor = false;
-    nightwatch()->sensor->exceptionSensor = function () use (&$thrownInExceptionSensor) {
-        $thrownInExceptionSensor = true;
+    $exceptionHandler = new class(app()) extends Handler
+    {
+        public bool $thrown = false;
 
-        throw new RuntimeException('Whoops!');
+        public function reportable(callable $reportUsing)
+        {
+            $this->thrown = true;
+
+            throw new RuntimeException('Whoops!');
+        }
     };
 
-    $exceptionHandler = app(ExceptionHandler::class);
     $handler = new ExceptionHandlerResolvedHandler(nightwatch());
     $handler($exceptionHandler);
 
-    $exceptionHandler->report(new RuntimeException('Test'));
-
-    expect($thrownInExceptionSensor)->toBeTrue();
+    expect($exceptionHandler->thrown)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
 });
 
 it('gracefully handles custom exception handlers', function () {
