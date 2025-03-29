@@ -20,4 +20,6 @@ it('gracefully handles exceptions', function () {
 
     expect($thrownInJobAttemptSensor)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 })->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');

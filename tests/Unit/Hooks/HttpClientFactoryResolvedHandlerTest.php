@@ -21,4 +21,6 @@ it('gracefully handles exceptions', function () {
 
     expect($factory->thrown)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });

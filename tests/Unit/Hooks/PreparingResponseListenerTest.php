@@ -25,4 +25,6 @@ it('gracefully handles exceptions', function () {
 
     expect($thrownInStageSensor)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });

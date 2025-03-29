@@ -47,4 +47,6 @@ it('gracefully handles exceptions', function () {
     expect($thrownInExceptionSensor)->toBeTrue();
     expect($unrecoverableExceptions)->toHaveCount(1);
     expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });

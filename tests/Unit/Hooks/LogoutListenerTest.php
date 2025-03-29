@@ -10,4 +10,6 @@ test('it gracefully handles exceptions', function () {
     $listener($event);
 
     expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });

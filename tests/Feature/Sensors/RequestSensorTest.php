@@ -311,6 +311,8 @@ it('captures exceptions', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('request:0.exceptions', 2);
     $ingest->assertLatestWrite('request:0.exception_preview', 'Unhandled error');
+
+    forgetRecordedExceptions(2);
 });
 
 it('doesn\'t capture the exception preview for handled exceptions', function () {
@@ -327,6 +329,8 @@ it('doesn\'t capture the exception preview for handled exceptions', function () 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('request:0.exceptions', 1);
     $ingest->assertLatestWrite('request:0.exception_preview', '');
+
+    forgetRecordedExceptions(1);
 });
 
 it('consistently sorts the route methods', function () {

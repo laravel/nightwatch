@@ -21,7 +21,7 @@ it('gracefully handles exceptions', function () {
     };
 
     $handler = new CommandLifecycleIsLongerThanHandler(nightwatch());
-    $handler(now(), new StringInput('app:command'), 3);
+    $handler(now(), new StringInput('app:build'), 3);
 
     expect($thrownInStageSensor)->toBeTrue();
     expect($thrownInCommandSensor)->toBeTrue();
@@ -34,4 +34,6 @@ it('gracefully handles exceptions', function () {
 
         return true;
     });
+
+    forgetRecordedExceptions(2);
 });

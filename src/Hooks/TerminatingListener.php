@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Foundation\Events\Terminating;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\State\CommandState;
@@ -26,6 +27,10 @@ final class TerminatingListener
     public function __invoke(Terminating $event): void
     {
         try {
+            if (! Compatibility::$terminatingEventExists) {
+                return;
+            }
+
             $this->nightwatch->sensor->stage(ExecutionStage::Terminating);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);

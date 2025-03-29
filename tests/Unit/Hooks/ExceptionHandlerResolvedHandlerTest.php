@@ -22,6 +22,8 @@ it('gracefully handles exceptions', function () {
 
     expect($exceptionHandler->thrown)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });
 
 it('gracefully handles custom exception handlers', function () {

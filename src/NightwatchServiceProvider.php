@@ -313,12 +313,11 @@ final class NightwatchServiceProvider extends ServiceProvider
         }
 
         /** @var Core<RequestState|CommandState> $core */
-        if (Compatibility::$terminatingEventExists) {
-            /**
-             * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-             */
-            $events->listen(Terminating::class, (new TerminatingListener($core))(...));
-        }
+
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         */
+        $events->listen(Terminating::class, (new TerminatingListener($core))(...));
     }
 
     /**

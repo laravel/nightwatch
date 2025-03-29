@@ -22,4 +22,6 @@ it('gracefully handles exceptions', function () {
 
     expect($record->thrown)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });

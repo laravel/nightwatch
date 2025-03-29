@@ -16,10 +16,10 @@ it('gracefully handles exceptions', function () {
         throw new RuntimeException('Whoops!');
     };
     nightwatch()->state->stage = ExecutionStage::Bootstrap;
-    nightwatch()->state->name = 'app:command';
+    nightwatch()->state->name = 'app:build';
 
     $event = new CommandFinished(
-        'app:command', new StringInput('app:command'), new NullOutput, 1
+        'app:build', new StringInput('app:build'), new NullOutput, 1
     );
 
     $listener = new CommandFinishedListener(nightwatch());
@@ -27,4 +27,6 @@ it('gracefully handles exceptions', function () {
 
     expect($thrownInStageSensor)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });

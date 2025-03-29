@@ -84,4 +84,6 @@ it('gracefully handles exceptions when prepending middleware', function () {
 
     expect($kernel->thrown)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });
