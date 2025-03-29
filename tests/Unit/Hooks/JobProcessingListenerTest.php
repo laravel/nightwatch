@@ -21,4 +21,5 @@ it('gracefully handles exceptions', function () {
     $handler($event);
 
     expect($thrownInMicrotimeResolver)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
 })->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');

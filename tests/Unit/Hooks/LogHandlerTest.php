@@ -18,4 +18,5 @@ it('gracefully handles exceptions', function () {
     $handler->handle($record);
 
     expect($thrownInLogSensor)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
 });

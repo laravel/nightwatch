@@ -22,4 +22,5 @@ it('gracefully handles exceptions', function () {
     $handler($event);
 
     expect($thrownInScheduledTaskSensor)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
 });

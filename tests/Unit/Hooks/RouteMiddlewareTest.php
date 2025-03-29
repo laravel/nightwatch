@@ -28,6 +28,7 @@ it('gracefully handles exceptions', function () {
     expect($thrownInStageSensor)->toBeTrue();
     expect($response)->toBe('response');
     expect($nextCalledWith)->toBe($request);
+    expect(nightwatch()->state->exceptions)->toBe(1);
 });
 
 it('handles response types that laravel does not wrap', function () {
@@ -55,4 +56,5 @@ it('handles response types that laravel does not wrap', function () {
     expect($thrownInStageSensor)->toBeTrue();
     expect($response)->toBeInstanceOf(StreamedResponse::class);
     expect($nextCalledWith)->toBe($request);
+    expect(nightwatch()->state->exceptions)->toBe(1);
 });

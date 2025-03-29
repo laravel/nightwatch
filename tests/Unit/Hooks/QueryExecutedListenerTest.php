@@ -18,4 +18,5 @@ it('gracefully handles exceptions', function () {
     $listener($event);
 
     expect($thrownInQuerySensor)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
 });

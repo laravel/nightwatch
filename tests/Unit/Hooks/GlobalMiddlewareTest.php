@@ -33,6 +33,7 @@ it('gracefully handles exceptions when the terminating event doesn\'t exist', fu
     $middleware->terminate($request, $response);
 
     expect($thrownInStageSensor)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
 });
 
 it('handles response types that laravel does not wrap', function () {
@@ -65,4 +66,5 @@ it('handles response types that laravel does not wrap', function () {
     $middleware->terminate($request, $response);
 
     expect($thrownInStageSensor)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
 });

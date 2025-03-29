@@ -58,5 +58,5 @@ it('gracefully handles custom exception handlers', function () {
     $handler($exceptionHandler);
     $exceptionHandler->report(new RuntimeException('Test'));
 
-    expect($exceptions)->toBe([]);
+    expect($exceptions)->toHaveCount(0);
 });
