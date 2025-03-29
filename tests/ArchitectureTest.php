@@ -20,5 +20,4 @@ arch('final classes')->expect('Laravel\Nightwatch')
         'Laravel\Nightwatch\Contracts',
         Laravel\Nightwatch\RecordsBuffer::class,
         Laravel\Nightwatch\ExecutionStage::class,
-        Laravel\Nightwatch\SensorManager::class,
     ]);

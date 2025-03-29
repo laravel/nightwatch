@@ -46,7 +46,7 @@ use Throwable;
  *
  * @internal
  */
-class SensorManager
+final class SensorManager
 {
     public Closure|null|CacheEventSensor $cacheEventSensor;
 
