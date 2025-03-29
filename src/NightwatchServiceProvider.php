@@ -178,9 +178,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(RouteMiddleware::class, fn () => new RouteMiddleware($this->core)); // @phpstan-ignore argument.type
 
-        if (! Compatibility::$terminatingEventExists) {
-            $this->app->scoped(GlobalMiddleware::class, fn () => new GlobalMiddleware($this->core));
-        }
+        $this->app->scoped(GlobalMiddleware::class, fn () => new GlobalMiddleware($this->core));
     }
 
     private function registerAgentCommand(): void

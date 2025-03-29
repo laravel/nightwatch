@@ -6,7 +6,7 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-it('gracefully handles exceptions when execution preview', function () {
+it('gracefully handles exceptions when capturing execution preview', function () {
     $request = new class extends Request
     {
         public bool $thrown = false;
