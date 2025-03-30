@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch;
 
-use Closure;
 use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
@@ -48,33 +47,75 @@ use Throwable;
  */
 final class SensorManager
 {
-    public Closure|null|CacheEventSensor $cacheEventSensor;
+    /**
+     * @var (callable(CacheEvent): void)|null
+     */
+    public $cacheEventSensor;
 
-    public Closure|null|ExceptionSensor $exceptionSensor;
+    /**
+     * @var (callable(Throwable): void)|null
+     */
+    public $exceptionSensor;
 
-    public Closure|null|LogSensor $logSensor;
+    /**
+     * @var (callable(LogRecord): void)|null
+     */
+    public $logSensor;
 
-    public Closure|null|OutgoingRequestSensor $outgoingRequestSensor;
+    /**
+     * @var (callable(float, float, RequestInterface, ResponseInterface): void)|null
+     */
+    public $outgoingRequestSensor;
 
-    public Closure|null|QuerySensor $querySensor;
+    /**
+     * @var (callable(QueryExecuted, list<array{ file?: string, line?: int }>): void)|null
+     */
+    public $querySensor;
 
-    public Closure|null|QueuedJobSensor $queuedJobSensor;
+    /**
+     * @var (callable(JobQueueing|JobQueued): void)|null
+     */
+    public $queuedJobSensor;
 
-    public Closure|null|JobAttemptSensor $jobAttemptSensor;
+    /**
+     * @var (callable(JobAttempted): void)|null
+     */
+    public $jobAttemptSensor;
 
-    public Closure|null|NotificationSensor $notificationSensor;
+    /**
+     * @var (callable(NotificationSending|NotificationSent): void)|null
+     */
+    public $notificationSensor;
 
-    public Closure|null|MailSensor $mailSensor;
+    /**
+     * @var (callable(MessageSending|MessageSent): void)|null
+     */
+    public $mailSensor;
 
-    public Closure|null|UserSensor $userSensor;
+    /**
+     * @var (callable(): void)|null
+     */
+    public $userSensor;
 
-    public Closure|null|StageSensor $stageSensor;
+    /**
+     * @var (callable(ExecutionStage): void)|null
+     */
+    public $stageSensor;
 
-    public Closure|null|ScheduledTaskSensor $scheduledTaskSensor;
+    /**
+     * @var (callable(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed): void)|null
+     */
+    public $scheduledTaskSensor;
 
-    public Closure|null|RequestSensor $requestSensor;
+    /**
+     * @var (callable(Request, Response): void)|null
+     */
+    public $requestSensor;
 
-    public Closure|null|CommandSensor $commandSensor;
+    /**
+     * @var (callable(InputInterface, int): void)|null
+     */
+    public $commandSensor;
 
     public function __construct(
         private RequestState|CommandState $executionState,
