@@ -115,7 +115,11 @@ final class NightwatchServiceProvider extends ServiceProvider
     public function boot(): void
     {
         try {
-            $this->handleAndClearRegisterException();
+            if ($this->registerException) {
+                $this->handleAndClearRegisterException();
+
+                return;
+            }
 
             if ($this->app->runningInConsole()) {
                 $this->registerPublications();
@@ -217,11 +221,9 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function handleAndClearRegisterException(): void
     {
-        if ($this->registerException) {
-            Nightwatch::unrecoverableExceptionOccurred($this->registerException);
+        Nightwatch::unrecoverableExceptionOccurred($this->registerException);
 
-            $this->registerException = null;
-        }
+        $this->registerException = null;
     }
 
     private function registerPublications(): void
