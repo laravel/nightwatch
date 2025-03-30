@@ -221,7 +221,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function handleAndClearRegisterException(): void
     {
-        Nightwatch::unrecoverableExceptionOccurred($this->registerException);
+        Nightwatch::unrecoverableExceptionOccurred($this->registerException); // @phpstan-ignore argument.type
 
         $this->registerException = null;
     }
