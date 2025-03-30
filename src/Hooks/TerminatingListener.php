@@ -26,11 +26,11 @@ final class TerminatingListener
 
     public function __invoke(Terminating $event): void
     {
-        try {
-            if (! Compatibility::$terminatingEventExists) {
-                return;
-            }
+        if (! Compatibility::$terminatingEventExists) {
+            return;
+        }
 
+        try {
             $this->nightwatch->sensor->stage(ExecutionStage::Terminating);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
