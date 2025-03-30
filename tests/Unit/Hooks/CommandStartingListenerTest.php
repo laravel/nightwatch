@@ -3,6 +3,7 @@
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bus\PendingDispatch;
 use Laravel\Nightwatch\Hooks\CommandStartingListener;
 use Symfony\Component\Console\Input\StringInput;
@@ -25,7 +26,9 @@ it('gracefully handles exceptions', function () {
     expect(nightwatch()->state->exceptions)->toBe(2);
 
     forgetRecordedExceptions(2);
-});
+})->skip(version_compare(Application::VERSION, '12.0.0', '<'), <<<'MESSAGE'
+This test only fails when there are type declations which where introduced in 12.x
+MESSAGE);
 
 it('gracefully handles custom kernel implementations', function () {
     $events = app(Dispatcher::class);

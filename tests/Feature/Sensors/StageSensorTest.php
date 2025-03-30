@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Compatibility;
 
@@ -16,7 +17,7 @@ it('captures the terminating phase when the terminating event does not exist', f
     Compatibility::$terminatingEventExists = false;
     $ingest = fakeIngest();
     Route::get('/users', function () {
-        defer(function () {
+        app()->terminating(function () {
             travelTo(now()->addMicroseconds(123));
         });
 
@@ -35,7 +36,7 @@ it('captures the terminating phase when the terminating event does exist', funct
     Compatibility::$terminatingEventExists = true;
     $ingest = fakeIngest();
     Route::get('/users', function () {
-        defer(function () {
+        app()->terminating(function () {
             travelTo(now()->addMicroseconds(123));
         });
 
@@ -47,4 +48,4 @@ it('captures the terminating phase when the terminating event does exist', funct
     $response->assertOk();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('request:0.terminating', 123);
-});
+})->skip(! class_exists(Terminating::class));
