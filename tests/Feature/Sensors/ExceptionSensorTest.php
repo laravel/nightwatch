@@ -485,6 +485,7 @@ it('handles the args in the trace', function () {
     ]));
 
     fclose($resourceToClose);
+
     forgetRecordedExceptions(2);
 });
 
