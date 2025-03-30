@@ -39,7 +39,7 @@ it('can write and flush many records', function () {
 it('does does not want flushing without writes', function () {
     $buffer = new StreamBuffer(100);
 
-    $this->assertFalse($buffer->wantsFlushing());
+    expect($buffer->wantsFlushing())->toBeFalse();
 });
 
 it('does not want flushing before reaching the threshold', function () {

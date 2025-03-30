@@ -41,8 +41,8 @@ it('gracefully handles exceptions in the after middleware', function () {
 
     $response = $stack(new Request('GET', '/test'), [])->wait();
 
-    $this->assertTrue($thrownInOutgoingRequestSensor);
-    $this->assertSame('ok', (string) $response->getBody());
+    expect($thrownInOutgoingRequestSensor)->toBeTrue();
+    expect((string) $response->getBody())->toBe('ok');
     expect(nightwatch()->state->exceptions)->toBe(1);
 
     forgetRecordedExceptions(1);
