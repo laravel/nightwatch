@@ -25,7 +25,7 @@ final class ArtisanStartingListener
     {
         try {
             $this->nightwatch->state->artisan = $event->artisan;
-        } catch (Throwable $e) {
+        } catch (Throwable $e) { // @phpstan-ignore catch.neverThrown
             $this->nightwatch->report($e);
         }
     }
