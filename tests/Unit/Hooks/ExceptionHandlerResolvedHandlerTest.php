@@ -7,11 +7,11 @@ use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 it('gracefully handles exceptions', function () {
     $exceptionHandler = new class(app()) extends Handler
     {
-        public bool $thrown = false;
+        public bool $thrownInReportable = false;
 
         public function reportable(callable $reportUsing)
         {
-            $this->thrown = true;
+            $this->thrownInReportable = true;
 
             throw new RuntimeException('Whoops!');
         }
@@ -20,7 +20,7 @@ it('gracefully handles exceptions', function () {
     $handler = new ExceptionHandlerResolvedHandler(nightwatch());
     $handler($exceptionHandler);
 
-    expect($exceptionHandler->thrown)->toBeTrue();
+    expect($exceptionHandler->thrownInReportable)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
 
     forgetRecordedExceptions(1);

@@ -10,11 +10,11 @@ it('gracefully handles exceptions thrown while ingesting', function () {
     });
     nightwatch()->ingest = new class implements LocalIngest
     {
-        public bool $thrown = false;
+        public bool $thrownInWrite = false;
 
         public function write(string $payload): void
         {
-            $this->thrown = true;
+            $this->thrownInWrite = true;
 
             throw new RuntimeException('Whoops!');
         }

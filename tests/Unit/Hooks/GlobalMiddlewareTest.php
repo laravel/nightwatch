@@ -9,11 +9,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 it('gracefully handles exceptions when capturing execution preview', function () {
     $request = new class extends Request
     {
-        public bool $thrown = false;
+        public bool $thrownInGetMethod = false;
 
         public function getMethod(): string
         {
-            $this->thrown = true;
+            $this->thrownInGetMethod = true;
 
             throw new RuntimeException('Whoops!');
         }
@@ -23,7 +23,7 @@ it('gracefully handles exceptions when capturing execution preview', function ()
     $middleware = new GlobalMiddleware(nightwatch());
     $response = $middleware->handle($request, $next);
 
-    expect($request->thrown)->toBeTrue();
+    expect($request->thrownInGetMethod)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
     expect($response->content())->toBe('response');
 

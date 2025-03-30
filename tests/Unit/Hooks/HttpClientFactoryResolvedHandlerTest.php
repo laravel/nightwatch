@@ -6,11 +6,11 @@ use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 it('gracefully handles exceptions', function () {
     $factory = new class extends Factory
     {
-        public bool $thrown = false;
+        public bool $thrownInGlobalMiddleware = false;
 
         public function globalMiddleware($middleware)
         {
-            $this->thrown = true;
+            $this->thrownInGlobalMiddleware = true;
 
             throw new RuntimeException('Whoops!');
         }
@@ -19,7 +19,7 @@ it('gracefully handles exceptions', function () {
     $handler = new HttpClientFactoryResolvedHandler(nightwatch());
     $handler($factory);
 
-    expect($factory->thrown)->toBeTrue();
+    expect($factory->thrownInGlobalMiddleware)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
 
     forgetRecordedExceptions(1);

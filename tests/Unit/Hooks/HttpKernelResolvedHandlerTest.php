@@ -44,11 +44,11 @@ it('gracefully handles exceptions when registering lifecycle handler', function 
 
     $kernel = new class(app(), app(Router::class)) extends Kernel
     {
-        public bool $thrown = false;
+        public bool $thrownInWhenRequestLifecycleIsLongerThan = false;
 
         public function whenRequestLifecycleIsLongerThan($threshold, $handler)
         {
-            $this->thrown = true;
+            $this->thrownInWhenRequestLifecycleIsLongerThan = true;
 
             throw new RuntimeException('Whoops!');
         }
@@ -57,7 +57,7 @@ it('gracefully handles exceptions when registering lifecycle handler', function 
     $handler = new HttpKernelResolvedHandler(nightwatch());
     $handler($kernel, app());
 
-    expect($kernel->thrown)->toBeTrue();
+    expect($kernel->thrownInWhenRequestLifecycleIsLongerThan)->toBeTrue();
     expect($unrecoverableExceptions)->toHaveCount(1);
 });
 
@@ -69,11 +69,11 @@ it('gracefully handles exceptions when prepending middleware', function () {
 
     $kernel = new class(app(), app(Router::class)) extends Kernel
     {
-        public bool $thrown = false;
+        public bool $thrownInPrependMiddleware = false;
 
         public function prependMiddleware($middleware)
         {
-            $this->thrown = true;
+            $this->thrownInPrependMiddleware = true;
 
             throw new RuntimeException('Whoops!');
         }
@@ -82,7 +82,7 @@ it('gracefully handles exceptions when prepending middleware', function () {
     $handler = new HttpKernelResolvedHandler(nightwatch());
     $handler($kernel, app());
 
-    expect($kernel->thrown)->toBeTrue();
+    expect($kernel->thrownInPrependMiddleware)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
 
     forgetRecordedExceptions(1);
