@@ -17,6 +17,9 @@ it('gracefully handles exceptions', function () {
     $handler = new LogHandler(nightwatch());
     $handler->handle($record);
 
+    expect($thrownInLogSensor)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
+
     $thrownInLogSensor = false;
     $handler->handleBatch([null]);
 
