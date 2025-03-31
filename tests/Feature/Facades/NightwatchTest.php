@@ -48,11 +48,13 @@ it('handles unrecoverable exceptions statelessly', function () {
         $resolved = true;
     });
 
+    $handled = [];
     Nightwatch::handleUnrecoverableExceptionsUsing(function (Throwable $e) use (&$handled) {
         $handled[] = $e;
     });
     Nightwatch::unrecoverableExceptionOccurred($first = new RuntimeException('Whoops!'));
 
     expect($resolved)->toBeFalse();
+    expect($handled)->toHaveCount(1);
     expect(app()->resolved(Core::class))->toBeFalse();
 });
