@@ -2,16 +2,17 @@
 
 namespace Laravel\NightwatchAgent;
 
-use Laravel\NightwatchAgent\Factories\IngestDetailsRepositoryFactory;
-use Laravel\NightwatchAgent\Factories\IngestFactory;
+use Laravel\NightwatchAgent\Factories\BrowserFactory;
 use Laravel\NightwatchAgent\Factories\ServerFactory;
 use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\Loop;
+use React\EventLoop\LoopInterface;
 use Throwable;
 
 use function date;
 use function gethostname;
 use function round;
+use function rtrim;
 use function str_replace;
 
 require __DIR__.'/../vendor/react/promise/src/functions_include.php';
@@ -62,40 +63,59 @@ $error = static function (string $message): void {
  * Initialize services...
  */
 
+if ($loop ?? null) {
+    /** @var LoopInterface $loop */
+    Loop::set($loop);
+}
+
 $packageVersion = new PackageVersionRepository(
     path: $basePath.'/../../version.txt',
 );
 
-$ingestDetails = (new IngestDetailsRepositoryFactory)(
-    baseUrl: $baseUrl,
-    refreshToken: $refreshToken,
+/** @var ?BrowserFactory $browserFactory */
+$browserFactory ??= new BrowserFactory($packageVersion);
+
+$ingestDetailsBrowser = $browserFactory(
     connectionTimeout: $authenticationConnectionTimeout,
     timeout: $authenticationTimeout,
-    preemptivelyRefreshInSeconds: 60,
-    minRefreshDurationInSeconds: 60,
     server: $server,
-    packageVersion: $packageVersion,
+    headers: [
+        'authorization' => "Bearer {$refreshToken}",
+        'content-type' => 'application/json',
+    ],
+    baseUrl: rtrim($baseUrl, '/'),
+);
+
+$ingestDetails = new IngestDetailsRepository(
+    browser: $ingestDetailsBrowser,
     onAuthenticationSuccess: static fn (IngestDetails $ingestDetails, float $duration) => $info('Authentication successful ['.round($duration, 3).'s]'),
     onAuthenticationError: static fn (Throwable $e, float $duration) => $info('Authentication failed ['.round($duration, 3).'s]: '.$e->getMessage()),
 );
 
-$ingest = (new IngestFactory)(
-    ingestDetails: $ingestDetails,
+$ingestBrowser = $browserFactory(
     connectionTimeout: $ingestConnectionTimeout,
     timeout: $ingestTimeout,
-    debug: $debug,
-    threshold: 6_000_000,
-    concurrentRequestLimit: 2,
-    maxBufferDurationInSeconds: 10,
     server: $server,
-    packageVersion: $packageVersion,
+    headers: [
+        'content-encoding' => 'gzip',
+        'content-type' => 'application/octet-stream',
+    ],
+    debug: $debug,
+);
+
+$ingest = new Ingest(
+    browser: $ingestBrowser,
+    ingestDetails: $ingestDetails,
+    buffer: new StreamBuffer(6_000_000),
+    concurrentRequestLimit: 2,
+    maxBufferDurationInSeconds: $debug ? 1 : 10,
     onIngestSuccess: static fn (ResponseInterface $response, float $duration) => $info('Ingest successful ['.round($duration, 3).'s]'),
     onIngestError: static fn (Throwable $e, float $duration) => $info('Ingest failed ['.round($duration, 3).'s]: '.$e->getMessage()),
 );
 
 $server = (new ServerFactory)(
     listenOn: $listenOn,
-    onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]."),
+    onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]"),
     onServerError: static fn (Throwable $e) => $error("Server error: {$e->getMessage()}"),
     onConnectionError: static fn (Throwable $e) => $error("Connection error: {$e->getMessage()}"),
     onPayloadReceived: $ingest->write(...),

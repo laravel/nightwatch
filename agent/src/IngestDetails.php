@@ -8,6 +8,7 @@ class IngestDetails
         public string $token,
         public int $expiresIn,
         public string $ingestUrl,
+        public int $refreshIn,
     ) {
         //
     }

@@ -8,6 +8,7 @@
 
 /*.md export-ignore
 /.editorconfig export-ignore
+/.env.example export-ignore
 /.gitattributes export-ignore
 /.github export-ignore
 /.gitignore export-ignore

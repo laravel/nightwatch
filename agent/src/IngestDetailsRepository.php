@@ -3,22 +3,24 @@
 namespace Laravel\NightwatchAgent;
 
 use Closure;
+use Laravel\NightwatchAgent\Contracts\Browser;
 use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\Loop;
-use React\Http\Browser;
-use React\Promise\Promise;
+use React\Http\Message\ResponseException;
 use React\Promise\PromiseInterface;
 use RuntimeException;
 use Throwable;
 
+use function array_fill;
 use function call_user_func;
 use function is_array;
 use function is_int;
 use function is_string;
 use function json_decode;
-use function max;
 use function microtime;
 use function React\Promise\resolve;
+use function strlen;
+use function substr;
 
 class IngestDetailsRepository
 {
@@ -27,15 +29,22 @@ class IngestDetailsRepository
      */
     private ?PromiseInterface $ingestDetails = null;
 
+    private bool $hasAuthenticated = false;
+
+    private int $consecutiveFailures = 0;
+
     /**
+     * @var list<int|float>|null
+     */
+    private ?array $quickRetryStrategyDurationsCache = null;
+
+    /**
+     * @param  Browser  $browser
      * @param  (Closure(IngestDetails $ingestDetails, float $duration): mixed)  $onAuthenticationSuccess
      * @param  (Closure(Throwable $e, float $duration): mixed)  $onAuthenticationError
      */
     public function __construct(
-        private Browser $browser,
-        private int $preemptivelyRefreshInSeconds,
-        private int $minRefreshDurationInSeconds,
-        private PackageVersionRepository $packageVersion,
+        private $browser,
         private Closure $onAuthenticationSuccess,
         private Closure $onAuthenticationError,
     ) {
@@ -61,62 +70,127 @@ class IngestDetailsRepository
     private function refresh(): PromiseInterface
     {
         $start = microtime(true);
+        $duration = null;
 
-        return $this->browser->post('', headers: [
-            'user-agent' => 'NightwatchAgent/'.$this->packageVersion->get(),
-        ])->then(function (ResponseInterface $response) use ($start): IngestDetails {
-            $duration = microtime(true) - $start;
+        return $this->browser->post('/api/agent-auth', headers: [], body: '')
+            ->then(function (ResponseInterface $response) use ($start, &$duration): IngestDetails {
+                $duration = microtime(true) - $start;
 
-            $data = json_decode($response->getBody()->getContents(), associative: true, flags: JSON_THROW_ON_ERROR);
+                $ingestDetails = $this->parseResponse($response);
 
-            if (
-                ! is_array($data) ||
-                ! is_string($data['token'] ?? null) ||
-                ! is_int($data['expires_in'] ?? null) ||
-                ! is_string($data['ingest_url'] ?? null)
-            ) {
-                throw new RuntimeException("Invalid authentication response [{$response->getBody()->getContents()}].");
-            }
+                $this->scheduleRefreshIn($ingestDetails->refreshIn);
 
-            $ingestDetails = new IngestDetails($data['token'], $data['expires_in'], $data['ingest_url']);
+                call_user_func($this->onAuthenticationSuccess, $ingestDetails, $duration);
 
-            $this->scheduleRefreshIn(seconds: $ingestDetails->expiresIn - $this->preemptivelyRefreshInSeconds);
+                $this->hasAuthenticated = true;
+                $this->consecutiveFailures = 0;
 
-            call_user_func($this->onAuthenticationSuccess, $ingestDetails, $duration);
+                return $ingestDetails;
+            })->catch(function (Throwable $e) use ($start, &$duration): null {
+                $this->consecutiveFailures++;
 
-            return $ingestDetails;
-        }, function (Throwable $e) use ($start): null {
-            $duration = microtime(true) - $start;
+                // TODO if the current token has expired we should `null` it.
+                $duration ??= microtime(true) - $start;
 
-            // On first failure, the old key will still work for the next ~60 seconds.
-            // Will comment this out until we have a solid retry mechanism in place.
-            // We won't want to keep this in place all the time as the agent should
-            // stop sending data if the key has expired. We could probably capture
-            // the current timestamp on refresh with the expires_in added. Each
-            // time the key is retrieved we check if it has expired and return
-            // null if we believe it has.
-            // $this->ingestDetails = new Promise(fn () => null);
-            // TODO schedule retry after failure
+                [$e, $interval] = $this->parseException($e);
 
-            call_user_func($this->onAuthenticationError, $e, $duration);
+                $this->scheduleRefreshIn($interval);
 
-            return null;
-        })->catch(function (Throwable $e): null {
-            // TODO schedule retry
-            call_user_func($this->onAuthenticationError, $e, 0.0);
+                call_user_func($this->onAuthenticationError, $e, $duration);
 
-            return null;
+                return null;
+            });
+    }
+
+    private function scheduleRefreshIn(int|float $seconds): void
+    {
+        Loop::addTimer($seconds, function (): void {
+            $this->refresh()->then(function (?IngestDetails $ingestDetails): void {
+                if ($ingestDetails) {
+                    $this->ingestDetails = resolve($ingestDetails);
+                }
+            });
         });
     }
 
-    private function scheduleRefreshIn(int $seconds): void
+    private function parseResponse(ResponseInterface $response): IngestDetails
     {
-        $seconds = max($this->minRefreshDurationInSeconds, $seconds);
+        $body = $response->getBody()->getContents();
 
-        Loop::addTimer($seconds, function (): void {
-            $this->refresh()->then(function (?IngestDetails $ingestDetails): void {
-                $this->ingestDetails = resolve($ingestDetails);
-            });
-        });
+        $data = json_decode($body, associative: true, flags: JSON_THROW_ON_ERROR);
+
+        if (
+            ! is_array($data) ||
+            ! is_string($data['token'] ?? null) ||
+            ! is_int($data['expires_in'] ?? null) ||
+            ! is_int($data['refresh_in'] ?? null) ||
+            ! is_string($data['ingest_url'] ?? null)
+        ) {
+            throw new RuntimeException("Invalid authentication response [{$body}].");
+        }
+
+        return new IngestDetails(
+            token: $data['token'],
+            expiresIn: $data['expires_in'],
+            ingestUrl: $data['ingest_url'],
+            refreshIn: $data['refresh_in'],
+        );
+    }
+
+    /**
+     * @return array{0: Throwable, 1: int|float}
+     */
+    private function parseException(Throwable $e): array
+    {
+        return $e instanceof ResponseException
+            ? $this->parseResponseException($e)
+            : $this->parseNonResponseException($e);
+    }
+
+    /**
+     * @return array{0: Throwable, 1: int|float}
+     */
+    private function parseResponseException(ResponseException $e): array
+    {
+        $status = $e->getResponse()->getStatusCode();
+        $body = $e->getResponse()->getBody()->getContents();
+
+        if (strlen($body) > 255) {
+            $body = substr($body, 0, 250).'[...]';
+        }
+
+        $e = new RuntimeException("{$status} [{$body}]");
+
+        if ($status === 401) {
+            return [$e, 3_600];
+        }
+
+        return $this->hasAuthenticated
+            ? [$e, $this->slowRetryStrategy()]
+            : [$e, $this->quickRetryStrategy()];
+    }
+
+    /**
+     * @return array{0: Throwable, 1: int|float}
+     */
+    private function parseNonResponseException(Throwable $e): array
+    {
+        return $this->hasAuthenticated
+            ? [$e, $this->slowRetryStrategy()]
+            : [$e, $this->quickRetryStrategy()];
+    }
+
+    private function quickRetryStrategy(): int|float
+    {
+        $strategy = $this->quickRetryStrategyDurationsCache ??= [2.5, 5, 10, 15, 30, 60, 120, 240, ...array_fill(0, 12, 300)];
+
+        return $strategy[$this->consecutiveFailures - 1] ?? 3_600;
+    }
+
+    private function slowRetryStrategy(): int
+    {
+        return $this->consecutiveFailures < 13
+            ? 300
+            : 3_600;
     }
 }

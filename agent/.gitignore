@@ -1,6 +1,8 @@
 /.box_dump
+/.env.testing
 /.phpunit.result.cache
 /box.json
 /phpstan.neon
 /phpunit.xml
 /vendor
+/tests/test-payload

@@ -27,11 +27,13 @@
         "react/socket": "^1.16"
     },
     "require-dev": {
+        "ext-pcntl": "*",
         "laravel/pint": "1.21.0",
         "pestphp/pest": "^3.7.4",
         "phpstan/phpstan": "^2.1.6",
         "phpunit/phpunit": "^11.5.3",
-        "symfony/process": "^7.2"
+        "symfony/process": "^7.2",
+        "vlucas/phpdotenv": "^5.6"
     },
     "autoload": {
         "psr-4": {

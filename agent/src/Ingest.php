@@ -3,10 +3,10 @@
 namespace Laravel\NightwatchAgent;
 
 use Closure;
+use Laravel\NightwatchAgent\Contracts\Browser;
 use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
-use React\Http\Browser;
 use React\Promise\PromiseInterface;
 use RuntimeException;
 use Throwable;
@@ -22,16 +22,16 @@ class Ingest
     private ?TimerInterface $flushBufferAfterDelayTimer = null;
 
     /**
+     * @param  Browser  $browser
      * @param  (Closure(ResponseInterface $response, float $duration): mixed)  $onIngestSuccess
      * @param  (Closure(Throwable $e, float $duration): mixed)  $onIngestError
      */
     public function __construct(
-        private Browser $browser,
+        private $browser,
         private IngestDetailsRepository $ingestDetails,
         private StreamBuffer $buffer,
         private int $concurrentRequestLimit,
         private int $maxBufferDurationInSeconds,
-        private PackageVersionRepository $packageVersion,
         private Closure $onIngestSuccess,
         private Closure $onIngestError,
     ) {
@@ -93,7 +93,6 @@ class Ingest
                 url: $ingestDetails->ingestUrl,
                 headers: [
                     'authorization' => "Bearer {$ingestDetails->token}",
-                    'user-agent' => 'NightwatchAgent/'.$this->packageVersion->get(),
                 ],
                 body: $payload,
             )->then(
