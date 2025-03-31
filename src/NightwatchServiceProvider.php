@@ -405,6 +405,9 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\State\CommandState::$id
          * @see \Laravel\Nightwatch\Records\JobAttempt
          * @see \Laravel\Nightwatch\Records\Exception
+         *
+         * Scheduled tasks...
+         * @see \Laravel\Nightwatch\Core::ingest()
          */
         $events->listen(CommandStarting::class, (new CommandStartingListener($events, $core, $kernel))(...));
     }

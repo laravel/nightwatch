@@ -16,6 +16,7 @@ use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobPopping;
 use Illuminate\Queue\Events\JobProcessing;
 use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
 use Throwable;
@@ -56,7 +57,7 @@ final class CommandStartingListener
                 default => $this->registerCommandHooks(),
             };
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            Nightwatch::unrecoverableExceptionOccurred($e);
         }
     }
 
@@ -93,6 +94,9 @@ final class CommandStartingListener
 
         $this->events->listen(ScheduledTaskStarting::class, (new ScheduledTaskStartingListener($this->nightwatch))(...));
 
+        /**
+         * @see \Laravel\Nightwatch\Core::ingest()
+         */
         $this->events->listen([
             ScheduledTaskFinished::class,
             ScheduledTaskSkipped::class,
@@ -110,8 +114,6 @@ final class CommandStartingListener
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */
         $this->events->listen(CommandFinished::class, (new CommandFinishedListener($this->nightwatch))(...));
-
-        // TODO this is an unrecoverable error... it needs to be handled as such unlike other errors that might occur in this handler
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::End
