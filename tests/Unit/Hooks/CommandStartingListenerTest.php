@@ -5,11 +5,16 @@ use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bus\PendingDispatch;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\CommandStartingListener;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\NullOutput;
 
 it('gracefully handles exceptions', function () {
+    $unrecoverableExceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions) {
+        $unrecoverableExceptions[] = $e;
+    });
     $events = app(Dispatcher::class);
     $kernel = app(Kernel::class);
     $event = new class extends CommandStarting
@@ -23,9 +28,10 @@ it('gracefully handles exceptions', function () {
     $listener = new CommandStartingListener($events, nightwatch(), $kernel);
     $listener($event);
 
-    expect(nightwatch()->state->exceptions)->toBe(2);
+    expect($unrecoverableExceptions)->toHaveCount(1);
+    expect(nightwatch()->state->exceptions)->toBe(1);
 
-    forgetRecordedExceptions(2);
+    forgetRecordedExceptions(1);
 })->skip(version_compare(Application::VERSION, '12.0.0', '<'), <<<'MESSAGE'
 This test only fails when there are type declations which where introduced in 12.x
 MESSAGE);
