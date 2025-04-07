@@ -9,6 +9,7 @@ use function call_user_func;
 
 /**
  * @method static void report(\Throwable $e)
+ * @method static void user(callable $callback)
  *
  * @see \Laravel\Nightwatch\Core
  */

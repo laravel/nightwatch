@@ -25,9 +25,9 @@ final class UserSensor
 
         $this->requestState->records->write(new User(
             timestamp: $this->clock->microtime(),
-            id: $details['id'],
-            name: $details['name'],
-            username: $details['username'],
+            id: (string) $details['id'], // @phpstan-ignore cast.string
+            name: (string) ($details['name'] ?? ''), // @phpstan-ignore cast.string
+            username: (string) ($details['username'] ?? ''), // @phpstan-ignore cast.string
         ));
     }
 }

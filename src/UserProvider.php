@@ -6,6 +6,8 @@ use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Laravel\Nightwatch\Types\Str;
 
+use function call_user_func;
+
 /**
  * @internal
  */
@@ -14,10 +16,16 @@ final class UserProvider
     // TODO we need to reset this state between executions.
     private ?Authenticatable $rememberedUser = null;
 
+    /**
+     * @var (callable(): (null|(callable(Authenticatable): array{id: mixed, name?: mixed, username?: mixed})))
+     */
+    public $userDetailsResolverResolver;
+
     public function __construct(
         private AuthManager $auth,
+        callable $userDetailsResolverResolver,
     ) {
-        //
+        $this->userDetailsResolverResolver = $userDetailsResolverResolver;
     }
 
     /**
@@ -39,7 +47,7 @@ final class UserProvider
     }
 
     /**
-     * @return array{ id: string, name: string, username: string }|null
+     * @return array{ id: mixed, name?: mixed, username?: mixed }|null
      */
     public function details(): ?array
     {
@@ -49,11 +57,17 @@ final class UserProvider
             return null;
         }
 
-        return [
-            'id' => (string) $user->getAuthIdentifier(), // @phpstan-ignore cast.string
-            'name' => (string) ($user->name ?? ''),
-            'username' => (string) ($user->email ?? ''),
-        ];
+        $resolver = call_user_func($this->userDetailsResolverResolver);
+
+        if ($resolver === null) {
+            return [
+                'id' => $user->getAuthIdentifier(),
+                'name' => $user->name ?? '',
+                'username' => $user->email ?? '',
+            ];
+        }
+
+        return $resolver($user);
     }
 
     public function remember(Authenticatable $user): void
