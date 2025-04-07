@@ -1,9 +1,13 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\CurlHandler;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\StreamDecoratorTrait;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Psr\Http\Message\StreamInterface;
 
 use function Pest\Laravel\post;
@@ -187,6 +191,23 @@ it("doesn't capture the outgoing request URL authentication details", function (
     $ingest->assertLatestWrite('outgoing-request:2.url', 'https://laravel.com');
     expect($ingest->latestWriteAsString())->not->toContain('ryuta');
     expect($ingest->latestWriteAsString())->not->toContain('secret');
+});
+
+it('can use Guzzle directly', function () {
+    $ingest = fakeIngest();
+    Route::post('/users', function () {
+        $stack = new HandlerStack;
+        $stack->setHandler(new CurlHandler);
+        $stack->push(Nightwatch::guzzleMiddleware());
+        $client = new Client(['handler' => $stack]);
+        $client->get('https://laravel.com');
+    });
+
+    $response = post('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('outgoing-request:0.url', 'https://laravel.com');
 });
 
 final class NoReadStream implements StreamInterface

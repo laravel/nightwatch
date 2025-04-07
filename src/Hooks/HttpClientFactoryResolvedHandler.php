@@ -30,7 +30,7 @@ final class HttpClientFactoryResolvedHandler
              *
              * TODO check this isn't a memory leak in octane
              */
-            $factory->globalMiddleware(new GuzzleMiddleware($this->nightwatch));
+            $factory->globalMiddleware($this->nightwatch->guzzleMiddleware());
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

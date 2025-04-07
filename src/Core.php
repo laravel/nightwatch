@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
@@ -48,6 +49,11 @@ final class Core
     public function user(callable $callback): void
     {
         $this->userDetailsResolver = $callback;
+    }
+
+    public function guzzleMiddleware(): callable
+    {
+        return new GuzzleMiddleware($this);
     }
 
     /**
