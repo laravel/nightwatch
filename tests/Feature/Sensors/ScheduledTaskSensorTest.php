@@ -125,8 +125,11 @@ it('ingests skipped tasks', function () {
 
 it('ingests failed tasks', function () {
     $line = __LINE__ + 1;
-    $task = app(Schedule::class)->call(fn () => travelTo(now()->addMicroseconds(1_000_000)) & throw new Exception('Unhandled error'))
-        ->everyMinute();
+    $task = app(Schedule::class)->call(function () {
+        travelTo(now()->addMicroseconds(1_000_000));
+
+        throw new Exception('Unhandled error');
+    })->everyMinute();
     $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
 
     Artisan::call('schedule:run');
@@ -166,6 +169,9 @@ it('ingests failed tasks', function () {
             'exception_preview' => 'Unhandled error',
         ],
     ]);
+    $this->ingest->assertLatestWrite('exception:0.message', 'Unhandled error');
+
+    forgetRecordedExceptions(1);
 });
 
 it('resets trace ID and timestamp on each task run', function () {

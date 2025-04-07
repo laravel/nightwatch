@@ -2,26 +2,30 @@
 
 use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Support\Facades\Log;
+use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Hooks\ScheduledTaskStartingListener;
-use Laravel\Nightwatch\Types\Str;
 
 beforeAll(function () {
     forceCommandExecutionState();
 });
 
 it('gracefully handles exceptions', function () {
-    Str::createUuidsUsing(function () {
-        throw new RuntimeException('Whoops!');
+    $thrownInMicrotimeResolver = false;
+    nightwatch()->clock = tap(new Clock, function ($clock) use (&$thrownInMicrotimeResolver) {
+        $clock->microtimeResolver = function () use (&$thrownInMicrotimeResolver) {
+            $thrownInMicrotimeResolver = true;
+
+            throw new RuntimeException('Whoops!');
+        };
     });
 
+    $event = new ScheduledTaskStarting(app(Schedule::class)->command('php artisan inspire'));
+
     $handler = new ScheduledTaskStartingListener(nightwatch());
+    $handler($event);
 
-    Log::shouldReceive('critical')
-        ->once()
-        ->with('[nightwatch] Whoops!');
+    expect($thrownInMicrotimeResolver)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
 
-    $handler(new ScheduledTaskStarting(app(Schedule::class)->command('php artisan inspire')));
-
-    Str::createUuidsNormally();
+    forgetRecordedExceptions(1);
 });

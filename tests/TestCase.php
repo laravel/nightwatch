@@ -2,12 +2,13 @@
 
 namespace Tests;
 
-use Illuminate\Config\Repository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use RuntimeException;
 
 use function env;
 use function now;
@@ -17,22 +18,27 @@ abstract class TestCase extends OrchestraTestCase
 {
     use RefreshDatabase, WithWorkbench;
 
+    private Core $core;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        $core = $this->app->make(Core::class);
-        $core->state->reset();
-        $core->clock->microtimeResolver = fn () => (float) now()->format('U.u');
-
-        $this->app->make(Repository::class)->set('nightwatch.error_log_channel', 'null');
+        $this->core = $this->app->make(Core::class);
+        $this->core->state->reset();
+        $this->core->clock->microtimeResolver = fn () => (float) now()->format('U.u');
+        Nightwatch::handleUnrecoverableExceptionsUsing(fn ($e) => throw $e);
     }
 
     protected function tearDown(): void
     {
-        parent::tearDown();
+        if (($count = $this->core->state->exceptions) > 0) {
+            throw new RuntimeException("{$count} exception(s) were captured that you did not forget. Remember to call `forgetRecordedExceptions(\$count)` at the end of your test after asserting against the expected exception count.");
+        }
 
         Str::createUuidsNormally();
+
+        parent::tearDown();
     }
 
     protected function beforeRefreshingDatabase(): void

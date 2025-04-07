@@ -1,11 +1,14 @@
 <?php
 
-use Illuminate\Foundation\Http\Events\RequestHandled;
-use Illuminate\Http\Request;
+use Illuminate\Console\Events\CommandFinished;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Hooks\RequestHandledListener;
+use Laravel\Nightwatch\Hooks\CommandFinishedListener;
+use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\NullOutput;
 
 it('gracefully handles exceptions', function () {
+    Compatibility::$terminatingEventExists = false;
     $thrownInStageSensor = false;
     nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
         $thrownInStageSensor = true;
@@ -13,10 +16,13 @@ it('gracefully handles exceptions', function () {
         throw new RuntimeException('Whoops!');
     };
     nightwatch()->state->stage = ExecutionStage::Bootstrap;
+    nightwatch()->state->name = 'app:build';
 
-    $event = new RequestHandled(Request::create('/tests'), response(''));
+    $event = new CommandFinished(
+        'app:build', new StringInput('app:build'), new NullOutput, 1
+    );
 
-    $listener = new RequestHandledListener(nightwatch());
+    $listener = new CommandFinishedListener(nightwatch());
     $listener($event);
 
     expect($thrownInStageSensor)->toBeTrue();

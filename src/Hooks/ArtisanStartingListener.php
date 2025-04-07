@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Illuminate\Console\Application as Artisan;
+use Illuminate\Console\Events\ArtisanStarting;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
@@ -10,7 +10,7 @@ use Throwable;
 /**
  * @internal
  */
-final class ArtisanStartingHandler
+final class ArtisanStartingListener
 {
     /**
      * @param  Core<CommandState>  $nightwatch
@@ -21,10 +21,10 @@ final class ArtisanStartingHandler
         //
     }
 
-    public function __invoke(Artisan $artisan): void
+    public function __invoke(ArtisanStarting $event): void
     {
         try {
-            $this->nightwatch->state->artisan = $artisan;
+            $this->nightwatch->state->artisan = $event->artisan;
         } catch (Throwable $e) { // @phpstan-ignore catch.neverThrown
             $this->nightwatch->report($e);
         }

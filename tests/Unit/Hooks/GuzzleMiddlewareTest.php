@@ -4,60 +4,46 @@ use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
-use Laravel\Nightwatch\SensorManager;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 
 it('gracefully handles exceptions in the before middleware', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $thrown = false;
-
-        public function __construct() {}
-
-        public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
-        {
-            $this->thrown = true;
-
-            throw new RuntimeException('Whoops!');
-        }
-    });
-
-    $thrown = false;
-    nightwatch()->clock->microtimeResolver = function () use (&$thrown): float {
-        $thrown = true;
+    $exceptions = [];
+    nightwatch()->sensor->exceptionSensor = function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
+    };
+    $thrownInMicrotimeResolver = false;
+    nightwatch()->clock->microtimeResolver = function () use (&$thrownInMicrotimeResolver): float {
+        $thrownInMicrotimeResolver = true;
 
         throw new RuntimeException('Whoops!');
     };
 
-    $middleware = new GuzzleMiddleware($nightwatch);
+    $middleware = new GuzzleMiddleware(nightwatch());
 
     $stack = $middleware(fn () => new Response(body: 'ok'));
     $response = $stack(new Request('GET', '/test'), []);
 
-    $this->assertTrue($thrown);
-    $this->assertSame('ok', (string) $response->getBody());
+    expect($thrownInMicrotimeResolver)->toBeTrue();
+    expect($exceptions)->toHaveCount(1);
+    expect($exceptions[0]->getMessage())->toBe('Whoops!');
+    expect((string) $response->getBody())->toBe('ok');
 });
 
 it('gracefully handles exceptions in the after middleware', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $thrown = false;
+    $thrownInOutgoingRequestSensor = false;
+    nightwatch()->sensor->outgoingRequestSensor = function () use (&$thrownInOutgoingRequestSensor) {
+        $thrownInOutgoingRequestSensor = true;
 
-        public function __construct() {}
+        throw new RuntimeException('Whoops!');
+    };
 
-        public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
-        {
-            $this->thrown = true;
-
-            throw new RuntimeException('Whoops!');
-        }
-    });
-    $middleware = new GuzzleMiddleware($nightwatch);
+    $middleware = new GuzzleMiddleware(nightwatch());
     $stack = $middleware(fn () => new FulfilledPromise(new Response(body: 'ok')));
 
     $response = $stack(new Request('GET', '/test'), [])->wait();
 
-    $this->assertTrue($sensor->thrown);
-    $this->assertSame('ok', (string) $response->getBody());
+    expect($thrownInOutgoingRequestSensor)->toBeTrue();
+    expect((string) $response->getBody())->toBe('ok');
+    expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });

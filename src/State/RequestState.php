@@ -21,6 +21,9 @@ final class RequestState
 {
     public int $v = 1;
 
+    /**
+     * @var 'request'
+     */
     public string $source = 'request';
 
     /**

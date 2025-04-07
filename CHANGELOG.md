@@ -1,6 +1,17 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.1.1...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.1.2...1.x)
+
+## [v1.1.2](https://github.com/laravel/nightwatch/compare/v1.1.1...v1.1.2) - 2025-03-31
+
+### What's Changed
+
+* Add missing record property length limits by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/126
+* Capture exception previews by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/127
+* Capture execution previews by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/128
+* Improve exception handling by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/129
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.1.1...v1.1.2
 
 ## [v1.1.1](https://github.com/laravel/nightwatch/compare/v1.1.0...v1.1.1) - 2025-03-19
 

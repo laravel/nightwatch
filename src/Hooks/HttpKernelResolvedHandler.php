@@ -7,6 +7,7 @@ use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Kernel;
 use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
@@ -42,7 +43,7 @@ final class HttpKernelResolvedHandler
              */
             $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->nightwatch));
         } catch (Throwable $e) {
-            $this->nightwatch->handleUnrecoverableException($e);
+            Nightwatch::unrecoverableExceptionOccurred($e);
         }
 
         try {

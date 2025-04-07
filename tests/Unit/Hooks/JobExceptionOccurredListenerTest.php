@@ -3,32 +3,31 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Jobs\FakeJob;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\JobExceptionOccurredListener;
-use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $thrown = false;
-
-        public function __construct() {}
-
-        public function exception(Throwable $e): void
-        {
-            $this->thrown = true;
-
-            throw new RuntimeException('Whoops!');
-        }
+    $exceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
     });
+    $throwInExceptionSensor = false;
+    nightwatch()->sensor->exceptionSensor = function () use (&$throwInExceptionSensor) {
+        $throwInExceptionSensor = true;
 
-    $listener = new JobExceptionOccurredListener($nightwatch);
+        throw new RuntimeException('Whoops!');
+    };
+
     $event = new JobExceptionOccurred(
         'redis',
         new FakeJob,
         new RuntimeException('Whoops!')
     );
 
+    $listener = new JobExceptionOccurredListener(nightwatch());
     $listener($event);
 
-    expect($sensor->thrown)->toBeTrue();
+    expect($throwInExceptionSensor)->toBeTrue();
+    expect($exceptions)->toHaveCount(1);
+    expect($exceptions[0]->getMessage())->toBe('Whoops!');
 })->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');

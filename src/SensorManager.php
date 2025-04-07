@@ -45,31 +45,77 @@ use Throwable;
  *
  * @internal
  */
-class SensorManager
+final class SensorManager
 {
-    private ?CacheEventSensor $cacheEventSensor;
+    /**
+     * @var (callable(CacheEvent): void)|null
+     */
+    public $cacheEventSensor;
 
-    private ?ExceptionSensor $exceptionSensor;
+    /**
+     * @var (callable(Throwable): void)|null
+     */
+    public $exceptionSensor;
 
-    private ?LogSensor $logSensor;
+    /**
+     * @var (callable(LogRecord): void)|null
+     */
+    public $logSensor;
 
-    private ?OutgoingRequestSensor $outgoingRequestSensor;
+    /**
+     * @var (callable(float, float, RequestInterface, ResponseInterface): void)|null
+     */
+    public $outgoingRequestSensor;
 
-    private ?QuerySensor $querySensor;
+    /**
+     * @var (callable(QueryExecuted, list<array{ file?: string, line?: int }>): void)|null
+     */
+    public $querySensor;
 
-    private ?QueuedJobSensor $queuedJobSensor;
+    /**
+     * @var (callable(JobQueueing|JobQueued): void)|null
+     */
+    public $queuedJobSensor;
 
-    private ?JobAttemptSensor $jobAttemptSensor;
+    /**
+     * @var (callable(JobAttempted): void)|null
+     */
+    public $jobAttemptSensor;
 
-    private ?NotificationSensor $notificationSensor;
+    /**
+     * @var (callable(NotificationSending|NotificationSent): void)|null
+     */
+    public $notificationSensor;
 
-    private ?MailSensor $mailSensor;
+    /**
+     * @var (callable(MessageSending|MessageSent): void)|null
+     */
+    public $mailSensor;
 
-    private ?UserSensor $userSensor;
+    /**
+     * @var (callable(): void)|null
+     */
+    public $userSensor;
 
-    private ?StageSensor $stageSensor;
+    /**
+     * @var (callable(ExecutionStage): void)|null
+     */
+    public $stageSensor;
 
-    private ?ScheduledTaskSensor $scheduledTaskSensor;
+    /**
+     * @var (callable(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed): void)|null
+     */
+    public $scheduledTaskSensor;
+
+    /**
+     * @var (callable(Request, Response): void)|null
+     */
+    public $requestSensor;
+
+    /**
+     * @var (callable(InputInterface, int): void)|null
+     */
+    public $commandSensor;
 
     public function __construct(
         private RequestState|CommandState $executionState,
@@ -96,7 +142,7 @@ class SensorManager
 
     public function request(Request $request, Response $response): void
     {
-        $sensor = new RequestSensor(
+        $sensor = $this->requestSensor ??= new RequestSensor(
             requestState: $this->executionState, // @phpstan-ignore argument.type
         );
 
@@ -105,7 +151,7 @@ class SensorManager
 
     public function command(InputInterface $input, int $status): void
     {
-        $sensor = new CommandSensor(
+        $sensor = $this->commandSensor ??= new CommandSensor(
             executionState: $this->executionState, // @phpstan-ignore argument.type
         );
 

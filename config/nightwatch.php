@@ -11,6 +11,4 @@ return [
         'timeout' => env('NIGHTWATCH_INGEST_TIMEOUT', 0.5),
         'connection_timeout' => env('NIGHTWATCH_INGEST_CONNECTION_TIMEOUT', 0.5),
     ],
-
-    'error_log_channel' => env('NIGHTWATCH_ERROR_LOG_CHANNEL', 'single'),
 ];

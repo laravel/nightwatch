@@ -43,7 +43,7 @@ class RecordsBuffer
     public function flush(): string
     {
         if (count($this->records) === 0) {
-            return '';
+            return '[]';
         }
 
         $records = json_encode($this->records, flags: JSON_THROW_ON_ERROR);

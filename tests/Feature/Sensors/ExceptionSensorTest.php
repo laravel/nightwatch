@@ -81,6 +81,8 @@ it('can ingest thrown exceptions', function () {
             'laravel_version' => '11.33.0',
         ],
     ]);
+
+    forgetRecordedExceptions(1);
 });
 
 it('captures the code', function () {
@@ -97,6 +99,8 @@ it('captures the code', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exception:0._group', hash('xxh128', "MyException,999,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"));
     $ingest->assertLatestWrite('exception:0.code', '999');
+
+    forgetRecordedExceptions(1);
 });
 
 it('can ingest reported exceptions', function () {
@@ -148,6 +152,8 @@ it('can ingest reported exceptions', function () {
             'laravel_version' => '11.33.0',
         ],
     ]);
+
+    forgetRecordedExceptions(1);
 });
 
 it('captures aggregate exception data on the request', function () {
@@ -163,6 +169,8 @@ it('captures aggregate exception data on the request', function () {
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('request:0.exceptions', 3);
+
+    forgetRecordedExceptions(3);
 });
 
 it('handles view exceptions', function () {
@@ -181,6 +189,8 @@ it('handles view exceptions', function () {
     $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
     $ingest->assertLatestWrite('exception:0.code', '999');
     $ingest->assertLatestWrite('exception:0._group', hash('xxh128', 'Exception,999,workbench/resources/views/exception.blade.php,'));
+
+    forgetRecordedExceptions(1);
 });
 
 it('handles spatie view exceptions', function () {
@@ -200,6 +210,8 @@ it('handles spatie view exceptions', function () {
     $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
     $ingest->assertLatestWrite('exception:0.code', '999');
     $ingest->assertLatestWrite('exception:0._group', hash('xxh128', 'Exception,999,workbench/resources/views/exception.blade.php,6'));
+
+    forgetRecordedExceptions(1);
 });
 
 it('handles unknown lines for internal locations', function () {
@@ -222,6 +234,8 @@ it('handles unknown lines for internal locations', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exception:0.file', 'app/Models/User.php');
     $ingest->assertLatestWrite('exception:0.line', 0);
+
+    forgetRecordedExceptions(1);
 });
 
 it('captures handled and unhandled exceptions', function () {
@@ -239,6 +253,8 @@ it('captures handled and unhandled exceptions', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exception:0.handled', true);
     $ingest->assertLatestWrite('exception:1.handled', false);
+
+    forgetRecordedExceptions(2);
 });
 
 it('handles the file in the trace', function () {
@@ -278,6 +294,10 @@ it('handles the file in the trace', function () {
             'source' => '()',
         ],
     ]));
+
+    // Although we only care about 1 exception in this test, another exception
+    // is thrown by monolog due to the frame not having a filename.
+    forgetRecordedExceptions(2);
 });
 
 it('handles the line in the trace', function () {
@@ -317,6 +337,8 @@ it('handles the line in the trace', function () {
             'source' => '()',
         ],
     ]));
+
+    forgetRecordedExceptions(1);
 });
 
 it('handles the class in the trace', function () {
@@ -356,6 +378,10 @@ it('handles the class in the trace', function () {
             'source' => 'TheClass()',
         ],
     ]));
+
+    // Although we only care about 1 exception in this test, another exception
+    // is thrown by monolog due to the frame not having a filename.
+    forgetRecordedExceptions(2);
 });
 
 it('handles the function in the trace', function () {
@@ -395,6 +421,10 @@ it('handles the function in the trace', function () {
             'source' => 'the_function()',
         ],
     ]));
+
+    // Although we only care about 1 exception in this test, another exception
+    // is thrown by monolog due to the frame not having a filename.
+    forgetRecordedExceptions(2);
 });
 
 it('handles the args in the trace', function () {
@@ -455,6 +485,8 @@ it('handles the args in the trace', function () {
     ]));
 
     fclose($resourceToClose);
+
+    forgetRecordedExceptions(2);
 });
 
 it('handles named arguments for variadic functions', function () {
@@ -486,6 +518,8 @@ it('handles named arguments for variadic functions', function () {
             'source' => '(foo: int, bar: int)',
         ],
     ]));
+
+    forgetRecordedExceptions(1);
 });
 
 it('handles ini setting disabling args in exceptions', function () {
@@ -505,6 +539,8 @@ it('handles ini setting disabling args in exceptions', function () {
     $response->assertServerError();
     $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
+
+    forgetRecordedExceptions(2);
 });
 
 it('strips base_path from trace files', function () {
@@ -518,6 +554,8 @@ it('strips base_path from trace files', function () {
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '"file":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Route.php:'));
+
+    forgetRecordedExceptions(1);
 });
 
 it('can manually report exceptions', function () {
@@ -569,6 +607,8 @@ it('can manually report exceptions', function () {
             'laravel_version' => '11.33.0',
         ],
     ]);
+
+    forgetRecordedExceptions(1);
 });
 
 it('handles PDOExceptions where the code is a string', function () {
@@ -582,6 +622,8 @@ it('handles PDOExceptions where the code is a string', function () {
     $response->assertServerError();
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('exception:0.code', 'HY000');
+
+    forgetRecordedExceptions(1);
 });
 
 final class MyException extends RuntimeException

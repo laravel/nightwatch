@@ -4,31 +4,23 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\ResponsePreparedListener;
-use Laravel\Nightwatch\SensorManager;
-
-beforeAll(function () {
-    forceRequestExecutionState();
-});
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $thrown = false;
+    $thrownInStageSensor = false;
+    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+        $thrownInStageSensor = true;
 
-        public function __construct() {}
+        throw new RuntimeException('Whoops!');
+    };
+    nightwatch()->state->stage = ExecutionStage::Render;
 
-        public function stage(ExecutionStage $executionStage): void
-        {
-            $this->thrown = true;
-
-            throw new RuntimeException('Whoops!');
-        }
-    });
-    $nightwatch->state->stage = ExecutionStage::Render;
-    $listener = new ResponsePreparedListener($nightwatch);
     $event = new ResponsePrepared(Request::create('/tests'), response(''));
 
+    $listener = new ResponsePreparedListener(nightwatch());
     $listener($event);
 
-    expect($sensor->thrown)->toBeTrue();
+    expect($thrownInStageSensor)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });

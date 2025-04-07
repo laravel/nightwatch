@@ -21,6 +21,9 @@ final class CommandState
 {
     public int $v = 1;
 
+    /**
+     * @var 'command'|'job'|'schedule'
+     */
     public string $source = 'command';
 
     /**

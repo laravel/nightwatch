@@ -2,25 +2,21 @@
 
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
-use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $thrown = false;
+    $thrownInStageSensor = false;
+    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+        $thrownInStageSensor = true;
 
-        public function __construct() {}
+        throw new RuntimeException('Whoops!');
+    };
+    nightwatch()->state->stage = ExecutionStage::Bootstrap;
 
-        public function stage(ExecutionStage $executionStage): void
-        {
-            $this->thrown = true;
-
-            throw new RuntimeException('Whoops!');
-        }
-    });
-    $handler = new CommandBootedHandler($nightwatch);
-
+    $handler = new CommandBootedHandler(nightwatch());
     $handler(app());
 
-    expect($sensor->thrown)->toBeTrue();
+    expect($thrownInStageSensor)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });

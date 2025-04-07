@@ -3,24 +3,17 @@
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
-use Laravel\Nightwatch\SensorManager;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $thrown = false;
+    $thrownInStageSensor = false;
+    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+        $thrownInStageSensor = true;
 
-        public function __construct() {}
+        throw new RuntimeException('Whoops!');
+    };
+    nightwatch()->state->stage = ExecutionStage::Bootstrap;
 
-        public function stage(ExecutionStage $executionStage): void
-        {
-            $this->thrown = true;
-
-            throw new RuntimeException('Whoops!');
-        }
-    });
-    $middleware = new RouteMiddleware($nightwatch);
     $request = Request::create('/test');
     $nextCalledWith = null;
     $next = function ($request) use (&$nextCalledWith) {
@@ -29,28 +22,26 @@ it('gracefully handles exceptions', function () {
         return 'response';
     };
 
+    $middleware = new RouteMiddleware(nightwatch());
     $response = $middleware->handle($request, $next);
 
-    expect($sensor->thrown)->toBeTrue();
+    expect($thrownInStageSensor)->toBeTrue();
     expect($response)->toBe('response');
     expect($nextCalledWith)->toBe($request);
+    expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });
 
 it('handles response types that laravel does not wrap', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $thrown = false;
+    $thrownInStageSensor = false;
+    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+        $thrownInStageSensor = true;
 
-        public function __construct() {}
+        throw new RuntimeException('Whoops!');
+    };
+    nightwatch()->state->stage = ExecutionStage::Bootstrap;
 
-        public function stage(ExecutionStage $executionStage): void
-        {
-            $this->thrown = true;
-
-            throw new RuntimeException('Whoops!');
-        }
-    });
-    $middleware = new RouteMiddleware($nightwatch);
     $request = Request::create('/test');
     $nextCalledWith = null;
     $next = function ($request) use (&$nextCalledWith) {
@@ -61,9 +52,13 @@ it('handles response types that laravel does not wrap', function () {
         });
     };
 
+    $middleware = new RouteMiddleware(nightwatch());
     $response = $middleware->handle($request, $next);
 
-    expect($sensor->thrown)->toBeTrue();
+    expect($thrownInStageSensor)->toBeTrue();
     expect($response)->toBeInstanceOf(StreamedResponse::class);
     expect($nextCalledWith)->toBe($request);
+    expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 });

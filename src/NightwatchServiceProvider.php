@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch;
 
-use Closure;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\Events\CacheHit;
@@ -16,7 +15,7 @@ use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
-use Illuminate\Console\Application as Artisan;
+use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
@@ -27,7 +26,6 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Client\Factory as Http;
-use Illuminate\Log\LogManager;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSending;
@@ -42,8 +40,9 @@ use Illuminate\Support\Env;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\AgentCommand;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Factories\Logger;
-use Laravel\Nightwatch\Hooks\ArtisanStartingHandler;
+use Laravel\Nightwatch\Hooks\ArtisanStartingListener;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
 use Laravel\Nightwatch\Hooks\CommandStartingListener;
@@ -65,11 +64,8 @@ use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Psr\Log\LoggerInterface;
 use Throwable;
 
-use function app;
-use function call_user_func;
 use function defined;
 use function is_string;
 use function microtime;
@@ -97,10 +93,11 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     deployment?: string,
      *     server?: string,
      *     ingest?: array{ uri?: string, timeout?: float|int, connection_timeout?: float|int },
-     *     error_log_channel?: string,
      *  }
      */
     private array $nightwatchConfig;
+
+    private ?Throwable $registerException = null;
 
     public function register(): void
     {
@@ -111,13 +108,19 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerAndCaptureConfig();
             $this->registerBindings();
         } catch (Throwable $e) {
-            $this->handleUnrecoverableException($e);
+            $this->registerException = $e;
         }
     }
 
     public function boot(): void
     {
         try {
+            if ($this->registerException) {
+                $this->handleAndClearRegisterException();
+
+                return;
+            }
+
             if ($this->app->runningInConsole()) {
                 $this->registerPublications();
                 $this->registerCommands();
@@ -129,7 +132,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             $this->registerHooks();
         } catch (Throwable $e) {
-            $this->handleUnrecoverableException($e);
+            Nightwatch::unrecoverableExceptionOccurred($e);
         }
     }
 
@@ -179,9 +182,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(RouteMiddleware::class, fn () => new RouteMiddleware($this->core)); // @phpstan-ignore argument.type
 
-        if (! Compatibility::$terminatingEventExists) {
-            $this->app->scoped(GlobalMiddleware::class, fn () => new GlobalMiddleware($this->core));
-        }
+        $this->app->scoped(GlobalMiddleware::class, fn () => new GlobalMiddleware($this->core));
     }
 
     private function registerAgentCommand(): void
@@ -215,8 +216,14 @@ final class NightwatchServiceProvider extends ServiceProvider
             state: $state,
             clock: $clock,
             enabled: ($this->nightwatchConfig['enabled'] ?? true),
-            emergencyLoggerResolver: $this->emergencyLoggerResolver())
-        );
+        ));
+    }
+
+    private function handleAndClearRegisterException(): void
+    {
+        Nightwatch::unrecoverableExceptionOccurred($this->registerException); // @phpstan-ignore argument.type
+
+        $this->registerException = null;
     }
 
     private function registerPublications(): void
@@ -308,12 +315,11 @@ final class NightwatchServiceProvider extends ServiceProvider
         }
 
         /** @var Core<RequestState|CommandState> $core */
-        if (Compatibility::$terminatingEventExists) {
-            /**
-             * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-             */
-            $events->listen(Terminating::class, (new TerminatingListener($core))(...));
-        }
+
+        /**
+         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         */
+        $events->listen(Terminating::class, (new TerminatingListener($core))(...));
     }
 
     /**
@@ -376,7 +382,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\State\CommandState::$artisan
          */
-        Artisan::starting((new ArtisanStartingHandler($core))(...));
+        $events->listen(ArtisanStarting::class, (new ArtisanStartingListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Action
@@ -399,6 +405,9 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\State\CommandState::$id
          * @see \Laravel\Nightwatch\Records\JobAttempt
          * @see \Laravel\Nightwatch\Records\Exception
+         *
+         * Scheduled tasks...
+         * @see \Laravel\Nightwatch\Core::ingest()
          */
         $events->listen(CommandStarting::class, (new CommandStartingListener($events, $core, $kernel))(...));
     }
@@ -444,39 +453,5 @@ final class NightwatchServiceProvider extends ServiceProvider
                 server: $this->nightwatchConfig['server'] ?? '',
             );
         }
-    }
-
-    private function handleUnrecoverableException(Throwable $e): void
-    {
-        try {
-            $logger = call_user_func($this->emergencyLoggerResolver());
-
-            $logger->critical('[nightwatch] '.$e->getMessage(), [
-                'exception' => $e,
-            ]);
-        } catch (Throwable $e) {
-            //
-        }
-    }
-
-    /**
-     * @return (Closure(): LoggerInterface)
-     */
-    private function emergencyLoggerResolver(): Closure
-    {
-        return static function () {
-            /** @var LogManager */
-            $log = app('log');
-            /** @var Repository */
-            $config = app('config');
-
-            $channel = $config->get('nightwatch.error_log_channel');
-
-            if (! is_string($channel) || ! $channel || $channel === 'nightwatch') {
-                $channel = 'single';
-            }
-
-            return $log->channel($channel);
-        };
     }
 }

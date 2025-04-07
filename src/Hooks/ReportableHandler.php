@@ -25,12 +25,8 @@ final class ReportableHandler
 
     public function __invoke(Throwable $e): void
     {
-        try {
-            if (in_array($this->nightwatch->state->source, ['job', 'schedule'], true)) {
-                return;
-            }
-        } catch (Throwable $exception) {
-            $this->nightwatch->report($exception);
+        if (in_array($this->nightwatch->state->source, ['job', 'schedule'], true)) {
+            return;
         }
 
         $this->nightwatch->report($e);

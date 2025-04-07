@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Console\Events\ScheduledTaskStarting;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
@@ -43,7 +42,7 @@ final class ScheduledTaskStartingListener
             $this->nightwatch->state->timestamp = $this->nightwatch->clock->microtime();
             memory_reset_peak_usage();
         } catch (Throwable $e) {
-            Log::critical('[nightwatch] '.$e->getMessage());
+            $this->nightwatch->report($e);
         }
     }
 }

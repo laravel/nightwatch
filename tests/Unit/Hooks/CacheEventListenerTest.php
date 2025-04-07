@@ -1,30 +1,23 @@
 <?php
 
-use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Cache\Events\RetrievingKey;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
-use Laravel\Nightwatch\SensorManager;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $thrown = false;
+    $thrownInCacheEventSensor = false;
+    nightwatch()->sensor->cacheEventSensor = function () use (&$thrownInCacheEventSensor) {
+        $thrownInCacheEventSensor = true;
 
-        public function __construct() {}
-
-        public function cacheEvent(CacheEvent $event): void
-        {
-            $this->thrown = true;
-
-            throw new RuntimeException('Whoops!');
-        }
-    });
-
-    $listener = new CacheEventListener($nightwatch);
+        throw new RuntimeException('Whoops!');
+    };
     $event = new RetrievingKey(storeName: 'default', key: 'popular_destinations');
 
+    $listener = new CacheEventListener(nightwatch());
     $listener($event);
 
-    expect($sensor->thrown)->toBeTrue();
+    expect($thrownInCacheEventSensor)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
+
+    forgetRecordedExceptions(1);
 })->skip(fn () => ! Compatibility::$cacheFailuresCapturable, 'Requires a more recent framework version');

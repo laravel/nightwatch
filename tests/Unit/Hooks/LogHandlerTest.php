@@ -2,27 +2,37 @@
 
 use Carbon\CarbonImmutable;
 use Laravel\Nightwatch\Hooks\LogHandler;
-use Laravel\Nightwatch\SensorManager;
 use Monolog\Level;
 use Monolog\LogRecord;
 
 it('gracefully handles exceptions', function () {
-    $nightwatch = nightwatch()->setSensor($sensor = new class extends SensorManager
-    {
-        public bool $thrown = false;
+    $thrownInLogSensor = false;
+    nightwatch()->sensor->logSensor = function () use (&$thrownInLogSensor) {
+        $thrownInLogSensor = true;
 
-        public function __construct() {}
+        throw new RuntimeException('Whoops!');
+    };
+    $record = new LogRecord(CarbonImmutable::now(), 'nightwatch', Level::Debug, 'hello world');
 
-        public function log(LogRecord $record): void
-        {
-            $this->thrown = true;
+    $handler = new LogHandler(nightwatch());
+    $handler->handle($record);
 
-            throw new RuntimeException('Whoops!');
-        }
-    });
-    $handler = new LogHandler($nightwatch);
+    expect($thrownInLogSensor)->toBeTrue();
+    expect(nightwatch()->state->exceptions)->toBe(1);
 
-    $handler->handle(new LogRecord(CarbonImmutable::now(), 'nightwatch', Level::Debug, 'hello world'));
+    $thrownInLogSensor = false;
+    $handler->handleBatch([null]);
 
-    expect($sensor->thrown)->toBeTrue();
+    expect($thrownInLogSensor)->toBeFalse();
+    expect(nightwatch()->state->exceptions)->toBe(2);
+
+    expect($handler->close())->toBeNull();
+    expect($thrownInLogSensor)->toBeFalse();
+    expect(nightwatch()->state->exceptions)->toBe(2);
+
+    expect($handler->isHandling($record))->toBeTrue();
+    expect($thrownInLogSensor)->toBeFalse();
+    expect(nightwatch()->state->exceptions)->toBe(2);
+
+    forgetRecordedExceptions(2);
 });

@@ -2,7 +2,6 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Monolog\LogRecord;
@@ -187,35 +186,9 @@ it('captures extra', function () {
     $ingest->assertLatestWrite('log:0.context', '{}');
 });
 
-it('falls back to "single" log channel when error log is set to "nightwatch"', function () {
-    $ingest = fakeIngest();
-    $logs = [];
-    Log::listen(function ($event) use (&$logs) {
-        $logs[] = $event;
-    });
-    $e = new RuntimeException('Whoops!');
-    Config::set('nightwatch.error_log_channel', 'nightwatch');
-    Route::get('/', function () use ($e) {
-        nightwatch()->handleUnrecoverableException($e);
-    });
-
-    $response = get('/');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('log:*', []);
-    expect($logs)->toHaveCount(1);
-    expect($logs[0]->level)->toBe('critical');
-    expect($logs[0]->message)->toBe('[nightwatch] Whoops!');
-    expect($logs[0]->context)->toBe([
-        'exception' => $e,
-    ]);
-});
-
 it('normalizes context', function () {
     $ingest = fakeIngest();
     $e = new RuntimeException('Whoops!');
-    Config::set('nightwatch.error_log_channel', 'nightwatch');
     Route::get('/', function () {
         Log::channel('nightwatch')->info('Whoops!', [
             'o' => (object) [
