@@ -74,7 +74,7 @@ class LoopFake implements LoopInterface
      */
     public function addTimer($interval, $callback): TimerInterface
     {
-        $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2];
+        $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
         $class = $frame['class'] ?? '';
         $function = $frame['function'];
         $scheduledBy = "{$class}::{$function}";

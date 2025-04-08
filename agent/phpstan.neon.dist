@@ -7,6 +7,9 @@ parameters:
       -
           message: '#.*#'
           path: tests/Pest.php
+      -
+          message: '#.*#'
+          path: tests/ArchitectureTest.php
       - '#Call to an undefined method Pest\\Expectation\<Tests\\BrowserFake\|null\>::toHavePending\(\)#'
       - '#Call to an undefined method Pest\\Expectation\<Tests\\BrowserFake\|null\>::toHaveSent\(\)#'
       - '#Call to an undefined method Pest\\Expectation\<Tests\\LoopFake\|null\>::toHavePending\(\)#'

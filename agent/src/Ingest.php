@@ -5,7 +5,7 @@ namespace Laravel\NightwatchAgent;
 use Closure;
 use Laravel\NightwatchAgent\Contracts\Browser;
 use Psr\Http\Message\ResponseInterface;
-use React\EventLoop\Loop;
+use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
 use React\Promise\PromiseInterface;
 use RuntimeException;
@@ -22,11 +22,13 @@ class Ingest
     private ?TimerInterface $flushBufferAfterDelayTimer = null;
 
     /**
+     * @param  LoopInterface  $loop
      * @param  Browser  $browser
      * @param  (Closure(ResponseInterface $response, float $duration): mixed)  $onIngestSuccess
      * @param  (Closure(Throwable $e, float $duration): mixed)  $onIngestError
      */
     public function __construct(
+        private $loop,
         private $browser,
         private IngestDetailsRepository $ingestDetails,
         private StreamBuffer $buffer,
@@ -46,14 +48,14 @@ class Ingest
             $records = $this->buffer->flush();
 
             if ($this->flushBufferAfterDelayTimer !== null) {
-                Loop::cancelTimer($this->flushBufferAfterDelayTimer);
+                $this->loop->cancelTimer($this->flushBufferAfterDelayTimer);
 
                 $this->flushBufferAfterDelayTimer = null;
             }
 
             $this->ingest($records);
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->flushBufferAfterDelayTimer ??= Loop::addTimer($this->maxBufferDurationInSeconds, function (): void {
+            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, function (): void {
                 $records = $this->buffer->flush();
 
                 $this->flushBufferAfterDelayTimer = null;

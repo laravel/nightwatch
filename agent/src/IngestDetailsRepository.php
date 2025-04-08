@@ -5,7 +5,7 @@ namespace Laravel\NightwatchAgent;
 use Closure;
 use Laravel\NightwatchAgent\Contracts\Browser;
 use Psr\Http\Message\ResponseInterface;
-use React\EventLoop\Loop;
+use React\EventLoop\LoopInterface;
 use React\Http\Message\ResponseException;
 use React\Promise\PromiseInterface;
 use RuntimeException;
@@ -39,11 +39,13 @@ class IngestDetailsRepository
     private ?array $quickRetryStrategyDurationsCache = null;
 
     /**
+     * @param  LoopInterface  $loop
      * @param  Browser  $browser
      * @param  (Closure(IngestDetails $ingestDetails, float $duration): mixed)  $onAuthenticationSuccess
      * @param  (Closure(Throwable $e, float $duration): mixed)  $onAuthenticationError
      */
     public function __construct(
+        private $loop,
         private $browser,
         private Closure $onAuthenticationSuccess,
         private Closure $onAuthenticationError,
@@ -104,7 +106,7 @@ class IngestDetailsRepository
 
     private function scheduleRefreshIn(int|float $seconds): void
     {
-        Loop::addTimer($seconds, function (): void {
+        $this->loop->addTimer($seconds, function (): void {
             $this->refresh()->then(function (?IngestDetails $ingestDetails): void {
                 if ($ingestDetails) {
                     $this->ingestDetails = resolve($ingestDetails);

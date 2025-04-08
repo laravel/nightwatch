@@ -19,6 +19,18 @@ require __DIR__.'/../vendor/react/promise/src/functions_include.php';
 require __DIR__.'/../vendor/autoload.php';
 
 /*
+ * Testing setup...
+ */
+
+$loop ??= null;
+$browserFactory ??= null;
+
+/**
+ * @var ?BrowserFactory $browserFactory
+ * @var ?LoopInterface $loop
+ */
+
+/*
  * Input...
  */
 
@@ -63,16 +75,16 @@ $error = static function (string $message): void {
  * Initialize services...
  */
 
-if ($loop ?? null) {
-    /** @var LoopInterface $loop */
+if ($loop) {
     Loop::set($loop);
+} else {
+    $loop = Loop::get();
 }
 
 $packageVersion = new PackageVersionRepository(
     path: $basePath.'/../../version.txt',
 );
 
-/** @var ?BrowserFactory $browserFactory */
 $browserFactory ??= new BrowserFactory($packageVersion);
 
 $ingestDetailsBrowser = $browserFactory(
@@ -87,6 +99,7 @@ $ingestDetailsBrowser = $browserFactory(
 );
 
 $ingestDetails = new IngestDetailsRepository(
+    loop: $loop,
     browser: $ingestDetailsBrowser,
     onAuthenticationSuccess: static fn (IngestDetails $ingestDetails, float $duration) => $info('Authentication successful ['.round($duration, 3).'s]'),
     onAuthenticationError: static fn (Throwable $e, float $duration) => $info('Authentication failed ['.round($duration, 3).'s]: '.$e->getMessage()),
@@ -104,6 +117,7 @@ $ingestBrowser = $browserFactory(
 );
 
 $ingest = new Ingest(
+    loop: $loop,
     browser: $ingestBrowser,
     ingestDetails: $ingestDetails,
     buffer: new StreamBuffer(6_000_000),
@@ -129,4 +143,4 @@ $server->start();
 
 $ingestDetails->hydrate();
 
-Loop::run();
+$loop->run();

@@ -30,6 +30,7 @@
         "ext-pcntl": "*",
         "laravel/pint": "1.21.0",
         "pestphp/pest": "^3.7.4",
+        "pestphp/pest-plugin-arch": "^3.1",
         "phpstan/phpstan": "^2.1.6",
         "phpunit/phpunit": "^11.5.3",
         "symfony/process": "^7.2",
