@@ -33,6 +33,7 @@
         "pestphp/pest-plugin-arch": "^3.1",
         "phpstan/phpstan": "^2.1.6",
         "phpunit/phpunit": "^11.5.3",
+        "react/async": "^4.3",
         "symfony/process": "^7.2",
         "vlucas/phpdotenv": "^5.6"
     },

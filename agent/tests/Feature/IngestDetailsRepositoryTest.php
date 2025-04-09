@@ -14,13 +14,13 @@ it('handles runtime exceptions while procesing the request', function () {
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
     expect($e)->toBeNull($e?->getMessage() ?? '');
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     expect($output)->toMatchLog(<<<'OUTPUT'
@@ -37,13 +37,13 @@ it('handles 4xx errors', function () {
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
     expect($e)->toBeNull($e?->getMessage() ?? '');
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     expect($output)->toMatchLog(<<<'OUTPUT'
@@ -60,13 +60,13 @@ it('handles 5xx errors', function () {
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
     expect($e)->toBeNull($e?->getMessage() ?? '');
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     expect($output)->toMatchLog(<<<'OUTPUT'
@@ -83,13 +83,13 @@ it('handles malformed JSON responses', function (string $body) {
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
     expect($e)->toBeNull($e?->getMessage() ?? '');
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     expect($output)->toMatchLog(<<<'OUTPUT'
@@ -106,13 +106,13 @@ it('handles unexpected response payloads', function (array $payload) {
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
     expect($e)->toBeNull($e?->getMessage() ?? '');
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     $payload = preg_quote(json_encode($payload, flags: JSON_THROW_ON_ERROR), '#');
@@ -137,13 +137,33 @@ it('handles valid responses', function () {
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
+    $baseUrl = $_SERVER['NIGHTWATCH_BASE_URL'];
+    $token = $_SERVER['NIGHTWATCH_TOKEN'];
+
+    expect($baseUrl)
+        ->toBeString()
+        ->toStartWith('https://');
+    expect($token)
+        ->toBeString()
+        ->toHaveLength(44);
     expect($e)->toBeNull($e?->getMessage() ?? '');
+    expect($browser)
+        ->timeout->toBe(10.0)
+        ->connectionTimeout->toBe(5.0)
+        ->baseUrl->toBe($baseUrl)
+        ->headers->toBe([
+            'accept' => 'application/json',
+            'authorization' => "Bearer {$token}",
+            'content-type' => 'application/json',
+            'nightwatch-debug' => '1',
+            'nightwatch-server' => gethostname(),
+        ]);
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     expect($output)->toMatchLog(<<<'OUTPUT'
@@ -165,7 +185,7 @@ it('refreshes the token based on refresh_in', function () {
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
@@ -181,11 +201,11 @@ it('refreshes the token based on refresh_in', function () {
         new Timer(interval: 3_600, runAt: 5 + 10 + 300 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
     ]);
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     expect($output)->toMatchLog(<<<'OUTPUT'
@@ -229,7 +249,7 @@ it('uses the quick-retry back-off strategy if the agent has not yet authenticate
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
@@ -264,30 +284,30 @@ it('uses the quick-retry back-off strategy if the agent has not yet authenticate
         new Timer(interval: 3_600, runAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
     ]);
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     expect($output)->toMatchLog(<<<'OUTPUT'
@@ -350,7 +370,7 @@ it('uses the quick-retry back-off strategy if the agent has not yet authenticate
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
@@ -386,30 +406,30 @@ it('uses the quick-retry back-off strategy if the agent has not yet authenticate
     ]);
     expect($browser)->toHavePending([]);
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($output)->toMatchLog(<<<'OUTPUT'
         {date} {info} Authentication failed {duration}: 500 \[Whoops 1!\]
@@ -451,7 +471,7 @@ it('schedules a refresh after 1 hour if the agent has not yet authenticated and 
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
@@ -466,10 +486,10 @@ it('schedules a refresh after 1 hour if the agent has not yet authenticated and 
         new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
     ]);
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     expect($output)->toMatchLog(<<<'OUTPUT'
@@ -505,7 +525,7 @@ it('uses the slow-retry back-off strategy if the agent has already authenticated
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
@@ -533,23 +553,23 @@ it('uses the slow-retry back-off strategy if the agent has already authenticated
         new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
     ]);
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     expect($output)->toMatchLog(<<<'OUTPUT'
@@ -598,7 +618,7 @@ it('uses the slow-retry back-off strategy if the agent has already authenticated
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
@@ -626,23 +646,23 @@ it('uses the slow-retry back-off strategy if the agent has already authenticated
         new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
     ]);
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     expect($output)->toMatchLog(<<<'OUTPUT'
@@ -679,7 +699,7 @@ it('schedules a refresh after 1 hour if the agent has authenticated and receives
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
@@ -695,11 +715,11 @@ it('schedules a refresh after 1 hour if the agent has authenticated and receives
         new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
     ]);
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     expect($output)->toMatchLog(<<<'OUTPUT'
@@ -720,7 +740,7 @@ it('limits response body included in logs', function () {
 
     [$output, $e] = run(
         via: 'source',
-        browser: $browser,
+        ingestDetailsBrowser: $browser,
         loop: $loop,
     );
 
@@ -733,8 +753,8 @@ it('limits response body included in logs', function () {
         new Timer(interval: 5, runAt: 7.5, scheduledBy: $scheduledBy),
     ]);
     expect($browser)->toHaveSent([
-        new Request('/api/agent-auth'),
-        new Request('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
+        Request::json('/api/agent-auth'),
     ]);
     expect($browser)->toHavePending([]);
     $firstBody = str_repeat('a', 255);
@@ -744,3 +764,4 @@ it('limits response body included in logs', function () {
         {date} {info} Authentication failed {duration}: 500 \[{$secondBody}\[\.\.\.\]\]
         OUTPUT);
 });
+

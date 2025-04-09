@@ -1,10 +1,21 @@
 <?php
 
-require_once __DIR__.'/../src/Contracts/Browser.php';
+require_once __DIR__.'./../src/Contracts/Browser.php';
 require_once __DIR__.'./../vendor/react/event-loop/src/LoopInterface.php';
+require_once __DIR__.'./../vendor/evenement/evenement/src/EventEmitterInterface.php';
+require_once __DIR__.'./../vendor/evenement/evenement/src/EventEmitterTrait.php';
+require_once __DIR__.'./../vendor/evenement/evenement/src/EventEmitter.php';
+require_once __DIR__.'./../vendor/react/stream/src/ReadableStreamInterface.php';
+require_once __DIR__.'./../vendor/react/stream/src/WritableStreamInterface.php';
+require_once __DIR__.'./../vendor/react/stream/src/DuplexStreamInterface.php';
+require_once __DIR__.'./../vendor/react/socket/src/ConnectionInterface.php';
+require_once __DIR__.'./../vendor/react/socket/src/ServerInterface.php';
 require_once __DIR__.'/LoopFake.php';
 require_once __DIR__.'/BrowserFake.php';
 require_once __DIR__.'/Response.php';
+require_once __DIR__.'/PendingConnection.php';
+require_once __DIR__.'/TcpServerFake.php';
+require_once __DIR__.'/TcpServerFake.php';
 
 $payloadFile = __DIR__.'/test-payload';
 $payload = @file_get_contents($payloadFile);
@@ -21,39 +32,66 @@ if (! is_array($payload)) {
     exit(1);
 }
 
-/** @var array{listenOn: string, viaPhar: bool, browser: \Tests\BrowserFake|null, loop: \Tests\LoopFake|null }  $payload */
+/** @var array{listenOn: string, viaPhar: bool, ingestDetailsBrowser: \Tests\BrowserFake|null, ingestBrowser: \Tests\BrowserFake|null, loop: \Tests\LoopFake|null }  $payload */
 [
     'listenOn' => $listenOn,
     'viaPhar' => $viaPhar,
-    'browser' => $browser,
+    'ingestDetailsBrowser' => $ingestDetailsBrowser,
+    'ingestBrowser' => $ingestBrowser,
     'loop' => $loop,
+    'server' => $server,
 ] = $payload;
 
-if ($browser !== null) {
+$browserFactory = null;
+$serverResolver = null;
+
+if ($viaPhar === false) {
     pcntl_async_signals(true);
-    pcntl_signal(SIGTERM, function () use ($payloadFile, $browser, $loop) {
+    pcntl_signal(SIGTERM, function () use ($payloadFile, $ingestDetailsBrowser, $ingestBrowser, $loop) {
         file_put_contents($payloadFile, serialize([
-            'browser' => $browser,
+            'ingestDetailsBrowser' => $ingestDetailsBrowser,
+            'ingestBrowser' => $ingestBrowser,
             'loop' => $loop,
         ]));
     });
+
+    $browsers = [
+        $ingestDetailsBrowser ?? new Tests\BrowserFake,
+        $ingestBrowser ?? new Tests\BrowserFake,
+    ];
+
+    $browserFactory = function (...$args) use (&$browsers) {
+        $browser = array_shift($browsers);
+
+        if ($browser === null) {
+            return null;
+        }
+
+        $browser->connectionTimeout = $args['connectionTimeout'];
+        $browser->timeout = $args['timeout'];
+        $browser->headers = $args['headers'];
+        $browser->baseUrl = $args['baseUrl'] ?? null;
+
+        return $browser;
+    };
+
+    $serverResolver = $server
+        ? fn () => $server
+        : null;
 }
 
-$browserFactory = $browser
-    ? fn (...$args) => $browser
-    : null;
-
 if ($viaPhar) {
-    call_user_func(static function () use ($listenOn, $browserFactory, $loop) { // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse
+    call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop) { // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
         require __DIR__.'/../build/agent.phar';
     });
 } else {
-    call_user_func(static function () use ($listenOn, $browserFactory, $loop) {  // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse
+    call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop) {  // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
         require __DIR__.'/../src/agent.php';
     });
 }
 
 file_put_contents($payloadFile, serialize([
-    'browser' => $browser,
+    'ingestDetailsBrowser' => $ingestDetailsBrowser,
+    'ingestBrowser' => $ingestBrowser,
     'loop' => $loop,
 ]));

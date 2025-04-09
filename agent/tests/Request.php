@@ -2,6 +2,8 @@
 
 namespace Tests;
 
+use function json_encode;
+
 class Request
 {
     /**
@@ -13,5 +15,17 @@ class Request
         public string $body = '',
     ) {
         //
+    }
+
+    /**
+     * @param  array<string, string>  $headers
+     * @param  array<mixed>  $body
+     */
+    public static function json(
+        string $url,
+        array $headers = [],
+        array $body = [],
+    ): self {
+        return new self($url, $headers, json_encode((object) $body, flags: JSON_THROW_ON_ERROR));
     }
 }

@@ -7,6 +7,7 @@ use Symfony\Component\Process\Process;
 use Tests\BrowserFake;
 use Tests\LoopFake;
 use Tests\Request;
+use Tests\TcpServerFake;
 use Tests\Timer;
 
 if (! ($_SERVER['CI'] ?? false)) {
@@ -71,17 +72,20 @@ expect()->extend('toHavePending', function (array $items) {
  * @param-out  BrowserFake  $browser
  * @param-out  LoopFake  $loop
  */
-function run(string $via, ?callable $until = null, float $timeout = 0.5, ?BrowserFake &$browser = null, ?LoopFake &$loop = null): array
+function run(string $via, ?callable $until = null, float $timeout = 0.5, ?BrowserFake &$ingestDetailsBrowser = null, ?BrowserFake &$ingestBrowser = null, ?LoopFake &$loop = null, ?TcpServerFake $server = null): array
 {
     $output = '';
+    $port ??= rand(9000, 9999);
     $payloadFile = __DIR__.'/test-payload';
 
     try {
         $write = file_put_contents($payloadFile, serialize([
-            'listenOn' => '127.0.0.1:'.rand(9000, 9999),
+            'listenOn' => "127.0.0.1:{$port}",
             'viaPhar' => $via === 'phar',
-            'browser' => $browser,
+            'ingestDetailsBrowser' => $ingestDetailsBrowser,
+            'ingestBrowser' => $ingestBrowser,
             'loop' => $loop,
+            'server' => $server,
         ]));
 
         if ($write === false) {
@@ -114,8 +118,9 @@ function run(string $via, ?callable $until = null, float $timeout = 0.5, ?Browse
                 $payload = unserialize($payload);
 
                 if (is_array($payload)) {
-                    /** @var array{browser: BrowserFake, loop: LoopFake}  $payload */
-                    $browser = $payload['browser'];
+                    /** @var array{ingestDetailsBrowser: BrowserFake, ingestBrowser: BrowserFake, loop: LoopFake}  $payload */
+                    $ingestDetailsBrowser = $payload['ingestDetailsBrowser'];
+                    $ingestBrowser = $payload['ingestBrowser'];
                     $loop = $payload['loop'];
                 }
             }

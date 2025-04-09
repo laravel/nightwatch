@@ -22,27 +22,17 @@ class BrowserFactory
     public function __invoke(
         float $connectionTimeout,
         float $timeout,
-        string $server,
         array $headers = [],
-        string $baseUrl = '',
-        bool $debug = false,
+        ?string $baseUrl = null,
     ): BrowserContract {
         $connector = new Connector(['timeout' => $connectionTimeout]);
 
         $browser = (new ReactBrowser($connector))
             ->withTimeout($timeout)
-            ->withHeader('nightwatch-server', $server);
-
-        if ($baseUrl) {
-            $browser = $browser->withBase($baseUrl);
-        }
+            ->withBase($baseUrl);
 
         foreach ($headers as $key => $value) {
             $browser = $browser->withHeader($key, $value);
-        }
-
-        if ($debug) {
-            $browser = $browser->withHeader('nightwatch-debug', '1');
         }
 
         return new NightwatchBrowser($browser, [

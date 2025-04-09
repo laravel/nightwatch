@@ -3,8 +3,8 @@
 namespace Laravel\NightwatchAgent;
 
 use Closure;
-use React\Socket\Connection;
-use React\Socket\TcpServer;
+use React\Socket\ConnectionInterface;
+use React\Socket\ServerInterface;
 use Throwable;
 use WeakMap;
 
@@ -13,12 +13,12 @@ use function call_user_func;
 class Server
 {
     /**
-     * @var WeakMap<Connection, string>
+     * @var WeakMap<ConnectionInterface, string>
      */
     private WeakMap $connections;
 
     /**
-     * @param  (Closure(): TcpServer)  $serverResolver
+     * @param  (Closure(): ServerInterface)  $serverResolver
      * @param  (Closure(): mixed)  $onServerStarted
      * @param  (Closure(Throwable $e): mixed)  $onServerError
      * @param  (Closure(Throwable $e): mixed)  $onConnectionError
@@ -38,7 +38,7 @@ class Server
     {
         $server = call_user_func($this->serverResolver);
 
-        $server->on('connection', function (Connection $connection): void {
+        $server->on('connection', function (ConnectionInterface $connection): void {
             $this->accept($connection);
 
             $connection->on('data', function (string $chunk) use ($connection): void {
@@ -67,17 +67,17 @@ class Server
         call_user_func($this->onServerStarted);
     }
 
-    private function accept(Connection $connection): void
+    private function accept(ConnectionInterface $connection): void
     {
         $this->connections[$connection] = '';
     }
 
-    private function bufferConnectionChunk(Connection $connection, string $chunk): void
+    private function bufferConnectionChunk(ConnectionInterface $connection, string $chunk): void
     {
         $this->connections[$connection] .= $chunk;
     }
 
-    private function flushConnectionBuffer(Connection $connection): string
+    private function flushConnectionBuffer(ConnectionInterface $connection): string
     {
         $payload = $this->connections[$connection];
 
@@ -86,7 +86,7 @@ class Server
         return $payload;
     }
 
-    private function evict(Connection $connection): void
+    private function evict(ConnectionInterface $connection): void
     {
         $connection->close();
 

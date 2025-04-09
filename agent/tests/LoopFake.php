@@ -11,7 +11,9 @@ use function array_map;
 use function array_shift;
 use function count;
 use function debug_backtrace;
+use function is_object;
 use function microtime;
+use function str_starts_with;
 use function usort;
 
 class LoopFake implements LoopInterface
@@ -74,10 +76,14 @@ class LoopFake implements LoopInterface
      */
     public function addTimer($interval, $callback): TimerInterface
     {
-        $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
-        $class = $frame['class'] ?? '';
-        $function = $frame['function'];
-        $scheduledBy = "{$class}::{$function}";
+        if (is_object($callback) && str_starts_with($callback::class, 'Laravel\\')) {
+            $scheduledBy = $callback::class;
+        } else {
+            $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+            $class = $frame['class'] ?? '';
+            $function = $frame['function'];
+            $scheduledBy = "{$class}::{$function}";
+        }
 
         $this->pendingTimers[] = [
             'runAt' => $this->now + $interval,
@@ -116,7 +122,7 @@ class LoopFake implements LoopInterface
      */
     public function futureTick($listener)
     {
-        throw new RuntimeException('Not yet implemented');
+        throw new RuntimeException(__FUNCTION__);
     }
 
     /**
@@ -125,7 +131,7 @@ class LoopFake implements LoopInterface
      */
     public function addSignal($signal, $listener): void
     {
-        //
+        throw new RuntimeException(__FUNCTION__);
     }
 
     /**
@@ -134,7 +140,7 @@ class LoopFake implements LoopInterface
      */
     public function removeSignal($signal, $listener): void
     {
-        //
+        throw new RuntimeException(__FUNCTION__);
     }
 
     public function run(): void
@@ -182,6 +188,6 @@ class LoopFake implements LoopInterface
 
     public function stop(): void
     {
-        //
+        throw new RuntimeException(__FUNCTION__);
     }
 }

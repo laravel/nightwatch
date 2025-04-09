@@ -2,11 +2,12 @@
 
 namespace Laravel\NightwatchAgent;
 
-use Laravel\NightwatchAgent\Factories\BrowserFactory;
+use Laravel\NightwatchAgent\Contracts\Browser;
 use Laravel\NightwatchAgent\Factories\ServerFactory;
 use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\Loop;
-use React\EventLoop\LoopInterface;
+use React\Socket\ServerInterface;
+use React\Socket\TcpServer;
 use Throwable;
 
 use function date;
@@ -19,16 +20,13 @@ require __DIR__.'/../vendor/react/promise/src/functions_include.php';
 require __DIR__.'/../vendor/autoload.php';
 
 /*
- * Testing setup...
+ * Testing...
  */
 
-$loop ??= null;
+/** (Closure(): Browser)|null $browserFactory */
 $browserFactory ??= null;
-
-/**
- * @var ?BrowserFactory $browserFactory
- * @var ?LoopInterface $loop
- */
+/** (Closure(): ServerInterface)|null $serverResolver */
+$serverResolver ??= null;
 
 /*
  * Input...
@@ -90,10 +88,12 @@ $browserFactory ??= new BrowserFactory($packageVersion);
 $ingestDetailsBrowser = $browserFactory(
     connectionTimeout: $authenticationConnectionTimeout,
     timeout: $authenticationTimeout,
-    server: $server,
     headers: [
+        'accept' => 'application/json',
         'authorization' => "Bearer {$refreshToken}",
         'content-type' => 'application/json',
+        ...($debug ? ['nightwatch-debug' => '1'] : []),
+        'nightwatch-server' => $server,
     ],
     baseUrl: rtrim($baseUrl, '/'),
 );
@@ -108,12 +108,13 @@ $ingestDetails = new IngestDetailsRepository(
 $ingestBrowser = $browserFactory(
     connectionTimeout: $ingestConnectionTimeout,
     timeout: $ingestTimeout,
-    server: $server,
     headers: [
+        'accept' => 'application/json',
         'content-encoding' => 'gzip',
         'content-type' => 'application/octet-stream',
+        ...($debug ? ['nightwatch-debug' => '1'] : []),
+        'nightwatch-server' => $server,
     ],
-    debug: $debug,
 );
 
 $ingest = new Ingest(
@@ -127,8 +128,10 @@ $ingest = new Ingest(
     onIngestError: static fn (Throwable $e, float $duration) => $info('Ingest failed ['.round($duration, 3).'s]: '.$e->getMessage()),
 );
 
+$serverResolver ??= static fn (): ServerInterface => new TcpServer($listenOn);
+
 $server = (new ServerFactory)(
-    listenOn: $listenOn,
+    serverResolver: $serverResolver,
     onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]"),
     onServerError: static fn (Throwable $e) => $error("Server error: {$e->getMessage()}"),
     onConnectionError: static fn (Throwable $e) => $error("Connection error: {$e->getMessage()}"),
