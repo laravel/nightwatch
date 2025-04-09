@@ -32,7 +32,7 @@ if (! is_array($payload)) {
     exit(1);
 }
 
-/** @var array{listenOn: string, viaPhar: bool, ingestDetailsBrowser: \Tests\BrowserFake|null, ingestBrowser: \Tests\BrowserFake|null, loop: \Tests\LoopFake|null }  $payload */
+/** @var array{listenOn: string, viaPhar: bool, ingestDetailsBrowser: \Tests\BrowserFake|null, ingestBrowser: \Tests\BrowserFake|null, loop: \Tests\LoopFake|null, server: \Tests\TcpServerFake|null }  $payload */
 [
     'listenOn' => $listenOn,
     'viaPhar' => $viaPhar,
@@ -60,17 +60,23 @@ if ($viaPhar === false) {
         $ingestBrowser ?? new Tests\BrowserFake,
     ];
 
-    $browserFactory = function (...$args) use (&$browsers) {
+    $browserFactory = function (
+        float $connectionTimeout,
+        float $timeout,
+        array $headers = [],
+        ?string $baseUrl = null,
+    ) use (&$browsers) {
+        /** @var array<string, string> $headers */
         $browser = array_shift($browsers);
 
         if ($browser === null) {
             return null;
         }
 
-        $browser->connectionTimeout = $args['connectionTimeout'];
-        $browser->timeout = $args['timeout'];
-        $browser->headers = $args['headers'];
-        $browser->baseUrl = $args['baseUrl'] ?? null;
+        $browser->connectionTimeout = $connectionTimeout;
+        $browser->timeout = $timeout;
+        $browser->headers = $headers;
+        $browser->baseUrl = $baseUrl;
 
         return $browser;
     };

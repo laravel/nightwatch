@@ -7,35 +7,52 @@ use Tests\Response;
 use Tests\TcpServerFake;
 use Tests\Timer;
 
-it('works', function () {
+it('ingests records', function () {
     $loop = new LoopFake(runForSeconds: 1);
     $server = new TcpServerFake;
-    $browser = new BrowserFake([
+    $ingestDetailsBrowser = new BrowserFake([
         Response::jwt(),
     ]);
-    $loop->addTimer(0, $server->pendingConnection('asdf'));
+    $ingestBrowser = new BrowserFake([
+        new Response,
+    ]);
+    $records = array_fill(0, 375_001, ['t' => 'request']);
+    $loop->addTimer(0, $server->pendingConnection($records));
 
     [$output, $e] = run(
         via: 'source',
-        ingestDetailsBrowser: $browser,
+        ingestDetailsBrowser: $ingestDetailsBrowser,
+        ingestBrowser: $ingestBrowser,
         loop: $loop,
         server: $server,
     );
 
-    echo $output;
-
     expect($e)->toBeNull($e?->getMessage() ?? '');
-    expect($browser)->toHaveSent([
-        Request::json('/api/agent-auth'),
-    ]);
-    expect($browser)->toHavePending([]);
     expect($output)->toMatchLog(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
+        {date} {info} Ingest successful {duration}
         OUTPUT);
-    expect($loop)->toHaveRun([]);
-    $scheduleRefreshIn = 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn';
-    expect($loop)->toHavePending([
-        new Timer(interval: 1, runAt: 1, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 3_600, runAt: 3_600, scheduledBy: $scheduleRefreshIn),
+    expect($ingestBrowser->timeout)->toBe(10.0);
+    expect($ingestBrowser->connectionTimeout)->toBe(5.0);
+    expect($ingestBrowser->baseUrl)->toBeNull();
+    expect($ingestBrowser->headers)->toBe([
+        'accept' => 'application/json',
+        'content-encoding' => 'gzip',
+        'content-type' => 'application/json',
+        'nightwatch-server' => gethostname(),
     ]);
+    expect($ingestBrowser)->toHaveSent([
+        Request::ingest($records),
+    ]);
+    expect($ingestBrowser)->toHavePending([]);
+    expect($loop)->toHaveRun([
+        new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+    ]);
+    expect($loop)->toHavePending([
+        new Timer(interval: 3_600, runAt: 3_600, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+    ]);
+    expect($ingestDetailsBrowser)->toHaveSent([
+        Request::json('/api/agent-auth'),
+    ]);
+    expect($ingestDetailsBrowser)->toHavePending([]);
 });

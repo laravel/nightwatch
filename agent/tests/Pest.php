@@ -33,8 +33,32 @@ expect()->extend('toMatchLog', function (string $log) {
 });
 
 expect()->extend('toHaveSent', function (array $requests) {
+    foreach ($requests as $request) {
+        if (($this->value->headers['content-type'] ?? null) === 'application/octet-stream') {
+            $body = gzdecode($request->body);
+
+            if ($body === false) {
+                throw new RuntimeException('Unable to uncompress request payload.');
+            }
+
+            $request->body = gzdecode($request->body);
+        }
+    }
+
     $this->value = array_map(
-        fn ($request) => new Request($request[0], $request[1], $request[2]),
+        function ($request) {
+            [$url, $headers, $body] = $request;
+
+            if (($this->value->headers['content-type'] ?? null) === 'application/octet-stream') {
+                $body = gzdecode($body);
+
+                if ($body === false) {
+                    throw new RuntimeException('Unable to uncompress request payload.');
+                }
+            }
+
+            return new Request($url, $headers, $body);
+        },
         $this->value->sentRequests,
     );
 
@@ -69,7 +93,8 @@ expect()->extend('toHavePending', function (array $items) {
  * @param  (callable(string): bool)  $until
  * @return array{0: string, 1: Throwable|null}
  *
- * @param-out  BrowserFake  $browser
+ * @param-out  BrowserFake  $ingestDetailsBrowser
+ * @param-out  BrowserFake  $ingestBrowser
  * @param-out  LoopFake  $loop
  */
 function run(string $via, ?callable $until = null, float $timeout = 0.5, ?BrowserFake &$ingestDetailsBrowser = null, ?BrowserFake &$ingestBrowser = null, ?LoopFake &$loop = null, ?TcpServerFake $server = null): array

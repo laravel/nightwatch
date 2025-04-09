@@ -25,7 +25,7 @@ class Response
     }
 
     public static function jwt(
-        string $token = 'TOKEN',
+        string $token = 'NIGHTWATCH_TEST_TOKEN',
         int $expiresIn = 7_200,
         int $refreshIn = 3_600,
         string $ingestUrl = 'https://ingest.nightwatch.laravel.com',

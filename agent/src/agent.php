@@ -2,7 +2,9 @@
 
 namespace Laravel\NightwatchAgent;
 
+use Closure;
 use Laravel\NightwatchAgent\Contracts\Browser;
+use Laravel\NightwatchAgent\Factories\BrowserFactory;
 use Laravel\NightwatchAgent\Factories\ServerFactory;
 use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\Loop;
@@ -23,9 +25,9 @@ require __DIR__.'/../vendor/autoload.php';
  * Testing...
  */
 
-/** (Closure(): Browser)|null $browserFactory */
+/** @var (Closure(float $connectionTimeout, float $timeout, array<string, string> $headers, ?string $baseUrl): Browser)|null $browserFactory */
 $browserFactory ??= null;
-/** (Closure(): ServerInterface)|null $serverResolver */
+/** @var (Closure(): ServerInterface)|null $serverResolver */
 $serverResolver ??= null;
 
 /*
@@ -55,7 +57,7 @@ $server ??= (string) gethostname();
  * Internal state...
  */
 
-$debug = (bool) ($_SERVER['NIGHTWATCH_DEBUG'] ?? false);
+$debug = ($_SERVER['NIGHTWATCH_DEBUG'] ?? false) === 'true';
 $basePath = str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
 
 /*
@@ -111,7 +113,7 @@ $ingestBrowser = $browserFactory(
     headers: [
         'accept' => 'application/json',
         'content-encoding' => 'gzip',
-        'content-type' => 'application/octet-stream',
+        'content-type' => 'application/json',
         ...($debug ? ['nightwatch-debug' => '1'] : []),
         'nightwatch-server' => $server,
     ],

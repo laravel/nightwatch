@@ -6,11 +6,13 @@ use Evenement\EventEmitter;
 use React\Socket\ServerInterface;
 use RuntimeException;
 
+use function json_encode;
+
 class TcpServerFake extends EventEmitter implements ServerInterface
 {
-    public function pendingConnection(string $payload): PendingConnection
+    public function pendingConnection(array $records): PendingConnection
     {
-        return new PendingConnection($this, $payload);
+        return new PendingConnection($this, json_encode($records, flags: JSON_THROW_ON_ERROR));
     }
 
     public function getAddress()

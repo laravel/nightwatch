@@ -11,7 +11,6 @@ use function array_map;
 use function array_shift;
 use function count;
 use function debug_backtrace;
-use function is_object;
 use function microtime;
 use function str_starts_with;
 use function usort;
@@ -76,13 +75,13 @@ class LoopFake implements LoopInterface
      */
     public function addTimer($interval, $callback): TimerInterface
     {
-        if (is_object($callback) && str_starts_with($callback::class, 'Laravel\\')) {
-            $scheduledBy = $callback::class;
+        $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+        $class = $frame['class'] ?? '';
+
+        if (str_starts_with($class, 'P\\Tests\\Feature')) {
+            $scheduledBy = $class;
         } else {
-            $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
-            $class = $frame['class'] ?? '';
-            $function = $frame['function'];
-            $scheduledBy = "{$class}::{$function}";
+            $scheduledBy = "{$class}::{$frame['function']}";
         }
 
         $this->pendingTimers[] = [
