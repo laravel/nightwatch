@@ -7,7 +7,7 @@ use Tests\Response;
 use Tests\TcpServerFake;
 use Tests\Timer;
 
-it('ingests records', function () {
+it('can ingests records', function () {
     $loop = new LoopFake(runForSeconds: 1);
     $server = new TcpServerFake;
     $ingestDetailsBrowser = new BrowserFake([
