@@ -86,7 +86,7 @@ class Ingest
         }
 
         $this->concurrentRequests++;
-        $start = null;
+        $start = microtime(true);
 
         $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails) use ($payload, &$start): PromiseInterface {
             $start = microtime(true);
