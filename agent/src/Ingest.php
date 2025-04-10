@@ -71,7 +71,7 @@ class Ingest
     private function ingest(string $payload): void
     {
         if ($this->concurrentRequests >= $this->concurrentRequestLimit) {
-            call_user_func($this->onIngestError, new RuntimeException('Exceeded concurrent request limit.'), 0.0);
+            call_user_func($this->onIngestError, new RuntimeException("Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing"), 0.0);
 
             return;
         }

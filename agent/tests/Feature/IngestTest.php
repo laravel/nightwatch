@@ -400,12 +400,12 @@ it('can have two concurrent ingest requests', function () {
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response(duration: 2),
-        new Response(duration: 2),
+        new Response(duration: 3),
+        new Response(duration: 4),
     ]);
     $records = array_fill(0, 375_001, ['t' => 'request']);
     $loop->addTimer(0, $server->pendingConnection($records));
-    $loop->addTimer(1, $server->pendingConnection($records));
+    $loop->addTimer(0, $server->pendingConnection($records));
 
     [$output, $e] = run(
         via: 'source',
@@ -425,17 +425,76 @@ it('can have two concurrent ingest requests', function () {
         Request::ingest($records),
         Request::ingest($records),
     ]);
-
+    expect($ingestDetailsBrowser)->toBeProcessing([]);
     expect($ingestBrowser)->toHavePending([]);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
-        new Timer(interval: 1, runAt: 1, scheduledBy: 'Tests\Response::toPromise'),
+        new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        new Timer(interval: 3, runAt: 3, scheduledBy: 'Tests\Response::toPromise'),
+        new Timer(interval: 4, runAt: 4, scheduledBy: 'Tests\Response::toPromise'),
     ]);
     expect($loop)->toHavePending([
-        new Timer(interval: 2.5, runAt: 3.5, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+        new Timer(interval: 3_600, runAt: 3_600, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
     ]);
     expect($ingestDetailsBrowser)->toHaveSent([
         Request::json('/api/agent-auth'),
     ]);
+    expect($ingestDetailsBrowser)->toBeProcessing([]);
+    expect($ingestDetailsBrowser)->toHavePending([]);
+});
+
+it('can have no more than two concurrent ingest requests', function () {
+    $loop = new LoopFake(runForSeconds: 10);
+    $server = new TcpServerFake;
+    $ingestDetailsBrowser = new BrowserFake([
+        Response::jwt(),
+    ]);
+    $ingestBrowser = new BrowserFake([
+        new Response(duration: 3),
+        new Response(duration: 4),
+    ]);
+    $records = array_fill(0, 375_001, ['t' => 'request']);
+    $loop->addTimer(0, $server->pendingConnection($records));
+    $loop->addTimer(0, $server->pendingConnection($records));
+    $loop->addTimer(0, $server->pendingConnection($records));
+    $loop->addTimer(0, $server->pendingConnection($records));
+
+    [$output, $e] = run(
+        via: 'source',
+        ingestDetailsBrowser: $ingestDetailsBrowser,
+        ingestBrowser: $ingestBrowser,
+        loop: $loop,
+        server: $server,
+    );
+
+    expect($e)->toBeNull($e?->getMessage() ?? '');
+    expect($output)->toMatchLog(<<<'OUTPUT'
+        {date} {info} Authentication successful {duration}
+        {date} {info} Ingest failed {duration}: Exceeded concurrent request limit\. \[2\] requests are processing
+        {date} {info} Ingest failed {duration}: Exceeded concurrent request limit\. \[2\] requests are processing
+        {date} {info} Ingest successful {duration}
+        {date} {info} Ingest successful {duration}
+        OUTPUT);
+    expect($ingestBrowser)->toHaveSent([
+        Request::ingest($records),
+        Request::ingest($records),
+    ]);
+    expect($ingestDetailsBrowser)->toBeProcessing([]);
+    expect($ingestBrowser)->toHavePending([]);
+    expect($loop)->toHaveRun([
+        new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        new Timer(interval: 3, runAt: 3, scheduledBy: 'Tests\Response::toPromise'),
+        new Timer(interval: 4, runAt: 4, scheduledBy: 'Tests\Response::toPromise'),
+    ]);
+    expect($loop)->toHavePending([
+        new Timer(interval: 3_600, runAt: 3_600, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+    ]);
+    expect($ingestDetailsBrowser)->toHaveSent([
+        Request::json('/api/agent-auth'),
+    ]);
+    expect($ingestDetailsBrowser)->toBeProcessing([]);
     expect($ingestDetailsBrowser)->toHavePending([]);
 });
