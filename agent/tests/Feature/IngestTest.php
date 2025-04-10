@@ -261,7 +261,7 @@ it('limits response body included in logs', function () {
 });
 
 it('waits on the resolution of the ingest details before attempting to ingest', function () {
-    $loop = new LoopFake(runForSeconds: 1);
+    $loop = new LoopFake(runForSeconds: 100);
     $server = new TcpServerFake;
     $ingestDetailsBrowser = new BrowserFake([
         Response::jwt(), // delay

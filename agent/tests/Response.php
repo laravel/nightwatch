@@ -3,8 +3,10 @@
 namespace Tests;
 
 use Psr\Http\Message\ResponseInterface;
+use React\EventLoop\Loop;
 use React\Http\Message\Response as ReactResponse;
 use React\Http\Message\ResponseException;
+use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
 use RuntimeException;
 use Throwable;
@@ -23,6 +25,7 @@ class Response
     public function __construct(
         public string|array $body = '',
         public ?int $status = 200,
+        public int $defer = 0,
     ) {
         //
     }
@@ -32,32 +35,38 @@ class Response
         int $expiresIn = 7_200,
         int $refreshIn = 3_600,
         string $ingestUrl = 'https://ingest.nightwatch.laravel.com',
+        int $defer = 0,
     ): self {
         return new self([
             'token' => $token,
             'expires_in' => $expiresIn,
             'ingest_url' => $ingestUrl,
             'refresh_in' => $refreshIn,
-        ]);
+        ], defer: $defer);
     }
 
     public static function unauthenticated(
         string $message = 'Invalid environment token',
+        int $defer = 0
     ): self {
-        return new self(['message' => $message], status: 401);
+        return new self(['message' => $message], status: 401, defer: $defer);
     }
 
-    public static function internalServerError(string $body = ''): self
-    {
-        return new self($body, status: 500);
+    public static function internalServerError(
+        string $body = '',
+        int $defer = 0,
+    ): self {
+        return new self($body, status: 500, defer: $defer);
     }
 
-    public static function throwWhileProcessing(string|Throwable $e): self
-    {
+    public static function throwWhileProcessing(
+        string|Throwable $e,
+        int $defer = 0,
+    ): self {
         if (is_string($e)) {
-            return new self([RuntimeException::class, $e], status: null);
+            return new self([RuntimeException::class, $e], status: null, defer: $defer);
         } else {
-            return new self([$e::class, $e->getMessage()], status: null);
+            return new self([$e::class, $e->getMessage()], status: null, defer: $defer);
         }
     }
 
@@ -65,6 +74,24 @@ class Response
      * @return PromiseInterface<ResponseInterface>
      */
     public function toPromise(): PromiseInterface
+    {
+        if ($this->defer) {
+            $deferred = new Deferred;
+
+            Loop::addTimer($this->defer, function () use ($deferred) {
+                $deferred->resolve($this->toResponsePromise());
+            });
+
+            return $deferred->promise();
+        }
+
+        return $this->toResponsePromise();
+    }
+
+    /**
+     * @return PromiseInterface<ResponseInterface>
+     */
+    public function toResponsePromise(): PromiseInterface
     {
         if ($this->status === null && is_array($this->body)) {
             /** @var class-string<Throwable> $class */
