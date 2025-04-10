@@ -25,7 +25,7 @@ class Response
     public function __construct(
         public string|array $body = '',
         public ?int $status = 200,
-        public int $defer = 0,
+        public int $duration = 0,
     ) {
         //
     }
@@ -35,38 +35,38 @@ class Response
         int $expiresIn = 7_200,
         int $refreshIn = 3_600,
         string $ingestUrl = 'https://ingest.nightwatch.laravel.com',
-        int $defer = 0,
+        int $duration = 0,
     ): self {
         return new self([
             'token' => $token,
             'expires_in' => $expiresIn,
             'ingest_url' => $ingestUrl,
             'refresh_in' => $refreshIn,
-        ], defer: $defer);
+        ], duration: $duration);
     }
 
     public static function unauthenticated(
         string $message = 'Invalid environment token',
-        int $defer = 0
+        int $duration = 0
     ): self {
-        return new self(['message' => $message], status: 401, defer: $defer);
+        return new self(['message' => $message], status: 401, duration: $duration);
     }
 
     public static function internalServerError(
         string $body = '',
-        int $defer = 0,
+        int $duration = 0,
     ): self {
-        return new self($body, status: 500, defer: $defer);
+        return new self($body, status: 500, duration: $duration);
     }
 
     public static function throwWhileProcessing(
         string|Throwable $e,
-        int $defer = 0,
+        int $duration = 0,
     ): self {
         if (is_string($e)) {
-            return new self([RuntimeException::class, $e], status: null, defer: $defer);
+            return new self([RuntimeException::class, $e], status: null, duration: $duration);
         } else {
-            return new self([$e::class, $e->getMessage()], status: null, defer: $defer);
+            return new self([$e::class, $e->getMessage()], status: null, duration: $duration);
         }
     }
 
@@ -75,11 +75,16 @@ class Response
      */
     public function toPromise(): PromiseInterface
     {
-        if ($this->defer) {
+        if ($this->duration) {
+            /** @var Deferred<ResponseInterface> $deferred */
             $deferred = new Deferred;
 
-            Loop::addTimer($this->defer, function () use ($deferred) {
-                $deferred->resolve($this->toResponsePromise());
+            Loop::addTimer($this->duration, function () use ($deferred) {
+                $this->toResponsePromise()->then(function ($response) use ($deferred) {
+                    $deferred->resolve($response);
+                }, function (Throwable $e) use ($deferred) {
+                    $deferred->reject($e);
+                });
             });
 
             return $deferred->promise();

@@ -260,14 +260,14 @@ it('limits response body included in logs', function () {
     expect($ingestDetailsBrowser)->toHavePending([]);
 });
 
-it('waits on the resolution of the ingest details before attempting to ingest', function () {
-    $loop = new LoopFake(runForSeconds: 100);
+it('waits on the resolution of the ingest details before attempting to ingest', function (int $duration, string $log) {
+    $loop = new LoopFake(runForSeconds: 10);
     $server = new TcpServerFake;
     $ingestDetailsBrowser = new BrowserFake([
-        Response::jwt(), // delay
+        Response::jwt(duration: $duration),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response,
+        new Response('Ingest successful'),
     ]);
     $records = array_fill(0, 375_001, ['t' => 'request']);
     $loop->addTimer(0, $server->pendingConnection($records));
@@ -281,32 +281,32 @@ it('waits on the resolution of the ingest details before attempting to ingest', 
     );
 
     expect($e)->toBeNull($e?->getMessage() ?? '');
-    expect($output)->toMatchLog(<<<'OUTPUT'
-        {date} {info} Authentication successful {duration}
-        {date} {info} Ingest successful {duration}
-        OUTPUT);
-    expect($ingestBrowser->timeout)->toBe(10.0);
-    expect($ingestBrowser->connectionTimeout)->toBe(5.0);
-    expect($ingestBrowser->baseUrl)->toBeNull();
-    expect($ingestBrowser->headers)->toBe([
-        'accept' => 'application/json',
-        'content-encoding' => 'gzip',
-        'content-type' => 'application/json',
-        'nightwatch-server' => gethostname(),
-    ]);
-    expect($ingestBrowser)->toHaveSent([
-        Request::ingest($records),
-    ]);
-    expect($ingestBrowser)->toHavePending([]);
+    expect($output)->toMatchLog($log);
+    expect($ingestBrowser)->toHaveSent($duration === 9
+        ? [Request::ingest($records)]
+        : []);
+    expect($ingestBrowser)->toHavePending($duration === 9
+        ? []
+        : [new Response('Ingest successful')]);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        ...($duration === 9
+            ? [new Timer(interval: $duration, runAt: $duration, scheduledBy: 'Tests\Response::toPromise')]
+            : []),
     ]);
-    expect($loop)->toHavePending([
-        new Timer(interval: 3_600, runAt: 3_600, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
-    ]);
+    expect($loop)->toHavePending($duration === 9
+        ? [new Timer(interval: 3_600, runAt: 3_609, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn')]
+        : [new Timer(interval: $duration, runAt: $duration, scheduledBy: 'Tests\Response::toPromise')]);
     expect($ingestDetailsBrowser)->toHaveSent([
         Request::json('/api/agent-auth'),
     ]);
-    expect($ingestDetailsBrowser)->toHavePending([]);
-
-});
+    expect($ingestDetailsBrowser)->toHavePending($duration === 9
+        ? []
+        : [Response::jwt(duration: $duration)]);
+})->with([
+    [9, <<<'LOG'
+        {date} {info} Authentication successful {duration}
+        {date} {info} Ingest successful {duration}
+        LOG],
+    [10, ''],
+]);

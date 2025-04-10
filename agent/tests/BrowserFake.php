@@ -6,7 +6,8 @@ use Laravel\NightwatchAgent\Contracts\Browser;
 use React\Promise\PromiseInterface;
 use RuntimeException;
 
-use function array_shift;
+use function array_search;
+use function array_values;
 use function json_encode;
 
 class BrowserFake implements Browser
@@ -28,7 +29,7 @@ class BrowserFake implements Browser
     public ?array $headers = null;
 
     /**
-     * @param  list<Response>  $pendingResponses
+     * @param  array<int, Response>  $pendingResponses
      */
     public function __construct(
         public array $pendingResponses = [],
@@ -40,7 +41,7 @@ class BrowserFake implements Browser
     {
         $this->sentRequests[] = [$url, $headers, $body];
 
-        $response = array_shift($this->pendingResponses);
+        $response = array_values($this->pendingResponses)[0] ?? null;
 
         if ($response === null) {
             throw new RuntimeException('A request was made but there are no more responses: ['.json_encode([
@@ -48,6 +49,14 @@ class BrowserFake implements Browser
             ], flags: JSON_THROW_ON_ERROR).']');
         }
 
-        return $response->toPromise();
+        return $response->toPromise()->finally(function () use ($response) {
+            $index = array_search($response, $this->pendingResponses, true);
+
+            if ($index === false) {
+                throw new RuntimeException('Was unable to find the response in the pending responses. Something is wrong.');
+            }
+
+            unset($this->pendingResponses[$index]);
+        });
     }
 }
