@@ -2,15 +2,12 @@
 
 namespace Tests;
 
-use Exception;
 use Laravel\NightwatchAgent\Contracts\Browser;
 use React\Promise\PromiseInterface;
 use RuntimeException;
 
 use function array_shift;
-use function is_array;
 use function json_encode;
-use function React\Promise\reject;
 
 class BrowserFake implements Browser
 {
@@ -31,7 +28,7 @@ class BrowserFake implements Browser
     public ?array $headers = null;
 
     /**
-     * @param  list<Response|array{0: class-string<Exception>, 1: string}>  $pendingResponses
+     * @param  list<Response>  $pendingResponses
      */
     public function __construct(
         public array $pendingResponses = [],
@@ -49,10 +46,6 @@ class BrowserFake implements Browser
             throw new RuntimeException('A request was made but there are no more responses: ['.json_encode([
                 'url' => $url,
             ], flags: JSON_THROW_ON_ERROR).']');
-        }
-
-        if (is_array($response)) {
-            return reject(new $response[0]($response[1]));
         }
 
         return $response->toPromise();

@@ -114,7 +114,7 @@ it('handles runtime exceptions while procesing the request', function () {
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        [RuntimeException::class, 'Whoops!'],
+        Response::throwWhileProcessing('Whoops!'),
     ]);
     $records = array_fill(0, 375_001, ['t' => 'request']);
     $loop->addTimer(0, $server->pendingConnection($records));

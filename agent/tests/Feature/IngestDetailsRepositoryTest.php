@@ -52,7 +52,7 @@ it('can authenticate', function () {
 it('handles runtime exceptions while procesing the request', function () {
     $loop = new LoopFake;
     $browser = new BrowserFake([
-        [RuntimeException::class, 'Whoops!'],
+        Response::throwWhileProcessing('Whoops!'),
     ]);
 
     [$output, $e] = run(
@@ -220,31 +220,31 @@ it('refreshes the token based on refresh_in', function () {
 it('uses the quick-retry back-off strategy if the agent has not yet authenticated and encouters a runtime exception', function () {
     $loop = new LoopFake(runForSeconds: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + (300 * 12) + (3_600 * 3) + 1);
     $browser = new BrowserFake([
-        [RuntimeException::class, 'Whoops 1!'], // 0s
+        Response::throwWhileProcessing('Whoops 1!'), // 0s
 
-        [RuntimeException::class, 'Whoops 2!'], // 2.5s
-        [RuntimeException::class, 'Whoops 3!'], // 5s
-        [RuntimeException::class, 'Whoops 4!'], // 10s
-        [RuntimeException::class, 'Whoops 5!'], // 15s
-        [RuntimeException::class, 'Whoops 6!'], // 30s
-        [RuntimeException::class, 'Whoops 7!'], // 60s
-        [RuntimeException::class, 'Whoops 8!'], // 120s
-        [RuntimeException::class, 'Whoops 9!'], // 240s
-        [RuntimeException::class, 'Whoops 10!'], // 300s
-        [RuntimeException::class, 'Whoops 11!'], // 300s
-        [RuntimeException::class, 'Whoops 12!'], // 300s
-        [RuntimeException::class, 'Whoops 13!'], // 300s
-        [RuntimeException::class, 'Whoops 14!'], // 300s
-        [RuntimeException::class, 'Whoops 15!'], // 300s
-        [RuntimeException::class, 'Whoops 16!'], // 300s
-        [RuntimeException::class, 'Whoops 17!'], // 300s
-        [RuntimeException::class, 'Whoops 18!'], // 300s
-        [RuntimeException::class, 'Whoops 19!'], // 300s
-        [RuntimeException::class, 'Whoops 20!'], // 300s
-        [RuntimeException::class, 'Whoops 21!'], // 300s
-        [RuntimeException::class, 'Whoops 22!'], // 1h
-        [RuntimeException::class, 'Whoops 23!'], // 1h
-        [RuntimeException::class, 'Whoops 24!'], // 1h
+        Response::throwWhileProcessing('Whoops 2!'), // 2.5s
+        Response::throwWhileProcessing('Whoops 3!'), // 5s
+        Response::throwWhileProcessing('Whoops 4!'), // 10s
+        Response::throwWhileProcessing('Whoops 5!'), // 15s
+        Response::throwWhileProcessing('Whoops 6!'), // 30s
+        Response::throwWhileProcessing('Whoops 7!'), // 60s
+        Response::throwWhileProcessing('Whoops 8!'), // 120s
+        Response::throwWhileProcessing('Whoops 9!'), // 240s
+        Response::throwWhileProcessing('Whoops 10!'), // 300s
+        Response::throwWhileProcessing('Whoops 11!'), // 300s
+        Response::throwWhileProcessing('Whoops 12!'), // 300s
+        Response::throwWhileProcessing('Whoops 13!'), // 300s
+        Response::throwWhileProcessing('Whoops 14!'), // 300s
+        Response::throwWhileProcessing('Whoops 15!'), // 300s
+        Response::throwWhileProcessing('Whoops 16!'), // 300s
+        Response::throwWhileProcessing('Whoops 17!'), // 300s
+        Response::throwWhileProcessing('Whoops 18!'), // 300s
+        Response::throwWhileProcessing('Whoops 19!'), // 300s
+        Response::throwWhileProcessing('Whoops 20!'), // 300s
+        Response::throwWhileProcessing('Whoops 21!'), // 300s
+        Response::throwWhileProcessing('Whoops 22!'), // 1h
+        Response::throwWhileProcessing('Whoops 23!'), // 1h
+        Response::throwWhileProcessing('Whoops 24!'), // 1h
     ]);
 
     [$output, $e] = run(
@@ -505,22 +505,22 @@ it('uses the slow-retry back-off strategy if the agent has already authenticated
     $browser = new BrowserFake([
         Response::jwt(),
 
-        [RuntimeException::class, 'Whoops 1!'], // 300s
-        [RuntimeException::class, 'Whoops 2!'], // 300s
-        [RuntimeException::class, 'Whoops 3!'], // 300s
-        [RuntimeException::class, 'Whoops 4!'], // 300s
-        [RuntimeException::class, 'Whoops 5!'], // 300s
-        [RuntimeException::class, 'Whoops 6!'], // 300s
-        [RuntimeException::class, 'Whoops 7!'], // 300s
-        [RuntimeException::class, 'Whoops 8!'], // 300s
-        [RuntimeException::class, 'Whoops 9!'], // 300s
-        [RuntimeException::class, 'Whoops 10!'], // 300s
-        [RuntimeException::class, 'Whoops 11!'], // 300s
-        [RuntimeException::class, 'Whoops 12!'], // 300s
-        [RuntimeException::class, 'Whoops 13!'], // 3_600s
-        [RuntimeException::class, 'Whoops 14!'], // 3_600s
-        [RuntimeException::class, 'Whoops 15!'], // 3_600s
-        [RuntimeException::class, 'Whoops 16!'], // 3_600s
+        Response::throwWhileProcessing('Whoops 1!'), // 300s
+        Response::throwWhileProcessing('Whoops 2!'), // 300s
+        Response::throwWhileProcessing('Whoops 3!'), // 300s
+        Response::throwWhileProcessing('Whoops 4!'), // 300s
+        Response::throwWhileProcessing('Whoops 5!'), // 300s
+        Response::throwWhileProcessing('Whoops 6!'), // 300s
+        Response::throwWhileProcessing('Whoops 7!'), // 300s
+        Response::throwWhileProcessing('Whoops 8!'), // 300s
+        Response::throwWhileProcessing('Whoops 9!'), // 300s
+        Response::throwWhileProcessing('Whoops 10!'), // 300s
+        Response::throwWhileProcessing('Whoops 11!'), // 300s
+        Response::throwWhileProcessing('Whoops 12!'), // 300s
+        Response::throwWhileProcessing('Whoops 13!'), // 3_600s
+        Response::throwWhileProcessing('Whoops 14!'), // 3_600s
+        Response::throwWhileProcessing('Whoops 15!'), // 3_600s
+        Response::throwWhileProcessing('Whoops 16!'), // 3_600s
     ]);
 
     [$output, $e] = run(
