@@ -178,7 +178,7 @@ it('handles missing authentication details', function () {
     expect($e)->toBeNull($e?->getMessage() ?? '');
     expect($output)->toMatchLog(<<<'OUTPUT'
         {date} {info} Authentication failed {duration}: 401 \[{"message":"Invalid environment token"}\]
-        {date} {info} Ingest failed {duration}: No authentication details\.
+        {date} {info} Ingest failed {duration}: No authentication details
         OUTPUT);
     expect($ingestBrowser->timeout)->toBe(10.0);
     expect($ingestBrowser->connectionTimeout)->toBe(5.0);
@@ -261,7 +261,7 @@ it('limits response body included in logs', function () {
 });
 
 it('waits on the resolution of the ingest details before attempting to ingest', function (int $duration, string $log) {
-    $loop = new LoopFake(runForSeconds: 10);
+    $loop = new LoopFake(runForSeconds: 2);
     $server = new TcpServerFake;
     $ingestDetailsBrowser = new BrowserFake([
         Response::jwt(duration: $duration),
@@ -282,31 +282,160 @@ it('waits on the resolution of the ingest details before attempting to ingest', 
 
     expect($e)->toBeNull($e?->getMessage() ?? '');
     expect($output)->toMatchLog($log);
-    expect($ingestBrowser)->toHaveSent($duration === 9
+    expect($ingestBrowser)->toHaveSent($duration === 1
         ? [Request::ingest($records)]
         : []);
-    expect($ingestBrowser)->toHavePending($duration === 9
+    expect($ingestBrowser)->toBeProcessing([]);
+    expect($ingestBrowser)->toHavePending($duration === 1
         ? []
         : [new Response('Ingest successful')]);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
-        ...($duration === 9
+        ...($duration === 1
             ? [new Timer(interval: $duration, runAt: $duration, scheduledBy: 'Tests\Response::toPromise')]
             : []),
     ]);
-    expect($loop)->toHavePending($duration === 9
-        ? [new Timer(interval: 3_600, runAt: 3_609, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn')]
+    expect($loop)->toHavePending($duration === 1
+        ? [new Timer(interval: 3_600, runAt: 3_601, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn')]
         : [new Timer(interval: $duration, runAt: $duration, scheduledBy: 'Tests\Response::toPromise')]);
     expect($ingestDetailsBrowser)->toHaveSent([
         Request::json('/api/agent-auth'),
     ]);
-    expect($ingestDetailsBrowser)->toHavePending($duration === 9
+    expect($ingestDetailsBrowser)->toBeProcessing($duration === 1
         ? []
         : [Response::jwt(duration: $duration)]);
+    expect($ingestDetailsBrowser)->toHavePending([]);
 })->with([
-    [9, <<<'LOG'
+    [1, <<<'LOG'
         {date} {info} Authentication successful {duration}
         {date} {info} Ingest successful {duration}
         LOG],
-    [10, ''],
+    [2, ''],
 ]);
+
+it('handles runtime errors while waiting to authenticate', function () {
+    $loop = new LoopFake(runForSeconds: 2);
+    $server = new TcpServerFake;
+    $ingestDetailsBrowser = new BrowserFake([
+        Response::throwWhileProcessing('Whoops!', duration: 1),
+    ]);
+    $ingestBrowser = new BrowserFake([
+        //
+    ]);
+    $records = array_fill(0, 375_001, ['t' => 'request']);
+    $loop->addTimer(0, $server->pendingConnection($records));
+
+    [$output, $e] = run(
+        via: 'source',
+        ingestDetailsBrowser: $ingestDetailsBrowser,
+        ingestBrowser: $ingestBrowser,
+        loop: $loop,
+        server: $server,
+    );
+
+    expect($e)->toBeNull($e?->getMessage() ?? '');
+    expect($output)->toMatchLog(<<<'OUTPUT'
+        {date} {info} Authentication failed {duration}: Whoops!
+        {date} {info} Ingest failed {duration}: No authentication details
+        OUTPUT);
+    expect($ingestBrowser)->toHaveSent([]);
+    expect($ingestBrowser)->toHavePending([]);
+    expect($loop)->toHaveRun([
+        new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        new Timer(interval: 1, runAt: 1, scheduledBy: 'Tests\Response::toPromise'),
+    ]);
+    expect($loop)->toHavePending([
+        new Timer(interval: 2.5, runAt: 3.5, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+    ]);
+    expect($ingestDetailsBrowser)->toHaveSent([
+        Request::json('/api/agent-auth'),
+    ]);
+    expect($ingestDetailsBrowser)->toHavePending([]);
+});
+
+it('handles error responses while waiting to authenticate', function () {
+    $loop = new LoopFake(runForSeconds: 2);
+    $server = new TcpServerFake;
+    $ingestDetailsBrowser = new BrowserFake([
+        Response::internalServerError('Whoops!', duration: 1),
+    ]);
+    $ingestBrowser = new BrowserFake([
+        //
+    ]);
+    $records = array_fill(0, 375_001, ['t' => 'request']);
+    $loop->addTimer(0, $server->pendingConnection($records));
+
+    [$output, $e] = run(
+        via: 'source',
+        ingestDetailsBrowser: $ingestDetailsBrowser,
+        ingestBrowser: $ingestBrowser,
+        loop: $loop,
+        server: $server,
+    );
+
+    expect($e)->toBeNull($e?->getMessage() ?? '');
+    expect($output)->toMatchLog(<<<'OUTPUT'
+        {date} {info} Authentication failed {duration}: 500 \[Whoops!\]
+        {date} {info} Ingest failed {duration}: No authentication details
+        OUTPUT);
+    expect($ingestBrowser)->toHaveSent([]);
+    expect($ingestBrowser)->toHavePending([]);
+    expect($loop)->toHaveRun([
+        new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        new Timer(interval: 1, runAt: 1, scheduledBy: 'Tests\Response::toPromise'),
+    ]);
+    expect($loop)->toHavePending([
+        new Timer(interval: 2.5, runAt: 3.5, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+    ]);
+    expect($ingestDetailsBrowser)->toHaveSent([
+        Request::json('/api/agent-auth'),
+    ]);
+    expect($ingestDetailsBrowser)->toHavePending([]);
+});
+
+it('can have two concurrent ingest requests', function () {
+    $loop = new LoopFake(runForSeconds: 10);
+    $server = new TcpServerFake;
+    $ingestDetailsBrowser = new BrowserFake([
+        Response::jwt(),
+    ]);
+    $ingestBrowser = new BrowserFake([
+        new Response(duration: 2),
+        new Response(duration: 2),
+    ]);
+    $records = array_fill(0, 375_001, ['t' => 'request']);
+    $loop->addTimer(0, $server->pendingConnection($records));
+    $loop->addTimer(1, $server->pendingConnection($records));
+
+    [$output, $e] = run(
+        via: 'source',
+        ingestDetailsBrowser: $ingestDetailsBrowser,
+        ingestBrowser: $ingestBrowser,
+        loop: $loop,
+        server: $server,
+    );
+
+    expect($e)->toBeNull($e?->getMessage() ?? '');
+    expect($output)->toMatchLog(<<<'OUTPUT'
+        {date} {info} Authentication successful {duration}
+        {date} {info} Ingest successful {duration}
+        {date} {info} Ingest successful {duration}
+        OUTPUT);
+    expect($ingestBrowser)->toHaveSent([
+        Request::ingest($records),
+        Request::ingest($records),
+    ]);
+
+    expect($ingestBrowser)->toHavePending([]);
+    expect($loop)->toHaveRun([
+        new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        new Timer(interval: 1, runAt: 1, scheduledBy: 'Tests\Response::toPromise'),
+    ]);
+    expect($loop)->toHavePending([
+        new Timer(interval: 2.5, runAt: 3.5, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+    ]);
+    expect($ingestDetailsBrowser)->toHaveSent([
+        Request::json('/api/agent-auth'),
+    ]);
+    expect($ingestDetailsBrowser)->toHavePending([]);
+});

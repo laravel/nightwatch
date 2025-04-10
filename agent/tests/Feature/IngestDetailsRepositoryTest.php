@@ -160,7 +160,7 @@ it('handles unexpected response payloads', function (array $payload) {
     expect($browser)->toHavePending([]);
     $payload = preg_quote(json_encode($payload, flags: JSON_THROW_ON_ERROR), '#');
     expect($output)->toMatchLog(<<<OUTPUT
-        {date} {info} Authentication failed {duration}: Invalid authentication response \[{$payload}\].
+        {date} {info} Authentication failed {duration}: Invalid authentication response \[{$payload}\]
         OUTPUT);
     expect($loop)->toHaveRun([]);
 })->with([

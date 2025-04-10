@@ -128,7 +128,7 @@ class IngestDetailsRepository
             ! is_int($data['refresh_in'] ?? null) ||
             ! is_string($data['ingest_url'] ?? null)
         ) {
-            throw new RuntimeException("Invalid authentication response [{$body}].");
+            throw new RuntimeException("Invalid authentication response [{$body}]");
         }
 
         return new IngestDetails(

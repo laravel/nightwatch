@@ -7,7 +7,7 @@ use React\Promise\PromiseInterface;
 use RuntimeException;
 
 use function array_search;
-use function array_values;
+use function array_shift;
 use function json_encode;
 
 class BrowserFake implements Browser
@@ -16,6 +16,11 @@ class BrowserFake implements Browser
      * @var list<array{0: string, 1: array<string, string>, 2: string }>
      */
     public array $sentRequests = [];
+
+    /**
+     * @var array<int, Response>
+     */
+    public array $processingResponses = [];
 
     public ?float $connectionTimeout = null;
 
@@ -41,7 +46,7 @@ class BrowserFake implements Browser
     {
         $this->sentRequests[] = [$url, $headers, $body];
 
-        $response = array_values($this->pendingResponses)[0] ?? null;
+        $response = array_shift($this->pendingResponses);
 
         if ($response === null) {
             throw new RuntimeException('A request was made but there are no more responses: ['.json_encode([
@@ -49,14 +54,16 @@ class BrowserFake implements Browser
             ], flags: JSON_THROW_ON_ERROR).']');
         }
 
+        $this->processingResponses[] = $response;
+
         return $response->toPromise()->finally(function () use ($response) {
-            $index = array_search($response, $this->pendingResponses, true);
+            $index = array_search($response, $this->processingResponses, true);
 
             if ($index === false) {
-                throw new RuntimeException('Was unable to find the response in the pending responses. Something is wrong.');
+                throw new RuntimeException('Was unable to find the processing response. Something is wrong.');
             }
 
-            unset($this->pendingResponses[$index]);
+            unset($this->processingResponses[$index]);
         });
     }
 }

@@ -88,6 +88,12 @@ expect()->extend('toHavePending', function (array $items) {
     return $this->toEqual($items);
 });
 
+expect()->extend('toBeProcessing', function (array $responses) {
+    $this->value = $this->value->processingResponses;
+
+    return $this->toEqual($responses);
+});
+
 /**
  * @param  'source'|'phar'  $via
  * @param  (callable(string): bool)  $until

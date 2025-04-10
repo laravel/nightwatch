@@ -86,30 +86,24 @@ class Ingest
         }
 
         $this->concurrentRequests++;
+        $start = null;
 
-        $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails) use ($payload): PromiseInterface {
-            if ($ingestDetails === null) {
-                throw new RuntimeException('No authentication details.');
-            }
-
+        $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails) use ($payload, &$start): PromiseInterface {
             $start = microtime(true);
+
+            if ($ingestDetails === null) {
+                throw new RuntimeException('No authentication details');
+            }
 
             return $this->browser->post(
                 url: $ingestDetails->ingestUrl,
-                headers: [
-                    'authorization' => "Bearer {$ingestDetails->token}",
-                ],
+                headers: ['authorization' => "Bearer {$ingestDetails->token}"],
                 body: $payload,
-            )->then(
-                function (ResponseInterface $response) use ($start): void {
-                    call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
-                },
-                function (Throwable $e) use ($start): void {
-                    call_user_func($this->onIngestError, $this->parseException($e), microtime(true) - $start);
-                }
             );
-        })->catch(function (Throwable $e): void {
-            call_user_func($this->onIngestError, $e, 0.0);
+        })->then(function (ResponseInterface $response) use (&$start): void {
+            call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
+        })->catch(function (Throwable $e) use (&$start): void {
+            call_user_func($this->onIngestError, $this->parseException($e), microtime(true) - $start);
         })->finally(function (): void {
             $this->concurrentRequests--;
         });
