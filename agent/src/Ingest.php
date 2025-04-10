@@ -87,27 +87,27 @@ class Ingest
 
         $this->concurrentRequests++;
 
-        $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails): PromiseInterface {
-            // if ($ingestDetails === null) {
-            //     throw new RuntimeException('No authentication details.');
-            // }
+        $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails) use ($payload): PromiseInterface {
+            if ($ingestDetails === null) {
+                throw new RuntimeException('No authentication details.');
+            }
 
-            // $start = microtime(true);
+            $start = microtime(true);
 
-            // return $this->browser->post(
-            //     url: $ingestDetails->ingestUrl,
-            //     headers: [
-            //         'authorization' => "Bearer {$ingestDetails->token}",
-            //     ],
-            //     body: $payload,
-            // )->then(
-            // function (ResponseInterface $response) use ($start): void {
-            //     call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
-            // },
-            // function (Throwable $e) use ($start): void {
-            //     call_user_func($this->onIngestError, $this->parseException($e), microtime(true) - $start);
-            // }
-            // );
+            return $this->browser->post(
+                url: $ingestDetails->ingestUrl,
+                headers: [
+                    'authorization' => "Bearer {$ingestDetails->token}",
+                ],
+                body: $payload,
+            )->then(
+                function (ResponseInterface $response) use ($start): void {
+                    call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
+                },
+                function (Throwable $e) use ($start): void {
+                    call_user_func($this->onIngestError, $this->parseException($e), microtime(true) - $start);
+                }
+            );
         })->catch(function (Throwable $e): void {
             call_user_func($this->onIngestError, $e, 0.0);
         })->finally(function (): void {

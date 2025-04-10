@@ -38,11 +38,15 @@ class Response
         ]);
     }
 
-    public static function unauthenticated(): self
+    public static function unauthenticated(
+        string $message = 'Invalid environment token',
+    ): self {
+        return new self(['message' => $message], status: 401);
+    }
+
+    public static function internalServerError(string $body = ''): self
     {
-        return new self([
-            'message' => 'Invalid environment token',
-        ], status: 401);
+        return new self($body, status: 500);
     }
 
     /**

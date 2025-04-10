@@ -18,9 +18,9 @@ it('can authenticate', function () {
         loop: $loop,
     );
 
-    /** @var ?string  $baseUrl */
+    /** @var ?string $baseUrl */
     $baseUrl = $_SERVER['NIGHTWATCH_BASE_URL'] ?? null;
-    /** @var ?string  $token */
+    /** @var ?string $token */
     $token = $_SERVER['NIGHTWATCH_TOKEN'] ?? null;
 
     expect($baseUrl)
@@ -75,7 +75,7 @@ it('handles runtime exceptions while procesing the request', function () {
 it('handles 4xx errors', function () {
     $loop = new LoopFake;
     $browser = new BrowserFake([
-        new Response('Whoops!', status: 400),
+        new Response('Whoops!', 400),
     ]);
 
     [$output, $e] = run(
@@ -98,7 +98,7 @@ it('handles 4xx errors', function () {
 it('handles 5xx errors', function () {
     $loop = new LoopFake;
     $browser = new BrowserFake([
-        new Response('Whoops!', status: 500),
+        Response::internalServerError('Whoops!'),
     ]);
 
     [$output, $e] = run(
@@ -174,11 +174,11 @@ it('handles unexpected response payloads', function (array $payload) {
 
 it('refreshes the token based on refresh_in', function () {
     $loop = new LoopFake(runForSeconds: 5 + 10 + 3_600 + 300 + 1);
-    $browser = new BrowserFake(pendingResponses: [
+    $browser = new BrowserFake([
         Response::jwt(refreshIn: 5),
 
         Response::jwt(refreshIn: 10),
-        new Response(status: 500),
+        Response::internalServerError(),
         Response::jwt(),
         Response::jwt(),
     ]);
@@ -341,31 +341,31 @@ it('uses the quick-retry back-off strategy if the agent has not yet authenticate
 it('uses the quick-retry back-off strategy if the agent has not yet authenticated and receives an unknown error response', function () {
     $loop = new LoopFake(runForSeconds: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + (300 * 12) + (3_600 * 3) + 1);
     $browser = new BrowserFake([
-        new Response('Whoops 1!', status: 500), // 0s
+        Response::internalServerError('Whoops 1!'), // 0s
 
-        new Response('Whoops 2!', status: 501), // 2.5s
-        new Response('Whoops 3!', status: 400), // 5s
-        new Response('Whoops 4!', status: 402), // 10s
-        new Response('Whoops 5!', status: 500), // 30s
-        new Response('Whoops 6!', status: 500), // 60s
-        new Response('Whoops 7!', status: 500), // 120s
-        new Response('Whoops 8!', status: 500), // 240s
-        new Response('Whoops 9!', status: 500), // 300s
-        new Response('Whoops 10!', status: 500), // 300s
-        new Response('Whoops 11!', status: 500), // 300s
-        new Response('Whoops 12!', status: 500), // 300s
-        new Response('Whoops 13!', status: 500), // 300s
-        new Response('Whoops 14!', status: 500), // 300s
-        new Response('Whoops 15!', status: 500), // 300s
-        new Response('Whoops 16!', status: 500), // 300s
-        new Response('Whoops 17!', status: 500), // 300s
-        new Response('Whoops 18!', status: 500), // 300s
-        new Response('Whoops 19!', status: 500), // 300s
-        new Response('Whoops 20!', status: 500), // 300s
-        new Response('Whoops 21!', status: 500), // 1h
-        new Response('Whoops 22!', status: 500), // 1h
-        new Response('Whoops 23!', status: 500), // 1h
-        new Response('Whoops 24!', status: 500), // 1h
+        new Response('Whoops 2!', 501), // 2.5s
+        new Response('Whoops 3!', 400), // 5s
+        new Response('Whoops 4!', 402), // 10s
+        Response::internalServerError('Whoops 5!'), // 30s
+        Response::internalServerError('Whoops 6!'), // 60s
+        Response::internalServerError('Whoops 7!'), // 120s
+        Response::internalServerError('Whoops 8!'), // 240s
+        Response::internalServerError('Whoops 9!'), // 300s
+        Response::internalServerError('Whoops 10!'), // 300s
+        Response::internalServerError('Whoops 11!'), // 300s
+        Response::internalServerError('Whoops 12!'), // 300s
+        Response::internalServerError('Whoops 13!'), // 300s
+        Response::internalServerError('Whoops 14!'), // 300s
+        Response::internalServerError('Whoops 15!'), // 300s
+        Response::internalServerError('Whoops 16!'), // 300s
+        Response::internalServerError('Whoops 17!'), // 300s
+        Response::internalServerError('Whoops 18!'), // 300s
+        Response::internalServerError('Whoops 19!'), // 300s
+        Response::internalServerError('Whoops 20!'), // 300s
+        Response::internalServerError('Whoops 21!'), // 1h
+        Response::internalServerError('Whoops 22!'), // 1h
+        Response::internalServerError('Whoops 23!'), // 1h
+        Response::internalServerError('Whoops 24!'), // 1h
     ]);
 
     [$output, $e] = run(
@@ -462,11 +462,11 @@ it('uses the quick-retry back-off strategy if the agent has not yet authenticate
 it('schedules a refresh after 1 hour if the agent has not yet authenticated and receives an unauthenticated response', function () {
     $loop = new LoopFake(runForSeconds: (3_600 * 3) + 1);
     $browser = new BrowserFake([
-        new Response('{"message":"Missing token"}', 401),
+        Response::unauthenticated('Missing token'),
 
-        new Response('{"message":"Missing token"}', 401),
-        new Response('{"message":"Invalid environment token"}', 401),
-        new Response('{"message":"Invalid environment token"}', 401),
+        Response::unauthenticated('Missing token'),
+        Response::unauthenticated('Invalid environment token'),
+        Response::unauthenticated('Invalid environment token'),
     ]);
 
     [$output, $e] = run(
@@ -598,22 +598,22 @@ it('uses the slow-retry back-off strategy if the agent has already authenticated
     $browser = new BrowserFake([
         Response::jwt(),
 
-        new Response('Whoops 1!', status: 500), // 300s
-        new Response('Whoops 2!', status: 501), // 300s
-        new Response('Whoops 3!', status: 400), // 300s
-        new Response('Whoops 4!', status: 402), // 300s
-        new Response('Whoops 5!', status: 500), // 300s
-        new Response('Whoops 6!', status: 500), // 300s
-        new Response('Whoops 7!', status: 500), // 300s
-        new Response('Whoops 8!', status: 500), // 300s
-        new Response('Whoops 9!', status: 500), // 300s
-        new Response('Whoops 10!', status: 500), // 300s
-        new Response('Whoops 11!', status: 500), // 300s
-        new Response('Whoops 12!', status: 500), // 300s
-        new Response('Whoops 13!', status: 500), // 3_600s
-        new Response('Whoops 14!', status: 500), // 3_600s
-        new Response('Whoops 15!', status: 500), // 3_600s
-        new Response('Whoops 16!', status: 500), // 3_600s
+        Response::internalServerError('Whoops 1!'), // 300s
+        new Response('Whoops 2!', 501), // 300s
+        new Response('Whoops 3!', 400), // 300s
+        new Response('Whoops 4!', 402), // 300s
+        Response::internalServerError('Whoops 5!'), // 300s
+        Response::internalServerError('Whoops 6!'), // 300s
+        Response::internalServerError('Whoops 7!'), // 300s
+        Response::internalServerError('Whoops 8!'), // 300s
+        Response::internalServerError('Whoops 9!'), // 300s
+        Response::internalServerError('Whoops 10!'), // 300s
+        Response::internalServerError('Whoops 11!'), // 300s
+        Response::internalServerError('Whoops 12!'), // 300s
+        Response::internalServerError('Whoops 13!'), // 3_600s
+        Response::internalServerError('Whoops 14!'), // 3_600s
+        Response::internalServerError('Whoops 15!'), // 3_600s
+        Response::internalServerError('Whoops 16!'), // 3_600s
     ]);
 
     [$output, $e] = run(
@@ -691,10 +691,10 @@ it('schedules a refresh after 1 hour if the agent has authenticated and receives
     $browser = new BrowserFake([
         Response::jwt(),
 
-        new Response('{"message":"Missing token"}', 401),
-        new Response('{"message":"Missing token"}', 401),
-        new Response('{"message":"Invalid environment token"}', 401),
-        new Response('{"message":"Invalid environment token"}', 401),
+        Response::unauthenticated('Missing token'),
+        Response::unauthenticated('Missing token'),
+        Response::unauthenticated('Invalid environment token'),
+        Response::unauthenticated('Invalid environment token'),
     ]);
 
     [$output, $e] = run(
@@ -733,9 +733,9 @@ it('schedules a refresh after 1 hour if the agent has authenticated and receives
 
 it('limits response body included in logs', function () {
     $loop = new LoopFake(runForSeconds: 2.5 + 5);
-    $browser = new BrowserFake(pendingResponses: [
-        new Response(str_repeat('a', 255), 500),
-        new Response(str_repeat('a', 256), 500),
+    $browser = new BrowserFake([
+        Response::internalServerError(str_repeat('a', 255)),
+        Response::internalServerError(str_repeat('a', 256)),
     ]);
 
     [$output, $e] = run(
@@ -764,4 +764,3 @@ it('limits response body included in logs', function () {
         {date} {info} Authentication failed {duration}: 500 \[{$secondBody}\[\.\.\.\]\]
         OUTPUT);
 });
-
