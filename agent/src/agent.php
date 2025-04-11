@@ -14,6 +14,7 @@ use Throwable;
 
 use function date;
 use function gethostname;
+use function in_array;
 use function round;
 use function rtrim;
 use function str_replace;
@@ -59,7 +60,7 @@ $server ??= (string) gethostname();
  * Internal state...
  */
 
-$debug = ($_SERVER['NIGHTWATCH_DEBUG'] ?? false) === 'true';
+$debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
 $basePath = str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
 
 /*
