@@ -172,7 +172,6 @@ it('handles valid responses', function () {
     expect($loop)->toHaveRun([]);
 });
 
-
 it('refreshes the token based on refresh_in', function () {
     $loop = new LoopFake(runForSeconds: 5 + 10 + 3_600 + 300 + 1);
     $browser = new BrowserFake([

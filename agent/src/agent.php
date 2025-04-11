@@ -133,10 +133,8 @@ $ingest = new Ingest(
     onIngestError: static fn (Throwable $e, float $duration) => $info('Ingest failed ['.round($duration, 3).'s]: '.$e->getMessage()),
 );
 
-$serverResolver ??= static fn (): ServerInterface => new TcpServer($listenOn);
-
 $server = new Server(
-    serverResolver: $serverResolver,
+    serverResolver: $serverResolver ?? static fn (): ServerInterface => new TcpServer($listenOn),
     onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]"),
     onServerError: static fn (Throwable $e) => $error("Server error: {$e->getMessage()}"),
     onConnectionError: static fn (Throwable $e) => $error("Connection error: {$e->getMessage()}"),
