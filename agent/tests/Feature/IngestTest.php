@@ -58,7 +58,7 @@ it('can ingests records', function () {
 });
 
 it('handles unsuccessful responses', function () {
-    $loop = new LoopFake(runForSeconds: 1);
+    $loop = new LoopFake(runForSeconds: 11);
     $server = new TcpServerFake;
     $ingestDetailsBrowser = new BrowserFake([
         Response::jwt(),
@@ -66,8 +66,7 @@ it('handles unsuccessful responses', function () {
     $ingestBrowser = new BrowserFake([
         Response::internalServerError('Whoops!'),
     ]);
-    $records = array_fill(0, 375_001, ['t' => 'request']);
-    $loop->addTimer(0, $server->pendingConnection($records));
+    $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
 
     [$output, $e] = run(
         via: 'source',
@@ -82,21 +81,13 @@ it('handles unsuccessful responses', function () {
         {date} {info} Authentication successful {duration}
         {date} {info} Ingest failed {duration}: 500 \[Whoops!\]
         OUTPUT);
-    expect($ingestBrowser->timeout)->toBe(10.0);
-    expect($ingestBrowser->connectionTimeout)->toBe(5.0);
-    expect($ingestBrowser->baseUrl)->toBeNull();
-    expect($ingestBrowser->headers)->toBe([
-        'accept' => 'application/json',
-        'content-encoding' => 'gzip',
-        'content-type' => 'application/json',
-        'nightwatch-server' => gethostname(),
-    ]);
     expect($ingestBrowser)->toHaveSent([
-        Request::ingest($records),
+        Request::ingest([['t' => 'request']]),
     ]);
     expect($ingestBrowser)->toHavePending([]);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        new Timer(interval: 10, runAt: 10, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
     ]);
     expect($loop)->toHavePending([
         new Timer(interval: 3_600, runAt: 3_600, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
@@ -108,7 +99,7 @@ it('handles unsuccessful responses', function () {
 });
 
 it('handles runtime exceptions while procesing the request', function () {
-    $loop = new LoopFake(runForSeconds: 1);
+    $loop = new LoopFake(runForSeconds: 11);
     $server = new TcpServerFake;
     $ingestDetailsBrowser = new BrowserFake([
         Response::jwt(),
@@ -116,8 +107,7 @@ it('handles runtime exceptions while procesing the request', function () {
     $ingestBrowser = new BrowserFake([
         Response::throwWhileProcessing('Whoops!'),
     ]);
-    $records = array_fill(0, 375_001, ['t' => 'request']);
-    $loop->addTimer(0, $server->pendingConnection($records));
+    $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
 
     [$output, $e] = run(
         via: 'source',
@@ -132,21 +122,13 @@ it('handles runtime exceptions while procesing the request', function () {
         {date} {info} Authentication successful {duration}
         {date} {info} Ingest failed {duration}: Whoops!
         OUTPUT);
-    expect($ingestBrowser->timeout)->toBe(10.0);
-    expect($ingestBrowser->connectionTimeout)->toBe(5.0);
-    expect($ingestBrowser->baseUrl)->toBeNull();
-    expect($ingestBrowser->headers)->toBe([
-        'accept' => 'application/json',
-        'content-encoding' => 'gzip',
-        'content-type' => 'application/json',
-        'nightwatch-server' => gethostname(),
-    ]);
     expect($ingestBrowser)->toHaveSent([
-        Request::ingest($records),
+        Request::ingest([['t' => 'request']]),
     ]);
     expect($ingestBrowser)->toHavePending([]);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        new Timer(interval: 10, runAt: 10, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
     ]);
     expect($loop)->toHavePending([
         new Timer(interval: 3_600, runAt: 3_600, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
@@ -158,14 +140,13 @@ it('handles runtime exceptions while procesing the request', function () {
 });
 
 it('handles missing authentication details', function () {
-    $loop = new LoopFake(runForSeconds: 1);
+    $loop = new LoopFake(runForSeconds: 11);
     $server = new TcpServerFake;
     $ingestDetailsBrowser = new BrowserFake([
         Response::unauthenticated(),
     ]);
     $ingestBrowser = new BrowserFake([]);
-    $records = array_fill(0, 375_001, ['t' => 'request']);
-    $loop->addTimer(0, $server->pendingConnection($records));
+    $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
 
     [$output, $e] = run(
         via: 'source',
@@ -180,19 +161,11 @@ it('handles missing authentication details', function () {
         {date} {info} Authentication failed {duration}: 401 \[{"message":"Invalid environment token"}\]
         {date} {info} Ingest failed {duration}: No authentication details
         OUTPUT);
-    expect($ingestBrowser->timeout)->toBe(10.0);
-    expect($ingestBrowser->connectionTimeout)->toBe(5.0);
-    expect($ingestBrowser->baseUrl)->toBeNull();
-    expect($ingestBrowser->headers)->toBe([
-        'accept' => 'application/json',
-        'content-encoding' => 'gzip',
-        'content-type' => 'application/json',
-        'nightwatch-server' => gethostname(),
-    ]);
     expect($ingestBrowser)->toHaveSent([]);
     expect($ingestBrowser)->toHavePending([]);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        new Timer(interval: 10, runAt: 10, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
     ]);
     expect($loop)->toHavePending([
         new Timer(interval: 3_600, runAt: 3_600, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
@@ -204,7 +177,7 @@ it('handles missing authentication details', function () {
 });
 
 it('limits response body included in logs', function () {
-    $loop = new LoopFake(runForSeconds: 2);
+    $loop = new LoopFake(runForSeconds: 22);
     $server = new TcpServerFake;
     $ingestDetailsBrowser = new BrowserFake([
         Response::jwt(),
@@ -213,9 +186,8 @@ it('limits response body included in logs', function () {
         Response::internalServerError(str_repeat('a', 255)),
         Response::internalServerError(str_repeat('a', 256)),
     ]);
-    $records = array_fill(0, 375_001, ['t' => 'request']);
-    $loop->addTimer(0, $server->pendingConnection($records));
-    $loop->addTimer(1, $server->pendingConnection($records));
+    $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
+    $loop->addTimer(11, $server->pendingConnection([['t' => 'request']]));
 
     [$output, $e] = run(
         via: 'source',
@@ -233,23 +205,16 @@ it('limits response body included in logs', function () {
         {date} {info} Ingest failed {duration}: 500 \[{$firstBody}\]
         {date} {info} Ingest failed {duration}: 500 \[{$secondBody}\[\.\.\.\]\]
         OUTPUT);
-    expect($ingestBrowser->timeout)->toBe(10.0);
-    expect($ingestBrowser->connectionTimeout)->toBe(5.0);
-    expect($ingestBrowser->baseUrl)->toBeNull();
-    expect($ingestBrowser->headers)->toBe([
-        'accept' => 'application/json',
-        'content-encoding' => 'gzip',
-        'content-type' => 'application/json',
-        'nightwatch-server' => gethostname(),
-    ]);
     expect($ingestBrowser)->toHaveSent([
-        Request::ingest($records),
-        Request::ingest($records),
+        Request::ingest([['t' => 'request']]),
+        Request::ingest([['t' => 'request']]),
     ]);
     expect($ingestBrowser)->toHavePending([]);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
-        new Timer(interval: 1, runAt: 1, scheduledBy: self::class),
+        new Timer(interval: 10, runAt: 10, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+        new Timer(interval: 11, runAt: 11, scheduledBy: self::class),
+        new Timer(interval: 10, runAt: 21, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
     ]);
     expect($loop)->toHavePending([
         new Timer(interval: 3_600, runAt: 3_600, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
@@ -788,16 +753,18 @@ it('ingests immediately when buffer is empty and a payload over the threshold is
 });
 
 it('stops ingesting data when over quota', function () {
-    $loop = new LoopFake(runForSeconds: 1);
+    $loop = new LoopFake(runForSeconds: 60);
     $server = new TcpServerFake;
     $ingestDetailsBrowser = new BrowserFake([
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        Response::ingest(),
+        Response::ingest(remaining: 1),
+        Response::ingest(remaining: 0),
     ]);
-    $records = array_fill(0, 375_001, ['t' => 'request']);
-    $loop->addTimer(0, $server->pendingConnection($records));
+    $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
+    $loop->addTimer(11, $server->pendingConnection([['t' => 'request']]));
+    $loop->addTimer(22, $server->pendingConnection([['t' => 'request']]));
 
     [$output, $e] = run(
         via: 'source',
@@ -811,25 +778,25 @@ it('stops ingesting data when over quota', function () {
     expect($output)->toMatchLog(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Ingest successful {duration}
+        {date} {info} Ingest attempted {duration}: Quota exceeded
         OUTPUT);
-    expect($ingestBrowser->timeout)->toBe(10.0);
-    expect($ingestBrowser->connectionTimeout)->toBe(5.0);
-    expect($ingestBrowser->baseUrl)->toBeNull();
-    expect($ingestBrowser->headers)->toBe([
-        'accept' => 'application/json',
-        'content-encoding' => 'gzip',
-        'content-type' => 'application/json',
-        'nightwatch-server' => gethostname(),
-    ]);
     expect($ingestBrowser)->toHaveSent([
-        Request::ingest($records),
+        Request::ingest([['t' => 'request']]),
+        Request::ingest([['t' => 'request']]),
     ]);
     expect($ingestBrowser)->toHavePending([]);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
+        new Timer(interval: 10, runAt: 10, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+        new Timer(interval: 11, runAt: 11, scheduledBy: self::class),
+        new Timer(interval: 10, runAt: 21, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+        new Timer(interval: 22, runAt: 22, scheduledBy: self::class),
+    ]);
+    expect($loop)->toHaveCanceled([
+        new Timer(interval: 3_600, runAt: 3_600 - 21, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
     ]);
     expect($loop)->toHavePending([
-        new Timer(interval: 3_600, runAt: 3_600, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+        new Timer(interval: 900, runAt: 921, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
     ]);
     expect($ingestDetailsBrowser)->toHaveSent([
         Request::json('/api/agent-auth'),

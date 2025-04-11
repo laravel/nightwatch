@@ -14,6 +14,7 @@ use Throwable;
 
 use function call_user_func;
 use function gzencode;
+use function json_decode;
 use function microtime;
 use function strlen;
 use function substr;
@@ -29,6 +30,7 @@ class Ingest
      * @param  Browser  $browser
      * @param  (Closure(ResponseInterface $response, float $duration): mixed)  $onIngestSuccess
      * @param  (Closure(Throwable $e, float $duration): mixed)  $onIngestError
+     * @param  (Closure(float $duration): mixed)  $onExceededQuota
      */
     public function __construct(
         private $loop,
@@ -39,12 +41,17 @@ class Ingest
         private int $maxBufferDurationInSeconds,
         private Closure $onIngestSuccess,
         private Closure $onIngestError,
+        private Closure $onExceededQuota,
     ) {
         //
     }
 
     public function write(string $payload): void
     {
+        if ($this->ingestDetails->quotaExceeded) {
+            return;
+        }
+
         $this->buffer->write($payload);
 
         if ($this->buffer->wantsFlushing()) {
@@ -103,6 +110,15 @@ class Ingest
                 body: $payload,
             );
         })->then(function (ResponseInterface $response) use (&$start): void {
+            /** @var array{remaining: int} */
+            $content = json_decode($response->getBody()->getContents(), associative: true, flags: JSON_THROW_ON_ERROR);
+
+            if ($content['remaining'] <= 0) {
+                call_user_func($this->onExceededQuota, microtime(true) - $start);
+
+                return;
+            }
+
             call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
         })->catch(function (Throwable $e) use (&$start): void {
             call_user_func($this->onIngestError, $this->parseException($e), microtime(true) - $start);

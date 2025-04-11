@@ -6,6 +6,7 @@ use Closure;
 use Laravel\NightwatchAgent\Contracts\Browser;
 use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\LoopInterface;
+use React\EventLoop\TimerInterface;
 use React\Http\Message\ResponseException;
 use React\Promise\PromiseInterface;
 use RuntimeException;
@@ -24,6 +25,8 @@ use function substr;
 
 class IngestDetailsRepository
 {
+    public bool $quotaExceeded = false;
+
     /**
      * @var PromiseInterface<IngestDetails|null>|null
      */
@@ -32,6 +35,8 @@ class IngestDetailsRepository
     private bool $hasAuthenticated = false;
 
     private int $consecutiveFailures = 0;
+
+    private ?TimerInterface $refreshTimer = null;
 
     /**
      * @var list<int|float>|null
@@ -66,6 +71,15 @@ class IngestDetailsRepository
         return $this->ingestDetails ??= $this->refresh();
     }
 
+    public function markQuotaExceeded(): void
+    {
+        $this->quotaExceeded = true;
+
+        $this->loop->cancelTimer($this->refreshTimer); // @phpstan-ignore argument.type
+
+        $this->scheduleRefreshIn(60 * 15);
+    }
+
     /**
      * @return PromiseInterface<IngestDetails|null>
      */
@@ -84,6 +98,7 @@ class IngestDetailsRepository
 
                 call_user_func($this->onAuthenticationSuccess, $ingestDetails, $duration);
 
+                $this->quotaExceeded = false;
                 $this->hasAuthenticated = true;
                 $this->consecutiveFailures = 0;
 
@@ -106,7 +121,7 @@ class IngestDetailsRepository
 
     private function scheduleRefreshIn(int|float $seconds): void
     {
-        $this->loop->addTimer($seconds, function (): void {
+        $this->refreshTimer = $this->loop->addTimer($seconds, function (): void {
             $this->refresh()->then(function (?IngestDetails $ingestDetails): void {
                 if ($ingestDetails) {
                     $this->ingestDetails = resolve($ingestDetails);
