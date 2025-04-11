@@ -97,7 +97,9 @@ class Ingest
 
             return $this->browser->post(
                 url: $ingestDetails->ingestUrl,
-                headers: ['authorization' => "Bearer {$ingestDetails->token}"],
+                headers: [
+                    'authorization' => "Bearer {$ingestDetails->token}",
+                ],
                 body: $payload,
             );
         })->then(function (ResponseInterface $response) use (&$start): void {
