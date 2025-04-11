@@ -70,6 +70,13 @@ class Response
         }
     }
 
+    public static function ingest(
+        int $remaining = 100_000,
+        int $duration = 0,
+    ): self {
+        return new self(['remaining' => $remaining], duration: $duration);
+    }
+
     /**
      * @return PromiseInterface<ResponseInterface>
      */

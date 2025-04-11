@@ -14,7 +14,7 @@ it('can ingests records', function () {
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response,
+        Response::ingest(),
     ]);
     $records = array_fill(0, 375_001, ['t' => 'request']);
     $loop->addTimer(0, $server->pendingConnection($records));
@@ -267,7 +267,7 @@ it('waits on the resolution of the ingest details before attempting to ingest', 
         Response::jwt(duration: $duration),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response('Ingest successful'),
+        Response::ingest(),
     ]);
     $records = array_fill(0, 375_001, ['t' => 'request']);
     $loop->addTimer(0, $server->pendingConnection($records));
@@ -288,7 +288,7 @@ it('waits on the resolution of the ingest details before attempting to ingest', 
     expect($ingestBrowser)->toBeProcessing([]);
     expect($ingestBrowser)->toHavePending($duration === 1
         ? []
-        : [new Response('Ingest successful')]);
+        : [Response::ingest()]);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
         ...($duration === 1
@@ -400,8 +400,8 @@ it('can have two concurrent ingest requests', function () {
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response(duration: 3),
-        new Response(duration: 4),
+        Response::ingest(duration: 3),
+        Response::ingest(duration: 4),
     ]);
     $records = array_fill(0, 375_001, ['t' => 'request']);
     $loop->addTimer(0, $server->pendingConnection($records));
@@ -450,8 +450,8 @@ it('can have no more than two concurrent ingest requests', function () {
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response(duration: 3),
-        new Response(duration: 4),
+        Response::ingest(duration: 3),
+        Response::ingest(duration: 4),
     ]);
     $records = array_fill(0, 375_001, ['t' => 'request']);
     $loop->addTimer(0, $server->pendingConnection($records));
@@ -506,19 +506,19 @@ it('can have two concurrent requests ongoing', function () {
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response(duration: 2),
-        new Response(duration: 2),
+        Response::ingest(duration: 2),
+        Response::ingest(duration: 2),
         //
-        new Response(duration: 2),
-        new Response(duration: 2),
+        Response::ingest(duration: 2),
+        Response::ingest(duration: 2),
         //
-        new Response(duration: 2),
-        new Response(duration: 2),
+        Response::ingest(duration: 2),
+        Response::ingest(duration: 2),
         //
-        new Response(duration: 1),
-        new Response(duration: 1),
-        new Response(duration: 1),
-        new Response(duration: 1),
+        Response::ingest(duration: 1),
+        Response::ingest(duration: 1),
+        Response::ingest(duration: 1),
+        Response::ingest(duration: 1),
     ]);
     $records = array_fill(0, 375_001, ['t' => 'request']);
     //
@@ -654,7 +654,7 @@ it('ingests payloads under the threshold after 10 seconds', function () {
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response,
+        Response::ingest(),
     ]);
     $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
 
@@ -696,7 +696,7 @@ it('ingests payloads before 10 seconds if the buffer exceeds the threshold', fun
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response,
+        Response::ingest(),
     ]);
     $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
     $loop->addTimer(1, $server->pendingConnection([['t' => 'request']]));
@@ -752,7 +752,7 @@ it('ingests immediately when buffer is empty and a payload over the threshold is
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response,
+        Response::ingest(),
     ]);
     $records = array_fill(0, 375_001, ['t' => 'request']);
     $loop->addTimer(0, $server->pendingConnection($records));
@@ -777,6 +777,56 @@ it('ingests immediately when buffer is empty and a payload over the threshold is
     expect($ingestBrowser)->toHavePending([]);
     expect($loop)->toHaveRun([
         new Timer(0, 0, self::class),
+    ]);
+    expect($loop)->toHavePending([
+        new Timer(interval: 3_600, runAt: 3_600, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+    ]);
+    expect($ingestDetailsBrowser)->toHaveSent([
+        Request::json('/api/agent-auth'),
+    ]);
+    expect($ingestDetailsBrowser)->toHavePending([]);
+});
+
+it('stops ingesting data when over quota', function () {
+    $loop = new LoopFake(runForSeconds: 1);
+    $server = new TcpServerFake;
+    $ingestDetailsBrowser = new BrowserFake([
+        Response::jwt(),
+    ]);
+    $ingestBrowser = new BrowserFake([
+        Response::ingest(),
+    ]);
+    $records = array_fill(0, 375_001, ['t' => 'request']);
+    $loop->addTimer(0, $server->pendingConnection($records));
+
+    [$output, $e] = run(
+        via: 'source',
+        ingestDetailsBrowser: $ingestDetailsBrowser,
+        ingestBrowser: $ingestBrowser,
+        loop: $loop,
+        server: $server,
+    );
+
+    expect($e)->toBeNull($e?->getMessage() ?? '');
+    expect($output)->toMatchLog(<<<'OUTPUT'
+        {date} {info} Authentication successful {duration}
+        {date} {info} Ingest successful {duration}
+        OUTPUT);
+    expect($ingestBrowser->timeout)->toBe(10.0);
+    expect($ingestBrowser->connectionTimeout)->toBe(5.0);
+    expect($ingestBrowser->baseUrl)->toBeNull();
+    expect($ingestBrowser->headers)->toBe([
+        'accept' => 'application/json',
+        'content-encoding' => 'gzip',
+        'content-type' => 'application/json',
+        'nightwatch-server' => gethostname(),
+    ]);
+    expect($ingestBrowser)->toHaveSent([
+        Request::ingest($records),
+    ]);
+    expect($ingestBrowser)->toHavePending([]);
+    expect($loop)->toHaveRun([
+        new Timer(interval: 0, runAt: 0, scheduledBy: self::class),
     ]);
     expect($loop)->toHavePending([
         new Timer(interval: 3_600, runAt: 3_600, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
