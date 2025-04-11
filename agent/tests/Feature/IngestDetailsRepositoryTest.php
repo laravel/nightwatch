@@ -533,24 +533,24 @@ it('uses the slow-retry back-off strategy if the agent has already authenticated
     $scheduleRefreshIn = 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn';
     expect($loop)->toHaveRun([
         new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300, scheduledAt: 3_600, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300, scheduledAt: 3_600 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
     ]);
     expect($loop)->toHavePending([
-        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
     ]);
     expect($browser)->toHaveSent([
         Request::json('/api/agent-auth'),
@@ -626,24 +626,24 @@ it('uses the slow-retry back-off strategy if the agent has already authenticated
     $scheduleRefreshIn = 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn';
     expect($loop)->toHaveRun([
         new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300, scheduledAt: 3_600, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300, scheduledAt: 3_600 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 300, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
     ]);
     expect($loop)->toHavePending([
-        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
     ]);
     expect($browser)->toHaveSent([
         Request::json('/api/agent-auth'),
@@ -707,12 +707,12 @@ it('schedules a refresh after 1 hour if the agent has authenticated and receives
     $scheduleRefreshIn = 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn';
     expect($loop)->toHaveRun([
         new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 3_600, runAt: 3_600 + 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
-        new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 3_600, runAt: 3_600 + 3_600, scheduledAt: 3_600, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
     ]);
     expect($loop)->toHavePending([
-        new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
+        new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
     ]);
     expect($browser)->toHaveSent([
         Request::json('/api/agent-auth'),
@@ -750,7 +750,7 @@ it('limits response body included in logs', function () {
         new Timer(interval: 2.5, runAt: 2.5, scheduledAt: 0, scheduledBy: $scheduledBy),
     ]);
     expect($loop)->toHavePending([
-        new Timer(interval: 5, runAt: 7.5, scheduledAt: 0, scheduledBy: $scheduledBy),
+        new Timer(interval: 5, runAt: 7.5, scheduledAt: 2.5, scheduledBy: $scheduledBy),
     ]);
     expect($browser)->toHaveSent([
         Request::json('/api/agent-auth'),
