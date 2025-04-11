@@ -88,6 +88,18 @@ expect()->extend('toHavePending', function (array $items) {
     return $this->toEqual($items);
 });
 
+expect()->extend('toHaveCanceled', function (array $timers) {
+    $this->value = match ($this->value::class) {
+        LoopFake::class => array_map(fn ($timer) => new Timer(
+            interval: $timer['interval'],
+            runAt: $timer['runAt'],
+            scheduledBy: $timer['scheduledBy']
+        ), $this->value->canceledTimers),
+    };
+
+    return $this->toEqual($timers);
+});
+
 expect()->extend('toBeProcessing', function (array $responses) {
     $this->value = $this->value->processingResponses;
 
