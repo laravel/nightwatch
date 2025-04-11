@@ -6,49 +6,6 @@ use Tests\Request;
 use Tests\Response;
 use Tests\Timer;
 
-it('can authenticate', function () {
-    $loop = new LoopFake;
-    $browser = new BrowserFake([
-        Response::jwt(),
-    ]);
-
-    [$output, $e] = run(
-        via: 'source',
-        ingestDetailsBrowser: $browser,
-        loop: $loop,
-    );
-
-    /** @var ?string $baseUrl */
-    $baseUrl = $_SERVER['NIGHTWATCH_BASE_URL'] ?? null;
-    /** @var ?string $token */
-    $token = $_SERVER['NIGHTWATCH_TOKEN'] ?? null;
-
-    expect($baseUrl)
-        ->toBeString()
-        ->toStartWith('https://');
-    expect($token)
-        ->toBeString()
-        ->toHaveLength(44);
-    expect($e)->toBeNull($e?->getMessage() ?? '');
-    expect($browser->timeout)->toBe(10.0);
-    expect($browser->connectionTimeout)->toBe(5.0);
-    expect($browser->baseUrl)->toBe($baseUrl);
-    expect($browser->headers)->toBe([
-        'accept' => 'application/json',
-        'authorization' => "Bearer {$token}",
-        'content-type' => 'application/json',
-        'nightwatch-server' => gethostname(),
-    ]);
-    expect($browser)->toHaveSent([
-        Request::json('/api/agent-auth'),
-    ]);
-    expect($browser)->toHavePending([]);
-    expect($output)->toMatchLog(<<<'OUTPUT'
-        {date} {info} Authentication successful {duration}
-        OUTPUT);
-    expect($loop)->toHaveRun([]);
-});
-
 it('handles runtime exceptions while procesing the request', function () {
     $loop = new LoopFake;
     $browser = new BrowserFake([
@@ -171,6 +128,50 @@ it('handles unexpected response payloads', function (array $payload) {
     [['token' => 'token', 'expires_in' => '3_600', 'ingest_url' => 'https://ingest.nightwatch.laravel.com', 'refresh_in' => 1_000]],
     [['token' => 'token', 'expires_in' => 3_600, 'ingest_url' => 'https://ingest.nightwatch.laravel.com', 'refresh_in' => '1_000']],
 ]);
+
+it('handles valid responses', function () {
+    $loop = new LoopFake;
+    $browser = new BrowserFake([
+        Response::jwt(),
+    ]);
+
+    [$output, $e] = run(
+        via: 'source',
+        ingestDetailsBrowser: $browser,
+        loop: $loop,
+    );
+
+    /** @var ?string $baseUrl */
+    $baseUrl = $_SERVER['NIGHTWATCH_BASE_URL'] ?? null;
+    /** @var ?string $token */
+    $token = $_SERVER['NIGHTWATCH_TOKEN'] ?? null;
+
+    expect($baseUrl)
+        ->toBeString()
+        ->toStartWith('https://');
+    expect($token)
+        ->toBeString()
+        ->toHaveLength(44);
+    expect($e)->toBeNull($e?->getMessage() ?? '');
+    expect($browser->timeout)->toBe(10.0);
+    expect($browser->connectionTimeout)->toBe(5.0);
+    expect($browser->baseUrl)->toBe($baseUrl);
+    expect($browser->headers)->toBe([
+        'accept' => 'application/json',
+        'authorization' => "Bearer {$token}",
+        'content-type' => 'application/json',
+        'nightwatch-server' => gethostname(),
+    ]);
+    expect($browser)->toHaveSent([
+        Request::json('/api/agent-auth'),
+    ]);
+    expect($browser)->toHavePending([]);
+    expect($output)->toMatchLog(<<<'OUTPUT'
+        {date} {info} Authentication successful {duration}
+        OUTPUT);
+    expect($loop)->toHaveRun([]);
+});
+
 
 it('refreshes the token based on refresh_in', function () {
     $loop = new LoopFake(runForSeconds: 5 + 10 + 3_600 + 300 + 1);
