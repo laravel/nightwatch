@@ -47,6 +47,20 @@
             "Tests\\": "tests/"
         }
     },
+    "scripts": {
+        "ci": [
+            "@composer test",
+            "@composer lint"
+        ],
+        "lint": [
+            "@php vendor/bin/pint --config=pint.ci.json",
+            "@php vendor/bin/pint",
+            "@php vendor/bin/phpstan --memory-limit=-1 --verbose"
+        ],
+        "test": [
+            "@php vendor/bin/pest"
+        ]
+    },
     "config": {
         "sort-packages": true,
         "allow-plugins": {

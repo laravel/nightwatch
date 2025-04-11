@@ -613,9 +613,9 @@ it('schedules an ingest when buffer is empty and a payload under the threshold i
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([]);
-    $loop->addTimer(0, $server->pendingConnection(['t' => 'request']));
-    $loop->addTimer(1, $server->pendingConnection(['t' => 'request']));
-    $loop->addTimer(2, $server->pendingConnection(['t' => 'request']));
+    $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
+    $loop->addTimer(1, $server->pendingConnection([['t' => 'request']]));
+    $loop->addTimer(2, $server->pendingConnection([['t' => 'request']]));
 
     [$output, $e] = run(
         via: 'source',
@@ -654,7 +654,7 @@ it('ingests payloads under the threshold after 10 seconds', function () {
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response
+        new Response,
     ]);
     $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
 
@@ -696,7 +696,7 @@ it('ingests payloads before 10 seconds if the buffer exceeds the threshold', fun
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response
+        new Response,
     ]);
     $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
     $loop->addTimer(1, $server->pendingConnection([['t' => 'request']]));
@@ -752,7 +752,7 @@ it('ingests immediately when buffer is empty and a payload over the threshold is
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([
-        new Response
+        new Response,
     ]);
     $records = array_fill(0, 375_001, ['t' => 'request']);
     $loop->addTimer(0, $server->pendingConnection($records));

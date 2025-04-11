@@ -126,7 +126,7 @@ class LoopFake implements LoopInterface
                 'interval' => $pendingTimer['interval'],
             ];
 
-            unset($this->pendingTimers[$index]);
+            unset($this->pendingTimers[$index]); // @phpstan-ignore assign.propertyType
 
             $this->sortPendingTimers();
 
@@ -172,6 +172,7 @@ class LoopFake implements LoopInterface
                     'runAt' => $pendingTimer['runAt'] - $startedAt,
                     'scheduledBy' => $pendingTimer['scheduledBy'],
                     'callback' => null,
+                    'instance' => null,
                 ], $this->pendingTimers);
 
                 return;
@@ -208,7 +209,7 @@ class LoopFake implements LoopInterface
         throw new RuntimeException(__FUNCTION__);
     }
 
-    private function sortPendingTimers()
+    private function sortPendingTimers(): void
     {
         usort($this->pendingTimers, function ($a, $b) {
             if ($a['runAt'] === $b['runAt']) {

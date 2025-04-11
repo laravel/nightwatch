@@ -79,7 +79,8 @@ class Response
             /** @var Deferred<ResponseInterface> $deferred */
             $deferred = new Deferred;
 
-            Loop::addTimer($this->duration, function () use ($deferred) {
+            $loop = Loop::get();
+            $loop->addTimer($this->duration, function () use ($deferred) {
                 $this->toResponsePromise()->then(function ($response) use ($deferred) {
                     $deferred->resolve($response);
                 }, function (Throwable $e) use ($deferred) {

@@ -8,6 +8,7 @@ use Laravel\NightwatchAgent\Factories\BrowserFactory;
 use Laravel\NightwatchAgent\Factories\ServerFactory;
 use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\Loop;
+use React\EventLoop\LoopInterface;
 use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
 use Throwable;
@@ -29,6 +30,8 @@ require __DIR__.'/../vendor/autoload.php';
 $browserFactory ??= null;
 /** @var (Closure(): ServerInterface)|null $serverResolver */
 $serverResolver ??= null;
+/** @var ?LoopInterface $loop */
+$loop ??= null;
 
 /*
  * Input...
