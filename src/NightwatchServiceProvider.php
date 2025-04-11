@@ -107,6 +107,12 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->captureExecutionType();
             $this->registerAndCaptureConfig();
             $this->registerBindings();
+
+            if (! $this->core->enabled) {
+                return;
+            }
+
+            $this->registerHooks();
         } catch (Throwable $e) {
             $this->registerException = $e;
         }
@@ -125,12 +131,6 @@ final class NightwatchServiceProvider extends ServiceProvider
                 $this->registerPublications();
                 $this->registerCommands();
             }
-
-            if (! $this->core->enabled) {
-                return;
-            }
-
-            $this->registerHooks();
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }
