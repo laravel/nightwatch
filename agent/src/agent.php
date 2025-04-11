@@ -5,7 +5,6 @@ namespace Laravel\NightwatchAgent;
 use Closure;
 use Laravel\NightwatchAgent\Contracts\Browser;
 use Laravel\NightwatchAgent\Factories\BrowserFactory;
-use Laravel\NightwatchAgent\Factories\ServerFactory;
 use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
@@ -135,7 +134,7 @@ $ingest = new Ingest(
 
 $serverResolver ??= static fn (): ServerInterface => new TcpServer($listenOn);
 
-$server = (new ServerFactory)(
+$server = new Server(
     serverResolver: $serverResolver,
     onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]"),
     onServerError: static fn (Throwable $e) => $error("Server error: {$e->getMessage()}"),
