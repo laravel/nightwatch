@@ -34,7 +34,7 @@ expect()->extend('toMatchLog', function (string $log) {
 
 expect()->extend('toHaveSent', function (array $requests) {
     foreach ($requests as $request) {
-        if (($this->value->headers['content-type'] ?? null) === 'application/octet-stream') {
+        if (($this->value->headers['content-encoding'] ?? null) === 'gzip') {
             $body = gzdecode($request->body);
 
             if ($body === false) {
@@ -49,7 +49,7 @@ expect()->extend('toHaveSent', function (array $requests) {
         function ($request) {
             [$url, $headers, $body] = $request;
 
-            if (($this->value->headers['content-type'] ?? null) === 'application/octet-stream') {
+            if (($this->value->headers['content-encoding'] ?? null) === 'gzip') {
                 $body = gzdecode($body);
 
                 if ($body === false) {
