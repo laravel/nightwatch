@@ -6,8 +6,10 @@ class Timer
 {
     public function __construct(
         public float|int $interval,
-        public float|int $runAt,
         public string $scheduledBy,
+        public float|int $scheduledAt,
+        public float|int|null $runAt = null,
+        public float|int|null $canceledAt = null,
     ) {
         //
     }

@@ -18,26 +18,28 @@ use function usort;
 class LoopFake implements LoopInterface
 {
     /**
-     * @var list<array{runAt: float, scheduledBy: string, interval: float, callback: ?callable, instance: ?TimerInterface }>
+     * @var list<array{runAt: float, scheduledAt: float, scheduledBy: string, interval: float, callback: ?callable, instance: ?TimerInterface }>
      */
     public array $pendingTimers = [];
 
     /**
-     * @var list<array{runAt: float, scheduledBy: string, interval: float }>
+     * @var list<array{canceledAt: float, scheduledAt: float, scheduledBy: string, interval: float }>
      */
     public array $canceledTimers = [];
 
     /**
-     * @var list<array{interval: float, runAt: float, scheduledBy: string}>
+     * @var list<array{interval: float, runAt: float, scheduledAt: float, scheduledBy: string}>
      */
     public array $timersRun = [];
 
     private float $now;
 
+    private float $startedAt;
+
     public function __construct(
         private float $runForSeconds = 0,
     ) {
-        $this->now = microtime(true);
+        $this->startedAt = $this->now = microtime(true);
     }
 
     /**
@@ -93,6 +95,7 @@ class LoopFake implements LoopInterface
 
         $this->pendingTimers[] = [
             'runAt' => $this->now + $interval,
+            'scheduledAt' => $this->now - $this->startedAt,
             'scheduledBy' => $scheduledBy,
             'interval' => $interval,
             'callback' => $callback,
@@ -121,8 +124,9 @@ class LoopFake implements LoopInterface
             }
 
             $this->canceledTimers[] = [
-                'runAt' => ($this->now - $pendingTimer['runAt']) * -1,
+                'canceledAt' => $this->now - $this->startedAt,
                 'scheduledBy' => $pendingTimer['scheduledBy'],
+                'scheduledAt' => $pendingTimer['scheduledAt'],
                 'interval' => $pendingTimer['interval'],
             ];
 
@@ -162,14 +166,14 @@ class LoopFake implements LoopInterface
 
     public function run(): void
     {
-        $startedAt = $this->now;
         $stopRunningAt = $this->now + $this->runForSeconds;
 
         while (count($this->pendingTimers)) {
             if ($this->now >= $stopRunningAt) {
                 $this->pendingTimers = array_map(fn ($pendingTimer) => [
                     'interval' => $pendingTimer['interval'],
-                    'runAt' => $pendingTimer['runAt'] - $startedAt,
+                    'runAt' => $pendingTimer['runAt'] - $this->startedAt,
+                    'scheduledAt' => $pendingTimer['scheduledAt'],
                     'scheduledBy' => $pendingTimer['scheduledBy'],
                     'callback' => null,
                     'instance' => null,
@@ -181,6 +185,7 @@ class LoopFake implements LoopInterface
             [
                 'runAt' => $runAt,
                 'scheduledBy' => $scheduledBy,
+                'scheduledAt' => $scheduledAt,
                 'interval' => $interval,
                 'callback' => $callback,
             ] = $this->pendingTimers[0];
@@ -191,8 +196,9 @@ class LoopFake implements LoopInterface
 
                 $this->timersRun[] = [
                     'interval' => $interval,
-                    'runAt' => $this->now - $startedAt,
+                    'runAt' => $this->now - $this->startedAt,
                     'scheduledBy' => $scheduledBy,
+                    'scheduledAt' => $scheduledAt,
                 ];
 
                 array_shift($this->pendingTimers);

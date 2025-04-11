@@ -69,7 +69,8 @@ expect()->extend('toHaveRun', function (array $timers) {
     $this->value = array_map(fn ($timer) => new Timer(
         interval: $timer['interval'],
         runAt: $timer['runAt'],
-        scheduledBy: $timer['scheduledBy']
+        scheduledBy: $timer['scheduledBy'],
+        scheduledAt: $timer['scheduledAt'],
     ), $this->value->timersRun);
 
     return $this->toEqual($timers);
@@ -80,7 +81,8 @@ expect()->extend('toHavePending', function (array $items) {
         LoopFake::class => array_map(fn ($timer) => new Timer(
             interval: $timer['interval'],
             runAt: $timer['runAt'],
-            scheduledBy: $timer['scheduledBy']
+            scheduledBy: $timer['scheduledBy'],
+            scheduledAt: $timer['scheduledAt'],
         ), $this->value->pendingTimers),
         BrowserFake::class => $this->value->pendingResponses,
     };
@@ -92,8 +94,9 @@ expect()->extend('toHaveCanceled', function (array $timers) {
     $this->value = match ($this->value::class) {
         LoopFake::class => array_map(fn ($timer) => new Timer(
             interval: $timer['interval'],
-            runAt: $timer['runAt'],
-            scheduledBy: $timer['scheduledBy']
+            canceledAt: $timer['canceledAt'],
+            scheduledBy: $timer['scheduledBy'],
+            scheduledAt: $timer['scheduledAt'],
         ), $this->value->canceledTimers),
     };
 
