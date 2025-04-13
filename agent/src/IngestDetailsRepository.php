@@ -88,7 +88,7 @@ class IngestDetailsRepository
         $start = microtime(true);
         $duration = null;
 
-        return $this->browser->post('/api/agent-auth', headers: [], body: '{}')
+        return $this->browser->post('/api/agent-auth', body: '{}')
             ->then(function (ResponseInterface $response) use ($start, &$duration): IngestDetails {
                 $duration = microtime(true) - $start;
 

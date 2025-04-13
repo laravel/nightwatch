@@ -42,7 +42,7 @@ class BrowserFake implements Browser
         //
     }
 
-    public function post(string $url, array $headers, string $body): PromiseInterface
+    public function post(string $url, array $headers = [], string $body = ''): PromiseInterface
     {
         $this->sentRequests[] = [$url, $headers, $body];
 

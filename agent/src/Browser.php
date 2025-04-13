@@ -21,7 +21,7 @@ class Browser implements BrowserContract
     /**
      * @param  array<string, string>  $headers
      */
-    public function post(string $url, array $headers, string $body): PromiseInterface
+    public function post(string $url, array $headers = [], string $body = ''): PromiseInterface
     {
         return $this->browser->post($url, [
             $this->headers(),
