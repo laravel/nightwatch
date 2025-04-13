@@ -161,7 +161,7 @@ it('handles missing authentication details', function () {
         {date} {info} Authentication failed {duration}: 401 \[{"message":"Invalid environment token"}\]
         {date} {info} Ingest failed {duration}: No authentication details
         OUTPUT);
-    expect($ingestBrowser)->toHaveSent([]);
+    expect($ingestBrowser)->toHaveSentNothing();
     expect($ingestBrowser)->toHavePending([]);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: self::class),
@@ -303,7 +303,7 @@ it('handles runtime errors while waiting to authenticate', function () {
         {date} {info} Authentication failed {duration}: Whoops!
         {date} {info} Ingest failed {duration}: No authentication details
         OUTPUT);
-    expect($ingestBrowser)->toHaveSent([]);
+    expect($ingestBrowser)->toHaveSentNothing();
     expect($ingestBrowser)->toHavePending([]);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: self::class),
@@ -343,7 +343,7 @@ it('handles error responses while waiting to authenticate', function () {
         {date} {info} Authentication failed {duration}: 500 \[Whoops!\]
         {date} {info} Ingest failed {duration}: No authentication details
         OUTPUT);
-    expect($ingestBrowser)->toHaveSent([]);
+    expect($ingestBrowser)->toHaveSentNothing();
     expect($ingestBrowser)->toHavePending([]);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: self::class),
@@ -594,7 +594,7 @@ it('schedules an ingest when buffer is empty and a payload under the threshold i
     expect($output)->toMatchLog(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         OUTPUT);
-    expect($ingestBrowser)->toHaveSent([]);
+    expect($ingestBrowser)->toHaveSentNothing();
     expect($ingestBrowser)->toBeProcessing([]);
     expect($ingestBrowser)->toHavePending([]);
     expect($loop)->toHaveRun([

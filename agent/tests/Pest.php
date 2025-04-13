@@ -65,6 +65,8 @@ expect()->extend('toHaveSent', function (array $requests) {
     return $this->toEqual($requests);
 });
 
+expect()->extend('toHaveSentNothing', fn () => $this->toHaveSent([]));
+
 expect()->extend('toHaveRun', function (array $timers) {
     $this->value = array_map(fn ($timer) => new Timer(
         interval: $timer['interval'],
