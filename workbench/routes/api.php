@@ -2,14 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::post('agent-auth', fn () => [
+Route::post('agent-auth', static fn () => [
     'token' => 'NIGHTWATCH_TOKEN',
     'expires_in' => 60,
     'refresh_in' => 30,
     'ingest_url' => 'http://127.0.0.1:8000/api/ingest',
 ]);
 
-Route::post('ingest', function () {
+Route::post('ingest', static function () {
     if (false) {
         return response()->json([
             'message' => 'Exceeded quota',
