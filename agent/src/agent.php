@@ -108,6 +108,10 @@ $ingestDetails = new IngestDetailsRepository(
     browser: $ingestDetailsBrowser,
     onAuthenticationSuccess: static fn (IngestDetails $ingestDetails, float $duration) => $info('Authentication successful ['.round($duration, 3).'s]'),
     onAuthenticationError: static fn (Throwable $e, float $duration) => $info('Authentication failed ['.round($duration, 3).'s]: '.$e->getMessage()),
+    onUnderQuota: static function () use (&$ingest) {
+        /** @var Ingest $ingest */
+        $ingest->resumeIngestion();
+    },
 );
 
 $ingestBrowser = $browserFactory(
@@ -131,10 +135,10 @@ $ingest = new Ingest(
     maxBufferDurationInSeconds: $debug ? 1 : 10,
     onIngestSuccess: static fn (ResponseInterface $response, float $duration) => $info('Ingest successful ['.round($duration, 3).'s]'),
     onIngestError: static fn (Throwable $e, float $duration) => $info('Ingest failed ['.round($duration, 3).'s]: '.$e->getMessage()),
-    onExceededQuota: static function (float $duration) use ($info, $ingestDetails) {
+    onOverQuota: static function (float $duration) use ($info, $ingestDetails) {
         $info('Ingest attempted ['.round($duration, 3).'s]: Quota exceeded');
 
-        $ingestDetails->markQuotaExceeded();
+        $ingestDetails->markOverQuota();
     },
 );
 
