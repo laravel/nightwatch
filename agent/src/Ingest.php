@@ -126,6 +126,7 @@ class Ingest
 
             if ($content['remaining'] <= 0) {
                 $this->pauseIngestion();
+                $this->ingestDetails->markOverQuota();
 
                 call_user_func($this->onOverQuota, microtime(true) - $start);
 
