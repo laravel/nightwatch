@@ -186,3 +186,27 @@ it('can only collect the user id', function () {
         'username' => '',
     ]]);
 });
+
+it('it captures the user id even when excluded from the Nightwatch::user return array', function () {
+    $ingest = fakeIngest();
+    Route::get('/users', fn () => []);
+    $user = User::make([
+        'id' => '567',
+        'name' => 'Tim MacDonald',
+        'email' => 'tim@laravel.com',
+    ]);
+    Nightwatch::user(fn (Authenticatable $user) => []);
+
+    $response = actingAs($user)->get('/users');
+
+    $response->assertOk();
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('user:*', [[
+        'v' => 1,
+        't' => 'user',
+        'timestamp' => 946688523.456789,
+        'id' => '567',
+        'name' => '',
+        'username' => '',
+    ]]);
+});
