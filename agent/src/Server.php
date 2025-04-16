@@ -42,7 +42,10 @@ class Server
             $this->accept($connection);
 
             $connection->on('data', function (string $chunk) use ($connection): void {
-                $this->bufferConnectionChunk($connection, $chunk);
+                match ($chunk) {
+                    'PING' => $connection->end('PONG'),
+                    default => $this->bufferConnectionChunk($connection, $chunk),
+                };
             });
 
             $connection->on('end', function () use ($connection): void {

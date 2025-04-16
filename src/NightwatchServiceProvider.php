@@ -237,6 +237,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->commands([
             Console\AgentCommand::class,
+            Console\StatusCommand::class,
         ]);
     }
 
