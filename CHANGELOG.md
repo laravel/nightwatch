@@ -1,6 +1,28 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.1.2...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.2.1...1.x)
+
+## [v1.2.1](https://github.com/laravel/nightwatch/compare/v1.2.0...v1.2.1) - 2025-04-16
+
+### What's Changed
+
+* Ensure user ID is always captured by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/138
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.2.0...v1.2.1
+
+## [v1.2.0](https://github.com/laravel/nightwatch/compare/v1.1.2...v1.2.0) - 2025-04-15
+
+### What's Changed
+
+* Improved authentication retries by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/130
+* Allow customisation of captured user details by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/131
+* Support using Guzzle directly by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/132
+* Capture and reuse loop instance by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/133
+* Register hooks to ensure we capture exceptions occuring in the register method of the application's service provider by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/135
+* Back off ingestion once over quota by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/134
+* Add auth testing endpoints by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/137
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.1.2...v1.2.0
 
 ## [v1.1.2](https://github.com/laravel/nightwatch/compare/v1.1.1...v1.1.2) - 2025-03-31
 

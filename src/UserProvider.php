@@ -67,7 +67,10 @@ final class UserProvider
             ];
         }
 
-        return $resolver($user);
+        return [
+            'id' => $user->getAuthIdentifier(),
+            ...$resolver($user),
+        ];
     }
 
     public function remember(Authenticatable $user): void
