@@ -6,6 +6,10 @@ use Evenement\EventEmitter;
 use React\Socket\ServerInterface;
 use RuntimeException;
 
+use function is_string;
+use function json_encode;
+use function strlen;
+
 class TcpServerFake extends EventEmitter implements ServerInterface
 {
     /**
@@ -13,6 +17,13 @@ class TcpServerFake extends EventEmitter implements ServerInterface
      */
     public function pendingConnection(array|string $records): PendingConnection
     {
+        if (is_string($records)) {
+            return new PendingConnection($this, $records);
+        }
+
+        $records = json_encode($records, flags: JSON_THROW_ON_ERROR);
+        $records = strlen($records).':'.$records;
+
         return new PendingConnection($this, $records);
     }
 
