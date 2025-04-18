@@ -866,3 +866,51 @@ it('starts ingesting data after a subsequent successful authentication', functio
     ]);
     expect($ingestDetailsBrowser)->toHavePending([]);
 });
+
+it('handles incomplete payloads', function () {
+    $loop = new LoopFake(runForSeconds: 6);
+    $server = new TcpServerFake;
+    $ingestDetailsBrowser = new BrowserFake([
+        Response::jwt(),
+    ]);
+    $ingestBrowser = new BrowserFake([]);
+    $loop->addTimer(0, $server->pendingConnection('4'));
+    $loop->addTimer(1, $server->pendingConnection('4:'));
+    $loop->addTimer(2, $server->pendingConnection('4:['));
+    $loop->addTimer(3, $server->pendingConnection('4:[{'));
+    $loop->addTimer(4, $server->pendingConnection('4:[{}'));
+    $loop->addTimer(5, $server->pendingConnection('4:[{}]'));
+
+    [$output, $e] = run(
+        via: 'source',
+        ingestDetailsBrowser: $ingestDetailsBrowser,
+        ingestBrowser: $ingestBrowser,
+        loop: $loop,
+        server: $server,
+    );
+
+    expect($e)->toBeNull($e?->getMessage() ?? '');
+    expect($output)->toMatchLog(<<<'OUTPUT'
+        {date} {info} Authentication successful {duration}
+        {date} {error} Connection error: Incomplete payload recieved
+        {date} {error} Connection error: Incomplete payload recieved
+        {date} {error} Connection error: Incomplete payload recieved
+        {date} {error} Connection error: Incomplete payload recieved
+        {date} {error} Connection error: Incomplete payload recieved
+        OUTPUT);
+    expect($loop)->toHaveRun([
+        new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: self::class),
+        new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: self::class),
+        new Timer(interval: 2, runAt: 2, scheduledAt: 0, scheduledBy: self::class),
+        new Timer(interval: 3, runAt: 3, scheduledAt: 0, scheduledBy: self::class),
+        new Timer(interval: 4, runAt: 4, scheduledAt: 0, scheduledBy: self::class),
+        new Timer(interval: 5, runAt: 5, scheduledAt: 0, scheduledBy: self::class),
+    ]);
+    expect($loop)->toHavePending([
+        new Timer(interval: 10, runAt: 15, scheduledAt: 5, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+        new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+    ]);
+    expect($ingestDetailsBrowser)->toHaveSent([
+        Request::json('/api/agent-auth'),
+    ]);
+});
