@@ -4,7 +4,7 @@ namespace Laravel\NightwatchAgent;
 
 class NullBuffer
 {
-    public function write(Payload $payload): void
+    public function write(string $payload): void
     {
         //
     }

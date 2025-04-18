@@ -17,7 +17,7 @@ class Server
      * @param  (Closure(): mixed)  $onServerStarted
      * @param  (Closure(Throwable $e): mixed)  $onServerError
      * @param  (Closure(Throwable $e): mixed)  $onConnectionError
-     * @param  (Closure(Payload $payload): mixed)  $onPayloadReceived
+     * @param  (Closure(string $payload): mixed)  $onPayloadReceived
      */
     public function __construct(
         private Closure $serverResolver,
@@ -40,7 +40,7 @@ class Server
                 $payload->append($chunk);
 
                 if ($payload->complete) {
-                    call_user_func($this->onPayloadReceived, $payload);
+                    call_user_func($this->onPayloadReceived, $payload->value);
                 }
             });
 

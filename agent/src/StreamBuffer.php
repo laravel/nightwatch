@@ -15,9 +15,9 @@ class StreamBuffer
         //
     }
 
-    public function write(Payload $payload): void
+    public function write(string $payload): void
     {
-        $input = substr($payload->value, 1, -1);
+        $input = substr($payload, 1, -1);
 
         if ($this->buffer === '') {
             $this->buffer = $input;
