@@ -42,7 +42,7 @@ class RecordsBuffer
 
     public function flush(): string
     {
-        if (count($this->records) === 0) {
+        if ($this->records === []) {
             return '[]';
         }
 
