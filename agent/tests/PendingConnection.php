@@ -2,6 +2,8 @@
 
 namespace Tests;
 
+use function strlen;
+
 class PendingConnection
 {
     public function __construct(
@@ -17,7 +19,7 @@ class PendingConnection
 
         $this->server->emit('connection', [$connection]);
 
-        $connection->emit('data', [$this->payload]);
+        $connection->emit('data', [strlen($this->payload).':'.$this->payload]);
 
         $connection->emit('end');
     }

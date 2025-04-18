@@ -50,7 +50,7 @@ class Ingest
         $this->buffer = $this->streamBufferBackup = $buffer;
     }
 
-    public function write(string $payload): void
+    public function write(Payload $payload): void
     {
         $this->buffer->write($payload);
 

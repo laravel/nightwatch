@@ -5,6 +5,7 @@ namespace Laravel\NightwatchClient;
 use React\Socket\ConnectorInterface;
 
 use function React\Async\await;
+use function strlen;
 
 class Ingest
 {
@@ -17,8 +18,6 @@ class Ingest
 
     public function __invoke(string $payload): void
     {
-        if ($payload !== '') {
-            await($this->connector->connect($this->transmitTo))->end($payload);
-        }
+        await($this->connector->connect($this->transmitTo))->end(strlen($payload).':'.$payload);
     }
 }
