@@ -25,33 +25,33 @@ class Ingest
 
     private ?TimerInterface $flushBufferAfterDelayTimer = null;
 
+    private StreamBuffer|NullBuffer $buffer;
+
+    private StreamBuffer $streamBufferBackup;
+
     /**
      * @param  LoopInterface  $loop
      * @param  Browser  $browser
      * @param  (Closure(ResponseInterface $response, float $duration): mixed)  $onIngestSuccess
      * @param  (Closure(Throwable $e, float $duration): mixed)  $onIngestError
-     * @param  (Closure(float $duration): mixed)  $onExceededQuota
+     * @param  (Closure(float $duration): mixed)  $onOverQuota
      */
     public function __construct(
         private $loop,
         private $browser,
         private IngestDetailsRepository $ingestDetails,
-        private StreamBuffer $buffer,
+        StreamBuffer $buffer,
         private int $concurrentRequestLimit,
         private int $maxBufferDurationInSeconds,
         private Closure $onIngestSuccess,
         private Closure $onIngestError,
-        private Closure $onExceededQuota,
+        private Closure $onOverQuota,
     ) {
-        //
+        $this->buffer = $this->streamBufferBackup = $buffer;
     }
 
     public function write(string $payload): void
     {
-        if ($this->ingestDetails->quotaExceeded) {
-            return;
-        }
-
         $this->buffer->write($payload);
 
         if ($this->buffer->wantsFlushing()) {
@@ -73,6 +73,17 @@ class Ingest
                 $this->ingest($records);
             });
         }
+    }
+
+    public function pauseIngestion(): void
+    {
+        $this->buffer = new NullBuffer;
+        $this->streamBufferBackup->flush();
+    }
+
+    public function resumeIngestion(): void
+    {
+        $this->buffer = $this->streamBufferBackup;
     }
 
     private function ingest(string $payload): void
@@ -114,7 +125,10 @@ class Ingest
             $content = json_decode($response->getBody()->getContents(), associative: true, flags: JSON_THROW_ON_ERROR);
 
             if ($content['remaining'] <= 0) {
-                call_user_func($this->onExceededQuota, microtime(true) - $start);
+                $this->pauseIngestion();
+                $this->ingestDetails->markOverQuota();
+
+                call_user_func($this->onOverQuota, microtime(true) - $start);
 
                 return;
             }

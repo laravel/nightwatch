@@ -25,7 +25,7 @@ use function substr;
 
 class IngestDetailsRepository
 {
-    public bool $quotaExceeded = false;
+    private bool $overQuota = false;
 
     /**
      * @var PromiseInterface<IngestDetails|null>|null
@@ -48,12 +48,14 @@ class IngestDetailsRepository
      * @param  Browser  $browser
      * @param  (Closure(IngestDetails $ingestDetails, float $duration): mixed)  $onAuthenticationSuccess
      * @param  (Closure(Throwable $e, float $duration): mixed)  $onAuthenticationError
+     * @param  (Closure(): mixed)  $onUnderQuota
      */
     public function __construct(
         private $loop,
         private $browser,
         private Closure $onAuthenticationSuccess,
         private Closure $onAuthenticationError,
+        private Closure $onUnderQuota,
     ) {
         //
     }
@@ -71,9 +73,9 @@ class IngestDetailsRepository
         return $this->ingestDetails ??= $this->refresh();
     }
 
-    public function markQuotaExceeded(): void
+    public function markOverQuota(): void
     {
-        $this->quotaExceeded = true;
+        $this->overQuota = true;
 
         $this->loop->cancelTimer($this->refreshTimer); // @phpstan-ignore argument.type
 
@@ -98,7 +100,12 @@ class IngestDetailsRepository
 
                 call_user_func($this->onAuthenticationSuccess, $ingestDetails, $duration);
 
-                $this->quotaExceeded = false;
+                if ($this->overQuota) {
+                    $this->overQuota = false;
+
+                    call_user_func($this->onUnderQuota);
+                }
+
                 $this->hasAuthenticated = true;
                 $this->consecutiveFailures = 0;
 
