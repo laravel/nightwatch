@@ -36,11 +36,14 @@ class Server
         $server->on('connection', function (ConnectionInterface $connection): void {
             $payload = new Payload;
 
-            $connection->on('data', function (string $chunk) use ($payload): void {
+            $connection->on('data', function (string $chunk) use ($connection, $payload): void {
                 $payload->append($chunk);
 
                 if ($payload->complete) {
-                    call_user_func($this->onPayloadReceived, $payload->value);
+                    match ($payload->value) {
+                        'PING' => $connection->end('4:PONG'),
+                        default => call_user_func($this->onPayloadReceived, $payload->value),
+                    };
                 }
             });
 

@@ -111,6 +111,12 @@ expect()->extend('toBeProcessing', function (array $responses) {
     return $this->toEqual($responses);
 });
 
+expect()->extend('toHaveConnections', function (array $connections) {
+    $this->value = $this->value->connections;
+
+    return $this->toEqual($connections);
+});
+
 /**
  * @param  'source'|'phar'  $via
  * @param  (callable(string): bool)  $until
@@ -119,8 +125,9 @@ expect()->extend('toBeProcessing', function (array $responses) {
  * @param-out  BrowserFake  $ingestDetailsBrowser
  * @param-out  BrowserFake  $ingestBrowser
  * @param-out  LoopFake  $loop
+ * @param-out  TcpServerFake  $server
  */
-function run(string $via, ?callable $until = null, float $timeout = 0.5, ?BrowserFake &$ingestDetailsBrowser = null, ?BrowserFake &$ingestBrowser = null, ?LoopFake &$loop = null, ?TcpServerFake $server = null): array
+function run(string $via, ?callable $until = null, float $timeout = 0.5, ?BrowserFake &$ingestDetailsBrowser = null, ?BrowserFake &$ingestBrowser = null, ?LoopFake &$loop = null, ?TcpServerFake &$server = null): array
 {
     $output = '';
     $port ??= rand(9000, 9999);
@@ -166,10 +173,11 @@ function run(string $via, ?callable $until = null, float $timeout = 0.5, ?Browse
                 $payload = unserialize($payload);
 
                 if (is_array($payload)) {
-                    /** @var array{ingestDetailsBrowser: BrowserFake, ingestBrowser: BrowserFake, loop: LoopFake}  $payload */
+                    /** @var array{ingestDetailsBrowser: BrowserFake, ingestBrowser: BrowserFake, loop: LoopFake, server: TcpServerFake }  $payload */
                     $ingestDetailsBrowser = $payload['ingestDetailsBrowser'];
                     $ingestBrowser = $payload['ingestBrowser'];
                     $loop = $payload['loop'];
+                    $server = $payload['server'];
                 }
             }
 

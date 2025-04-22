@@ -12,7 +12,7 @@ use function call_user_func;
 final class Ingest implements LocalIngest
 {
     /**
-     * @var (callable(string): void)|null
+     * @var (callable(string): string)|null
      */
     private $ingest = null;
 
@@ -30,8 +30,18 @@ final class Ingest implements LocalIngest
             return;
         }
 
+        $this->ingest($payload);
+    }
+
+    public function ping(): string
+    {
+        return $this->ingest('PING');
+    }
+
+    private function ingest(string $payload): string
+    {
         if ($this->ingest === null) {
-            /** @var (callable(string|null $transmitTo, float|null $ingestTimeout, float|null $ingestConnectionTimeout): (callable(string $payload): void)) */
+            /** @var (callable(string|null $transmitTo, float|null $ingestTimeout, float|null $ingestConnectionTimeout): (callable(string $payload): string)) */
             $factory = require __DIR__.'/../client/entry.php';
 
             $this->ingest = $factory(
@@ -41,6 +51,6 @@ final class Ingest implements LocalIngest
             );
         }
 
-        call_user_func($this->ingest, $payload);
+        return call_user_func($this->ingest, $payload);
     }
 }

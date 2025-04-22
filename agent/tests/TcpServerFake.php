@@ -13,6 +13,11 @@ use function strlen;
 class TcpServerFake extends EventEmitter implements ServerInterface
 {
     /**
+     * @var list<Connection>
+     */
+    public array $connections = [];
+
+    /**
      * @param  string|list<array<string, mixed>>  $records
      */
     public function pendingConnection(array|string $records): PendingConnection
