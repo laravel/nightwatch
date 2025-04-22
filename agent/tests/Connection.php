@@ -9,6 +9,19 @@ use RuntimeException;
 
 class Connection extends EventEmitter implements ConnectionInterface
 {
+    public function __construct(
+        public string $payload = '',
+        public bool $closed = false,
+    ) {
+        //
+    }
+
+    public static function closed(
+        string $payload = '',
+    ): self {
+        return new self($payload, closed: true);
+    }
+
     public function getRemoteAddress()
     {
         throw new RuntimeException(__FUNCTION__);
@@ -59,6 +72,9 @@ class Connection extends EventEmitter implements ConnectionInterface
 
     public function end($data = null)
     {
-        throw new RuntimeException(__FUNCTION__);
+        if (! $this->closed) {
+            $this->payload .= (string) $data; // @phpstan-ignore cast.string
+            $this->closed = true;
+        }
     }
 }

@@ -47,11 +47,14 @@ $serverResolver = null;
 
 if ($viaPhar === false) {
     pcntl_async_signals(true);
-    pcntl_signal(SIGTERM, function () use ($payloadFile, $ingestDetailsBrowser, $ingestBrowser, $loop) {
+    pcntl_signal(SIGTERM, function () use ($payloadFile, $ingestDetailsBrowser, $ingestBrowser, $loop, $server) {
+        $server?->removeAllListeners();
+
         file_put_contents($payloadFile, serialize([
             'ingestDetailsBrowser' => $ingestDetailsBrowser,
             'ingestBrowser' => $ingestBrowser,
             'loop' => $loop,
+            'server' => $server,
         ]));
     });
 
@@ -96,8 +99,11 @@ if ($viaPhar) {
     });
 }
 
+$server?->removeAllListeners();
+
 file_put_contents($payloadFile, serialize([
     'ingestDetailsBrowser' => $ingestDetailsBrowser,
     'ingestBrowser' => $ingestBrowser,
     'loop' => $loop,
+    'server' => $server,
 ]));

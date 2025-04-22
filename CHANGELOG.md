@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.2.0...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.2.1...1.x)
+
+## [v1.2.1](https://github.com/laravel/nightwatch/compare/v1.2.0...v1.2.1) - 2025-04-16
+
+### What's Changed
+
+* Ensure user ID is always captured by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/138
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.2.0...v1.2.1
 
 ## [v1.2.0](https://github.com/laravel/nightwatch/compare/v1.1.2...v1.2.0) - 2025-04-15
 
