@@ -49,7 +49,7 @@ class Server
 
             $connection->on('close', function () use ($payload) {
                 if (! $payload->complete) {
-                    call_user_func($this->onConnectionError, new RuntimeException('Incomplete payload recieved'));
+                    call_user_func($this->onConnectionError, new RuntimeException('Incomplete payload received'));
                 }
             });
 

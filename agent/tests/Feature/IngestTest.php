@@ -892,11 +892,11 @@ it('handles incomplete payloads', function () {
     expect($e)->toBeNull($e?->getMessage() ?? '');
     expect($output)->toMatchLog(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {error} Connection error: Incomplete payload recieved
-        {date} {error} Connection error: Incomplete payload recieved
-        {date} {error} Connection error: Incomplete payload recieved
-        {date} {error} Connection error: Incomplete payload recieved
-        {date} {error} Connection error: Incomplete payload recieved
+        {date} {error} Connection error: Incomplete payload received
+        {date} {error} Connection error: Incomplete payload received
+        {date} {error} Connection error: Incomplete payload received
+        {date} {error} Connection error: Incomplete payload received
+        {date} {error} Connection error: Incomplete payload received
         OUTPUT);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: self::class),
