@@ -8,8 +8,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  supported_php_version: (8.2, 8.3, 8.4)
-  minimum_supported_php_version: 8.2
+  supported_php_version: toJson([8.2, 8.3, 8.4])
   package_extensions: none, mbstring, curl, ctype, tokenizer, mongodb, xml, pdo, fileinfo, dom, xmlwriter, simplexml, sqlite3, pdo_sqlite, posix, redis
   agent_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter
   client_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter
@@ -24,10 +23,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP ${{ fromJson(env.supported_php_version)[0] }} and tooling
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ env.minimum_supported_php_version }}
+          php-version: ${{ fromJson(env.supported_php_version)[0] }}
           extensions: ${{ env.package_extensions }}
           ini-values: error_reporting=E_ALL
           tools: composer:v2, composer-dependency-analyser
@@ -68,10 +67,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP ${{ fromJson(env.supported_php_version)[0] }} and tooling
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ env.minimum_supported_php_version }}
+          php-version: ${{ fromJson(env.supported_php_version)[0] }}
           extensions: ${{ env.agent_extensions }}
           ini-values: error_reporting=E_ALL
           tools: composer:v2, composer-dependency-analyser
@@ -112,10 +111,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP ${{ fromJson(env.supported_php_version)[0] }} and tooling
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ env.minimum_supported_php_version }}
+          php-version: ${{ fromJson(env.supported_php_version)[0] }}
           extensions: ${{ env.client_extensions }}
           ini-values: error_reporting=E_ALL
           tools: composer:v2, composer-dependency-analyser
@@ -162,10 +161,10 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           ref: ${{ github.head_ref }}
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP ${{ fromJson(env.supported_php_version)[0] }} and tooling
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ env.minimum_supported_php_version }}
+          php-version: ${{ fromJson(env.supported_php_version)[0] }}
           extensions: ${{ env.package_extensions }}
           ini-values: error_reporting=E_ALL
           tools: composer:v2
@@ -227,10 +226,10 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           ref: ${{ github.head_ref }}
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP ${{ fromJson(env.supported_php_version)[0] }} and tooling
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ env.minimum_supported_php_version }}
+          php-version: ${{ fromJson(env.supported_php_version)[0] }}
           extensions: ${{ env.agent_extensions }}
           ini-values: error_reporting=E_ALL
           tools: composer:v2, box:4.6.3
@@ -294,10 +293,10 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           ref: ${{ github.head_ref }}
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP ${{ fromJson(env.supported_php_version)[0] }} and tooling
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ env.minimum_supported_php_version }}
+          php-version: ${{ fromJson(env.supported_php_version)[0] }}
           extensions: ${{ env.client_extensions }}
           ini-values: error_reporting=E_ALL
           tools: composer:v2, box:4.6.3
@@ -347,7 +346,7 @@ jobs:
 
     strategy:
       matrix:
-        php: ${{ env.supported_php_version }}
+        php: ${{ fromJson(env.supported_php_version) }}
         laravel: [10, 11, 12]
         prefer-lowest: ['0', '1']
 
@@ -399,7 +398,7 @@ jobs:
 
     strategy:
       matrix:
-        php: ${{ env.supported_php_version }}
+        php: ${{ fromJson(env.supported_php_version) }}
 
     name: Test agent [PHP ${{ matrix.php }}]
 
@@ -449,7 +448,7 @@ jobs:
 
     strategy:
       matrix:
-        php: ${{ env.supported_php_version }}
+        php: ${{ fromJson(env.supported_php_version) }}
 
     name: Test client [PHP ${{ matrix.php }}]
 
