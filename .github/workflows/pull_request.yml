@@ -398,7 +398,7 @@ jobs:
 
     strategy:
       matrix:
-        php: ${{ fromJson(env.supported_php_version) }}
+        php: [8.2, 8.3, 8.4]
 
     name: Test agent [PHP ${{ matrix.php }}]
 
@@ -448,7 +448,7 @@ jobs:
 
     strategy:
       matrix:
-        php: ${{ fromJson(env.supported_php_version) }}
+        php: [8.2, 8.3, 8.4]
 
     name: Test client [PHP ${{ matrix.php }}]
 
