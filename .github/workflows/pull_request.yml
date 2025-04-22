@@ -350,7 +350,7 @@ jobs:
         laravel: [10, 11, 12]
         prefer-lowest: ['0', '1']
 
-    name: Test package [PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }}], ${{ matrix.prefer-lowest == '1' && 'Prefer lowest' || 'Prefer latest' }}
+    name: Test package [PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }}, ${{ matrix.prefer-lowest == '1' && 'Prefer lowest' || 'Prefer latest' }}]
 
     steps:
       - name: Checkout code
@@ -381,9 +381,7 @@ jobs:
         run: composer require laravel/framework:^${{ matrix.laravel }} --no-update
 
       - name: Install dependencies
-        env:
-          COMPOSER_PREFER_LOWEST: ${{ matrix.prefer-lowest }}
-        run: composer install --no-interaction --no-progress
+        run: composer install --no-interaction --no-progress ${{ matrix.prefer-lowest == '1' && '--prefer-lowest' || '--prefer-dist' }}
 
       - name: Execute tests
         run: vendor/bin/pest --coverage --min=80
