@@ -45,7 +45,7 @@ jobs:
           restore-keys: ${{ runner.os }}-package-composer
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Check platform
         run: composer check-platform-reqs
@@ -89,7 +89,7 @@ jobs:
           restore-keys: ${{ runner.os }}-agent-composer
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Check platform
         run: composer check-platform-reqs
@@ -133,7 +133,7 @@ jobs:
           restore-keys: ${{ runner.os }}-client-composer
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Check platform
         run: composer check-platform-reqs
@@ -183,7 +183,7 @@ jobs:
           restore-keys: ${{ runner.os }}-package-composer
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Run Pint (CI only)
         run: vendor/bin/pint --config=pint.ci.json
@@ -248,7 +248,7 @@ jobs:
           restore-keys: ${{ runner.os }}-agent-composer
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress --no-dev
+        run: composer update --prefer-dist --no-interaction --no-progress --no-dev
 
       - name: Build agent
         id: build-agent
@@ -315,7 +315,7 @@ jobs:
           restore-keys: ${{ runner.os }}-client-composer
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress --no-dev
+        run: composer update --prefer-dist --no-interaction --no-progress --no-dev
 
       - name: Build client
         id: build-client
@@ -381,7 +381,7 @@ jobs:
         run: composer require laravel/framework:^${{ matrix.laravel }} --no-update
 
       - name: Install dependencies
-        run: composer install --no-interaction --no-progress ${{ matrix.prefer-lowest == '1' && '--prefer-lowest' || '--prefer-dist' }}
+        run: composer update --no-interaction --no-progress ${{ matrix.prefer-lowest == '1' && '--prefer-lowest' || '--prefer-dist' }}
 
       - name: Execute tests
         run: vendor/bin/pest --coverage --min=80
@@ -428,7 +428,7 @@ jobs:
           restore-keys: ${{ runner.os }}-agent-composer
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
         env:
@@ -478,7 +478,7 @@ jobs:
           restore-keys: ${{ runner.os }}-client-composer
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
         run: vendor/bin/pest --coverage
