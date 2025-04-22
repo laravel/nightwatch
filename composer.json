@@ -82,7 +82,7 @@
             "@php vendor/bin/testbench nightwatch:agent"
         ],
         "build": [
-            "@php vendor/bin/testbench package:sync-skeleton",
+            "@php vendor/bin/testbench package:sync-skeleton || true",
             "@php vendor/bin/testbench workbench:build"
         ],
         "ci": [
