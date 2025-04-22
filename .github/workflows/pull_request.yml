@@ -8,7 +8,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  minimum_supported_php_version: "8.2"
+  supported_php_version: (8.2, 8.3, 8.4)
+  minimum_supported_php_version: 8.2
   package_extensions: none, mbstring, curl, ctype, tokenizer, mongodb, xml, pdo, fileinfo, dom, xmlwriter, simplexml, sqlite3, pdo_sqlite, posix, redis
   agent_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter
   client_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter
@@ -346,7 +347,7 @@ jobs:
 
     strategy:
       matrix:
-        php: [8.2, 8.3]
+        php: ${{ env.supported_php_version }}
         laravel: [10, 11, 12]
         prefer-lowest: ['0', '1']
 
@@ -398,7 +399,7 @@ jobs:
 
     strategy:
       matrix:
-        php: [8.2, 8.3]
+        php: ${{ env.supported_php_version }}
 
     name: Test agent [PHP ${{ matrix.php }}]
 
@@ -448,7 +449,7 @@ jobs:
 
     strategy:
       matrix:
-        php: [8.2, 8.3]
+        php: ${{ env.supported_php_version }}
 
     name: Test client [PHP ${{ matrix.php }}]
 
