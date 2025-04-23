@@ -60,6 +60,13 @@
         ],
         "test": [
             "@php vendor/bin/pest"
+        ],
+        "build": [
+            "box compile"
+        ],
+        "watch": [
+            "npm ci",
+            "node watch.js"
         ]
     },
     "config": {
