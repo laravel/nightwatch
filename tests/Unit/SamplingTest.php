@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Records\User;
 
@@ -323,7 +325,8 @@ it('samples logs', function () {
     expect(nightwatch()->state->logs)->toBe(10);
 });
 
-it('does not attach route middleware when not sampling', function () {
+it('does not attach route middleware when not sampling', function ($terminatingEventExists, $expectedMiddleware) {
+    Compatibility::$terminatingEventExists = $terminatingEventExists;
     fakeIngest();
     nightwatch()->sampling['requests'] = 0.0;
     nightwatch()->configureRequestSampling();
@@ -344,9 +347,12 @@ it('does not attach route middleware when not sampling', function () {
     for ($i = 0; $i < 10; $i++) {
         get('test')->assertOk();
 
-        expect($middleware)->toBe([RouteMiddleware::class]);
+        expect($middleware)->toBe($expectedMiddleware);
     }
-});
+})->with([
+    [$terminatingEventExists = true, [RouteMiddleware::class]],
+    [$terminatingEventExists = false, [GlobalMiddleware::class, RouteMiddleware::class]],
+]);
 
 it('samples capuring request preview', function () {
     $ingest = fakeIngest();
