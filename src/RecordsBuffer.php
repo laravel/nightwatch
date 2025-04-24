@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
+use Countable;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\Exception;
@@ -23,7 +24,7 @@ use function json_encode;
 /**
  * @internal
  */
-class RecordsBuffer
+class RecordsBuffer implements Countable
 {
     /**
      * @var list<Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|JobAttempt|Mail|Notification|Log|User|ScheduledTask>
@@ -40,7 +41,12 @@ class RecordsBuffer
         $this->records[] = $record;
     }
 
-    public function flush(): string
+    public function count(): int
+    {
+        return count($this->records);
+    }
+
+    public function pull(): string
     {
         if ($this->records === []) {
             return '[]';
@@ -51,5 +57,10 @@ class RecordsBuffer
         $this->records = [];
 
         return $records;
+    }
+
+    public function flush(): void
+    {
+        $this->records = [];
     }
 }

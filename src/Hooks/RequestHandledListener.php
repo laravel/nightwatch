@@ -25,7 +25,7 @@ final class RequestHandledListener
     public function __invoke(RequestHandled $event): void
     {
         try {
-            $this->nightwatch->sensor->stage(ExecutionStage::Sending);
+            $this->nightwatch->stage(ExecutionStage::Sending);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

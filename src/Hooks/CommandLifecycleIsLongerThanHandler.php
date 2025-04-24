@@ -26,7 +26,7 @@ final class CommandLifecycleIsLongerThanHandler
     public function __invoke(Carbon $startedAt, InputInterface $input, int $status): void
     {
         try {
-            $this->nightwatch->sensor->stage(ExecutionStage::End);
+            $this->nightwatch->stage(ExecutionStage::End);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

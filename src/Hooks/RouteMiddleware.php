@@ -26,7 +26,7 @@ final class RouteMiddleware
     public function handle(Request $request, Closure $next): mixed
     {
         try {
-            $this->nightwatch->sensor->stage(ExecutionStage::Action);
+            $this->nightwatch->stage(ExecutionStage::Action);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

@@ -25,7 +25,7 @@ final class RequestBootedHandler
     public function __invoke(Application $app): void
     {
         try {
-            $this->nightwatch->sensor->stage(ExecutionStage::BeforeMiddleware);
+            $this->nightwatch->stage(ExecutionStage::BeforeMiddleware);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

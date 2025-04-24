@@ -19,8 +19,8 @@ it('gracefully handles exceptions in the before middleware', function () {
 
     $middleware = new GuzzleMiddleware(nightwatch());
 
-    $stack = $middleware(fn () => new Response(body: 'ok'));
-    $response = $stack(new Request('GET', '/test'), []);
+    $stack = $middleware(fn () => new FulfilledPromise(new Response(body: 'ok')));
+    $response = $stack(new Request('GET', '/test'), [])->wait();
 
     expect($thrownInMicrotimeResolver)->toBeTrue();
     expect($exceptions)->toHaveCount(1);
