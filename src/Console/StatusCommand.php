@@ -42,7 +42,7 @@ final class StatusCommand extends Command
                 throw new RuntimeException('Failed to check the status of the Nightwatch agent');
             }
 
-            $this->components->success('The Nightwatch agent is running and accepting connections');
+            $this->components->info('The Nightwatch agent is running and accepting connections');
 
             return 0;
         } catch (Throwable $e) {
