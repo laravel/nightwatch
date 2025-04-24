@@ -7,7 +7,7 @@ return [
     'server' => env('NIGHTWATCH_SERVER', (string) gethostname()),
 
     'sampling' => [
-        'requests' => 1.0,
+        'requests' => env('NIGHTWATCH_REQUEST_SAMPLE_RATE', 1.0),
     ],
 
     'ingest' => [
