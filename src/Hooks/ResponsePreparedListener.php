@@ -26,7 +26,7 @@ final class ResponsePreparedListener
     {
         try {
             if ($this->nightwatch->state->stage === ExecutionStage::Render) {
-                $this->nightwatch->sensor->stage(ExecutionStage::AfterMiddleware);
+                $this->nightwatch->stage(ExecutionStage::AfterMiddleware);
             }
         } catch (Throwable $e) {
             $this->nightwatch->report($e);

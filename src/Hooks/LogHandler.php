@@ -25,18 +25,24 @@ final class LogHandler implements HandlerInterface
 
     public function isHandling(LogRecord $record): bool
     {
-        return true;
+        return $this->nightwatch->shouldCaptureLogs();
     }
 
     public function handle(LogRecord $record): bool
     {
         try {
-            $this->nightwatch->sensor->log($record);
+            if (! $this->isHandling($record)) {
+                return false;
+            }
+
+            $this->nightwatch->log($record);
+
+            return true;
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
-        }
 
-        return true;
+            return false;
+        }
     }
 
     /**

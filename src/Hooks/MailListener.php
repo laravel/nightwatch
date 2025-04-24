@@ -26,7 +26,7 @@ final class MailListener
     public function __invoke(MessageSending|MessageSent $event): void
     {
         try {
-            $this->nightwatch->sensor->mail($event);
+            $this->nightwatch->mail($event);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

@@ -7,9 +7,7 @@ use Illuminate\Http\Request;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\Types\Str;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -18,10 +16,12 @@ use Throwable;
  */
 final class GlobalMiddleware
 {
-    private bool $hasRun = false;
+    private bool $hasHandledRequest = false;
+
+    private bool $hasTerminated = false;
 
     /**
-     * @param  Core<RequestState|CommandState>  $nightwatch
+     * @param  Core<RequestState>  $nightwatch
      */
     public function __construct(
         private Core $nightwatch,
@@ -31,10 +31,14 @@ final class GlobalMiddleware
 
     public function handle(Request $request, Closure $next): mixed
     {
+        if ($this->hasHandledRequest) {
+            return $next($request);
+        }
+
+        $this->hasHandledRequest = true;
+
         try {
-            $this->nightwatch->state->executionPreview = Str::tinyText(
-                $request->getMethod().' '.$request->getBaseUrl().$request->getPathInfo()
-            );
+            $this->nightwatch->captureRequestPreview($request);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
@@ -44,18 +48,14 @@ final class GlobalMiddleware
 
     public function terminate(Request $request, Response $response): void
     {
-        if (Compatibility::$terminatingEventExists) {
+        if ($this->hasTerminated || Compatibility::$terminatingEventExists) {
             return;
         }
 
-        if ($this->hasRun) {
-            return;
-        }
-
-        $this->hasRun = true;
+        $this->hasTerminated = true;
 
         try {
-            $this->nightwatch->sensor->stage(ExecutionStage::Terminating);
+            $this->nightwatch->stage(ExecutionStage::Terminating);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

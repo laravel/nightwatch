@@ -136,13 +136,7 @@ it('ignores notifications sent as MailMessages', function () {
 
             public function toMail(object $notifiable): MailMessage
             {
-                app()->setBasePath(dirname(app()->basePath()).'/');
-                app()->useAppPath(app()->basePath('/src'));
-
-                return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
+                return (new MailMessage)->view('mail');
             }
         });
     });

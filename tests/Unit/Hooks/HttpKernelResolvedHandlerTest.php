@@ -87,3 +87,21 @@ it('gracefully handles exceptions when prepending middleware', function () {
 
     forgetRecordedExceptions(1);
 });
+
+it('gracefully handles exceptions when determining whether to sample the request', function () {
+    nightwatch()->sampling = [];
+    $exceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
+    });
+    $kernel = app(HttpKernel::class);
+
+    $this->assertTrue(nightwatch()->shouldSample);
+
+    $handler = new HttpKernelResolvedHandler(nightwatch());
+    $handler($kernel, app());
+
+    $this->assertFalse(nightwatch()->shouldSample);
+    $this->assertCount(1, $exceptions);
+    $this->assertSame($exceptions[0]->getMessage(), 'Undefined array key "requests"');
+});
