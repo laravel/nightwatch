@@ -66,7 +66,7 @@ final class Core
         }
 
         try {
-            $this->ingest->write($this->state->records->read());
+            $this->ingest->write($this->state->records->pull());
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }

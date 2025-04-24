@@ -2,30 +2,30 @@
 
 use Laravel\NightwatchAgent\StreamBuffer;
 
-it('can read an empty buffer', function () {
+it('can pull an empty buffer', function () {
     $buffer = new StreamBuffer(100);
 
-    expect($buffer->read())->toBe('{"records":[]}');
+    expect($buffer->pull())->toBe('{"records":[]}');
 });
 
-it('can write and read a single record', function () {
+it('can write and pull a single record', function () {
     $buffer = new StreamBuffer(100);
 
     $buffer->write('[{"id":1}]');
 
-    expect($buffer->read())->toBe('{"records":[{"id":1}]}');
+    expect($buffer->pull())->toBe('{"records":[{"id":1}]}');
 });
 
-it('can write and read two records', function () {
+it('can write and pull two records', function () {
     $buffer = new StreamBuffer(100);
 
     $buffer->write('[{"id":1}]');
     $buffer->write('[{"id":2}]');
 
-    expect($buffer->read())->toBe('{"records":[{"id":1},{"id":2}]}');
+    expect($buffer->pull())->toBe('{"records":[{"id":1},{"id":2}]}');
 });
 
-it('can write and read many records', function () {
+it('can write and pull many records', function () {
     $buffer = new StreamBuffer(100);
 
     $buffer->write('[{"id":1}]');
@@ -33,7 +33,7 @@ it('can write and read many records', function () {
     $buffer->write('[{"id":3}]');
     $buffer->write('[{"id":4}]');
 
-    expect($buffer->read())->toBe('{"records":[{"id":1},{"id":2},{"id":3},{"id":4}]}');
+    expect($buffer->pull())->toBe('{"records":[{"id":1},{"id":2},{"id":3},{"id":4}]}');
 });
 
 it('has not reached threshold without writing', function () {
@@ -66,20 +66,20 @@ it('has reached threshold when over length', function () {
     expect($buffer->reachedThreshold())->toBeTrue();
 });
 
-it('has not reached threshold after reading', function () {
+it('has not reached threshold after pull', function () {
     $buffer = new StreamBuffer(100);
 
     $buffer->write('['.str_repeat('a', 101).']');
-    $buffer->read();
+    $buffer->pull();
 
     expect($buffer->reachedThreshold())->toBeFalse();
 });
 
-it('empties the buffer while reading', function () {
+it('empties the buffer while pulling', function () {
     $buffer = new StreamBuffer(100);
 
     $buffer->write('[{"id":1}]');
 
-    expect($buffer->read())->toBe('{"records":[{"id":1}]}');
-    expect($buffer->read())->toBe('{"records":[]}');
+    expect($buffer->pull())->toBe('{"records":[{"id":1}]}');
+    expect($buffer->pull())->toBe('{"records":[]}');
 });

@@ -55,7 +55,7 @@ class Ingest
         $this->buffer->write($payload);
 
         if ($this->buffer->reachedThreshold()) {
-            $records = $this->buffer->read();
+            $records = $this->buffer->pull();
 
             if ($this->sendBufferAfterDelayTimer !== null) {
                 $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
@@ -66,7 +66,7 @@ class Ingest
             $this->ingest($records);
         } elseif ($this->buffer->isNotEmpty()) {
             $this->sendBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, function (): void {
-                $records = $this->buffer->read();
+                $records = $this->buffer->pull();
 
                 $this->sendBufferAfterDelayTimer = null;
 

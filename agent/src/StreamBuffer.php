@@ -34,7 +34,7 @@ class StreamBuffer
     /**
      * @return non-empty-string
      */
-    public function read(): string
+    public function pull(): string
     {
         $payload = '{"records":['.$this->buffer.']}';
 

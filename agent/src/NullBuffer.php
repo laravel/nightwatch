@@ -17,7 +17,7 @@ class NullBuffer
     /**
      * @return non-empty-string
      */
-    public function read(): string
+    public function pull(): string
     {
         return '{"records":[]}';
     }

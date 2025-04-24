@@ -46,7 +46,7 @@ class RecordsBuffer implements Countable
         return count($this->records);
     }
 
-    public function read(): string
+    public function pull(): string
     {
         if ($this->records === []) {
             return '[]';
