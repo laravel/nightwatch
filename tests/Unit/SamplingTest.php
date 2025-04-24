@@ -9,6 +9,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
@@ -202,7 +203,7 @@ it('samples outgoing requests', function () {
     nightwatch()->configureRequestSampling();
 
     Http::fake([
-        'https://nightwatch.laravel.com' => 200,
+        'https://nightwatch.laravel.com' => Http::response(status: 200),
     ]);
 
     for ($i = 0; $i < 10; $i++) {
