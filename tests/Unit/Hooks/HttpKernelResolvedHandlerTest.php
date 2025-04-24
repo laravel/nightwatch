@@ -96,12 +96,12 @@ it('gracefully handles exceptions when determining whether to sample the request
     });
     $kernel = app(HttpKernel::class);
 
-    $this->assertTrue(nightwatch()->shouldSample);
+    expect(nightwatch()->shouldSample)->toBeTrue();
 
     $handler = new HttpKernelResolvedHandler(nightwatch());
     $handler($kernel, app());
 
-    $this->assertFalse(nightwatch()->shouldSample);
-    $this->assertCount(1, $exceptions);
-    $this->assertSame($exceptions[0]->getMessage(), 'Undefined array key "requests"');
+    expect(nightwatch()->shouldSample)->toBeFalse();
+    expect($exceptions)->toHaveCount(1);
+    expect($exceptions[0]->getMessage())->toBe('Undefined array key "requests"');
 });

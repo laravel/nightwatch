@@ -36,7 +36,7 @@ it('can configure request sampling', function () {
         }
     }
 
-    $this->assertSame(0, $sampled);
+    expect($sampled)->toBe(0);
 
     nightwatch()->sampling['requests'] = 0.25;
     $sampled = 0;
@@ -48,7 +48,7 @@ it('can configure request sampling', function () {
         }
     }
 
-    $this->assertEqualsWithDelta(250, $sampled, 50);
+    expect($sampled)->toEqualWithDelta(250, 50);
 
     nightwatch()->sampling['requests'] = 0.5;
     $sampled = 0;
@@ -60,7 +60,7 @@ it('can configure request sampling', function () {
         }
     }
 
-    $this->assertEqualsWithDelta(500, $sampled, 50);
+    expect($sampled)->toEqualWithDelta(500, 50);
 
     nightwatch()->sampling['requests'] = 1.0;
     $sampled = 0;
@@ -72,7 +72,7 @@ it('can configure request sampling', function () {
         }
     }
 
-    $this->assertSame(1000, $sampled);
+    expect($sampled)->toBe(1000);
 });
 
 it('samples queries', function () {
@@ -389,7 +389,7 @@ it('samples ingest', function () {
     ));
     nightwatch()->ingest();
 
-    $this->assertCount(1, nightwatch()->state->records);
+    expect(nightwatch()->state->records)->toHaveCount(1);
     $ingest->assertWrittenTimes(0);
 
     nightwatch()->sampling['requests'] = 1;
@@ -402,7 +402,7 @@ it('samples ingest', function () {
     ));
     nightwatch()->ingest();
 
-    $this->assertCount(0, nightwatch()->state->records);
+    expect(nightwatch()->state->records)->toHaveCount(0);
     $ingest->assertWrittenTimes(1);
 });
 
@@ -416,5 +416,5 @@ it('discards records captured before sampling rate decided', function () {
 
     get('test')->assertOk();
 
-    $this->assertSame(0, $count);
+    expect($count)->toBe(0);
 });
