@@ -356,7 +356,7 @@ it('does not attach route middleware when not sampling', function ($terminatingE
 ]);
 
 it('samples capuring request preview', function () {
-    $ingest = fakeIngest();
+    fakeIngest();
     nightwatch()->sampling['requests'] = 0.0;
     nightwatch()->configureRequestSampling();
     Route::get('/test', function () {
