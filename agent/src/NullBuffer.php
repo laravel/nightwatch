@@ -9,7 +9,7 @@ class NullBuffer
         //
     }
 
-    public function wantsFlushing(): bool
+    public function reachedThreshold(): bool
     {
         return false;
     }
@@ -17,7 +17,7 @@ class NullBuffer
     /**
      * @return non-empty-string
      */
-    public function flush(): string
+    public function pull(): string
     {
         return '{"records":[]}';
     }

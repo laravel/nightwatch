@@ -26,7 +26,7 @@ final class QueuedJobListener
     public function __invoke(JobQueueing|JobQueued $event): void
     {
         try {
-            $this->nightwatch->sensor->queuedJob($event);
+            $this->nightwatch->queuedJob($event);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

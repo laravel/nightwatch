@@ -93,11 +93,6 @@ final class FakeIngest implements LocalIngest
         return Arr::last($this->writes);
     }
 
-    public function flush(): void
-    {
-        $this->writes = [];
-    }
-
     private function decodedWrite(int $index): mixed
     {
         return json_decode($this->writes[$index], true, flags: JSON_THROW_ON_ERROR);

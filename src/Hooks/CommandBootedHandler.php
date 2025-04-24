@@ -25,7 +25,7 @@ final class CommandBootedHandler
     public function __invoke(Application $app): void
     {
         try {
-            $this->nightwatch->sensor->stage(ExecutionStage::Action);
+            $this->nightwatch->stage(ExecutionStage::Action);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

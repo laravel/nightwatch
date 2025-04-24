@@ -89,6 +89,9 @@ final class NightwatchServiceProvider extends ServiceProvider
     /**
      * @var array{
      *     enabled?: bool,
+     *     sampling: array{
+     *        requests: float,
+     *     },
      *     token?: string,
      *     deployment?: string,
      *     server?: string,
@@ -182,7 +185,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(RouteMiddleware::class, fn () => new RouteMiddleware($this->core)); // @phpstan-ignore argument.type
 
-        $this->app->scoped(GlobalMiddleware::class, fn () => new GlobalMiddleware($this->core));
+        $this->app->scoped(GlobalMiddleware::class, fn () => new GlobalMiddleware($this->core)); // @phpstan-ignore argument.type
     }
 
     private function registerAgentCommand(): void
@@ -216,7 +219,24 @@ final class NightwatchServiceProvider extends ServiceProvider
             state: $state,
             clock: $clock,
             enabled: ($this->nightwatchConfig['enabled'] ?? true),
+            sampling: [
+                'requests' => $this->configuredSampleRate('requests'),
+            ],
         ));
+    }
+
+    /**
+     * @param  'requests'  $key
+     */
+    private function configuredSampleRate($key): float
+    {
+        $value = (float) ($this->nightwatchConfig['sampling'][$key] ?? 1.0);
+
+        if ($value < 0 || $value > 1) {
+            return 0.0;
+        }
+
+        return $value;
     }
 
     private function handleAndClearRegisterException(): void
@@ -335,7 +355,7 @@ final class NightwatchServiceProvider extends ServiceProvider
          *
          * TODO handle this on the queue
          */
-        $events->listen(Logout::class, (new LogoutListener($core))(...)); // @phpstan-ignore argument.type
+        $events->listen(Logout::class, (new LogoutListener($core))(...));
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware

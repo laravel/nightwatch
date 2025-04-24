@@ -27,7 +27,7 @@ final class CommandFinishedListener
     {
         try {
             if ($event->command === $this->nightwatch->state->name && ! Compatibility::$terminatingEventExists) {
-                $this->nightwatch->sensor->stage(ExecutionStage::Terminating);
+                $this->nightwatch->stage(ExecutionStage::Terminating);
             }
         } catch (Throwable $e) {
             $this->nightwatch->report($e);

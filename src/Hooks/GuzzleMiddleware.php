@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
+use GuzzleHttp\Promise\PromiseInterface;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -28,7 +29,11 @@ final class GuzzleMiddleware
      */
     public function __invoke(callable $handler): callable
     {
-        return function (RequestInterface $request, array $options) use ($handler) {
+        if (! $this->nightwatch->shouldSample) {
+            return $handler;
+        }
+
+        return function (RequestInterface $request, array $options) use ($handler): PromiseInterface {
             try {
                 $startMicrotime = $this->nightwatch->clock->microtime();
             } catch (Throwable $e) {
@@ -37,11 +42,11 @@ final class GuzzleMiddleware
                 return $handler($request, $options);
             }
 
-            return $handler($request, $options)->then(function (ResponseInterface $response) use ($request, $startMicrotime) {
+            return $handler($request, $options)->then(function (ResponseInterface $response) use ($request, $startMicrotime): ResponseInterface {
                 try {
                     $endMicrotime = $this->nightwatch->clock->microtime();
 
-                    $this->nightwatch->sensor->outgoingRequest(
+                    $this->nightwatch->outgoingRequest(
                         $startMicrotime, $endMicrotime,
                         $request, $response,
                     );
