@@ -121,7 +121,7 @@ it('gracefully handles response size for a streamed file that is deleted after s
     ob_end_clean();
 
     nightwatch()->sensor->request($request, $response);
-    $ingest->write(nightwatch()->state->records->flush());
+    $ingest->write(nightwatch()->state->records->pull());
 
     $ingest->assertLatestWrite('request:0.response_size', 0);
 });
@@ -162,7 +162,7 @@ it('uses the content-length header as the response size when present on a stream
     ob_end_clean();
 
     nightwatch()->sensor->request($request, $response);
-    $ingest->write(nightwatch()->state->records->flush());
+    $ingest->write(nightwatch()->state->records->pull());
 
     $ingest->assertLatestWrite('request:0.response_size', 17);
 });
@@ -412,7 +412,7 @@ it('captures bootstrap execution stage', function () {
     Route::get('/users', fn () => []);
 
     // Simulating boot time.
-    nightwatch()->sensor->stage(ExecutionStage::Bootstrap);
+    nightwatch()->stage(ExecutionStage::Bootstrap);
     syncClock(now()->addMicroseconds(5));
     $response = get('/users');
 

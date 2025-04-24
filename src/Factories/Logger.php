@@ -11,7 +11,6 @@ use Laravel\Nightwatch\State\RequestState;
 use Monolog\Logger as Monolog;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * @internal
@@ -32,10 +31,6 @@ final class Logger
      */
     public function __invoke(array $config): LoggerInterface
     {
-        if (! $this->nightwatch->enabled) {
-            return new NullLogger;
-        }
-
         return new Monolog(
             name: 'nightwatch',
             handlers: [

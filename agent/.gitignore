@@ -2,7 +2,8 @@
 /.env.testing
 /.phpunit.result.cache
 /box.json
+/node_modules
 /phpstan.neon
 /phpunit.xml
-/vendor
 /tests/test-payload
+/vendor

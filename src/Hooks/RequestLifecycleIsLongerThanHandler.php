@@ -27,19 +27,19 @@ final class RequestLifecycleIsLongerThanHandler
     public function __invoke(Carbon $startedAt, Request $request, Response $response): void
     {
         try {
-            $this->nightwatch->sensor->stage(ExecutionStage::End);
+            $this->nightwatch->stage(ExecutionStage::End);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
 
         try {
-            $this->nightwatch->sensor->user();
+            $this->nightwatch->captureUser();
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
 
         try {
-            $this->nightwatch->sensor->request($request, $response);
+            $this->nightwatch->request($request, $response);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

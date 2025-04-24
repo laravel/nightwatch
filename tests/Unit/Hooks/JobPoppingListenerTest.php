@@ -9,7 +9,7 @@ it('gracefully handles exceptions', function () {
     {
         public bool $thrownInFlush = false;
 
-        public function flush(): string
+        public function flush(): void
         {
             $this->thrownInFlush = true;
 

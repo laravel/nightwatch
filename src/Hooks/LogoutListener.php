@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Auth\Events\Logout;
 use Laravel\Nightwatch\Core;
-use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
@@ -14,7 +13,7 @@ use Throwable;
 final class LogoutListener
 {
     /**
-     * @param  Core<RequestState|CommandState>  $nightwatch
+     * @param  Core<RequestState>  $nightwatch
      */
     public function __construct(
         private Core $nightwatch,
@@ -26,7 +25,7 @@ final class LogoutListener
     {
         try {
             if ($event->user !== null) {
-                $this->nightwatch->state->user->remember($event->user);
+                $this->nightwatch->remember($event->user);
             }
         } catch (Throwable $e) {
             $this->nightwatch->report($e);

@@ -28,6 +28,14 @@ final class HttpKernelResolvedHandler
     public function __invoke(KernelContract $kernel, Application $app): void
     {
         try {
+            $this->nightwatch->configureRequestSampling();
+        } catch (Throwable $e) {
+            $this->nightwatch->shouldSample = false;
+
+            Nightwatch::unrecoverableExceptionOccurred($e);
+        }
+
+        try {
             if (! $kernel instanceof Kernel) {
                 return;
             }

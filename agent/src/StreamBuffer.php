@@ -26,7 +26,7 @@ class StreamBuffer
         }
     }
 
-    public function wantsFlushing(): bool
+    public function reachedThreshold(): bool
     {
         return strlen($this->buffer) >= $this->threshold;
     }
@@ -34,7 +34,7 @@ class StreamBuffer
     /**
      * @return non-empty-string
      */
-    public function flush(): string
+    public function pull(): string
     {
         $payload = '{"records":['.$this->buffer.']}';
 
@@ -46,5 +46,10 @@ class StreamBuffer
     public function isNotEmpty(): bool
     {
         return $this->buffer !== '';
+    }
+
+    public function flush(): void
+    {
+        $this->buffer = '';
     }
 }

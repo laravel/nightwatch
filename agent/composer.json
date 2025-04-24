@@ -60,6 +60,14 @@
         ],
         "test": [
             "@php vendor/bin/pest"
+        ],
+        "build": [
+            "box compile",
+            "box info:signature build/agent.phar > build/signature.txt"
+        ],
+        "watch": [
+            "npm ci",
+            "node watch.js"
         ]
     },
     "config": {
