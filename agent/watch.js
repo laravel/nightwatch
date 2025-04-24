@@ -8,8 +8,9 @@ const watching = chokidar.watch('./src', {
 
 watching.on('all', (event, path) => {
     console.log(`${event}: ${path}`)
-    console.log('> box compile')
+    console.log('> composer build')
     console.log(execSync('composer build').toString('utf8'))
 })
 
+console.log('> composer build')
 console.log(execSync('composer build').toString('utf8'))
