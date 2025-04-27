@@ -67,7 +67,6 @@ use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 use function defined;
-use function is_string;
 use function microtime;
 
 /**
@@ -456,7 +455,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             return new CommandState(
                 timestamp: $this->timestamp,
                 trace: new LazyValue(static function () {
-                    return Compatibility::getHiddenContext('nightwatch_trace_id', function () {
+                    return Compatibility::getHiddenContext('nightwatch_trace_id', static function () {
                         $trace = (string) Str::uuid();
 
                         Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
