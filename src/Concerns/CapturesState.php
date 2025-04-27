@@ -201,8 +201,12 @@ trait CapturesState
         $this->sensor->request($request, $response);
     }
 
-    public function jobAttempt(JobAttempted $event)
+    public function jobAttempt(JobAttempted $event): void
     {
+        if (! $this->shouldSample) {
+            return;
+        }
+
         $this->sensor->jobAttempt($event);
     }
 

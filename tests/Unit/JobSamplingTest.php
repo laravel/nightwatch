@@ -11,7 +11,7 @@ beforeAll(function () {
     forceCommandExecutionState();
 });
 
-it('samples jobs', function () {
+it('samples job attempts', function () {
     Config::set('queue.default', 'database');
     $ingest = fakeIngest();
     Compatibility::addHiddenContext('nightwatch_should_sample', false);
@@ -27,6 +27,7 @@ it('samples jobs', function () {
     ]);
 
     $ingest->assertWrittenTimes(0);
+    expect(nightwatch()->state->records)->toHaveCount(0);
 
     Compatibility::addHiddenContext('nightwatch_should_sample', true);
 
@@ -41,4 +42,9 @@ it('samples jobs', function () {
     ]);
 
     $ingest->assertWrittenTimes(10);
+
+    expect(nightwatch()->state->records)->toHaveCount(1);
+    $ingest->write(nightwatch()->state->records->pull());
+    $ingest->assertLatestWrite('cache-event:0.key', 'illuminate:queue:restart');
+    $ingest->assertLatestWrite('job-attempt:*', []);
 });
