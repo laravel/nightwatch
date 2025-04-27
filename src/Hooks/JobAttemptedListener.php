@@ -7,8 +7,6 @@ use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
-use function dump;
-
 /**
  * @internal
  */
@@ -27,12 +25,9 @@ final class JobAttemptedListener
     {
         try {
             $this->nightwatch->jobAttempt($event);
-            dump('jobAttempt');
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
-
-        dump('ingest');
 
         $this->nightwatch->ingest();
     }
