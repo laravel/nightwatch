@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\ArgvInput;
 
 use function implode;
 use function method_exists;
+use function value;
 use function version_compare;
 
 final class Compatibility
@@ -123,15 +124,15 @@ final class Compatibility
      * @see https://github.com/laravel/framework/pull/49730
      * @see https://github.com/laravel/framework/releases/tag/v11.0.0
      */
-    public static function getHiddenContext(string $key): mixed
+    public static function getHiddenContext(string $key, mixed $default = null): mixed
     {
         if (! self::$contextExists) {
-            return self::$context[$key] ?? null;
+            return self::$context[$key] ?? value($default);
         }
 
         /** @var Context */
         $context = self::$app->make(Context::class);
 
-        return $context->getHidden($key);
+        return $context->getHidden($key, $default);
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -417,4 +418,20 @@ it('discards records captured before sampling rate decided', function () {
     get('test')->assertOk();
 
     expect($count)->toBe(0);
+});
+
+it('adds context for job sampling', function () {
+    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->configureRequestSampling();
+
+    $shouldSample = Compatibility::getHiddenContext('nightwatch_should_sample');
+
+    expect($shouldSample)->toBe(false);
+
+    nightwatch()->sampling['requests'] = 1;
+    nightwatch()->configureRequestSampling();
+
+    $shouldSample = Compatibility::getHiddenContext('nightwatch_should_sample');
+
+    expect($shouldSample)->toBe(true);
 });

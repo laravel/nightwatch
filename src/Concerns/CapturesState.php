@@ -51,6 +51,8 @@ trait CapturesState
     {
         $this->shouldSample = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $this->sampling['requests'];
 
+        Compatibility::addHiddenContext('nightwatch_should_sample', $this->shouldSample);
+
         if (! $this->shouldSample) {
             $this->state->records->flush();
         }
