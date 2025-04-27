@@ -24,7 +24,7 @@ final class JobAttemptedListener
     public function __invoke(JobAttempted $event): void
     {
         try {
-            $this->nightwatch->sensor->jobAttempt($event);
+            $this->nightwatch->jobAttempt($event);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

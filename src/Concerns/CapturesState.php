@@ -10,6 +10,7 @@ use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
+use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Routing\Route;
@@ -196,6 +197,11 @@ trait CapturesState
         }
 
         $this->sensor->request($request, $response);
+    }
+
+    public function jobAttempt(JobAttempted $event)
+    {
+        $this->sensor->jobAttempt($event);
     }
 
     /**
