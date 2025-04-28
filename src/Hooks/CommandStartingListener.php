@@ -50,16 +50,10 @@ final class CommandStartingListener
             match ($event->command) {
                 'queue:work', 'queue:listen', 'horizon:work' => $this->registerJobHooks(),
                 'schedule:run', 'schedule:work' => $this->registerScheduledTaskHooks(),
-                default => $this->registerCommandHooks(),
+                default => $this->registerCommandHooks($event),
             };
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
-        }
-
-        try {
-            $this->nightwatch->prepareForCommand($event->command);
-        } catch (Throwable $e) {
-            $this->nightwatch->report($e);
         }
     }
 
@@ -106,7 +100,7 @@ final class CommandStartingListener
         ], (new ScheduledTaskListener($this->nightwatch))(...));
     }
 
-    private function registerCommandHooks(): void
+    private function registerCommandHooks(CommandStarting $event): void
     {
         if (! $this->kernel instanceof ConsoleKernel) {
             return;
@@ -117,8 +111,10 @@ final class CommandStartingListener
         } catch (Throwable $e) {
             $this->nightwatch->shouldSample = false;
 
-            Nightwatch::unrecoverableExceptionOccurred($e);
+            throw $e;
         }
+
+        $this->nightwatch->prepareForCommand($event->command);
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
