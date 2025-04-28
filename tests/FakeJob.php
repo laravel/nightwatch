@@ -9,4 +9,3 @@ class FakeJob extends JobsFakeJob implements JobContract
 {
     //
 }
-
