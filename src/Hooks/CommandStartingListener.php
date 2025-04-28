@@ -25,6 +25,8 @@ use Throwable;
  */
 final class CommandStartingListener
 {
+    private bool $hasRun = false;
+
     /**
      * @param  Core<CommandState>  $nightwatch
      */
@@ -38,15 +40,11 @@ final class CommandStartingListener
 
     public function __invoke(CommandStarting $event): void
     {
-        try {
-            if ($this->nightwatch->state->name === null) {
-                $this->nightwatch->prepareForCommand($event->command);
-            } else {
-                return;
-            }
-        } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+        if ($this->hasRun) {
+            return;
         }
+
+        $this->hasRun = true;
 
         try {
             match ($event->command) {
@@ -56,6 +54,12 @@ final class CommandStartingListener
             };
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
+        }
+
+        try {
+            $this->nightwatch->prepareForCommand($event->command);
+        } catch (Throwable $e) {
+            $this->nightwatch->report($e);
         }
     }
 
