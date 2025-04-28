@@ -1,6 +1,8 @@
 /.box_dump
 /.env.testing
 /.phpunit.result.cache
+/.pint.cache
+/.pint.ci.cache
 /box.json
 /node_modules
 /phpstan.neon
