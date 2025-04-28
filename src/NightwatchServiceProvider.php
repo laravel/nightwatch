@@ -90,6 +90,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     enabled?: bool,
      *     sampling: array{
      *        requests: float,
+     *        commands: float,
      *     },
      *     token?: string,
      *     deployment?: string,
@@ -220,12 +221,13 @@ final class NightwatchServiceProvider extends ServiceProvider
             enabled: ($this->nightwatchConfig['enabled'] ?? true),
             sampling: [
                 'requests' => $this->configuredSampleRate('requests'),
+                'commands' => $this->configuredSampleRate('commands'),
             ],
         ));
     }
 
     /**
-     * @param  'requests'  $key
+     * @param  'requests'|'commands'  $key
      */
     private function configuredSampleRate($key): float
     {

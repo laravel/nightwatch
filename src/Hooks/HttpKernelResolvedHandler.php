@@ -27,8 +27,12 @@ final class HttpKernelResolvedHandler
 
     public function __invoke(KernelContract $kernel, Application $app): void
     {
+        if (! $kernel instanceof Kernel) {
+            return;
+        }
+
         try {
-            $this->nightwatch->configureRequestSampling();
+            $this->nightwatch->configureSampling('requests');
         } catch (Throwable $e) {
             $this->nightwatch->shouldSample = false;
 
@@ -36,10 +40,6 @@ final class HttpKernelResolvedHandler
         }
 
         try {
-            if (! $kernel instanceof Kernel) {
-                return;
-            }
-
             /**
              * @see \Laravel\Nightwatch\ExecutionStage::End
              * @see \Laravel\Nightwatch\Records\Request
