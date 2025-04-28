@@ -267,7 +267,7 @@ trait CapturesState
      */
     public function configureForJobs(): void
     {
-        $this->nightwatch->source = 'job';
+        $this->state->source = 'job';
     }
 
     /**
