@@ -32,7 +32,7 @@ final class ScheduledTaskListener
         }
 
         try {
-            $this->nightwatch->sensor->scheduledTask($event);
+            $this->nightwatch->scheduledTask($event);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

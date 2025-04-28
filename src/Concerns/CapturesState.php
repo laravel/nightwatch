@@ -3,6 +3,9 @@
 namespace Laravel\Nightwatch\Concerns;
 
 use Illuminate\Cache\Events\CacheEvent;
+use Illuminate\Console\Events\ScheduledTaskFailed;
+use Illuminate\Console\Events\ScheduledTaskFinished;
+use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Database\Events\QueryExecuted;
@@ -319,6 +322,14 @@ trait CapturesState
         $this->state->trace = $trace;
         $this->state->setId($trace);
         $this->state->timestamp = $this->clock->microtime();
+    }
+
+    /**
+     * @internal
+     */
+    public function scheduledTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
+    {
+        $this->sensor->scheduledTask($event);
     }
 
     /**
