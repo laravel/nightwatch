@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\MyJob;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Nightwatch\Compatibility;
@@ -47,4 +48,4 @@ it('samples job attempts', function () {
     $ingest->write(nightwatch()->state->records->pull());
     $ingest->assertLatestWrite('cache-event:0.key', 'illuminate:queue:restart');
     $ingest->assertLatestWrite('job-attempt:*', []);
-});
+})->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');
