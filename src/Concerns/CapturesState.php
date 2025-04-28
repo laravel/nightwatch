@@ -38,6 +38,9 @@ use function debug_backtrace;
 use function memory_reset_peak_usage;
 use function random_int;
 
+/**
+ * @mixin Core
+ */
 trait CapturesState
 {
     /**
