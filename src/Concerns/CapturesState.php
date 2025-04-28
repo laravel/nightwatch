@@ -273,21 +273,21 @@ trait CapturesState
     /**
      * @internal
      */
+    public function resetStateForNextJob(): void
+    {
+        $this->state->reset();
+        memory_reset_peak_usage();
+    }
+
+    /**
+     * @internal
+     */
     public function prepareForJob(Job $job): void
     {
         $this->state->timestamp = $this->clock->microtime();
         $this->state->setId((string) Str::uuid());
         $this->state->executionPreview = Str::tinyText($job->resolveName());
         $this->shouldSample = (bool) Compatibility::getHiddenContext('nightwatch_should_sample', true);
-    }
-
-    /**
-     * @internal
-     */
-    public function resetStateForNextJob(): void
-    {
-        $this->state->reset();
-        memory_reset_peak_usage();
     }
 
     /**
