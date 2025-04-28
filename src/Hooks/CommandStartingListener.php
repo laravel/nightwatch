@@ -90,7 +90,7 @@ final class CommandStartingListener
 
     private function registerScheduledTaskHooks(): void
     {
-        $this->nightwatch->state->source = 'schedule';
+        $this->nightwatch->configureForScheduledTasks();
 
         $this->events->listen(ScheduledTaskStarting::class, (new ScheduledTaskStartingListener($this->nightwatch))(...));
 

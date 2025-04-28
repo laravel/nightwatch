@@ -296,6 +296,14 @@ trait CapturesState
     /**
      * @internal
      */
+    public function configureForScheduledTasks(): void
+    {
+        $this->state->source = 'schedule';
+    }
+
+    /**
+     * @internal
+     */
     public function shouldCaptureLogs(): bool
     {
         return $this->shouldSample && $this->enabled;
