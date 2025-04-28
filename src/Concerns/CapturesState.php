@@ -27,6 +27,7 @@ use Laravel\Nightwatch\Types\Str;
 use Monolog\LogRecord;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 use WeakMap;
@@ -317,6 +318,14 @@ trait CapturesState
             $this->state->name = $name;
             $this->state->executionPreview = Str::tinyText($name);
         }
+    }
+
+    /**
+     * @internal
+     */
+    public function command(InputInterface $input, int $status): void
+    {
+        $this->sensor->command($input, $status);
     }
 
     /**
