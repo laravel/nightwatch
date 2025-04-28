@@ -27,7 +27,7 @@ final class Core
 
     /**
      * @param  TState  $state
-     * @param  array{ requests: float }  $sampling
+     * @param  array{ requests: float, commands: float }  $sampling
      */
     public function __construct(
         public LocalIngest $ingest,

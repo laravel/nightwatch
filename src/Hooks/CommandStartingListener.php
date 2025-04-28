@@ -110,6 +110,14 @@ final class CommandStartingListener
             return;
         }
 
+        try {
+            $this->nightwatch->configureSampling('commands');
+        } catch (Throwable $e) {
+            $this->nightwatch->shouldSample = false;
+
+            Nightwatch::unrecoverableExceptionOccurred($e);
+        }
+
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
          */

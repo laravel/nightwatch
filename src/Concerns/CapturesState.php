@@ -48,10 +48,12 @@ trait CapturesState
 
     /**
      * @internal
+     *
+     * @param  'requests'|'commands'  $by
      */
-    public function configureRequestSampling(): void
+    public function configureSampling(string $by): void
     {
-        $this->shouldSample = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $this->sampling['requests'];
+        $this->shouldSample = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $this->sampling[$by];
 
         Compatibility::addHiddenContext('nightwatch_should_sample', $this->shouldSample);
 

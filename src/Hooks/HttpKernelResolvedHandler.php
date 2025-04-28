@@ -28,7 +28,7 @@ final class HttpKernelResolvedHandler
     public function __invoke(KernelContract $kernel, Application $app): void
     {
         try {
-            $this->nightwatch->configureRequestSampling();
+            $this->nightwatch->configureSampling('requests');
         } catch (Throwable $e) {
             $this->nightwatch->shouldSample = false;
 
