@@ -262,6 +262,9 @@ trait CapturesState
         $this->routesWithMiddlewareRegistered[$route] = true;
     }
 
+    /**
+     * @internal
+     */
     public function configureForJobs(): void
     {
         $this->nightwatch->source = 'job';
@@ -278,7 +281,10 @@ trait CapturesState
         $this->shouldSample = (bool) Compatibility::getHiddenContext('nightwatch_should_sample', true);
     }
 
-    public function resetJobState(): void
+    /**
+     * @internal
+     */
+    public function resetStateForNextJob(): void
     {
         $this->state->reset();
         memory_reset_peak_usage();
