@@ -295,11 +295,13 @@ trait CapturesState
     {
         $this->shouldSample = (bool) Compatibility::getHiddenContext('nightwatch_should_sample', true);
 
-        if ($this->shouldSample) {
-            $this->state->timestamp = $this->clock->microtime();
-            $this->state->setId((string) Str::uuid());
-            $this->state->executionPreview = Str::tinyText($job->resolveName());
+        if (! $this->shouldSample) {
+            return;
         }
+
+        $this->state->timestamp = $this->clock->microtime();
+        $this->state->setId((string) Str::uuid());
+        $this->state->executionPreview = Str::tinyText($job->resolveName());
     }
 
     /**
@@ -317,10 +319,12 @@ trait CapturesState
     public function prepareForCommand(string $name): void
     {
         /** @var Core<CommandState> $this */
-        if ($this->shouldSample) {
-            $this->state->name = $name;
-            $this->state->executionPreview = Str::tinyText($name);
+        if (! $this->shouldSample) {
+            return;
         }
+
+        $this->state->name = $name;
+        $this->state->executionPreview = Str::tinyText($name);
     }
 
     /**
