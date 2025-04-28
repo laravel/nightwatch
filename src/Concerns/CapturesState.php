@@ -328,6 +328,10 @@ trait CapturesState
      */
     public function command(InputInterface $input, int $status): void
     {
+        if (! $this->shouldSample) {
+            return;
+        }
+
         $this->sensor->command($input, $status);
     }
 

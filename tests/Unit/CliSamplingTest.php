@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Compatibility;
+use Symfony\Component\Console\Input\StringInput;
 use Tests\FakeJob;
 
 uses(WithConsoleEvents::class);
@@ -156,4 +157,34 @@ it('samples preparing for command', function () {
 
     expect(nightwatch()->state->name)->toBe('current');
     expect(nightwatch()->state->executionPreview)->toBe('current');
+});
+
+it('samples commands', function () {
+    Artisan::command('app:build', function () {
+        return 0;
+    });
+    nightwatch()->sampling['commands'] = 0;
+    nightwatch()->configureSampling('commands');
+
+    // bootstrap the test to ensure everything needed is in place, such as artisan
+    Artisan::handle($input = new StringInput('app:build'));
+
+    for ($i = 0; $i < 10; $i++) {
+        nightwatch()->prepareForCommand('app:build');
+        nightwatch()->command($input, 0);
+    }
+
+    expect(json_decode(nightwatch()->state->records->pull()))->toBe([]);
+
+    nightwatch()->sampling['commands'] = 1.0;
+    nightwatch()->configureSampling('commands');
+
+    for ($i = 0; $i < 10; $i++) {
+        nightwatch()->prepareForCommand('app:build');
+        nightwatch()->command($input, 0);
+    }
+
+    $commands = collect(json_decode(nightwatch()->state->records->pull()));
+    expect($commands)->toHaveCount(10);
+    expect($commands->pluck('name')->every(fn ($name) => $name === 'app:build'))->toBeTrue();
 });
