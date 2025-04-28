@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Concerns;
 
 use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Queue\Job;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSending;
@@ -255,6 +256,14 @@ trait CapturesState
         $route->action['middleware'] = $middleware;
 
         $this->routesWithMiddlewareRegistered[$route] = true;
+    }
+
+    public function prepareForJob(Job $job): void
+    {
+        $this->state->timestamp = $this->clock->microtime();
+        $this->state->setId((string) Str::uuid());
+        $this->state->executionPreview = Str::tinyText($job->resolveName());
+        $this->shouldSample = (bool) Compatibility::getHiddenContext('nightwatch_should_sample', true);
     }
 
     /**
