@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Concerns;
 
 use Illuminate\Cache\Events\CacheEvent;
+use Illuminate\Console\Application as Artisan;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Database\Events\QueryExecuted;
@@ -16,14 +17,17 @@ use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
+use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
 use Monolog\LogRecord;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 use WeakMap;
@@ -34,6 +38,9 @@ use function debug_backtrace;
 use function memory_reset_peak_usage;
 use function random_int;
 
+/**
+ * @mixin Core
+ */
 trait CapturesState
 {
     /**
@@ -48,10 +55,12 @@ trait CapturesState
 
     /**
      * @internal
+     *
+     * @param  'requests'|'commands'  $by
      */
-    public function configureRequestSampling(): void
+    public function configureSampling(string $by): void
     {
-        $this->shouldSample = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $this->sampling['requests'];
+        $this->shouldSample = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $this->sampling[$by];
 
         Compatibility::addHiddenContext('nightwatch_should_sample', $this->shouldSample);
 
@@ -286,11 +295,48 @@ trait CapturesState
     {
         $this->shouldSample = (bool) Compatibility::getHiddenContext('nightwatch_should_sample', true);
 
-        if ($this->shouldSample) {
-            $this->state->timestamp = $this->clock->microtime();
-            $this->state->setId((string) Str::uuid());
-            $this->state->executionPreview = Str::tinyText($job->resolveName());
+        if (! $this->shouldSample) {
+            return;
         }
+
+        $this->state->timestamp = $this->clock->microtime();
+        $this->state->setId((string) Str::uuid());
+        $this->state->executionPreview = Str::tinyText($job->resolveName());
+    }
+
+    /**
+     * @internal
+     */
+    public function captureArtisan(Artisan $artisan): void
+    {
+        /** @var Core<CommandState> $this */
+        $this->state->artisan = $artisan;
+    }
+
+    /**
+     * @internal
+     */
+    public function prepareForCommand(string $name): void
+    {
+        /** @var Core<CommandState> $this */
+        if (! $this->shouldSample) {
+            return;
+        }
+
+        $this->state->name = $name;
+        $this->state->executionPreview = Str::tinyText($name);
+    }
+
+    /**
+     * @internal
+     */
+    public function command(InputInterface $input, int $status): void
+    {
+        if (! $this->shouldSample) {
+            return;
+        }
+
+        $this->sensor->command($input, $status);
     }
 
     /**

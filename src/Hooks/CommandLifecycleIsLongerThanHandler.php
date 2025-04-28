@@ -32,7 +32,7 @@ final class CommandLifecycleIsLongerThanHandler
         }
 
         try {
-            $this->nightwatch->sensor->command($input, $status);
+            $this->nightwatch->command($input, $status);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
