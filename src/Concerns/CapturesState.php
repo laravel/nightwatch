@@ -304,6 +304,26 @@ trait CapturesState
     /**
      * @internal
      */
+    public function prepareForScheduledTask(): void
+    {
+        /*
+         * Reset state for the current scheduled task execution.
+         * Since `schedule:run` executes multiple tasks sequentially,
+         * we need to clear previous task data to avoid metric pollution.
+         */
+        $this->state->reset();
+        memory_reset_peak_usage();
+
+        $trace = (string) Str::uuid();
+        Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
+        $this->state->trace = $trace;
+        $this->state->setId($trace);
+        $this->state->timestamp = $this->clock->microtime();
+    }
+
+    /**
+     * @internal
+     */
     public function shouldCaptureLogs(): bool
     {
         return $this->shouldSample && $this->enabled;
