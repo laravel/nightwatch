@@ -2,9 +2,9 @@
 
 use Illuminate\Foundation\Application;
 use Illuminate\Queue\Events\JobExceptionOccurred;
-use Illuminate\Queue\Jobs\FakeJob;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\JobExceptionOccurredListener;
+use Tests\FakeJob;
 
 it('gracefully handles exceptions', function () {
     $exceptions = [];

@@ -5,6 +5,7 @@ namespace Tests;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -29,6 +30,7 @@ abstract class TestCase extends OrchestraTestCase
         $this->core->state->reset();
         $this->core->clock->microtimeResolver = fn () => (float) now()->format('U.u');
         Nightwatch::handleUnrecoverableExceptionsUsing(fn ($e) => throw $e);
+        Compatibility::$context = [];
 
         Http::preventStrayRequests();
     }

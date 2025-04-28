@@ -202,6 +202,9 @@ trait CapturesState
         $this->sensor->request($request, $response);
     }
 
+    /**
+     * @internal
+     */
     public function jobAttempt(JobAttempted $event): void
     {
         if (! $this->shouldSample) {
@@ -258,6 +261,9 @@ trait CapturesState
         $this->routesWithMiddlewareRegistered[$route] = true;
     }
 
+    /**
+     * @internal
+     */
     public function prepareForJob(Job $job): void
     {
         $this->state->timestamp = $this->clock->microtime();
