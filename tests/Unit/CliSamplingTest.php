@@ -88,3 +88,72 @@ it('preparing for next job', function () {
     expect(nightwatch()->state->executionPreview)->toBe('current');
     expect(nightwatch()->state->timestamp)->toBe(5.5);
 })->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');
+
+it('can configure command sampling', function () {
+    nightwatch()->sampling['commands'] = 0;
+    $sampled = 0;
+
+    for ($i = 0; $i < 1000; $i++) {
+        nightwatch()->configureSampling('commands');
+        if (nightwatch()->shouldSample) {
+            $sampled++;
+        }
+    }
+
+    expect($sampled)->toBe(0);
+
+    nightwatch()->sampling['commands'] = 0.25;
+    $sampled = 0;
+
+    for ($i = 0; $i < 1000; $i++) {
+        nightwatch()->configureSampling('commands');
+        if (nightwatch()->shouldSample) {
+            $sampled++;
+        }
+    }
+
+    expect($sampled)->toEqualWithDelta(250, 50);
+
+    nightwatch()->sampling['commands'] = 0.5;
+    $sampled = 0;
+
+    for ($i = 0; $i < 1000; $i++) {
+        nightwatch()->configureSampling('commands');
+        if (nightwatch()->shouldSample) {
+            $sampled++;
+        }
+    }
+
+    expect($sampled)->toEqualWithDelta(500, 50);
+
+    nightwatch()->sampling['commands'] = 1.0;
+    $sampled = 0;
+
+    for ($i = 0; $i < 1000; $i++) {
+        nightwatch()->configureSampling('commands');
+        if (nightwatch()->shouldSample) {
+            $sampled++;
+        }
+    }
+
+    expect($sampled)->toBe(1000);
+});
+
+it('samples preparing for command', function () {
+    nightwatch()->shouldSample = false;
+
+    nightwatch()->state->name = 'previous';
+    nightwatch()->state->executionPreview = 'previous';
+
+    nightwatch()->prepareForCommand('current');
+
+    expect(nightwatch()->state->name)->toBe('previous');
+    expect(nightwatch()->state->executionPreview)->toBe('previous');
+
+    nightwatch()->shouldSample = true;
+
+    nightwatch()->prepareForCommand('current');
+
+    expect(nightwatch()->state->name)->toBe('current');
+    expect(nightwatch()->state->executionPreview)->toBe('current');
+});

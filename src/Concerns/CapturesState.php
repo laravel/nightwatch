@@ -313,8 +313,10 @@ trait CapturesState
     public function prepareForCommand(string $name): void
     {
         /** @var Core<CommandState> $this */
-        $this->state->name = $name;
-        $this->state->executionPreview = Str::tinyText($name);
+        if ($this->shouldSample) {
+            $this->state->name = $name;
+            $this->state->executionPreview = Str::tinyText($name);
+        }
     }
 
     /**
