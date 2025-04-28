@@ -63,7 +63,7 @@ final class CommandStartingListener
 
     private function registerJobHooks(): void
     {
-        $this->nightwatch->state->source = 'job';
+        $this->nightwatch->configureForJobs();
 
         /**
          * @see \Laravel\Nightwatch\State\CommandState::reset()

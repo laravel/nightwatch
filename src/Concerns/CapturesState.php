@@ -31,6 +31,7 @@ use WeakMap;
 use function array_shift;
 use function array_unshift;
 use function debug_backtrace;
+use function memory_reset_peak_usage;
 use function random_int;
 
 trait CapturesState
@@ -261,6 +262,11 @@ trait CapturesState
         $this->routesWithMiddlewareRegistered[$route] = true;
     }
 
+    public function configureForJobs(): void
+    {
+        $this->nightwatch->source = 'job';
+    }
+
     /**
      * @internal
      */
@@ -270,6 +276,12 @@ trait CapturesState
         $this->state->setId((string) Str::uuid());
         $this->state->executionPreview = Str::tinyText($job->resolveName());
         $this->shouldSample = (bool) Compatibility::getHiddenContext('nightwatch_should_sample', true);
+    }
+
+    public function resetJobState(): void
+    {
+        $this->state->reset();
+        memory_reset_peak_usage();
     }
 
     /**
