@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Concerns;
 
 use Illuminate\Cache\Events\CacheEvent;
+use Illuminate\Console\Application as Artisan;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Database\Events\QueryExecuted;
@@ -16,10 +17,12 @@ use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
+use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
 use Monolog\LogRecord;
 use Psr\Http\Message\RequestInterface;
@@ -293,6 +296,25 @@ trait CapturesState
             $this->state->setId((string) Str::uuid());
             $this->state->executionPreview = Str::tinyText($job->resolveName());
         }
+    }
+
+    /**
+     * @internal
+     */
+    public function captureArtisan(Artisan $artisan): void
+    {
+        /** @var Core<CommandState> $this */
+        $this->state->artisan = $artisan;
+    }
+
+    /**
+     * @internal
+     */
+    public function prepareForCommand(string $name): void
+    {
+        /** @var Core<CommandState> $this */
+        $this->state->name = $name;
+        $this->state->executionPreview = Str::tinyText($name);
     }
 
     /**

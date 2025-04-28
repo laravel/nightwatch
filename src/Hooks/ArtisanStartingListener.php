@@ -24,8 +24,8 @@ final class ArtisanStartingListener
     public function __invoke(ArtisanStarting $event): void
     {
         try {
-            $this->nightwatch->state->artisan = $event->artisan;
-        } catch (Throwable $e) { // @phpstan-ignore catch.neverThrown
+            $this->nightwatch->captureArtisan($event->artisan);
+        } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
     }
