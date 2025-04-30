@@ -81,8 +81,6 @@ final class Ingest implements LocalIngest
 
         $response = $this->readFromStream($stream);
 
-        echo $response;
-
         $this->closeStream($stream);
 
         return $response;
