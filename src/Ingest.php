@@ -144,6 +144,9 @@ final class Ingest implements LocalIngest
         }
     }
 
+    /**
+     * @param  resource  $stream
+     */
     private function readFromStream($stream)
     {
         $response = '';
