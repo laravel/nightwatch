@@ -13,7 +13,6 @@ use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
-use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobQueued;
@@ -81,7 +80,7 @@ final class SensorManager
     public $queuedJobSensor;
 
     /**
-     * @var (callable(JobAttempted): void)|null
+     * @var (callable(JobProcessed|JobReleasedAfterException|JobFailed): void)|null
      */
     public $jobAttemptSensor;
 
