@@ -170,17 +170,12 @@ final class Ingest implements LocalIngest
      */
     private function closeStreamAfterError(string $message, $stream): never
     {
-        [
-            'timed_out' => $timedOut,
-            'eof' => $eof,
-            'blocked' => $blocked,
-            'uri' => $uri,
-            'unread_bytes' => $unreadBytes,
-        ] = stream_get_meta_data($stream);
+        $meta = stream_get_meta_data($stream);
 
-        $timedOut = $timedOut ? 'true' : 'false';
-        $eof = $eof ? 'true' : 'false';
-        $blocked = $blocked ? 'true' : 'false';
+        $uri = $meta['uri'] ?? '';
+        $timedOut = $meta['timed_out'] ? 'true' : 'false';
+        $eof = $meta['eof'] ? 'true' : 'false';
+        $blocked = $meta['blocked'] ? 'true' : 'false';
 
         $this->closeStream($stream, new RuntimeException($message.<<<MESSAGE
 
@@ -189,7 +184,7 @@ final class Ingest implements LocalIngest
             EOF: {$timedOut}
             Blocked: {$blocked}
             URI: {$uri}
-            Unread bytes: {$unreadBytes}
+            Unread bytes: {$meta['unread_bytes']}
             MESSAGE));
     }
 
