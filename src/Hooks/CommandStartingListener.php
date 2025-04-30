@@ -11,10 +11,12 @@ use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobExceptionOccurred;
+use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobPopping;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\State\CommandState;
@@ -81,7 +83,11 @@ final class CommandStartingListener
          * @see \Laravel\Nightwatch\Records\JobAttempt
          * @see \Laravel\Nightwatch\Core::ingest()
          */
-        $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->nightwatch))(...));
+        $this->events->listen([
+            JobProcessed::class,
+            JobReleasedAfterException::class,
+            JobFailed::class,
+        ], (new JobAttemptListener($this->nightwatch))(...));
     }
 
     private function registerScheduledTaskHooks(): void

@@ -2,7 +2,9 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
-use Illuminate\Queue\Events\JobAttempted;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
@@ -10,7 +12,7 @@ use Throwable;
 /**
  * @internal
  */
-final class JobAttemptedListener
+final class JobAttemptListener
 {
     /**
      * @param  Core<CommandState>  $nightwatch
@@ -21,14 +23,16 @@ final class JobAttemptedListener
         //
     }
 
-    public function __invoke(JobAttempted $event): void
+    public function __invoke(JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
         try {
+            if ($event instanceof JobFailed) {
+                $this->nightwatch->report($event->exception);
+            }
+
             $this->nightwatch->jobAttempt($event);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
-
-        $this->nightwatch->ingest();
     }
 }

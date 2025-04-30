@@ -15,9 +15,11 @@ use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
-use Illuminate\Queue\Events\JobAttempted;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
+use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
@@ -218,7 +220,7 @@ trait CapturesState
     /**
      * @internal
      */
-    public function jobAttempt(JobAttempted $event): void
+    public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
         if (! $this->shouldSample) {
             return;
