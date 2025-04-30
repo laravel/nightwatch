@@ -20,6 +20,7 @@ it('gracefully handles exceptions', function () {
     };
     $thrownInExceptionSensor = false;
     $task = app(Schedule::class)->command('php artisan inspire');
+    $task->exitCode = 0;
     $event = new ScheduledTaskFinished($task, 10.0);
 
     $handler = new ScheduledTaskListener(nightwatch());

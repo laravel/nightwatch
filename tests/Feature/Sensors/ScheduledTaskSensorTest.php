@@ -11,6 +11,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Nightwatch\Types\Str;
 
+use function Illuminate\Support\artisan_binary;
 use function Pest\Laravel\travelTo;
 
 uses(WithConsoleEvents::class);
@@ -222,16 +223,12 @@ describe('task name normalization', function () {
     });
 
     it('normalizes task name for artisan command', function () {
-        Artisan::command('app:fly {destination} {--force} {--compress}', function () {
-            //
-        });
-
         app(Schedule::class)->command('app:fly tokyo')->everyMinute();
 
         Artisan::call('schedule:run');
 
         $this->ingest->assertWrittenTimes(1);
-        $this->ingest->assertLatestWrite('scheduled-task:0.name', 'php artisan app:fly tokyo');
+        $this->ingest->assertLatestWrite('scheduled-task:0.name', 'php '.artisan_binary().' app:fly tokyo');
     });
 
     it('normalizes task name for queued job', function () {
@@ -273,11 +270,11 @@ describe('task name normalization', function () {
     });
 
     it('normalizes task name for shell command', function () {
-        app(Schedule::class)->exec('find ./storage/logs -type f -mtime +7 -delete')->everyMinute();
+        app(Schedule::class)->exec('find ./workbench/storage/logs -type f -mtime +7 -delete')->everyMinute();
 
         Artisan::call('schedule:run');
 
         $this->ingest->assertWrittenTimes(1);
-        $this->ingest->assertLatestWrite('scheduled-task:0.name', 'find ./storage/logs -type f -mtime +7 -delete');
+        $this->ingest->assertLatestWrite('scheduled-task:0.name', 'find ./workbench/storage/logs -type f -mtime +7 -delete');
     });
 });

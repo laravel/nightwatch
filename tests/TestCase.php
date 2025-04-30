@@ -12,8 +12,11 @@ use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use RuntimeException;
 
+use function define;
+use function defined;
 use function env;
 use function now;
+use function realpath;
 use function touch;
 
 abstract class TestCase extends OrchestraTestCase
@@ -24,6 +27,10 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function setUp(): void
     {
+        if (! defined('ARTISAN_BINARY')) {
+            define('ARTISAN_BINARY', realpath(__DIR__.'/../vendor/bin/testbench'));
+        }
+
         parent::setUp();
 
         $this->core = $this->app->make(Core::class);

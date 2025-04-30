@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Hooks;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskSkipped;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
@@ -29,6 +30,15 @@ final class ScheduledTaskListener
         // This ensures that the exception is captured in the scheduled task record.
         if ($event instanceof ScheduledTaskFailed) {
             $this->nightwatch->report($event->exception);
+        }
+
+        if (
+            Compatibility::$firesFinishedAndFailedEventsForScheduledConsoleCommands &&
+            $event instanceof ScheduledTaskFinished &&
+            $event->task->command !== null &&
+            $event->task->exitCode !== 0
+        ) {
+            return;
         }
 
         try {
