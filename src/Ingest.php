@@ -71,11 +71,11 @@ final class Ingest implements LocalIngest
 
         // The payload is potentially a massive string. Let's say it is 1MB.
         // You might be tempted to concatenate these two strings and only write
-        // to the stream once, however that would create a new string 1MB+
-        // string in memory and potentially overflow PHP's memory allowence. In
-        // order to reserve memory, we write the individual strings to the
-        // stream as different writes. Slight performance trade off in order to
-        // keep memory usage low.
+        // to the stream once, however that would create a new 1MB+ string in
+        // memory and potentially overflow PHP's memory allowence. In order to
+        // reserve memory, we write the individual strings to the stream as
+        // different writes. Slight performance trade off in order to keep
+        // memory usage low.
         $this->writeToStream($stream, strlen($payload).':');
         $this->writeToStream($stream, $payload);
 
