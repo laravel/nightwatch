@@ -39,12 +39,17 @@ class Server
             $connection->on('data', function (string $chunk) use ($connection, $payload): void {
                 $payload->append($chunk);
 
-                if ($payload->complete) {
-                    match ($payload->value) {
-                        'PING' => $connection->end('4:PONG'),
-                        default => call_user_func($this->onPayloadReceived, $payload->value),
-                    };
+                if (! $payload->complete) {
+                    return;
                 }
+
+                $connection->end('2:OK');
+
+                if ($payload->value === 'PING') {
+                    return;
+                }
+
+                call_user_func($this->onPayloadReceived, $payload->value);
             });
 
             $connection->on('close', function () use ($payload) {

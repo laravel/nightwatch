@@ -2,27 +2,47 @@
 
 namespace Laravel\Nightwatch;
 
+use const STREAM_CLIENT_CONNECT;
+
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use RuntimeException;
+use Throwable;
 
-use function call_user_func;
+use function fclose;
+use function feof;
+use function fread;
+use function fwrite;
+use function gettype;
+use function intval;
+use function stream_get_meta_data;
+use function stream_set_timeout;
+use function stream_socket_client;
+use function strlen;
+use function substr;
 
 /**
  * @internal
  */
 final class Ingest implements LocalIngest
 {
+    private string $transmitTo;
+
     /**
-     * @var (callable(string): string)|null
+     * @var array{seconds: int, microseconds: int}
      */
-    private $ingest = null;
+    private array $ingestTimeout;
 
     public function __construct(
-        private ?string $transmitTo,
-        private ?float $ingestTimeout,
-        private ?float $ingestConnectionTimeout,
+        string $transmitTo,
+        float $ingestTimeout,
+        private float $ingestConnectionTimeout,
     ) {
-        //
+        $this->transmitTo = "tcp://{$transmitTo}";
+
+        $this->ingestTimeout = [
+            'seconds' => $seconds = (int) $ingestTimeout,
+            'microseconds' => intval(($ingestTimeout - $seconds) * 1_000_000),
+        ];
     }
 
     public function write(string $payload): void
@@ -47,17 +67,149 @@ final class Ingest implements LocalIngest
 
     private function ingest(string $payload): string
     {
-        if ($this->ingest === null) {
-            /** @var (callable(string|null $transmitTo, float|null $ingestTimeout, float|null $ingestConnectionTimeout): (callable(string $payload): string)) */
-            $factory = require __DIR__.'/../client/entry.php';
+        $stream = $this->createStream();
 
-            $this->ingest = $factory(
-                $this->transmitTo,
-                $this->ingestTimeout,
-                $this->ingestConnectionTimeout,
-            );
+        // The payload is potentially a massive string. Let's say it is 1MB.
+        // You might be tempted to concatenate these two strings and only write
+        // to the stream once, however that would create a new string 1MB+
+        // string in memory and potentially overflow PHP's memory allowence. In
+        // order to reserve memory, we write the individual strings to the
+        // stream as different writes. Slight performance trade off in order to
+        // keep memory usage low.
+        $this->writeToStream($stream, strlen($payload).':');
+        $this->writeToStream($stream, $payload);
+
+        $response = $this->readFromStream($stream);
+
+        echo $response;
+
+        $this->closeStream($stream);
+
+        return $response;
+    }
+
+    /**
+     * @return resource
+     */
+    private function createStream()
+    {
+        $stream = stream_socket_client(
+            address: $this->transmitTo,
+            error_code: $errorCode,
+            error_message: $errorMessage,
+            timeout: $this->ingestConnectionTimeout,
+            flags: STREAM_CLIENT_CONNECT,
+        );
+
+        if ($stream === false) {
+            throw new RuntimeException("Failed connecting to the agent: {$errorMessage} [{$errorCode}]");
         }
 
-        return call_user_func($this->ingest, $payload);
+        $timeoutConfigured = stream_set_timeout(
+            $stream,
+            $this->ingestTimeout['seconds'],
+            $this->ingestTimeout['microseconds'],
+        );
+
+        if ($timeoutConfigured === false) {
+            $this->closeStreamAfterError('Failed configuring agent writing timeout', $stream);
+        }
+
+        return $stream;
+    }
+
+    /**
+     * @param  resource  $stream
+     */
+    private function writeToStream($stream, string $payload): void
+    {
+        $written = 0;
+        $remainingPayload = $payload;
+        $payloadLength = strlen($payload);
+
+        while (true) {
+            $thisWrite = fwrite($stream, $remainingPayload);
+
+            if ($thisWrite === false) {
+                $this->closeStreamAfterError("Unable to write to the agent. Written [{$written}] Expected [{$payloadLength}]", $stream);
+            }
+
+            $written += $thisWrite;
+
+            if ($written >= $payloadLength) {
+                return;
+            }
+
+            $remainingPayload = substr($remainingPayload, $thisWrite);
+        }
+    }
+
+    private function readFromStream($stream)
+    {
+        $response = '';
+
+        // We are expecting a 4-byte response of "2:OK"...
+        do {
+            $part = fread($stream, 4);
+
+            if ($part === false) {
+                $this->closeStreamAfterError('Failed reading from the agent', $stream);
+            }
+
+            $response .= $part;
+        } while (strlen($response) < 4 && ! feof($stream));
+
+        return $response;
+    }
+
+    /**
+     * @param  resource  $stream
+     */
+    private function closeStreamAfterError(string $message, $stream): never
+    {
+        [
+            'timed_out' => $timedOut,
+            'eof' => $eof,
+            'blocked' => $blocked,
+            'uri' => $uri,
+            'unread_bytes' => $unreadBytes,
+        ] = stream_get_meta_data($stream);
+
+        $timedOut = $timedOut ? 'true' : 'false';
+        $eof = $eof ? 'true' : 'false';
+        $blocked = $blocked ? 'true' : 'false';
+
+        $this->closeStream($stream, new RuntimeException($message.<<<MESSAGE
+
+
+            Timed out: {$timedOut}
+            EOF: {$timedOut}
+            Blocked: {$blocked}
+            URI: {$uri}
+            Unread bytes: {$unreadBytes}
+            MESSAGE));
+    }
+
+    /**
+     * @param  resource  $stream
+     * @return ($previous is null ? void : never)
+     */
+    private function closeStream($stream, ?Throwable $previous = null): void
+    {
+        if (! $this->closed($stream) && fclose($stream) === false) {
+            throw new RuntimeException('Unable to close connection to agent', previous: $previous);
+        }
+
+        if ($previous !== null) {
+            throw $previous;
+        }
+    }
+
+    /**
+     * @param  resource  $stream
+     */
+    private function closed($stream): bool
+    {
+        return gettype($stream) === 'resource (closed)';
     }
 }
