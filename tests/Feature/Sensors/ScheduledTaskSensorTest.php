@@ -11,7 +11,6 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Nightwatch\Types\Str;
 
-use function Illuminate\Support\artisan_binary;
 use function Pest\Laravel\travelTo;
 
 uses(WithConsoleEvents::class);
@@ -228,7 +227,7 @@ describe('task name normalization', function () {
         Artisan::call('schedule:run');
 
         $this->ingest->assertWrittenTimes(1);
-        $this->ingest->assertLatestWrite('scheduled-task:0.name', 'php '.artisan_binary().' app:fly tokyo');
+        $this->ingest->assertLatestWrite('scheduled-task:0.name', 'php '.ARTISAN_BINARY.' app:fly tokyo');
     });
 
     it('normalizes task name for queued job', function () {
