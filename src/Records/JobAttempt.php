@@ -19,6 +19,7 @@ final class JobAttempt
      * @param  string|LazyValue<string>  $user
      * @param  string|LazyValue<string>  $attempt_id
      * @param  'processed'|'released'|'failed'  $status
+     * @param  LazyValue<int>  $queries
      * @param  LazyValue<string>  $exception_preview
      */
     public function __construct(
@@ -39,7 +40,7 @@ final class JobAttempt
         public int $duration,
         public int $exceptions,
         public int $logs,
-        public int $queries,
+        public LazyValue $queries,
         public int $lazy_loads,
         public int $jobs_queued,
         public int $mail,

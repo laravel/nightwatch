@@ -62,13 +62,17 @@ final class JobAttemptSensor
                 JobFailed::class => 'failed',
             },
             duration: (int) round(($now - $this->executionState->timestamp) * 1_000_000),
+            // When the job throws an exception, it will be captured after the job is recorded.
+            // We need to add 1 to the exceptions count to account for the exception that will be captured later.
             exceptions: $this->executionState->exceptions + (in_array(
                 $event::class,
                 [JobReleasedAfterException::class, JobFailed::class],
                 true
             ) ? 1 : 0),
             logs: $this->executionState->logs,
-            queries: $this->executionState->queries,
+            // When the job fails, a query is executed to insert into the failed_jobs table if the app is using the database queue.
+            // This query is executed after the job is recorded, so we lazily evaluate the queries count.
+            queries: new LazyValue(fn () => $this->executionState->queries),
             lazy_loads: $this->executionState->lazyLoads,
             jobs_queued: $this->executionState->jobsQueued,
             mail: $this->executionState->mail,
