@@ -146,6 +146,14 @@ final class Ingest implements LocalIngest
      */
     private function closeStreamAfterError(string $message, $stream): never
     {
+        if ($this->closed($stream)) {
+            throw new RuntimeException($message.<<<'MESSAGE'
+
+
+            Stream already closed
+            MESSAGE);
+        }
+
         $meta = stream_get_meta_data($stream);
 
         $uri = $meta['uri'] ?? '';

@@ -247,6 +247,27 @@ it('closes the stream', function () {
     expect(StreamWrapper::$events->pluck('type')->last())->toBe('stream_close');
 });
 
+it('does not retrieve meta of already closed stream', function () {
+    $stream = null;
+    nightwatch()->ingest->streamFactory = function ($address, $timeout) use (&$stream) {
+        $stream = fopen($address, 'r+');
+
+        return $stream;
+    };
+
+    StreamWrapper::intercept('stream_read', function () use (&$stream) {
+        fclose($stream);
+
+        return false;
+    });
+
+    nightwatch()->ingest->write('[{"t":"request"}]');
+})->throws(RuntimeException::class, <<<'MESSAGE'
+Failed reading from the agent
+
+Stream already closed
+MESSAGE);
+
 class StreamWrapper
 {
     public $context;
