@@ -338,22 +338,20 @@ it('does not attach route middleware when not sampling', function ($terminatingE
     });
 
     for ($i = 0; $i < 10; $i++) {
-        {
-            get('test')->assertOk();
-    }
 
-    expect($middleware)->toBe([]);
+        get('test')->assertOk();
+
+        expect($middleware)->toBe([]);
     }
 
     nightwatch()->sampling['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
-        {
-            get('test')->assertOk();
-    }
 
-    expect($middleware)->toBe($expectedMiddleware);
+        get('test')->assertOk();
+
+        expect($middleware)->toBe($expectedMiddleware);
     }
 })->with([
     [$terminatingEventExists = true, [RouteMiddleware::class]],
