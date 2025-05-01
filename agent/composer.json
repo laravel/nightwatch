@@ -5,7 +5,7 @@
     "description": "The official Laravel Nightwatch agent.",
     "keywords": ["laravel", "monitoring", "insights"],
     "homepage": "https://nightwatch.laravel.com",
-    "license": "AGPL-3.0-or-later",
+    "license": "MIT",
     "support": {
         "docs": "https://nightwatch.laravel.com/docs",
         "issues": "https://github.com/laravel/nightwatch/issues",
