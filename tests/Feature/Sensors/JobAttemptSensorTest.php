@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
+use Laravel\Nightwatch\Compatibility;
 
 use function Pest\Laravel\travelTo;
 
@@ -400,7 +401,7 @@ it('captures queued mail', function ($workCommand) use ($workOptions) {
             'timestamp' => 946688523.459289,
             'deploy' => 'v1.2.3',
             'server' => 'web-01',
-            '_group' => hash('xxh128', 'MyQueuedMail'),
+            '_group' => Compatibility::$mailableClassNameCapturable ? hash('xxh128', 'MyQueuedMail') : hash('xxh128', ''),
             'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
             'execution_source' => 'job',
             'execution_id' => $attemptId,
@@ -408,7 +409,7 @@ it('captures queued mail', function ($workCommand) use ($workOptions) {
             'execution_stage' => 'action',
             'user' => '',
             'mailer' => 'log',
-            'class' => 'MyQueuedMail',
+            'class' => Compatibility::$mailableClassNameCapturable ? 'MyQueuedMail' : '',
             'subject' => 'My Queued Mail',
             'to' => 1,
             'cc' => 0,
