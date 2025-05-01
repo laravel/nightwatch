@@ -39,7 +39,7 @@ $workCommands = [
 ];
 
 $workOptions = [
-    '--max-jobs' => 1,
+    '--max-jobs' => 2, // Loop twice as job attempts are ingested in the next loop.
     '--sleep' => 0,
     '--stop-when-empty' => true,
     '--tries' => 1,
@@ -55,7 +55,9 @@ it('ingests processed job attempts', function ($workCommand) use ($workOptions) 
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(1);
+    // When the queue worker starts, a cache event for `illuminate:queue:restart` is triggered,
+    // which is ingested in the first loop. The second loop ingests the job attempt.
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -102,7 +104,7 @@ it('ingests job released job attempts', function ($workCommand) use ($workOption
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(1);
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -149,7 +151,7 @@ it('ingests job failed job attempts', function ($workCommand) use ($workOptions)
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(1);
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -170,7 +172,7 @@ it('ingests job failed job attempts', function ($workCommand) use ($workOptions)
             'duration' => 2500,
             'exceptions' => 1,
             'logs' => 0,
-            'queries' => 5, // Reserve and delete the job
+            'queries' => 5, // Reserve and delete the job, and insert into the failed_jobs table
             'lazy_loads' => 0,
             'jobs_queued' => 0,
             'mail' => 0,
@@ -186,8 +188,6 @@ it('ingests job failed job attempts', function ($workCommand) use ($workOptions)
     ]);
     $ingest->assertLatestWrite('exception:0.execution_source', 'job');
     $ingest->assertLatestWrite('exception:0.execution_id', $attemptId);
-
-    forgetRecordedExceptions(1);
 })->with($workCommands);
 
 it('does not ingest jobs dispatched on the sync queue', function () {
@@ -210,7 +210,7 @@ it('captures closure job', function ($workCommand) use ($workOptions) {
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(1);
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -258,7 +258,7 @@ it('captures queued event listener', function ($workCommand) use ($workOptions) 
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(1);
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -307,7 +307,7 @@ it('captures queued mail', function ($workCommand) use ($workOptions) {
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(1);
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -373,15 +373,13 @@ it('captures multiple job attempts', function ($workCommand) use ($workOptions) 
     $ingest = fakeIngest();
     FailedJob::dispatch();
 
-    Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 2, '--tries' => 2]);
+    Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 3, '--tries' => 2]);
 
-    $ingest->assertWrittenTimes(2);
-    $ingest->assertWrite(0, 'job-attempt:0.attempt', 1);
-    $ingest->assertWrite(0, 'exception:0.message', 'Job failed');
-    $ingest->assertWrite(1, 'job-attempt:0.attempt', 2);
+    $ingest->assertWrittenTimes(3);
+    $ingest->assertWrite(1, 'job-attempt:0.attempt', 1);
     $ingest->assertWrite(1, 'exception:0.message', 'Job failed');
-
-    forgetRecordedExceptions(1);
+    $ingest->assertWrite(2, 'job-attempt:0.attempt', 2);
+    $ingest->assertWrite(2, 'exception:0.message', 'Job failed');
 })->with($workCommands);
 
 final class ProcessedJob implements ShouldQueue
