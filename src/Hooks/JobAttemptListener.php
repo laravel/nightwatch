@@ -26,10 +26,6 @@ final class JobAttemptListener
     public function __invoke(JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
         try {
-            if ($event instanceof JobFailed) {
-                $this->nightwatch->report($event->exception);
-            }
-
             $this->nightwatch->jobAttempt($event);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
