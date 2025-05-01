@@ -5,6 +5,8 @@ use Laravel\Nightwatch\Hooks\JobAttemptListener;
 use Tests\FakeJob;
 
 it('gracefully handles exceptions', function () {
+    fakeIngest();
+
     $thrownInJobAttemptSensor = false;
     nightwatch()->sensor->jobAttemptSensor = function () use (&$thrownInJobAttemptSensor) {
         $thrownInJobAttemptSensor = true;
