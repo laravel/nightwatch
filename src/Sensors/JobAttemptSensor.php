@@ -11,6 +11,7 @@ use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\State\CommandState;
 
 use function hash;
+use function in_array;
 use function round;
 
 /**
@@ -59,7 +60,11 @@ final class JobAttemptSensor
                 JobFailed::class => 'failed',
             },
             duration: (int) round(($now - $this->executionState->timestamp) * 1_000_000),
-            exceptions: $this->executionState->exceptions,
+            exceptions: $this->executionState->exceptions + (in_array(
+                $event::class,
+                [JobReleasedAfterException::class, JobFailed::class],
+                true
+            ) ? 1 : 0),
             logs: $this->executionState->logs,
             queries: $this->executionState->queries,
             lazy_loads: $this->executionState->lazyLoads,
