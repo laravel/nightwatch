@@ -2,12 +2,11 @@
 
 namespace Laravel\Nightwatch;
 
-use const STREAM_CLIENT_CONNECT;
-
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use RuntimeException;
 use Throwable;
 
+use function call_user_func;
 use function fclose;
 use function feof;
 use function fread;
@@ -16,7 +15,6 @@ use function gettype;
 use function intval;
 use function stream_get_meta_data;
 use function stream_set_timeout;
-use function stream_socket_client;
 use function strlen;
 use function substr;
 
@@ -30,18 +28,22 @@ final class Ingest implements LocalIngest
     /**
      * @var array{seconds: int, microseconds: int}
      */
-    private array $ingestTimeout;
+    private array $timeout;
 
+    /**
+     * @param  (callable(string $address, float $timeout): resource)  $streamFactory
+     */
     public function __construct(
         string $transmitTo,
-        float $ingestTimeout,
-        private float $ingestConnectionTimeout,
+        private float $connectionTimeout,
+        float $timeout,
+        public $streamFactory,
     ) {
         $this->transmitTo = "tcp://{$transmitTo}";
 
-        $this->ingestTimeout = [
-            'seconds' => $seconds = (int) $ingestTimeout,
-            'microseconds' => intval(($ingestTimeout - $seconds) * 1_000_000),
+        $this->timeout = [
+            'seconds' => $seconds = (int) $timeout,
+            'microseconds' => intval(($timeout - $seconds) * 1_000_000),
         ];
     }
 
@@ -91,26 +93,16 @@ final class Ingest implements LocalIngest
      */
     private function createStream()
     {
-        $stream = stream_socket_client(
-            address: $this->transmitTo,
-            error_code: $errorCode,
-            error_message: $errorMessage,
-            timeout: $this->ingestConnectionTimeout,
-            flags: STREAM_CLIENT_CONNECT,
-        );
-
-        if ($stream === false) {
-            throw new RuntimeException("Failed connecting to the agent: {$errorMessage} [{$errorCode}]");
-        }
+        $stream = call_user_func($this->streamFactory, $this->transmitTo, $this->connectionTimeout);
 
         $timeoutConfigured = stream_set_timeout(
             $stream,
-            $this->ingestTimeout['seconds'],
-            $this->ingestTimeout['microseconds'],
+            $this->timeout['seconds'],
+            $this->timeout['microseconds'],
         );
 
         if ($timeoutConfigured === false) {
-            $this->closeStreamAfterError('Failed configuring agent writing timeout', $stream);
+            $this->closeStreamAfterError('Failed configuring agent write timeout', $stream);
         }
 
         return $stream;
@@ -179,7 +171,7 @@ final class Ingest implements LocalIngest
 
 
             Timed out: {$timedOut}
-            EOF: {$timedOut}
+            EOF: {$eof}
             Blocked: {$blocked}
             URI: {$uri}
             Unread bytes: {$meta['unread_bytes']}
