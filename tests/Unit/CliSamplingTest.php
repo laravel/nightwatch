@@ -22,14 +22,18 @@ it('samples job attempts', function () {
     for ($i = 0; $i < 10; $i++) {
         MyJob::dispatch();
     }
+
+    nightwatch()->state->records->flush();
+
     Artisan::call('queue:work', [
-        '--max-jobs' => 10,
+        '--max-jobs' => 11, // Loop through the jobs 11 times to ingest 10 jobs.
         '--sleep' => 0,
         '--stop-when-empty' => true,
         '--tries' => 1,
     ]);
 
-    $ingest->assertWrittenTimes(0);
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('cache-event:0.key', 'illuminate:queue:restart');
     expect(nightwatch()->state->records)->toHaveCount(0);
 
     Compatibility::addHiddenContext('nightwatch_should_sample', true);
@@ -37,17 +41,21 @@ it('samples job attempts', function () {
     for ($i = 0; $i < 10; $i++) {
         MyJob::dispatch();
     }
+
+    nightwatch()->state->records->flush();
+
     Artisan::call('queue:work', [
-        '--max-jobs' => 10,
+        '--max-jobs' => 11,
         '--sleep' => 0,
         '--stop-when-empty' => true,
         '--tries' => 1,
     ]);
 
-    $ingest->assertWrittenTimes(10);
+    $ingest->assertWrittenTimes(11);
 
-    expect(nightwatch()->state->records)->toHaveCount(1);
+    expect(nightwatch()->state->records)->toHaveCount(2);
     $ingest->write(nightwatch()->state->records->pull());
+    $ingest->assertLatestWrite('query:0.sql', 'select * from "jobs" where "queue" = ? and (("reserved_at" is null and "available_at" <= ?) or ("reserved_at" <= ?)) order by "id" asc limit 1');
     $ingest->assertLatestWrite('cache-event:0.key', 'illuminate:queue:restart');
     $ingest->assertLatestWrite('job-attempt:*', []);
 });
