@@ -1,21 +1,39 @@
 <?php
 
-beforeAll(function () {
-    stream_wrapper_register('tcp', StreamFake::class);
-});
+use Illuminate\Support\Collection;
 
 beforeEach(function () {
-    StreamFake::reset();
+    StreamWrapper::reset();
+    stream_wrapper_register('tcp', StreamWrapper::class);
+    nightwatch()->ingest->streamFactory = fn ($address, $timeout) => fopen($address, 'r+');
 });
 
-it('throws an exception when unable to set timeout', function () {
-    nightwatch()->ingest->streamFactory = fn ($address, $timeout) => fopen($address, 'r+');
+afterEach(function () {
+    stream_wrapper_unregister('tcp');
+});
 
-    StreamFake::intercept('stream_set_option', fn () => false);
+it('configures the stream', function () {
+    $calls = [];
+    nightwatch()->ingest->streamFactory = function (...$args) use (&$calls) {
+        $calls[] = $args;
 
-    nightwatch()->ingest->write('[{}]');
+        return fopen($args[0], 'r+');
+    };
+
+    nightwatch()->ingest->write('[{"t":"request"}]');
+
+    expect($calls)->toHaveCount(1);
+    [$address, $connectionTimeout] = $calls[0];
+    expect($address)->toBe('tcp://127.0.0.1:2407');
+    expect($connectionTimeout)->toBe(0.5);
+});
+
+it('throws an exception when unable to set read timeout', function () {
+    StreamWrapper::intercept('stream_set_option', fn () => false);
+
+    nightwatch()->ingest->write('[{"t":"request"}]');
 })->throws(RuntimeException::class, <<<'MESSAGE'
-Failed configuring agent write timeout
+Failed configuring agent read timeout
 
 Timed out: false
 EOF: false
@@ -24,15 +42,117 @@ URI: tcp://127.0.0.1:2407
 Unread bytes: 0
 MESSAGE);
 
-it('shows correct eof status in exception meta', function () {
-    nightwatch()->ingest->streamFactory = fn ($address, $timeout) => fopen($address, 'r+');
+it('sets the read timeout', function () {
+    nightwatch()->ingest->write('[{"t":"request"}]');
 
-    StreamFake::intercept('stream_set_option', fn () => false);
-    StreamFake::intercept('stream_eof', fn () => true);
+    expect(StreamWrapper::type('stream_set_option'))->toHaveCount(1);
+    expect(StreamWrapper::type('stream_set_option')->value('args'))->toBe([
+        STREAM_OPTION_READ_TIMEOUT, 0, 500000,
+    ]);
+});
 
-    nightwatch()->ingest->write('[{}]');
+it('can write the payload in one write', function () {
+    StreamWrapper::intercept('stream_write', fn (string $value) => 20);
+
+    nightwatch()->ingest->write('[{"t":"request"}]');
+
+    expect(StreamWrapper::type('stream_write'))->toHaveCount(1);
+    expect(StreamWrapper::type('stream_write')->value('args'))->toBe([
+        '17:[{"t":"request"}]',
+    ]);
+});
+
+it('throws an exception if initial write to stream fails', function () {
+    StreamWrapper::intercept('stream_write', fn (string $value) => false);
+
+    nightwatch()->ingest->write('[{"t":"request"}]');
 })->throws(RuntimeException::class, <<<'MESSAGE'
-Failed configuring agent write timeout
+Unable to write to the agent. Written [0] Expected [20]
+
+Timed out: false
+EOF: false
+Blocked: true
+URI: tcp://127.0.0.1:2407
+Unread bytes: 0
+MESSAGE);
+
+it('can write the payload in multiple write', function () {
+    $writes = [1, 3, 5, 11];
+    StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
+        return array_shift($writes);
+    });
+
+    nightwatch()->ingest->write('[{"t":"request"}]');
+
+    expect(StreamWrapper::type('stream_write'))->toHaveCount(4);
+    expect(StreamWrapper::type('stream_write')->pluck('args')->all())->toBe([
+        ['17:[{"t":"request"}]'],
+        ['7:[{"t":"request"}]'],
+        ['{"t":"request"}]'],
+        ['"request"}]'],
+    ]);
+});
+
+it('throws an exception if subsequent writes to stream fails', function () {
+    $writes = 0;
+    StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
+        if ($writes === 2) {
+            return false;
+        }
+
+        $writes++;
+
+        return 3;
+    });
+
+    nightwatch()->ingest->write('[{"t":"request"}]');
+})->throws(RuntimeException::class, <<<'MESSAGE'
+Unable to write to the agent. Written [6] Expected [20]
+
+Timed out: false
+EOF: false
+Blocked: true
+URI: tcp://127.0.0.1:2407
+Unread bytes: 0
+MESSAGE);
+
+it('reads response from stream', function () {
+    nightwatch()->ingest->write('[{"t":"request"}]');
+
+    expect(StreamWrapper::type('stream_read'))->toHaveCount(1);
+    expect(StreamWrapper::type('stream_read')->value('args'))->toBe([
+        8192,
+    ]);
+});
+
+it('can read multiple times from stream', function () {
+    $response = ['2', ':', 'O', 'K'];
+    StreamWrapper::intercept('stream_read', function () use (&$response) {
+        return array_shift($response);
+    });
+    nightwatch()->ingest->write('[{"t":"request"}]');
+
+    expect(StreamWrapper::type('stream_read'))->toHaveCount(4);
+    expect(StreamWrapper::type('stream_read')->pluck('args')->all())->toBe([
+        [8192],
+        [8192],
+        [8192],
+        [8192],
+    ]);
+});
+
+it('throws an exception if stream EOFs before getting the expected response', function () {
+    $response = ['2', ':'];
+    StreamWrapper::intercept('stream_read', function () use (&$response) {
+        if ($response === [':']) {
+            StreamWrapper::intercept('stream_eof', fn () => true);
+        }
+
+        return array_shift($response);
+    });
+    nightwatch()->ingest->write('[{"t":"request"}]');
+})->throws(RuntimeException::class, <<<'MESSAGE'
+Unexpected response from agent [2:]
 
 Timed out: false
 EOF: true
@@ -41,36 +161,24 @@ URI: tcp://127.0.0.1:2407
 Unread bytes: 0
 MESSAGE);
 
-it('sets the wait timeout', function () {
-    nightwatch()->ingest->streamFactory = fn ($address, $timeout) => fopen($address, 'r+');
-
-    $calls = [];
-    StreamFake::intercept('stream_set_option', function (...$args) use (&$calls) {
-        $calls[] = $args;
-
-        return true;
-    });
-
-    nightwatch()->ingest->write('[{}]');
-
-    expect($calls)->toHaveCount(1);
-    [$option, $second, $microseconds] = $calls[0];
-    expect($option)->toBe(STREAM_OPTION_READ_TIMEOUT);
-    expect($second)->toBe(0);
-    expect($microseconds)->toBe(500000);
-});
-
-class StreamFake
+class StreamWrapper
 {
-    protected static $on = [];
-
     public $context;
+
+    private static array $on = [];
+
+    public static Collection $events;
 
     public function __call(string $name, array $arguments)
     {
         if (! array_key_exists($name, static::$on)) {
             throw new RuntimeException("StreamFake method not implemented [{$name}]");
         }
+
+        static::$events[] = [
+            'type' => $name,
+            'args' => $arguments,
+        ];
 
         return call_user_func_array(static::$on[$name], $arguments);
     }
@@ -80,16 +188,25 @@ class StreamFake
         static::$on[$method] = $callback;
     }
 
+    public static function type(string $type): Collection
+    {
+        return static::$events->where('type', $type);
+    }
+
     public static function reset()
     {
+        static::$events = new Collection;
+
         static::$on = [
-            'stream_open' => fn () => true,
-            'stream_set_option' => fn () => true,
-            'stream_eof' => fn () => false,
-            'stream_close' => fn () => true,
-            'stream_flush' => fn () => true,
-            'stream_write' => fn () => true,
-            'stream_read' => fn () => true,
+            'stream_open' => fn (string $path, string $mode, int $options, ?string &$openedPath): bool => true,
+            'stream_set_option' => fn (int $option, int $arg1, int $arg2): bool => true,
+            'stream_write' => fn (string $value): int => rand(1, strlen($value)),
+            'stream_read' => fn (int $length): string|false => '2:OK',
+            'stream_eof' => fn (): bool => false,
+            'stream_flush' => fn (): bool => true,
+            'stream_close' => function (): void {
+                //
+            },
         ];
     }
 }

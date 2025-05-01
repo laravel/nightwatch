@@ -6,7 +6,6 @@ use Illuminate\Console\Command;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 
@@ -38,9 +37,7 @@ final class StatusCommand extends Command
         }
 
         try {
-            if (! $nightwatch->ingest->ping()) {
-                throw new RuntimeException('Failed to check the status of the Nightwatch agent');
-            }
+            $nightwatch->ingest->ping();
 
             $this->components->info('The Nightwatch agent is running and accepting connections');
 

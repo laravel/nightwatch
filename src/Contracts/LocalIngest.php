@@ -9,5 +9,5 @@ interface LocalIngest
 {
     public function write(string $payload): void;
 
-    public function ping(): bool;
+    public function ping(): void;
 }

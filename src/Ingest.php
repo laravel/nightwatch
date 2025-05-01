@@ -56,36 +56,20 @@ final class Ingest implements LocalIngest
         $this->ingest($payload);
     }
 
-    public function ping(): bool
+    public function ping(): void
     {
-        $response = $this->ingest('PING');
-
-        if ($response === '4:PONG') {
-            return true;
-        }
-
-        throw new RuntimeException("Unexpected response from agent: [{$response}]");
+        $this->ingest('PING');
     }
 
-    private function ingest(string $payload): string
+    private function ingest(string $payload): void
     {
         $stream = $this->createStream();
 
-        // The payload is potentially a massive string. Let's say it is 1MB.
-        // You might be tempted to concatenate these two strings and only write
-        // to the stream once, however that would create a new 1MB+ string in
-        // memory and potentially overflow PHP's memory allowence. In order to
-        // reserve memory, we write the individual strings to the stream as
-        // different writes. Slight performance trade off in order to keep
-        // memory usage low.
-        $this->writeToStream($stream, strlen($payload).':');
-        $this->writeToStream($stream, $payload);
+        $this->sendPayload($stream, strlen($payload).':'.$payload);
 
-        $response = $this->readFromStream($stream);
+        $this->waitForAcknowledgment($stream);
 
-        $this->closeStream($stream);
-
-        return $response;
+        $this->close($stream);
     }
 
     /**
@@ -102,7 +86,7 @@ final class Ingest implements LocalIngest
         );
 
         if ($timeoutConfigured === false) {
-            $this->closeStreamAfterError('Failed configuring agent write timeout', $stream);
+            $this->closeStreamAfterError('Failed configuring agent read timeout', $stream);
         }
 
         return $stream;
@@ -111,7 +95,7 @@ final class Ingest implements LocalIngest
     /**
      * @param  resource  $stream
      */
-    private function writeToStream($stream, string $payload): void
+    private function sendPayload($stream, string $payload): void
     {
         $written = 0;
         $remainingPayload = $payload;
@@ -137,12 +121,12 @@ final class Ingest implements LocalIngest
     /**
      * @param  resource  $stream
      */
-    private function readFromStream($stream): string
+    private function waitForAcknowledgment($stream): void
     {
         $response = '';
 
-        // We are expecting a 4-byte response of "2:OK"...
         do {
+            // We are expecting a 4-byte response of "2:OK"...
             $part = fread($stream, 4);
 
             if ($part === false) {
@@ -152,7 +136,9 @@ final class Ingest implements LocalIngest
             $response .= $part;
         } while (strlen($response) < 4 && ! feof($stream));
 
-        return $response;
+        if ($response !== '2:OK') {
+            $this->closeStreamAfterError("Unexpected response from agent [{$response}]", $stream);
+        }
     }
 
     /**
@@ -167,7 +153,7 @@ final class Ingest implements LocalIngest
         $eof = $meta['eof'] ? 'true' : 'false';
         $blocked = $meta['blocked'] ? 'true' : 'false';
 
-        $this->closeStream($stream, new RuntimeException($message.<<<MESSAGE
+        $this->close($stream, new RuntimeException($message.<<<MESSAGE
 
 
             Timed out: {$timedOut}
@@ -182,7 +168,7 @@ final class Ingest implements LocalIngest
      * @param  resource  $stream
      * @return ($previous is null ? void : never)
      */
-    private function closeStream($stream, ?Throwable $previous = null): void
+    private function close($stream, ?Throwable $previous = null): void
     {
         if (! $this->closed($stream) && fclose($stream) === false) {
             throw new RuntimeException('Unable to close connection to agent', previous: $previous);

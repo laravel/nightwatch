@@ -33,9 +33,9 @@ final class FakeIngest implements LocalIngest
         $this->writes[] = $payload;
     }
 
-    public function ping(): bool
+    public function ping(): void
     {
-        return true;
+        //
     }
 
     public function assertWrittenTimes(int $expected): self

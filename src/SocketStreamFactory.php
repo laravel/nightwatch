@@ -13,13 +13,13 @@ final class SocketStreamFactory
      */
     public function __invoke(
         string $address,
-        float $timeout,
+        float $connectionTimeout,
     ) {
         $stream = stream_socket_client(
             address: $address,
             error_code: $errorCode,
             error_message: $errorMessage,
-            timeout: $timeout,
+            timeout: $connectionTimeout,
         );
 
         if ($stream === false) {

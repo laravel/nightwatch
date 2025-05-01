@@ -19,9 +19,9 @@ it('gracefully handles exceptions thrown while ingesting', function () {
             throw new RuntimeException('Whoops!');
         }
 
-        public function ping(): bool
+        public function ping(): void
         {
-            return true;
+            //
         }
     };
 
