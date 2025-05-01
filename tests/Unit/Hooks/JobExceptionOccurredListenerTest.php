@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Foundation\Application;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\JobExceptionOccurredListener;
@@ -30,4 +29,4 @@ it('gracefully handles exceptions', function () {
     expect($throwInExceptionSensor)->toBeTrue();
     expect($exceptions)->toHaveCount(1);
     expect($exceptions[0]->getMessage())->toBe('Whoops!');
-})->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');
+});

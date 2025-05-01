@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Foundation\Application;
 use Illuminate\Queue\Events\JobProcessing;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Hooks\JobProcessingListener;
@@ -24,4 +23,4 @@ it('gracefully handles exceptions', function () {
     expect(nightwatch()->state->exceptions)->toBe(1);
 
     forgetRecordedExceptions(1);
-})->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');
+});

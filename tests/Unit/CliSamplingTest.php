@@ -1,7 +1,6 @@
 <?php
 
 use App\Jobs\MyJob;
-use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
@@ -51,7 +50,7 @@ it('samples job attempts', function () {
     $ingest->write(nightwatch()->state->records->pull());
     $ingest->assertLatestWrite('cache-event:0.key', 'illuminate:queue:restart');
     $ingest->assertLatestWrite('job-attempt:*', []);
-})->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');
+});
 
 it('preparing for next job', function () {
     Config::set('queue.default', 'database');
@@ -88,7 +87,7 @@ it('preparing for next job', function () {
     expect(json_encode(nightwatch()->state->id()))->toBe('"1CF1F203-73A5-4E9D-8662-12E1C712F130"');
     expect(nightwatch()->state->executionPreview)->toBe('current');
     expect(nightwatch()->state->timestamp)->toBe(5.5);
-})->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');
+});
 
 it('can configure command sampling', function () {
     nightwatch()->sampling['commands'] = 0;
