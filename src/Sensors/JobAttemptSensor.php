@@ -56,10 +56,10 @@ final class JobAttemptSensor
             name: $name,
             connection: $event->job->getConnectionName(),
             queue: $this->normalizeQueue($event->job->getConnectionName(), $event->job->getQueue()),
-            status: match ($event::class) { // @phpstan-ignore-line match.unhandled
-                JobProcessed::class => 'processed',
-                JobReleasedAfterException::class => 'released',
-                JobFailed::class => 'failed',
+            status: match (true) {
+                $event->job->isReleased() => 'released',
+                $event->job->hasFailed() => 'failed',
+                default => 'processed',
             },
             duration: (int) round(($now - $this->executionState->timestamp) * 1_000_000),
             // When the job throws an exception, it will be captured after the job is recorded.
