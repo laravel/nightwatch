@@ -102,7 +102,7 @@ it('ingests job released job attempts', function ($workCommand) use ($workOption
     ]);
     ReleasedJob::dispatch();
 
-    Artisan::call($workCommand, $workOptions);
+    Artisan::call($workCommand, [...$workOptions, '--tries' => 2]);
 
     $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
