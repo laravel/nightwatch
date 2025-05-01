@@ -11,7 +11,6 @@ use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobPopping;
 use Illuminate\Queue\Events\JobProcessed;
@@ -73,11 +72,6 @@ final class CommandStartingListener
          * @see \Laravel\Nightwatch\State\CommandState::$id
          */
         $this->events->listen(JobProcessing::class, (new JobProcessingListener($this->nightwatch))(...));
-
-        /**
-         * @see \Laravel\Nightwatch\Records\Exception
-         */
-        $this->events->listen(JobExceptionOccurred::class, (new JobExceptionOccurredListener($this->nightwatch))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
