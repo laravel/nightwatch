@@ -26,6 +26,15 @@ it('configures the stream', function () {
     [$address, $connectionTimeout] = $calls[0];
     expect($address)->toBe('tcp://127.0.0.1:2407');
     expect($connectionTimeout)->toBe(0.5);
+    expect(StreamWrapper::$events->pluck('type')->all())->toBe([
+        'stream_open',
+        'stream_set_option',
+        'stream_write',
+        'stream_read',
+        'stream_eof',
+        'stream_flush',
+        'stream_close',
+    ]);
 });
 
 it('throws an exception when unable to set read timeout', function () {
@@ -49,6 +58,15 @@ it('sets the read timeout', function () {
     expect(StreamWrapper::type('stream_set_option')->value('args'))->toBe([
         STREAM_OPTION_READ_TIMEOUT, 0, 500000,
     ]);
+    expect(StreamWrapper::$events->pluck('type')->all())->toBe([
+        'stream_open',
+        'stream_set_option',
+        'stream_write',
+        'stream_read',
+        'stream_eof',
+        'stream_flush',
+        'stream_close',
+    ]);
 });
 
 it('can write the payload in one write', function () {
@@ -59,6 +77,15 @@ it('can write the payload in one write', function () {
     expect(StreamWrapper::type('stream_write'))->toHaveCount(1);
     expect(StreamWrapper::type('stream_write')->value('args'))->toBe([
         '17:[{"t":"request"}]',
+    ]);
+    expect(StreamWrapper::$events->pluck('type')->all())->toBe([
+        'stream_open',
+        'stream_set_option',
+        'stream_write',
+        'stream_read',
+        'stream_eof',
+        'stream_flush',
+        'stream_close',
     ]);
 });
 
@@ -90,6 +117,18 @@ it('can write the payload in multiple write', function () {
         ['7:[{"t":"request"}]'],
         ['{"t":"request"}]'],
         ['"request"}]'],
+    ]);
+    expect(StreamWrapper::$events->pluck('type')->all())->toBe([
+        'stream_open',
+        'stream_set_option',
+        'stream_write',
+        'stream_write',
+        'stream_write',
+        'stream_write',
+        'stream_read',
+        'stream_eof',
+        'stream_flush',
+        'stream_close',
     ]);
 });
 
@@ -123,6 +162,15 @@ it('reads response from stream', function () {
     expect(StreamWrapper::type('stream_read')->value('args'))->toBe([
         8192,
     ]);
+    expect(StreamWrapper::$events->pluck('type')->all())->toBe([
+        'stream_open',
+        'stream_set_option',
+        'stream_write',
+        'stream_read',
+        'stream_eof',
+        'stream_flush',
+        'stream_close',
+    ]);
 });
 
 it('can read multiple times from stream', function () {
@@ -139,10 +187,25 @@ it('can read multiple times from stream', function () {
         [8192],
         [8192],
     ]);
+    expect(StreamWrapper::$events->pluck('type')->all())->toBe([
+        'stream_open',
+        'stream_set_option',
+        'stream_write',
+        'stream_read',
+        'stream_eof',
+        'stream_read',
+        'stream_eof',
+        'stream_read',
+        'stream_eof',
+        'stream_read',
+        'stream_eof',
+        'stream_flush',
+        'stream_close',
+    ]);
 });
 
 it('throws an exception if stream EOFs before getting the expected response', function () {
-    $response = ['2', ':'];
+    $response = ['2', ':', false];
     StreamWrapper::intercept('stream_read', function () use (&$response) {
         if ($response === [':']) {
             StreamWrapper::intercept('stream_eof', fn () => true);
@@ -150,16 +213,39 @@ it('throws an exception if stream EOFs before getting the expected response', fu
 
         return array_shift($response);
     });
+
     nightwatch()->ingest->write('[{"t":"request"}]');
 })->throws(RuntimeException::class, <<<'MESSAGE'
-Unexpected response from agent [2:]
+Failed reading from the agent
 
 Timed out: false
-EOF: true
+EOF: false
 Blocked: true
 URI: tcp://127.0.0.1:2407
 Unread bytes: 0
 MESSAGE);
+
+it('throws when an unexpected response is received', function () {
+    StreamWrapper::intercept('stream_read', fn () => 'XXXXXXXXXXXXXXXXXXXXXXX');
+
+    nightwatch()->ingest->write('[{"t":"request"}]');
+})->throws(RuntimeException::class, <<<'MESSAGE'
+Unexpected response from agent [XXXX]
+
+Timed out: false
+EOF: false
+Blocked: true
+URI: tcp://127.0.0.1:2407
+Unread bytes: 19
+MESSAGE);
+
+it('closes the stream', function () {
+    StreamWrapper::intercept('stream_write', fn () => 20);
+
+    nightwatch()->ingest->write('[{"t":"request"}]');
+
+    expect(StreamWrapper::$events->pluck('type')->last())->toBe('stream_close');
+});
 
 class StreamWrapper
 {
@@ -200,7 +286,7 @@ class StreamWrapper
         static::$on = [
             'stream_open' => fn (string $path, string $mode, int $options, ?string &$openedPath): bool => true,
             'stream_set_option' => fn (int $option, int $arg1, int $arg2): bool => true,
-            'stream_write' => fn (string $value): int => rand(1, strlen($value)),
+            'stream_write' => fn (string $value): int => strlen($value),
             'stream_read' => fn (int $length): string|false => '2:OK',
             'stream_eof' => fn (): bool => false,
             'stream_flush' => fn (): bool => true,
