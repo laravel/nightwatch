@@ -94,7 +94,58 @@ it('ingests processed job attempts', function ($workCommand) use ($workOptions) 
     ]);
 })->with($workCommands);
 
-it('ingests job released job attempts', function ($workCommand) use ($workOptions) {
+it('ingests released job attempts', function ($workCommand) use ($workOptions) {
+    $ingest = fakeIngest();
+    Str::createUuidsUsingSequence([
+        $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
+        $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
+    ]);
+    FailedJob::dispatch();
+
+    Artisan::call($workCommand, [...$workOptions, '--tries' => 2]);
+
+    $ingest->assertWrittenTimes(2);
+    $ingest->assertLatestWrite('job-attempt:*', [
+        [
+            'v' => 1,
+            't' => 'job-attempt',
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            '_group' => hash('xxh128', 'FailedJob'),
+            'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+            'user' => '',
+            'job_id' => $jobId,
+            'attempt_id' => $attemptId,
+            'attempt' => 1,
+            'name' => 'FailedJob',
+            'connection' => 'database',
+            'queue' => 'default',
+            'status' => 'released',
+            'duration' => 2500,
+            'exceptions' => 1,
+            'logs' => 0,
+            'queries' => 5, // Reserve, delete, and insert into the jobs table
+            'lazy_loads' => 0,
+            'jobs_queued' => 0,
+            'mail' => 0,
+            'notifications' => 0,
+            'outgoing_requests' => 0,
+            'files_read' => 0,
+            'files_written' => 0,
+            'cache_events' => 0,
+            'hydrated_models' => 0,
+            'peak_memory_usage' => 1234,
+            'exception_preview' => 'Job failed',
+        ],
+    ]);
+    $ingest->assertLatestWrite('exception:0.execution_source', 'job');
+    $ingest->assertLatestWrite('exception:0.execution_id', $attemptId);
+
+    forgetRecordedExceptions(1);
+})->with($workCommands);
+
+it('ingests manually released job attempts', function ($workCommand) use ($workOptions) {
     $ingest = fakeIngest();
     Str::createUuidsUsingSequence([
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
