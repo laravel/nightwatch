@@ -14,8 +14,6 @@
 /agent/composer.json export-ignore
 /agent/composer.lock export-ignore
 /art export-ignore
-/client/composer.json export-ignore
-/client/composer.lock export-ignore
 /composer-dependency-analyser.php export-ignore
 /phpstan.neon.dist export-ignore
 /phpunit.xml.dist export-ignore
