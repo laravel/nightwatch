@@ -16,6 +16,7 @@ use Illuminate\Queue\Events\JobPopping;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
+use Illuminate\Queue\Events\Looping;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\State\CommandState;
@@ -63,6 +64,11 @@ final class CommandStartingListener
         $this->nightwatch->configureForJobs();
 
         /**
+         * @see \Laravel\Nightwatch\Core::ingest()
+         */
+        $this->events->listen(Looping::class, (new LoopingListener($this->nightwatch))(...));
+
+        /**
          * @see \Laravel\Nightwatch\State\CommandState::reset()
          */
         $this->events->listen(JobPopping::class, (new JobPoppingListener($this->nightwatch))(...));
@@ -75,7 +81,6 @@ final class CommandStartingListener
 
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
-         * @see \Laravel\Nightwatch\Core::ingest()
          */
         $this->events->listen([
             JobProcessed::class,
