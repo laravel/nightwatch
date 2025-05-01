@@ -7,8 +7,10 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
+use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\Types\Str;
 
 use function hash;
 use function in_array;
@@ -77,7 +79,7 @@ final class JobAttemptSensor
             cache_events: $this->executionState->cacheEvents,
             hydrated_models: $this->executionState->hydratedModels,
             peak_memory_usage: $this->executionState->peakMemory(),
-            exception_preview: $this->executionState->exceptionPreview,
+            exception_preview: new LazyValue(fn () => Str::tinyText($this->executionState->exceptionPreview)),
         ));
     }
 }

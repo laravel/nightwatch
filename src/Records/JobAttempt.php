@@ -19,6 +19,7 @@ final class JobAttempt
      * @param  string|LazyValue<string>  $user
      * @param  string|LazyValue<string>  $attempt_id
      * @param  'processed'|'released'|'failed'  $status
+     * @param  LazyValue<string>  $exception_preview
      */
     public function __construct(
         public float $timestamp,
@@ -49,11 +50,10 @@ final class JobAttempt
         public int $cache_events,
         public int $hydrated_models,
         public int $peak_memory_usage,
-        public string $exception_preview,
+        public LazyValue $exception_preview,
     ) {
         $this->name = Str::text($this->name);
         $this->connection = Str::tinyText($this->connection);
         $this->queue = Str::tinyText($this->queue);
-        $this->exception_preview = Str::tinyText($this->exception_preview);
     }
 }
