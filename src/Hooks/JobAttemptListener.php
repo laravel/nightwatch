@@ -30,5 +30,7 @@ final class JobAttemptListener
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
+
+        $this->nightwatch->ingest();
     }
 }
