@@ -8,7 +8,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  supported_php_version: "[8.2, 8.3, 8.4]"
+  supported_php_version: "[8.2, 8.3, 8.4]"  # this needs to be manually updated in the matrix
   package_extensions: none, mbstring, curl, ctype, tokenizer, mongodb, xml, pdo, fileinfo, dom, xmlwriter, simplexml, sqlite3, pdo_sqlite, posix, redis
   agent_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter
   client_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter
