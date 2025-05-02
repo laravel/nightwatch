@@ -384,7 +384,7 @@ jobs:
         run: composer update --no-interaction --no-progress ${{ matrix.prefer-lowest == '1' && '--prefer-lowest' || '--prefer-dist' }}
 
       - name: Execute tests
-        run: vendor/bin/pest --coverage --min=80
+        run: vendor/bin/pest --coverage --min=80 ${{ matrix.prefer-lowest == '1' && '--exclude-testsuite=Architecture' || '' }}
 
   agent_tests:
     runs-on: ubuntu-latest
