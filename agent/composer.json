@@ -5,7 +5,7 @@
     "description": "The official Laravel Nightwatch agent.",
     "keywords": ["laravel", "monitoring", "insights"],
     "homepage": "https://nightwatch.laravel.com",
-    "license": "AGPL-3.0-or-later",
+    "license": "MIT",
     "support": {
         "docs": "https://nightwatch.laravel.com/docs",
         "issues": "https://github.com/laravel/nightwatch/issues",
@@ -54,12 +54,20 @@
             "@composer lint"
         ],
         "lint": [
-            "@php vendor/bin/pint --config=pint.ci.json",
-            "@php vendor/bin/pint",
-            "@php vendor/bin/phpstan --memory-limit=-1 --verbose"
+            "@php vendor/bin/phpstan --memory-limit=-1 --verbose",
+            "@php vendor/bin/pint --config=pint.ci.json --cache-file=.pint.ci.cache",
+            "@php vendor/bin/pint --cache-file=.pint.cache"
         ],
         "test": [
             "@php vendor/bin/pest"
+        ],
+        "build": [
+            "box compile",
+            "box info:signature build/agent.phar > build/signature.txt"
+        ],
+        "watch": [
+            "npm ci",
+            "node watch.js"
         ]
     },
     "config": {

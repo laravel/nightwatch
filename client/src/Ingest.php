@@ -9,6 +9,7 @@ use React\Socket\ConnectorInterface;
 use Throwable;
 
 use function React\Async\await;
+use function strlen;
 
 class Ingest
 {
@@ -33,7 +34,7 @@ class Ingest
     private function ingest(string $payload): PromiseInterface
     {
         return $this->connect()->then(static function (ConnectionInterface $connection) use ($payload) {
-            $connection->end($payload);
+            $connection->end(strlen($payload).':'.$payload);
 
             return '';
         });
@@ -53,10 +54,6 @@ class Ingest
                 $output .= $data;
             });
 
-            $connection->on('end', static function () use (&$output, $deferred) {
-                $deferred->resolve($output);
-            });
-
             $connection->on('close', static function () use (&$output, $deferred) {
                 $deferred->resolve($output);
             });
@@ -65,7 +62,7 @@ class Ingest
                 $deferred->reject($e);
             });
 
-            $connection->write('PING');
+            $connection->write('4:PING');
 
             return $deferred->promise();
         });

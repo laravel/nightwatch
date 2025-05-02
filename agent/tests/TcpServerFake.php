@@ -8,6 +8,7 @@ use RuntimeException;
 
 use function is_string;
 use function json_encode;
+use function strlen;
 
 class TcpServerFake extends EventEmitter implements ServerInterface
 {
@@ -17,13 +18,18 @@ class TcpServerFake extends EventEmitter implements ServerInterface
     public array $connections = [];
 
     /**
-     * @param  list<array<string, mixed>>  $payload
+     * @param  string|list<array<string, mixed>>  $records
      */
-    public function pendingConnection(array|string $payload): PendingConnection
+    public function pendingConnection(array|string $records): PendingConnection
     {
-        return new PendingConnection($this, is_string($payload)
-            ? $payload
-            : json_encode($payload, flags: JSON_THROW_ON_ERROR));
+        if (is_string($records)) {
+            return new PendingConnection($this, $records);
+        }
+
+        $records = json_encode($records, flags: JSON_THROW_ON_ERROR);
+        $records = strlen($records).':'.$records;
+
+        return new PendingConnection($this, $records);
     }
 
     public function getAddress()

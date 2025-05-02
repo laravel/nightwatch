@@ -5,18 +5,13 @@ namespace Laravel\NightwatchAgent;
 use Closure;
 use React\Socket\ConnectionInterface;
 use React\Socket\ServerInterface;
+use RuntimeException;
 use Throwable;
-use WeakMap;
 
 use function call_user_func;
 
 class Server
 {
-    /**
-     * @var WeakMap<ConnectionInterface, string>
-     */
-    private WeakMap $connections;
-
     /**
      * @param  (Closure(): ServerInterface)  $serverResolver
      * @param  (Closure(): mixed)  $onServerStarted
@@ -31,7 +26,7 @@ class Server
         private Closure $onConnectionError,
         private Closure $onPayloadReceived,
     ) {
-        $this->connections = new WeakMap;
+        //
     }
 
     public function start(): void
@@ -39,26 +34,26 @@ class Server
         $server = call_user_func($this->serverResolver);
 
         $server->on('connection', function (ConnectionInterface $connection): void {
-            $this->accept($connection);
+            $payload = new Payload;
 
-            $connection->on('data', function (string $chunk) use ($connection): void {
-                match ($chunk) {
-                    'PING' => $connection->end('PONG'),
-                    default => $this->bufferConnectionChunk($connection, $chunk),
-                };
+            $connection->on('data', function (string $chunk) use ($connection, $payload): void {
+                $payload->append($chunk);
+
+                if ($payload->complete) {
+                    match ($payload->value) {
+                        'PING' => $connection->end('4:PONG'),
+                        default => call_user_func($this->onPayloadReceived, $payload->value),
+                    };
+                }
             });
 
-            $connection->on('end', function () use ($connection): void {
-                call_user_func($this->onPayloadReceived, $this->flushConnectionBuffer($connection));
+            $connection->on('close', function () use ($payload) {
+                if (! $payload->complete) {
+                    call_user_func($this->onConnectionError, new RuntimeException("Incomplete payload received. Length: [{$payload->length}] Value: [{$payload->value}]"));
+                }
             });
 
-            $connection->on('close', function () use ($connection): void {
-                $this->evict($connection);
-            });
-
-            $connection->on('error', function (Throwable $e) use ($connection): void {
-                $this->evict($connection);
-
+            $connection->on('error', function (Throwable $e): void {
                 call_user_func($this->onConnectionError, $e);
             });
         });
@@ -68,31 +63,5 @@ class Server
         });
 
         call_user_func($this->onServerStarted);
-    }
-
-    private function accept(ConnectionInterface $connection): void
-    {
-        $this->connections[$connection] = '';
-    }
-
-    private function bufferConnectionChunk(ConnectionInterface $connection, string $chunk): void
-    {
-        $this->connections[$connection] .= $chunk;
-    }
-
-    private function flushConnectionBuffer(ConnectionInterface $connection): string
-    {
-        $payload = $this->connections[$connection];
-
-        $this->evict($connection);
-
-        return $payload;
-    }
-
-    private function evict(ConnectionInterface $connection): void
-    {
-        $connection->close();
-
-        unset($this->connections[$connection]);
     }
 }

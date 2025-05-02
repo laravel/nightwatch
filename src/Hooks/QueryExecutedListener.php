@@ -8,8 +8,6 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
-use function debug_backtrace;
-
 /**
  * @internal
  */
@@ -27,7 +25,7 @@ final class QueryExecutedListener
     public function __invoke(QueryExecuted $event): void
     {
         try {
-            $this->nightwatch->sensor->query($event, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 20));
+            $this->nightwatch->query($event);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

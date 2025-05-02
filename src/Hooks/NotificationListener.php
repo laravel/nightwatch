@@ -26,7 +26,7 @@ final class NotificationListener
     public function __invoke(NotificationSending|NotificationSent $event): void
     {
         try {
-            $this->nightwatch->sensor->notification($event);
+            $this->nightwatch->notification($event);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

@@ -204,7 +204,7 @@ it('normalizes sqs queue names', function () {
         payload: '{"uuid":"00000000-0000-0000-0000-000000000000"}',
         delay: 0,
     ));
-    $ingest->write(nightwatch()->state->records->flush());
+    $ingest->write(nightwatch()->state->records->pull());
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('queued-job:0.queue', 'queue-name');

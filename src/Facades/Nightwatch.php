@@ -8,9 +8,9 @@ use Throwable;
 use function call_user_func;
 
 /**
- * @method static void report(\Throwable $e)
  * @method static void user(callable $callback)
  * @method static callable guzzleMiddleware()
+ * @method static void report(\Throwable $e)
  *
  * @see \Laravel\Nightwatch\Core
  */

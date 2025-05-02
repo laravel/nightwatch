@@ -15,9 +15,9 @@ class StreamBuffer
         //
     }
 
-    public function write(string $input): void
+    public function write(string $payload): void
     {
-        $input = substr(substr($input, 1), 0, -1);
+        $input = substr($payload, 1, -1);
 
         if ($this->buffer === '') {
             $this->buffer = $input;
@@ -26,7 +26,7 @@ class StreamBuffer
         }
     }
 
-    public function wantsFlushing(): bool
+    public function reachedThreshold(): bool
     {
         return strlen($this->buffer) >= $this->threshold;
     }
@@ -34,7 +34,7 @@ class StreamBuffer
     /**
      * @return non-empty-string
      */
-    public function flush(): string
+    public function pull(): string
     {
         $payload = '{"records":['.$this->buffer.']}';
 
@@ -46,5 +46,10 @@ class StreamBuffer
     public function isNotEmpty(): bool
     {
         return $this->buffer !== '';
+    }
+
+    public function flush(): void
+    {
+        $this->buffer = '';
     }
 }

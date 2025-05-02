@@ -3,7 +3,9 @@
 namespace Laravel\Nightwatch\Console;
 
 use Illuminate\Console\Command;
-use Laravel\Nightwatch\Ingest;
+use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
@@ -24,16 +26,23 @@ final class StatusCommand extends Command
      */
     protected $description = 'Get the current status of the Nightwatch agent.';
 
-    public function handle(Ingest $ingest): int
+    /**
+     * @param  Core<RequestState|CommandState>  $nightwatch
+     */
+    public function handle(Core $nightwatch): int
     {
-        try {
-            $response = $ingest->ping();
+        if (! $nightwatch->enabled) {
+            $this->components->error('Nightwatch is disabled');
 
-            if ($response !== 'PONG') {
-                throw new RuntimeException("Unexpected response from the agent [{$response}]");
+            return 1;
+        }
+
+        try {
+            if (! $nightwatch->ingest->ping()) {
+                throw new RuntimeException('Failed to check the status of the Nightwatch agent');
             }
 
-            $this->components->success('The agent is running and accepting connections.');
+            $this->components->info('The Nightwatch agent is running and accepting connections');
 
             return 0;
         } catch (Throwable $e) {

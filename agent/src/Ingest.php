@@ -23,7 +23,7 @@ class Ingest
 {
     private int $concurrentRequests = 0;
 
-    private ?TimerInterface $flushBufferAfterDelayTimer = null;
+    private ?TimerInterface $sendBufferAfterDelayTimer = null;
 
     private StreamBuffer|NullBuffer $buffer;
 
@@ -54,21 +54,21 @@ class Ingest
     {
         $this->buffer->write($payload);
 
-        if ($this->buffer->wantsFlushing()) {
-            $records = $this->buffer->flush();
+        if ($this->buffer->reachedThreshold()) {
+            $records = $this->buffer->pull();
 
-            if ($this->flushBufferAfterDelayTimer !== null) {
-                $this->loop->cancelTimer($this->flushBufferAfterDelayTimer);
+            if ($this->sendBufferAfterDelayTimer !== null) {
+                $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
 
-                $this->flushBufferAfterDelayTimer = null;
+                $this->sendBufferAfterDelayTimer = null;
             }
 
             $this->ingest($records);
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->flushBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, function (): void {
-                $records = $this->buffer->flush();
+            $this->sendBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, function (): void {
+                $records = $this->buffer->pull();
 
-                $this->flushBufferAfterDelayTimer = null;
+                $this->sendBufferAfterDelayTimer = null;
 
                 $this->ingest($records);
             });

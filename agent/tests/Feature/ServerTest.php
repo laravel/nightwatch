@@ -14,7 +14,7 @@ it('can ping the server', function () {
     $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
     $ingestBrowser = new BrowserFake;
 
-    $loop->addTimer(0, $server->pendingConnection('PING'));
+    $loop->addTimer(0, $server->pendingConnection('4:PING'));
 
     [$output, $e] = run(
         via: 'source',
@@ -26,7 +26,7 @@ it('can ping the server', function () {
 
     expect($e)->toBeNull($e?->getMessage() ?? '');
     expect($server)->toHaveConnections([
-        Connection::closed('PONG'),
+        Connection::closed('4:PONG'),
     ]);
     expect($output)->toMatchLog(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}

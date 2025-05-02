@@ -27,11 +27,19 @@ final class HttpKernelResolvedHandler
 
     public function __invoke(KernelContract $kernel, Application $app): void
     {
-        try {
-            if (! $kernel instanceof Kernel) {
-                return;
-            }
+        if (! $kernel instanceof Kernel) {
+            return;
+        }
 
+        try {
+            $this->nightwatch->configureSampling('requests');
+        } catch (Throwable $e) {
+            $this->nightwatch->shouldSample = false;
+
+            Nightwatch::unrecoverableExceptionOccurred($e);
+        }
+
+        try {
             /**
              * @see \Laravel\Nightwatch\ExecutionStage::End
              * @see \Laravel\Nightwatch\Records\Request

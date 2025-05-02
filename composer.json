@@ -3,7 +3,7 @@
     "description": "The official Laravel Nightwatch package.",
     "keywords": ["laravel", "monitoring", "insights"],
     "homepage": "https://nightwatch.laravel.com",
-    "license": "AGPL-3.0-or-later",
+    "license": "MIT",
     "support": {
         "docs": "https://nightwatch.laravel.com/docs",
         "issues": "https://github.com/laravel/nightwatch/issues",
@@ -18,6 +18,7 @@
     "require": {
         "php": "^8.2",
         "ext-zlib": "*",
+        "guzzlehttp/promises": "^2.0",
         "laravel/framework": "^10.0|^11.0|^12.0",
         "monolog/monolog": "^3.0",
         "nesbot/carbon": "^2.0|^3.0",
@@ -28,7 +29,6 @@
     },
     "require-dev": {
         "guzzlehttp/guzzle": "^7.0",
-        "guzzlehttp/promises": "^2.0",
         "guzzlehttp/psr7": "^2.0",
         "laravel/horizon": "^5.4",
         "laravel/pint": "1.21.0",
@@ -90,9 +90,9 @@
             "@composer lint"
         ],
         "lint": [
-            "@php vendor/bin/pint --config=pint.ci.json",
-            "@php vendor/bin/pint",
-            "@php vendor/bin/phpstan --memory-limit=-1 --verbose"
+            "@php vendor/bin/phpstan --memory-limit=-1 --verbose",
+            "@php vendor/bin/pint --config=pint.ci.json --cache-file=.pint.ci.cache",
+            "@php vendor/bin/pint --cache-file=.pint.cache"
         ],
         "test": [
             "@php vendor/bin/testbench package:purge-skeleton",

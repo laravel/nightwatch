@@ -2,9 +2,9 @@
 
 use Illuminate\Foundation\Application;
 use Illuminate\Queue\Events\JobProcessing;
-use Illuminate\Queue\Jobs\FakeJob;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Hooks\JobProcessingListener;
+use Tests\FakeJob;
 
 it('gracefully handles exceptions', function () {
     $thrownInMicrotimeResolver = false;

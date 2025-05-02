@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch;
 
 use Laravel\Nightwatch\Contracts\LocalIngest;
+use RuntimeException;
 
 use function call_user_func;
 
@@ -33,9 +34,15 @@ final class Ingest implements LocalIngest
         $this->ingest($payload);
     }
 
-    public function ping(): string
+    public function ping(): bool
     {
-        return $this->ingest('PING');
+        $response = $this->ingest('PING');
+
+        if ($response === '4:PONG') {
+            return true;
+        }
+
+        throw new RuntimeException("Unexpected response from agent: [{$response}]");
     }
 
     private function ingest(string $payload): string

@@ -8,4 +8,6 @@ namespace Laravel\Nightwatch\Contracts;
 interface LocalIngest
 {
     public function write(string $payload): void;
+
+    public function ping(): bool;
 }

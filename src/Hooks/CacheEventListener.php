@@ -25,7 +25,7 @@ final class CacheEventListener
     public function __invoke(CacheEvent $event): void
     {
         try {
-            $this->nightwatch->sensor->cacheEvent($event);
+            $this->nightwatch->cacheEvent($event);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

@@ -4,12 +4,12 @@ namespace Laravel\NightwatchAgent;
 
 class NullBuffer
 {
-    public function write(string $input): void
+    public function write(string $payload): void
     {
         //
     }
 
-    public function wantsFlushing(): bool
+    public function reachedThreshold(): bool
     {
         return false;
     }
@@ -17,7 +17,7 @@ class NullBuffer
     /**
      * @return non-empty-string
      */
-    public function flush(): string
+    public function pull(): string
     {
         return '{"records":[]}';
     }

@@ -2,8 +2,8 @@
 
 use Illuminate\Foundation\Application;
 use Illuminate\Queue\Events\JobAttempted;
-use Illuminate\Queue\Jobs\FakeJob;
 use Laravel\Nightwatch\Hooks\JobAttemptedListener;
+use Tests\FakeJob;
 
 it('gracefully handles exceptions', function () {
     fakeIngest();

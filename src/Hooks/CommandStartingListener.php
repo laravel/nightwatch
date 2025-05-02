@@ -18,7 +18,6 @@ use Illuminate\Queue\Events\JobProcessing;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\Types\Str;
 use Throwable;
 
 /**
@@ -26,6 +25,8 @@ use Throwable;
  */
 final class CommandStartingListener
 {
+    private bool $hasRun = false;
+
     /**
      * @param  Core<CommandState>  $nightwatch
      */
@@ -39,22 +40,17 @@ final class CommandStartingListener
 
     public function __invoke(CommandStarting $event): void
     {
-        try {
-            if ($this->nightwatch->state->name === null) {
-                $this->nightwatch->state->name = $event->command;
-                $this->nightwatch->state->executionPreview = Str::tinyText($event->command);
-            } else {
-                return;
-            }
-        } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+        if ($this->hasRun) {
+            return;
         }
+
+        $this->hasRun = true;
 
         try {
             match ($event->command) {
                 'queue:work', 'queue:listen', 'horizon:work' => $this->registerJobHooks(),
                 'schedule:run', 'schedule:work' => $this->registerScheduledTaskHooks(),
-                default => $this->registerCommandHooks(),
+                default => $this->registerCommandHooks($event),
             };
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
@@ -63,7 +59,7 @@ final class CommandStartingListener
 
     private function registerJobHooks(): void
     {
-        $this->nightwatch->state->source = 'job';
+        $this->nightwatch->configureForJobs();
 
         /**
          * @see \Laravel\Nightwatch\State\CommandState::reset()
@@ -90,7 +86,7 @@ final class CommandStartingListener
 
     private function registerScheduledTaskHooks(): void
     {
-        $this->nightwatch->state->source = 'schedule';
+        $this->nightwatch->configureForScheduledTasks();
 
         $this->events->listen(ScheduledTaskStarting::class, (new ScheduledTaskStartingListener($this->nightwatch))(...));
 
@@ -104,11 +100,21 @@ final class CommandStartingListener
         ], (new ScheduledTaskListener($this->nightwatch))(...));
     }
 
-    private function registerCommandHooks(): void
+    private function registerCommandHooks(CommandStarting $event): void
     {
         if (! $this->kernel instanceof ConsoleKernel) {
             return;
         }
+
+        try {
+            $this->nightwatch->configureSampling('commands');
+        } catch (Throwable $e) {
+            $this->nightwatch->shouldSample = false;
+
+            throw $e;
+        }
+
+        $this->nightwatch->prepareForCommand($event->command);
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
