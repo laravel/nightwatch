@@ -196,9 +196,12 @@ it('can read multiple times from stream', function () {
         'stream_write',
         'stream_read',
         'stream_eof',
-        'stream_read',
         'stream_eof',
         'stream_read',
+        'stream_eof',
+        'stream_eof',
+        'stream_read',
+        'stream_eof',
         'stream_eof',
         'stream_read',
         'stream_eof',
@@ -270,6 +273,53 @@ Failed reading from the agent
 
 Stream already closed
 MESSAGE);
+
+it('stops attempting to read once the stream has reached eof', function () {
+    StreamWrapper::intercept('stream_write', fn (string $value) => 28);
+    $reads = 0;
+    StreamWrapper::intercept('stream_read', function () use (&$reads) {
+        $reads++;
+
+        if ($reads > 2) {
+            StreamWrapper::intercept('stream_eof', fn () => true);
+        }
+
+        return '';
+    });
+
+    try {
+        nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
+    } catch (Throwable $e) {
+        //
+    }
+
+    expect($e)->toBeInstanceOf(RuntimeException::class);
+    expect($e->getMessage())->toBe(<<<'MESSAGE'
+    Unexpected response from agent []
+
+    Timed out: false
+    EOF: true
+    Blocked: true
+    URI: tcp://127.0.0.1:2407
+    Unread bytes: 0
+    MESSAGE);
+    expect($reads)->toBe(3);
+    expect(StreamWrapper::$events->pluck('type')->all())->toBe([
+        'stream_open',
+        'stream_set_option',
+        'stream_write',
+        'stream_read',
+        'stream_eof',
+        'stream_eof',
+        'stream_read',
+        'stream_eof',
+        'stream_eof',
+        'stream_read',
+        'stream_eof',
+        'stream_flush',
+        'stream_close',
+    ]);
+});
 
 class StreamWrapper
 {
