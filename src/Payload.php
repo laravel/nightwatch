@@ -9,7 +9,8 @@ use function strlen;
  */
 final class Payload
 {
-    public const SIGNATURE = '927361b';
+    // TODO
+    public const SIGNATURE = '57EBE5';
 
     /**
      * @param  'TEXT'|'JSON'  $type
