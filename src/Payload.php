@@ -14,7 +14,7 @@ final class Payload
      *
      * Do not modify this constant location or value.
      */
-    public const SIGNATURE = '57EBE5A';
+    public const SIGNATURE = '7F7C9AA';
 
     /**
      * @param  'TEXT'|'JSON'  $type
