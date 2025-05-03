@@ -8,6 +8,7 @@ use Throwable;
 
 use function call_user_func;
 use function fclose;
+use function feof;
 use function fread;
 use function fwrite;
 use function gettype;
@@ -133,8 +134,7 @@ final class Ingest implements LocalIngest
             }
 
             $response .= $part;
-
-        } while (strlen($response) < 4);
+        } while (strlen($response) < 4 && ! feof($stream));
 
         if ($response !== '2:OK') {
             $this->closeStreamAfterError("Unexpected response from agent [{$response}]", $stream);
