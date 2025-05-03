@@ -9,7 +9,11 @@ use function strlen;
  */
 final class Payload
 {
-    // TODO
+    /**
+     * This value is automatically generated.
+     *
+     * Do not modify this constant location or value.
+     */
     public const SIGNATURE = '57EBE5A';
 
     /**
