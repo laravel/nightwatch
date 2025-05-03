@@ -40,7 +40,7 @@ class Server
         $server->on('connection', function (ConnectionInterface $connection) use ($server): void {
             $payload = new Payload;
 
-            $connection->on('data', function (string $chunk) use ($connection, $payload): void {
+            $connection->on('data', static function (string $chunk) use ($connection, $payload): void {
                 $payload->append($chunk);
 
                 if (! $payload->complete) {
