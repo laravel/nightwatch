@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Collection;
+use Laravel\Nightwatch\Payload;
 
 beforeEach(function () {
     StreamWrapper::reset();
@@ -20,7 +21,7 @@ it('configures the stream', function () {
         return fopen($args[0], 'r+');
     };
 
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 
     expect($calls)->toHaveCount(1);
     [$address, $connectionTimeout] = $calls[0];
@@ -40,7 +41,7 @@ it('configures the stream', function () {
 it('throws an exception when unable to set read timeout', function () {
     StreamWrapper::intercept('stream_set_option', fn () => false);
 
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 })->throws(RuntimeException::class, <<<'MESSAGE'
 Failed configuring agent read timeout
 
@@ -52,7 +53,7 @@ Unread bytes: 0
 MESSAGE);
 
 it('sets the read timeout', function () {
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 
     expect(StreamWrapper::type('stream_set_option'))->toHaveCount(1);
     expect(StreamWrapper::type('stream_set_option')->value('args'))->toBe([
@@ -70,13 +71,13 @@ it('sets the read timeout', function () {
 });
 
 it('can write the payload in one write', function () {
-    StreamWrapper::intercept('stream_write', fn (string $value) => 20);
+    StreamWrapper::intercept('stream_write', fn (string $value) => 28);
 
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 
     expect(StreamWrapper::type('stream_write'))->toHaveCount(1);
     expect(StreamWrapper::type('stream_write')->value('args'))->toBe([
-        '17:[{"t":"request"}]',
+        '25:'.Payload::SIGNATURE.':[{"t":"request"}]',
     ]);
     expect(StreamWrapper::$events->pluck('type')->all())->toBe([
         'stream_open',
@@ -92,9 +93,9 @@ it('can write the payload in one write', function () {
 it('throws an exception if initial write to stream fails', function () {
     StreamWrapper::intercept('stream_write', fn (string $value) => false);
 
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 })->throws(RuntimeException::class, <<<'MESSAGE'
-Unable to write to the agent. Written [0] Expected [20]
+Unable to write to the agent. Written [0] Expected [28]
 
 Timed out: false
 EOF: false
@@ -104,23 +105,25 @@ Unread bytes: 0
 MESSAGE);
 
 it('can write the payload in multiple write', function () {
-    $writes = [1, 3, 5, 11];
+    $writes = [3, 7, 3, 5, 10];
     StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
         return array_shift($writes);
     });
 
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 
-    expect(StreamWrapper::type('stream_write'))->toHaveCount(4);
+    expect(StreamWrapper::type('stream_write'))->toHaveCount(5);
     expect(StreamWrapper::type('stream_write')->pluck('args')->all())->toBe([
-        ['17:[{"t":"request"}]'],
-        ['7:[{"t":"request"}]'],
-        ['{"t":"request"}]'],
-        ['"request"}]'],
+        ['25:'.Payload::SIGNATURE.':[{"t":"request"}]'],
+        [Payload::SIGNATURE.':[{"t":"request"}]'],
+        [':[{"t":"request"}]'],
+        ['"t":"request"}]'],
+        ['request"}]'],
     ]);
     expect(StreamWrapper::$events->pluck('type')->all())->toBe([
         'stream_open',
         'stream_set_option',
+        'stream_write',
         'stream_write',
         'stream_write',
         'stream_write',
@@ -144,9 +147,9 @@ it('throws an exception if subsequent writes to stream fails', function () {
         return 3;
     });
 
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 })->throws(RuntimeException::class, <<<'MESSAGE'
-Unable to write to the agent. Written [6] Expected [20]
+Unable to write to the agent. Written [6] Expected [28]
 
 Timed out: false
 EOF: false
@@ -156,7 +159,7 @@ Unread bytes: 0
 MESSAGE);
 
 it('reads response from stream', function () {
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 
     expect(StreamWrapper::type('stream_read'))->toHaveCount(1);
     expect(StreamWrapper::type('stream_read')->value('args'))->toBe([
@@ -178,7 +181,7 @@ it('can read multiple times from stream', function () {
     StreamWrapper::intercept('stream_read', function () use (&$response) {
         return array_shift($response);
     });
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 
     expect(StreamWrapper::type('stream_read'))->toHaveCount(4);
     expect(StreamWrapper::type('stream_read')->pluck('args')->all())->toBe([
@@ -214,7 +217,7 @@ it('throws an exception if stream EOFs before getting the expected response', fu
         return array_shift($response);
     });
 
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 })->throws(RuntimeException::class, <<<'MESSAGE'
 Failed reading from the agent
 
@@ -228,7 +231,7 @@ MESSAGE);
 it('throws when an unexpected response is received', function () {
     StreamWrapper::intercept('stream_read', fn () => 'XXXXXXXXXXXXXXXXXXXXXXX');
 
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 })->throws(RuntimeException::class, <<<'MESSAGE'
 Unexpected response from agent [XXXX]
 
@@ -240,9 +243,9 @@ Unread bytes: 19
 MESSAGE);
 
 it('closes the stream', function () {
-    StreamWrapper::intercept('stream_write', fn () => 20);
+    StreamWrapper::intercept('stream_write', fn () => 28);
 
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 
     expect(StreamWrapper::$events->pluck('type')->last())->toBe('stream_close');
 });
@@ -261,7 +264,7 @@ it('does not retrieve meta of already closed stream', function () {
         return false;
     });
 
-    nightwatch()->ingest->write('[{"t":"request"}]');
+    nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 })->throws(RuntimeException::class, <<<'MESSAGE'
 Failed reading from the agent
 

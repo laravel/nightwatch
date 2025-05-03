@@ -2,6 +2,7 @@
 
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Laravel\Nightwatch\Payload;
 
 it('gracefully handles exceptions thrown while ingesting', function () {
     $exceptions = [];
@@ -12,7 +13,7 @@ it('gracefully handles exceptions thrown while ingesting', function () {
     {
         public bool $thrownInWrite = false;
 
-        public function write(string $payload): void
+        public function write(Payload $payload): void
         {
             $this->thrownInWrite = true;
 

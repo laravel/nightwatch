@@ -46,9 +46,9 @@ final class Ingest implements LocalIngest
         ];
     }
 
-    public function write(string $payload): void
+    public function write(Payload $payload): void
     {
-        if ($payload === '[]') {
+        if ($payload->isEmpty()) {
             return;
         }
 
@@ -57,14 +57,14 @@ final class Ingest implements LocalIngest
 
     public function ping(): void
     {
-        $this->ingest('PING');
+        $this->ingest(Payload::text('PING'));
     }
 
-    private function ingest(string $payload): void
+    private function ingest(Payload $payload): void
     {
         $stream = $this->createStream();
 
-        $this->sendPayload($stream, strlen($payload).':'.$payload);
+        $this->sendPayload($stream, $payload);
 
         $this->waitForAcknowledgment($stream);
 
@@ -94,11 +94,11 @@ final class Ingest implements LocalIngest
     /**
      * @param  resource  $stream
      */
-    private function sendPayload($stream, string $payload): void
+    private function sendPayload($stream, Payload $payload): void
     {
         $written = 0;
-        $remainingPayload = $payload;
-        $payloadLength = strlen($payload);
+        $remainingPayload = $payload->pull();
+        $payloadLength = strlen($remainingPayload);
 
         while (true) {
             $thisWrite = fwrite($stream, $remainingPayload);

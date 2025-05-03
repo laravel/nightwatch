@@ -174,7 +174,7 @@ it('samples commands', function () {
         nightwatch()->command($input, 0);
     }
 
-    expect(json_decode(nightwatch()->state->records->pull()))->toBe([]);
+    expect(json_decode(nightwatch()->state->records->pull()->sourcePayload()))->toBe([]);
 
     nightwatch()->sampling['commands'] = 1.0;
     nightwatch()->configureSampling('commands');
@@ -184,7 +184,7 @@ it('samples commands', function () {
         nightwatch()->command($input, 0);
     }
 
-    $commands = collect(json_decode(nightwatch()->state->records->pull()));
+    $commands = collect(json_decode(nightwatch()->state->records->pull()->sourcePayload()));
     expect($commands)->toHaveCount(10);
     expect($commands->pluck('name')->every(fn ($name) => $name === 'app:build'))->toBeTrue();
 });
