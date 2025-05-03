@@ -55,23 +55,9 @@ class Ingest
         $this->buffer->write($payload);
 
         if ($this->buffer->reachedThreshold()) {
-            $records = $this->buffer->pull();
-
-            if ($this->sendBufferAfterDelayTimer !== null) {
-                $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
-
-                $this->sendBufferAfterDelayTimer = null;
-            }
-
-            $this->ingest($records);
+            $this->digest();
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->sendBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, function (): void {
-                $records = $this->buffer->pull();
-
-                $this->sendBufferAfterDelayTimer = null;
-
-                $this->ingest($records);
-            });
+            $this->sendBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, $this->digest(...));
         }
     }
 
@@ -86,8 +72,16 @@ class Ingest
         $this->buffer = $this->streamBufferBackup;
     }
 
-    private function ingest(string $payload): void
+    public function digest(): void
     {
+        if ($this->sendBufferAfterDelayTimer !== null) {
+            $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
+
+            $this->sendBufferAfterDelayTimer = null;
+        }
+
+        $payload = $this->buffer->pull();
+
         if ($this->concurrentRequests >= $this->concurrentRequestLimit) {
             call_user_func($this->onIngestError, new RuntimeException("Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing"), 0.0);
 
