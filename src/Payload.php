@@ -2,6 +2,9 @@
 
 namespace Laravel\Nightwatch;
 
+use RuntimeException;
+
+use function in_array;
 use function strlen;
 
 /**
@@ -15,6 +18,8 @@ final class Payload
      * Do not modify this constant location or value.
      */
     public const SIGNATURE = '7F7C9AA';
+
+    private bool $pulled = false;
 
     /**
      * @param  'TEXT'|'JSON'  $type
@@ -36,13 +41,13 @@ final class Payload
         return new self('JSON', $payload);
     }
 
-    public function write(string $payload): void
-    {
-        $this->payload .= $payload;
-    }
-
     public function pull(): string
     {
+        if ($this->pulled) {
+            throw new RuntimeException('Payload has already been read');
+        }
+
+        $this->pulled = true;
         $payload = $this->payload;
 
         $this->payload = '';
@@ -60,7 +65,7 @@ final class Payload
     public function isEmpty(): bool
     {
         return match ($this->type) {
-            'JSON' => $this->payload === '[]',
+            'JSON' => in_array($this->payload, ['[]', '{}', '""', 'null'], true),
             'TEXT' => $this->payload === '',
         };
     }
