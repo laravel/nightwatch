@@ -13,9 +13,9 @@ use function strlen;
 final class Payload
 {
     /**
-     * This value is automatically generated.
+     * This value is automatically updated in CI.
      *
-     * Do not modify this constant location or value.
+     * Do not modify or re-locate this constant.
      */
     public const SIGNATURE = '7F7C9AA';
 
