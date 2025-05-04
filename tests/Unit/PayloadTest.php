@@ -53,10 +53,9 @@ it('can only pull the payload once', function () {
 
 it('pulling the payload frees the payload memory', function () {
     $payload = Payload::text('abc123');
-    $property = new ReflectionProperty(Payload::class, 'payload');
 
-    expect($property->getValue($payload))->toBe('abc123');
+    expect($payload->sourcePayload())->toBe('abc123');
 
     $payload->pull();
-    expect($property->getValue($payload))->toBe('');
+    expect($payload->sourcePayload())->toBe('');
 });
