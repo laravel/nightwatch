@@ -59,3 +59,15 @@ it('pulling the payload frees the payload memory', function () {
     $payload->pull();
     expect($payload->rawPayload())->toBe('');
 });
+
+it('has up-to-date signature', function () {
+    $signature = file_get_contents(__DIR__.'/../../agent/build/signature.txt');
+
+    if ($signature === false) {
+        throw new RuntimeException('Unable to read signature');
+    }
+
+    $signature = substr($signature, 0, 7);
+
+    expect(Payload::SIGNATURE)->toBe($signature);
+});
