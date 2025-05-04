@@ -304,7 +304,7 @@ jobs:
       # See: https://github.com/shivammathur/setup-php#cache-composer-dependencies
       - name: Get composer cache directory
         id: composer-cache
-        run: ${{ matrix.os == 'ubuntu-latest' && 'echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT' }}${{ matrix.os == 'windows-latest' && ''"dir=$(composer config cache-files-dir)" >> $env:GITHUB_OUTPUT' }}
+        run: ${{ matrix.os == 'ubuntu-latest' && 'echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT' || '"dir=$(composer config cache-files-dir)" >> $env:GITHUB_OUTPUT' }}
 
       - name: Cache dependencies
         uses: actions/cache@v4
