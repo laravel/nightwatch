@@ -273,7 +273,6 @@ jobs:
         run: vendor/bin/pest --coverage --min=80
 
   agent_tests:
-    runs-on: ${{ matrix.runs-on }}
     needs:
       - build_agent
     if: ${{ needs.build_agent.outputs.agent-committed == 'false' }}
@@ -286,6 +285,7 @@ jobs:
         runs-on: ['ubuntu-latest', 'windows-latest']
         php: [8.2, 8.3]
 
+    runs-on: ${{ matrix.runs-on }}
     name: Test agent [PHP ${{ matrix.php }} System ${{ matrix-runs-on }}]
 
     steps:
