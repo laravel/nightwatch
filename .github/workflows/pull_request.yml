@@ -304,14 +304,14 @@ jobs:
       # See: https://github.com/shivammathur/setup-php#cache-composer-dependencies
       - name: Get composer cache directory (Ubuntu)
         id: composer-cache
-        if: ${{ matrix.os === 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       # See: https://github.com/shivammathur/setup-php#cache-composer-dependencies
       - name: Get composer cache directory (Windows)
         id: composer-cache
-        if: ${{ matrix.os === 'windows-latest' }}
-        run: "dir=$(composer config cache-files-dir)" >> $env:GITHUB_OUTPUT
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: '"dir=$(composer config cache-files-dir)" >> $env:GITHUB_OUTPUT'
 
       - name: Cache dependencies
         uses: actions/cache@v4
