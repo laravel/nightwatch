@@ -62,8 +62,7 @@
             "@php vendor/bin/pest"
         ],
         "build": [
-            "box compile",
-            "box info:signature build/agent.phar > build/signature.txt"
+            "bash ./build.sh"
         ],
         "watch": [
             "npm ci",

@@ -207,11 +207,8 @@ jobs:
       - name: Build agent
         id: build-agent
         run: |
-          box compile
-          AGENT_SIGNATURE=$(box info:signature build/agent.phar)
-          echo $AGENT_SIGNATURE > build/signature.txt
-          sed -i "s/public const SIGNATURE = '.*';/public const SIGNATURE = '${AGENT_SIGNATURE:0:7}';/" ../src/Payload.php;
-          echo "version=${AGENT_SIGNATURE}" >> "$GITHUB_OUTPUT"
+          composer build
+          echo "version=$(cat build/signature.txt)" >> "$GITHUB_OUTPUT"
       - id: commit-agent
         uses: EndBug/add-and-commit@v9
         with:
