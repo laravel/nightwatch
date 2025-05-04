@@ -95,6 +95,7 @@ if ($viaPhar) {
     });
 } else {
     call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop) {  // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
+        $basePath = __DIR__.'/../build';
         require __DIR__.'/../src/agent.php';
     });
 }
