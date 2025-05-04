@@ -57,7 +57,7 @@ final class Payload
         return $length.':'.self::SIGNATURE.':'.$payload;
     }
 
-    public function sourcePayload(): string
+    public function rawPayload(): string
     {
         return $this->payload;
     }

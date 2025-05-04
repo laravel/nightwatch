@@ -30,7 +30,7 @@ final class FakeIngest implements LocalIngest
             throw new RuntimeException('The payload was empty.');
         }
 
-        $this->writes[] = $payload->sourcePayload();
+        $this->writes[] = $payload->rawPayload();
     }
 
     public function ping(): void
