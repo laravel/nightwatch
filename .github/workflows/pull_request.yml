@@ -273,7 +273,7 @@ jobs:
         run: vendor/bin/pest --coverage --min=80
 
   agent_tests:
-    runs-on: {{ matrix.runs-on }}
+    runs-on: ${{ matrix.runs-on }}
     needs:
       - build_agent
     if: ${{ needs.build_agent.outputs.agent-committed == 'false' }}
