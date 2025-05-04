@@ -90,7 +90,7 @@ it('it can ingest empty strings', function () {
     expect($payload->complete)->toBeFalse();
 });
 
-it('signature can be any length', function () {
+it('can have a signature of any length', function () {
     $payload = new Payload;
 
     $payload->append('19:1234567890abcdef:[]');

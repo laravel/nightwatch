@@ -51,7 +51,7 @@ it('can only pull the payload once', function () {
     }
 });
 
-it('pulling the payload frees the payload memory', function () {
+it('frees memory after pulling the payload', function () {
     $payload = Payload::text('abc123');
 
     expect($payload->rawPayload())->toBe('abc123');
