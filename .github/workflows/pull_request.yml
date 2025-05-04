@@ -9,8 +9,8 @@ concurrency:
 
 env:
   minimum_supported_php_version: "8.2"
-  package_extensions: none, mbstring, curl, ctype, tokenizer, mongodb, xml, pdo, fileinfo, dom, xmlwriter, simplexml, sqlite3, pdo_sqlite, posix, redis
-  agent_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter
+  package_extensions: none, mbstring, curl, ctype, tokenizer, mongodb, xml, pdo, fileinfo, dom, xmlwriter, simplexml, sqlite3, pdo_sqlite, posix, redis, openssl
+  agent_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter, openssl
 
 jobs:
   ## Run coding standards and static analysis before building the agent
