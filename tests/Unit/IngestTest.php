@@ -246,8 +246,6 @@ Unread bytes: 19
 MESSAGE);
 
 it('closes the stream', function () {
-    StreamWrapper::intercept('stream_write', fn () => 28);
-
     nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
 
     expect(StreamWrapper::$events->pluck('type')->last())->toBe('stream_close');
@@ -275,7 +273,6 @@ Stream already closed
 MESSAGE);
 
 it('stops attempting to read once the stream has reached eof', function () {
-    StreamWrapper::intercept('stream_write', fn (string $value) => 28);
     $reads = 0;
     StreamWrapper::intercept('stream_read', function () use (&$reads) {
         $reads++;
@@ -315,6 +312,56 @@ it('stops attempting to read once the stream has reached eof', function () {
         'stream_eof',
         'stream_eof',
         'stream_read',
+        'stream_eof',
+        'stream_flush',
+        'stream_close',
+    ]);
+});
+
+it('only attempts to read from the stream 5 times', function () {
+    $reads = 0;
+    StreamWrapper::intercept('stream_read', function () use (&$reads) {
+        $reads++;
+
+        return '';
+    });
+
+    try {
+        nightwatch()->ingest->write(Payload::json('[{"t":"request"}]'));
+    } catch (Throwable $e) {
+        //
+    }
+
+    expect($reads)->toBe(5);
+    expect($e)->toBeInstanceOf(RuntimeException::class);
+    expect($e->getMessage())->toBe(<<<'MESSAGE'
+    Unexpected response from agent []
+
+    Timed out: false
+    EOF: false
+    Blocked: true
+    URI: tcp://127.0.0.1:2407
+    Unread bytes: 0
+    MESSAGE);
+    expect(StreamWrapper::$events->pluck('type')->all())->toBe([
+        'stream_open',
+        'stream_set_option',
+        'stream_write',
+        'stream_read',
+        'stream_eof',
+        'stream_eof',
+        'stream_read',
+        'stream_eof',
+        'stream_eof',
+        'stream_read',
+        'stream_eof',
+        'stream_eof',
+        'stream_read',
+        'stream_eof',
+        'stream_eof',
+        'stream_read',
+        'stream_eof',
+        'stream_eof',
         'stream_eof',
         'stream_flush',
         'stream_close',

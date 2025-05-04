@@ -124,6 +124,7 @@ final class Ingest implements LocalIngest
     private function waitForAcknowledgment($stream): void
     {
         $response = '';
+        $attempts = 0;
 
         do {
             // We are expecting a 4-byte response of "2:OK"...
@@ -134,7 +135,8 @@ final class Ingest implements LocalIngest
             }
 
             $response .= $part;
-        } while (strlen($response) < 4 && ! feof($stream));
+            $attempts++;
+        } while (strlen($response) < 4 && ! feof($stream) && $attempts < 5);
 
         if ($response !== '2:OK') {
             $this->closeStreamAfterError("Unexpected response from agent [{$response}]", $stream);
