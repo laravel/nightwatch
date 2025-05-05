@@ -56,6 +56,8 @@ class Ingest
         $this->buffer->write($payload);
 
         if ($this->buffer->reachedThreshold()) {
+            // TODO track all to ensure every active request has resolved
+            // before stopping
             $this->digest();
         } elseif ($this->buffer->isNotEmpty()) {
             $this->sendBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, $this->digest(...));

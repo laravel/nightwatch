@@ -159,6 +159,7 @@ $server = new Server(
     onInvaidSignature: static function () use ($info, $loop, $ingest) {
         $info('Incoming signature has changed. Ingesting buffered records and shutting down...');
 
+        // TODO test all have finished
         $ingest->digest()->finally(fn () => $loop->stop());
     },
 );
