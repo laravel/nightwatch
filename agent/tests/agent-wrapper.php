@@ -52,6 +52,16 @@ if ($viaPhar === false) {
         foreach ($server->connections ?? [] as $connection) {
             $connection->removeAllListeners();
         }
+        if ($loop?->stopped) {
+            foreach ($loop->pendingTimers as &$timer) {
+                $timer = [
+                    ...$timer,
+                    'callback' => null,
+                    'instance' => null,
+                    'runAt' => null,
+                ];
+            }
+        }
 
         file_put_contents($payloadFile, serialize([
             'ingestDetailsBrowser' => $ingestDetailsBrowser,
@@ -106,6 +116,16 @@ if ($viaPhar) {
 $server?->removeAllListeners();
 foreach ($server->connections ?? [] as $connection) {
     $connection->removeAllListeners();
+}
+if ($loop?->stopped) {
+    foreach ($loop->pendingTimers as &$timer) {
+        $timer = [
+            ...$timer,
+            'callback' => null,
+            'instance' => null,
+            'runAt' => null,
+        ];
+    }
 }
 
 file_put_contents($payloadFile, serialize([
