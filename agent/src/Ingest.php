@@ -85,7 +85,7 @@ class Ingest
         $this->buffer = $this->streamBufferBackup;
     }
 
-    public function digest(): void
+    private function digest(): void
     {
         $payload = $this->buffer->pull();
 
