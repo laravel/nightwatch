@@ -35,7 +35,6 @@ it('server responds with OK', function () {
         new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: self::class),
     ]);
     expect($loop)->toHavePending([
-        new Timer(interval: 10, runAt: 11, scheduledAt: 1, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
         new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
     ]);
     expect($ingestDetailsBrowser)->toHaveSent([
@@ -51,8 +50,9 @@ it('can ping the server', function () {
     $server = new TcpServerFake;
     $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
     $ingestBrowser = new BrowserFake;
+    $signature = signature();
 
-    $loop->addTimer(0, $server->pendingConnection('4:PING'));
+    $loop->addTimer(0, $server->pendingConnection("12:{$signature}:PING"));
 
     [$output, $e] = run(
         via: 'source',

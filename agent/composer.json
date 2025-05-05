@@ -50,6 +50,7 @@
     },
     "scripts": {
         "ci": [
+            "@composer build",
             "@composer test",
             "@composer lint"
         ],
