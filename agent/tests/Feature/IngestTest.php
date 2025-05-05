@@ -868,18 +868,22 @@ it('starts ingesting data after a subsequent successful authentication', functio
 });
 
 it('handles incomplete payloads', function () {
-    $loop = new LoopFake(runForSeconds: 6);
+    $loop = new LoopFake(runForSeconds: 8);
     $server = new TcpServerFake;
+    $signature = signature();
+    $signaturePart = substr($signature, 0, 2);
     $ingestDetailsBrowser = new BrowserFake([
         Response::jwt(),
     ]);
     $ingestBrowser = new BrowserFake([]);
-    $loop->addTimer(0, $server->pendingConnection('4'));
-    $loop->addTimer(1, $server->pendingConnection('4:'));
-    $loop->addTimer(2, $server->pendingConnection('4:['));
-    $loop->addTimer(3, $server->pendingConnection('4:[{'));
-    $loop->addTimer(4, $server->pendingConnection('4:[{}'));
-    $loop->addTimer(5, $server->pendingConnection('4:[{}]'));
+    $loop->addTimer(0, $server->pendingConnection('12'));
+    $loop->addTimer(1, $server->pendingConnection('12:'));
+    $loop->addTimer(2, $server->pendingConnection("12:{$signaturePart}"));
+    $loop->addTimer(3, $server->pendingConnection("12:{$signature}"));
+    $loop->addTimer(4, $server->pendingConnection("12:{$signature}:["));
+    $loop->addTimer(5, $server->pendingConnection("12:{$signature}:[{"));
+    $loop->addTimer(6, $server->pendingConnection("12:{$signature}:[{}"));
+    $loop->addTimer(7, $server->pendingConnection("12:{$signature}:[{}]"));
 
     [$output, $e] = run(
         via: 'source',
@@ -890,13 +894,15 @@ it('handles incomplete payloads', function () {
     );
 
     expect($e)->toBeNull($e?->getMessage() ?? '');
-    expect($output)->toMatchLog(<<<'OUTPUT'
+    expect($output)->toMatchLog(<<<OUTPUT
         {date} {info} Authentication successful {duration}
-        {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[4\]
-        {date} {error} Connection error: Incomplete payload received\. Length: \[4\] Value: \[\]
-        {date} {error} Connection error: Incomplete payload received\. Length: \[4\] Value: \[\[\]
-        {date} {error} Connection error: Incomplete payload received\. Length: \[4\] Value: \[\[\{\]
-        {date} {error} Connection error: Incomplete payload received\. Length: \[4\] Value: \[\[\{\}\]
+        {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[12\]
+        {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[12:\]
+        {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[12:{$signaturePart}\]
+        {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[12:{$signature}\]
+        {date} {error} Connection error: Incomplete payload received\. Length: \[12\] Value: \[\[\]
+        {date} {error} Connection error: Incomplete payload received\. Length: \[12\] Value: \[\[\{\]
+        {date} {error} Connection error: Incomplete payload received\. Length: \[12\] Value: \[\[\{\}\]
         OUTPUT);
     expect($loop)->toHaveRun([
         new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: self::class),
@@ -905,9 +911,11 @@ it('handles incomplete payloads', function () {
         new Timer(interval: 3, runAt: 3, scheduledAt: 0, scheduledBy: self::class),
         new Timer(interval: 4, runAt: 4, scheduledAt: 0, scheduledBy: self::class),
         new Timer(interval: 5, runAt: 5, scheduledAt: 0, scheduledBy: self::class),
+        new Timer(interval: 6, runAt: 6, scheduledAt: 0, scheduledBy: self::class),
+        new Timer(interval: 7, runAt: 7, scheduledAt: 0, scheduledBy: self::class),
     ]);
     expect($loop)->toHavePending([
-        new Timer(interval: 10, runAt: 15, scheduledAt: 5, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+        new Timer(interval: 10, runAt: 17, scheduledAt: 7, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
         new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
     ]);
     expect($ingestDetailsBrowser)->toHaveSent([
