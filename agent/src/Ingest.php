@@ -120,7 +120,7 @@ class Ingest
                 ],
                 body: $payload,
             );
-        })->then(function (ResponseInterface $response) use (&$start): void {
+        })->then(function (ResponseInterface $response) use (&$start): null {
             /** @var array{remaining: int} */
             $content = json_decode($response->getBody()->getContents(), associative: true, flags: JSON_THROW_ON_ERROR);
 
@@ -130,12 +130,16 @@ class Ingest
 
                 call_user_func($this->onOverQuota, microtime(true) - $start);
 
-                return;
+                return null;
             }
 
             call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
-        })->catch(function (Throwable $e) use (&$start): void {
+
+            return null;
+        })->catch(function (Throwable $e) use (&$start): null {
             call_user_func($this->onIngestError, $this->parseException($e), microtime(true) - $start);
+
+            return null;
         })->finally(function (): void {
             $this->concurrentRequests--;
         });
