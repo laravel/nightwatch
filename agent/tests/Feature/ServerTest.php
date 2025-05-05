@@ -109,7 +109,8 @@ it('stops loop when an incorrect signature is received', function () {
     expect($server->closed)->toBeTrue();
     expect($output)->toMatchLog(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Incoming signature has changed. Ingesting buffered records and shutting down...
+        {date} {info} Incoming signature has changed
+        {date} {info} Shutting down
         OUTPUT);
     expect($loop)->toHaveRun([
         new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: self::class),

@@ -157,12 +157,14 @@ $server = new Server(
     onServerError: static fn (Throwable $e) => $error("Server error: {$e->getMessage()}"),
     onConnectionError: static fn (Throwable $e) => $error("Connection error: {$e->getMessage()}"),
     onPayloadReceived: $ingest->write(...),
-    onInvaidSignature: static function () use ($info, $loop) {
-        $info('Incoming signature has changed. Ingesting buffered records and shutting down...');
+    onInvaidSignature: static function () use ($info, $loop, $ingest) {
+        $info('Incoming signature has changed');
 
-        // TODO test all have finished
-        // $ingest->wait()->finally(fn () => $loop->stop());
-        $loop->stop();
+        $ingest->forceDigest()->finally(static function () use ($info, $loop) {
+            $loop->stop();
+
+            $info('Shutting down');
+        });
     },
 );
 

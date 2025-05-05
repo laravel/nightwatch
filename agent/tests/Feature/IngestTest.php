@@ -1,6 +1,7 @@
 <?php
 
 use Tests\BrowserFake;
+use Tests\Connection;
 use Tests\LoopFake;
 use Tests\Request;
 use Tests\Response;
@@ -921,4 +922,149 @@ it('handles incomplete payloads', function () {
     expect($ingestDetailsBrowser)->toHaveSent([
         Request::json('/api/agent-auth'),
     ]);
+});
+
+it('sends pending records on invalid signature', function () {
+    $loop = new LoopFake(runForSeconds: 2);
+    $server = new TcpServerFake;
+    $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
+    $ingestBrowser = new BrowserFake([
+        Response::ingest(),
+    ]);
+    $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
+    $loop->addTimer(1, $server->pendingConnection('12:INVALID:[{}]'));
+
+    [$output, $e] = run(
+        via: 'source',
+        ingestDetailsBrowser: $ingestDetailsBrowser,
+        ingestBrowser: $ingestBrowser,
+        loop: $loop,
+        server: $server,
+    );
+
+    expect($e)->toBeNull($e?->getMessage() ?? '');
+    expect($server)->toHaveConnections([
+        Connection::closed('2:OK'),
+        Connection::closed('2:OK'),
+    ]);
+    expect($server->closed)->toBeTrue();
+    expect($output)->toMatchLog(<<<'OUTPUT'
+        {date} {info} Authentication successful {duration}
+        {date} {info} Incoming signature has changed
+        {date} {info} Ingest successful {duration}
+        {date} {info} Shutting down
+        OUTPUT);
+    expect($loop)->toHaveRun([
+        new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: self::class),
+        new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: self::class),
+    ]);
+    expect($loop)->toHaveCanceled([
+        new Timer(interval: 10, canceledAt: 1, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+    ]);
+    expect($loop)->toHavePending([
+        new Timer(interval: 3_600, runAt: null, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+    ]);
+    expect($loop->stopped)->toBeTrue();
+    expect($ingestDetailsBrowser)->toHaveSent([
+        Request::json('/api/agent-auth'),
+    ]);
+    expect($ingestDetailsBrowser)->toHavePending([]);
+    expect($ingestBrowser)->toHaveSent([
+        Request::ingest([['t' => 'request']]),
+    ]);
+    expect($ingestBrowser)->toHavePending([]);
+});
+
+it('does not make ingest request on shutdown if buffer is currently empty', function () {
+    $loop = new LoopFake(runForSeconds: 2);
+    $server = new TcpServerFake;
+    $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
+    $ingestBrowser = new BrowserFake([]);
+    $loop->addTimer(1, $server->pendingConnection('12:INVALID:[{}]'));
+
+    [$output, $e] = run(
+        via: 'source',
+        ingestDetailsBrowser: $ingestDetailsBrowser,
+        ingestBrowser: $ingestBrowser,
+        loop: $loop,
+        server: $server,
+    );
+
+    expect($e)->toBeNull($e?->getMessage() ?? '');
+    expect($server)->toHaveConnections([
+        Connection::closed('2:OK'),
+    ]);
+    expect($server->closed)->toBeTrue();
+    expect($output)->toMatchLog(<<<'OUTPUT'
+        {date} {info} Authentication successful {duration}
+        {date} {info} Incoming signature has changed
+        {date} {info} Shutting down
+        OUTPUT);
+    expect($loop)->toHaveRun([
+        new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: self::class),
+    ]);
+    expect($loop)->toHaveCanceled([]);
+    expect($loop)->toHavePending([
+        new Timer(interval: 3_600, runAt: null, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+    ]);
+    expect($loop->stopped)->toBeTrue();
+    expect($ingestDetailsBrowser)->toHaveSent([
+        Request::json('/api/agent-auth'),
+    ]);
+    expect($ingestDetailsBrowser)->toHavePending([]);
+    expect($ingestBrowser)->toHaveSentNothing();
+    expect($ingestBrowser)->toHavePending([]);
+});
+
+it('waits on active requests on shutdown', function () {
+    $loop = new LoopFake(runForSeconds: 16);
+    $server = new TcpServerFake;
+    $ingestDetailsBrowser = new BrowserFake([
+        Response::jwt(),
+    ]);
+    $ingestBrowser = new BrowserFake([
+        Response::ingest(duration: 5),
+    ]);
+    $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
+    $loop->addTimer(11, $server->pendingConnection('12:INVALID:[{}]'));
+
+    [$output, $e] = run(
+        via: 'source',
+        ingestDetailsBrowser: $ingestDetailsBrowser,
+        ingestBrowser: $ingestBrowser,
+        loop: $loop,
+        server: $server,
+    );
+
+    expect($e)->toBeNull($e?->getMessage() ?? '');
+    expect($server)->toHaveConnections([
+        Connection::closed('2:OK'),
+        Connection::closed('2:OK'),
+    ]);
+    expect($server->closed)->toBeTrue();
+    expect($output)->toMatchLog(<<<'OUTPUT'
+        {date} {info} Authentication successful {duration}
+        {date} {info} Incoming signature has changed
+        {date} {info} Ingest successful {duration}
+        {date} {info} Shutting down
+        OUTPUT);
+    expect($loop)->toHaveRun([
+        new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: self::class),
+        new Timer(interval: 10, runAt: 10, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+        new Timer(interval: 11, runAt: 11, scheduledAt: 0, scheduledBy: self::class),
+        new Timer(interval: 5, runAt: 15, scheduledAt: 10, scheduledBy: 'Tests\Response::toPromise'),
+    ]);
+    expect($loop)->toHaveCanceled([]);
+    expect($loop)->toHavePending([
+        new Timer(interval: 3_600, runAt: null, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+    ]);
+    expect($loop->stopped)->toBeTrue();
+    expect($ingestDetailsBrowser)->toHaveSent([
+        Request::json('/api/agent-auth'),
+    ]);
+    expect($ingestDetailsBrowser)->toHavePending([]);
+    expect($ingestBrowser)->toHaveSent([
+        Request::ingest([['t' => 'request']]),
+    ]);
+    expect($ingestBrowser)->toHavePending([]);
 });
