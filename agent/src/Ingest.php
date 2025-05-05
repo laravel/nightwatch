@@ -16,6 +16,7 @@ use function call_user_func;
 use function gzencode;
 use function json_decode;
 use function microtime;
+use function React\Promise\reject;
 use function strlen;
 use function substr;
 
@@ -72,7 +73,10 @@ class Ingest
         $this->buffer = $this->streamBufferBackup;
     }
 
-    public function digest(): void
+    /**
+     * @return PromiseInterface<null>
+     */
+    public function digest(): PromiseInterface
     {
         if ($this->sendBufferAfterDelayTimer !== null) {
             $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
@@ -83,24 +87,24 @@ class Ingest
         $payload = $this->buffer->pull();
 
         if ($this->concurrentRequests >= $this->concurrentRequestLimit) {
-            call_user_func($this->onIngestError, new RuntimeException("Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing"), 0.0);
+            call_user_func($this->onIngestError, $e = new RuntimeException("Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing"), 0.0);
 
-            return;
+            return reject($e);
         }
 
         // TODO determine what level is optimal here
         $payload = gzencode($payload);
 
         if ($payload === false) {
-            call_user_func($this->onIngestError, new RuntimeException('Unable to compress payload.'), 0.0);
+            call_user_func($this->onIngestError, $e = new RuntimeException('Unable to compress payload.'), 0.0);
 
-            return;
+            return reject($e);
         }
 
         $this->concurrentRequests++;
         $start = microtime(true);
 
-        $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails) use ($payload, &$start): PromiseInterface {
+        return $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails) use ($payload, &$start): PromiseInterface {
             $start = microtime(true);
 
             if ($ingestDetails === null) {

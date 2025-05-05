@@ -157,11 +157,9 @@ $server = new Server(
     onConnectionError: static fn (Throwable $e) => $error("Connection error: {$e->getMessage()}"),
     onPayloadReceived: $ingest->write(...),
     onInvaidSignature: static function () use ($info, $loop, $ingest) {
-        $info('Incoming signature has changed. Ingesting buffered records before shutting down');
-        $ingest->digest();
+        $info('Incoming signature has changed. Ingesting buffered records and shutting down...');
 
-        $info('Gracefully shutting down');
-        $loop->stop();
+        $ingest->digest()->finally(fn () => $loop->stop());
     },
 );
 
