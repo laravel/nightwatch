@@ -90,7 +90,7 @@ class Ingest
         $payload = $this->buffer->pull();
 
         if ($this->concurrentRequests >= $this->concurrentRequestLimit) {
-            call_user_func($this->onIngestError, $e = new RuntimeException("Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing"), 0.0);
+            call_user_func($this->onIngestError, new RuntimeException("Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing"), 0.0);
 
             return;
         }
@@ -99,7 +99,7 @@ class Ingest
         $payload = gzencode($payload);
 
         if ($payload === false) {
-            call_user_func($this->onIngestError, $e = new RuntimeException('Unable to compress payload.'), 0.0);
+            call_user_func($this->onIngestError, new RuntimeException('Unable to compress payload.'), 0.0);
 
             return;
         }
