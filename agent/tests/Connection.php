@@ -70,7 +70,11 @@ class Connection extends EventEmitter implements ConnectionInterface
     {
         if (! $this->closed) {
             $this->payload .= (string) $data; // @phpstan-ignore cast.string
+
+            return true;
         }
+
+        return false;
     }
 
     public function end($data = null)
