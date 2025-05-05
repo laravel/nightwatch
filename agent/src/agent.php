@@ -74,6 +74,7 @@ $error = static function (string $message): void {
  */
 
 $debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
+/** @var ?string $basePath */
 $basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
 $signature = file_get_contents($basePath.'/signature.txt');
 
