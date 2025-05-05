@@ -54,7 +54,5 @@ class TcpServerFake extends EventEmitter implements ServerInterface
     public function close()
     {
         $this->closed = true;
-
-        $this->removeAllListeners();
     }
 }

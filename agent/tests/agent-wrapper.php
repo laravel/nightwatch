@@ -49,6 +49,9 @@ if ($viaPhar === false) {
     pcntl_async_signals(true);
     pcntl_signal(SIGTERM, function () use ($payloadFile, $ingestDetailsBrowser, $ingestBrowser, $loop, $server) {
         $server?->removeAllListeners();
+        foreach ($server->connections ?? [] as $connection) {
+            $connection->removeAllListeners();
+        }
 
         file_put_contents($payloadFile, serialize([
             'ingestDetailsBrowser' => $ingestDetailsBrowser,
@@ -101,6 +104,9 @@ if ($viaPhar) {
 }
 
 $server?->removeAllListeners();
+foreach ($server->connections ?? [] as $connection) {
+    $connection->removeAllListeners();
+}
 
 file_put_contents($payloadFile, serialize([
     'ingestDetailsBrowser' => $ingestDetailsBrowser,

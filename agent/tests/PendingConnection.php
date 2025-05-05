@@ -19,11 +19,8 @@ class PendingConnection
 
         $connection->emit('data', [$this->payload]);
 
-        $connection->emit('end');
-
         $connection->emit('close');
 
-        $connection->removeAllListeners();
         $this->server->connections[] = $connection;
     }
 }

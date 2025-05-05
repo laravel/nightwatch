@@ -16,7 +16,6 @@ use function call_user_func;
 use function gzencode;
 use function json_decode;
 use function microtime;
-use function React\Promise\reject;
 use function strlen;
 use function substr;
 
@@ -58,9 +57,20 @@ class Ingest
         if ($this->buffer->reachedThreshold()) {
             // TODO track all to ensure every active request has resolved
             // before stopping
+
+            if ($this->sendBufferAfterDelayTimer !== null) {
+                $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
+
+                $this->sendBufferAfterDelayTimer = null;
+            }
+
             $this->digest();
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->sendBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, $this->digest(...));
+            $this->sendBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, function () {
+                $this->sendBufferAfterDelayTimer = null;
+
+                $this->digest();
+            });
         }
     }
 
@@ -75,23 +85,14 @@ class Ingest
         $this->buffer = $this->streamBufferBackup;
     }
 
-    /**
-     * @return PromiseInterface<null>
-     */
-    public function digest(): PromiseInterface
+    public function digest(): void
     {
-        if ($this->sendBufferAfterDelayTimer !== null) {
-            $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
-
-            $this->sendBufferAfterDelayTimer = null;
-        }
-
         $payload = $this->buffer->pull();
 
         if ($this->concurrentRequests >= $this->concurrentRequestLimit) {
             call_user_func($this->onIngestError, $e = new RuntimeException("Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing"), 0.0);
 
-            return reject($e);
+            return;
         }
 
         // TODO determine what level is optimal here
@@ -100,13 +101,13 @@ class Ingest
         if ($payload === false) {
             call_user_func($this->onIngestError, $e = new RuntimeException('Unable to compress payload.'), 0.0);
 
-            return reject($e);
+            return;
         }
 
         $this->concurrentRequests++;
         $start = microtime(true);
 
-        return $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails) use ($payload, &$start): PromiseInterface {
+        $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails) use ($payload, &$start): PromiseInterface {
             $start = microtime(true);
 
             if ($ingestDetails === null) {
@@ -120,7 +121,7 @@ class Ingest
                 ],
                 body: $payload,
             );
-        })->then(function (ResponseInterface $response) use (&$start): null {
+        })->then(function (ResponseInterface $response) use (&$start): void {
             /** @var array{remaining: int} */
             $content = json_decode($response->getBody()->getContents(), associative: true, flags: JSON_THROW_ON_ERROR);
 
@@ -130,16 +131,12 @@ class Ingest
 
                 call_user_func($this->onOverQuota, microtime(true) - $start);
 
-                return null;
+                return;
             }
 
             call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
-
-            return null;
-        })->catch(function (Throwable $e) use (&$start): null {
+        })->catch(function (Throwable $e) use (&$start): void {
             call_user_func($this->onIngestError, $this->parseException($e), microtime(true) - $start);
-
-            return null;
         })->finally(function (): void {
             $this->concurrentRequests--;
         });

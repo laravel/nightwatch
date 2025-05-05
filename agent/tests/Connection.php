@@ -58,7 +58,6 @@ class Connection extends EventEmitter implements ConnectionInterface
     public function close()
     {
         $this->closed = true;
-        $this->removeAllListeners();
     }
 
     public function isWritable()
@@ -79,7 +78,14 @@ class Connection extends EventEmitter implements ConnectionInterface
 
     public function end($data = null)
     {
-        $this->write($data);
+        if ($this->closed) {
+            return;
+        }
+
+        if ($data) {
+            $this->write($data);
+        }
+
         $this->close();
     }
 }
