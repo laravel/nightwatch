@@ -382,7 +382,7 @@ it('samples ingest', function () {
 
     nightwatch()->sampling['requests'] = 0;
     nightwatch()->configureSampling('requests');
-    nightwatch()->state->records->write(new User(
+    nightwatch()->ingest->write(new User(
         timestamp: microtime(true),
         id: '123',
         name: '',
@@ -395,7 +395,7 @@ it('samples ingest', function () {
 
     nightwatch()->sampling['requests'] = 1;
     nightwatch()->configureSampling('requests');
-    nightwatch()->state->records->write(new User(
+    nightwatch()->ingest->write(new User(
         timestamp: microtime(true),
         id: '123',
         name: '',

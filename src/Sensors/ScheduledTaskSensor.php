@@ -11,6 +11,7 @@ use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Ingest;
 use Laravel\Nightwatch\Records\ScheduledTask;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
@@ -34,6 +35,7 @@ final class ScheduledTaskSensor
 {
     public function __construct(
         private CommandState $executionState,
+        private Ingest $ingest,
         private Clock $clock,
     ) {
         //
@@ -51,7 +53,7 @@ final class ScheduledTaskSensor
             return;
         }
 
-        $this->executionState->records->write(new ScheduledTask(
+        $this->ingest->write(new ScheduledTask(
             timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
@@ -145,7 +147,7 @@ final class ScheduledTaskSensor
      */
     private function recordSkippedTask(ScheduledTaskSkipped $event, float $timestamp, string $name, string $timezone): void
     {
-        $this->executionState->records->write(new ScheduledTask(
+        $this->ingest->write(new ScheduledTask(
             timestamp: $timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

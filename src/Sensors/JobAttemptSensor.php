@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Queue\Events\JobAttempted;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
+use Laravel\Nightwatch\Ingest;
 use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\State\CommandState;
 
@@ -23,6 +24,7 @@ final class JobAttemptSensor
      */
     public function __construct(
         private CommandState $executionState,
+        private Ingest $ingest,
         private Clock $clock,
         private array $connectionConfig,
     ) {
@@ -38,7 +40,7 @@ final class JobAttemptSensor
         $now = $this->clock->microtime();
         $name = $event->job->resolveName();
 
-        $this->executionState->records->write(new JobAttempt(
+        $this->ingest->write(new JobAttempt(
             timestamp: $this->executionState->timestamp,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

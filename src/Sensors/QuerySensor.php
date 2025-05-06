@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Database\Events\QueryExecuted;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Ingest;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\State\CommandState;
@@ -22,6 +23,7 @@ final class QuerySensor
 {
     public function __construct(
         private Clock $clock,
+        private Ingest $ingest,
         private RequestState|CommandState $executionState,
         private Location $location,
     ) {
@@ -38,7 +40,7 @@ final class QuerySensor
 
         $this->executionState->queries++;
 
-        $this->executionState->records->write(new Query(
+        $this->ingest->write(new Query(
             timestamp: $this->clock->microtime() - ($event->time / 1000),
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
