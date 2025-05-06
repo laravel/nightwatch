@@ -12,7 +12,6 @@ use Laravel\Nightwatch\UserProvider;
 
 use function call_user_func;
 use function memory_get_peak_usage;
-use function memory_reset_peak_usage;
 
 /**
  * @internal
@@ -105,7 +104,7 @@ final class RequestState
         return memory_get_peak_usage(true);
     }
 
-    public function reset(): void
+    public function flush(): void
     {
         $this->exceptions = 0;
         $this->logs = 0;
@@ -119,8 +118,5 @@ final class RequestState
         $this->filesWritten = 0;
         $this->cacheEvents = 0;
         $this->hydratedModels = 0;
-        $this->records->flush();
-
-        memory_reset_peak_usage();
     }
 }

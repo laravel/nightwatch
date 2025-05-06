@@ -68,7 +68,8 @@ trait CapturesState
         Compatibility::addHiddenContext('nightwatch_should_sample', $this->shouldSample);
 
         if (! $this->shouldSample) {
-            $this->state->records->flush();
+            $this->state->flush();
+            $this->ingest->flush();
         }
     }
 
@@ -287,7 +288,8 @@ trait CapturesState
      */
     public function resetStateForNextJob(): void
     {
-        $this->state->reset();
+        $this->state->flush();
+        $this->ingest->flush();
         memory_reset_peak_usage();
     }
 
@@ -360,7 +362,8 @@ trait CapturesState
          * Since `schedule:run` executes multiple tasks sequentially,
          * we need to clear previous task data to avoid metric pollution.
          */
-        $this->state->reset();
+        $this->state->flush();
+        $this->ingest->flush();
         memory_reset_peak_usage();
 
         $trace = (string) Str::uuid();
