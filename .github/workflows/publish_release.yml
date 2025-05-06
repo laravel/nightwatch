@@ -21,8 +21,6 @@ jobs:
     permissions:
       id-token: write
       contents: write
-      packages: write
-      pull-requests: write
 
     steps:
       - name: Exit early if not on 1.x
