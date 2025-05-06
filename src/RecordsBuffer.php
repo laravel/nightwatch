@@ -17,7 +17,6 @@ use Laravel\Nightwatch\Records\Request;
 use Laravel\Nightwatch\Records\ScheduledTask;
 use Laravel\Nightwatch\Records\User;
 
-use function array_shift;
 use function count;
 use function json_encode;
 
@@ -33,11 +32,6 @@ class RecordsBuffer implements Countable
 
     public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|JobAttempt|Mail|Notification|Log|User|ScheduledTask $record): void
     {
-        // TODO temporary limit
-        if (count($this->records) > 499) {
-            array_shift($this->records);
-        }
-
         $this->records[] = $record;
     }
 
