@@ -207,6 +207,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 connectionTimeout: $this->nightwatchConfig['ingest']['connection_timeout'] ?? 0.5,
                 timeout: $this->nightwatchConfig['ingest']['timeout'] ?? 0.5,
                 streamFactory: new SocketStreamFactory,
+                buffer: new RecordsBuffer,
             ),
             sensor: new SensorManager(
                 ingest: $ingest,

@@ -29,8 +29,6 @@ final class Ingest implements LocalIngest
      */
     private array $timeout;
 
-    private RecordsBuffer $buffer;
-
     /**
      * @param  (callable(string $address, float $timeout): resource)  $streamFactory
      */
@@ -39,6 +37,7 @@ final class Ingest implements LocalIngest
         private float $connectionTimeout,
         float $timeout,
         public $streamFactory,
+        private RecordsBuffer $buffer,
     ) {
         $this->transmitTo = "tcp://{$transmitTo}";
 
@@ -46,8 +45,6 @@ final class Ingest implements LocalIngest
             'seconds' => $seconds = (int) $timeout,
             'microseconds' => intval(($timeout - $seconds) * 1_000_000),
         ];
-
-        $this->buffer = new RecordsBuffer;
     }
 
     public function write(string $payload): void
