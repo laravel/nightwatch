@@ -34,7 +34,6 @@ class Server
 
     public function start(): void
     {
-        /** @var ServerInterface $server */
         $server = call_user_func($this->serverResolver);
 
         $server->on('connection', function (ConnectionInterface $connection) use ($server): void {
