@@ -157,7 +157,7 @@ $server = new Server(
     onServerError: static fn (Throwable $e) => $error("Server error: {$e->getMessage()}"),
     onConnectionError: static fn (Throwable $e) => $error("Connection error: {$e->getMessage()}"),
     onPayloadReceived: $ingest->write(...),
-    onInvaidSignature: static function () use ($info, $loop, $ingest) {
+    onInvalidSignature: static function () use ($info, $loop, $ingest) {
         $info('Incoming signature has changed');
 
         $ingest->forceDigest()->finally(static function () use ($info, $loop) {
