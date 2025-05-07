@@ -207,10 +207,8 @@ jobs:
       - name: Build agent
         id: build-agent
         run: |
-          box compile
-          box info:signature build/agent.phar > build/signature.txt
+          composer build
           echo "version=$(cat build/signature.txt)" >> "$GITHUB_OUTPUT"
-
       - id: commit-agent
         uses: EndBug/add-and-commit@v9
         with:

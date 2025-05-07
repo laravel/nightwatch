@@ -2,13 +2,15 @@
 
 namespace Laravel\NightwatchAgent;
 
+use function count;
 use function explode;
-use function str_contains;
 use function strlen;
 
 class Payload
 {
     public string $value = '';
+
+    public string $signature = '';
 
     public ?int $length = null;
 
@@ -20,7 +22,7 @@ class Payload
 
         $this->parsePayload();
 
-        $this->complete = $this->length === strlen($this->value);
+        $this->complete = $this->length === (strlen($this->signature) + 1 + strlen($this->value));
     }
 
     private function parsePayload(): void
@@ -29,12 +31,14 @@ class Payload
             return;
         }
 
-        if (! str_contains($this->value, ':')) {
+        $bits = explode(':', $this->value, 3);
+
+        if (count($bits) !== 3) {
             return;
         }
 
-        $bits = explode(':', $this->value, 2);
         $this->length = (int) $bits[0];
-        $this->value = $bits[1];
+        $this->signature = $bits[1];
+        $this->value = $bits[2];
     }
 }

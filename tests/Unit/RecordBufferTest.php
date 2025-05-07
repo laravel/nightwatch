@@ -32,7 +32,7 @@ it('only keeps 500 records in memory', function () {
         ));
     }
 
-    $output = $buffer->pull();
+    $output = $buffer->pull()->rawPayload();
     expect($output)->not->toContain('"timestamp":0.499,');
     expect($output)->toContain('"timestamp":0.5,');
     expect(preg_match_all('/\"t\"\:\"mail\"/', $output))->toBe(500);

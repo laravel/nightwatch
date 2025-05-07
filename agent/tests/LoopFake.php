@@ -32,6 +32,8 @@ class LoopFake implements LoopInterface
      */
     public array $timersRun = [];
 
+    public bool $stopped = false;
+
     private float $now;
 
     private float $startedAt;
@@ -168,7 +170,7 @@ class LoopFake implements LoopInterface
     {
         $stopRunningAt = $this->now + $this->runForSeconds;
 
-        while (count($this->pendingTimers)) {
+        while (! $this->stopped && count($this->pendingTimers)) {
             if ($this->now >= $stopRunningAt) {
                 $this->pendingTimers = array_map(fn ($pendingTimer) => [
                     'interval' => $pendingTimer['interval'],
@@ -212,7 +214,7 @@ class LoopFake implements LoopInterface
 
     public function stop(): void
     {
-        throw new RuntimeException(__FUNCTION__);
+        $this->stopped = true;
     }
 
     private function sortPendingTimers(): void

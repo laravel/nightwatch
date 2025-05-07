@@ -187,3 +187,14 @@ function run(string $via, ?callable $until = null, float $timeout = 0.5, ?Browse
 
     return [$output, null];
 }
+
+function signature(): string
+{
+    $signature = file_get_contents(__DIR__.'./../build/signature.txt');
+
+    if ($signature === false) {
+        throw new RuntimeException('Unable to read signature');
+    }
+
+    return substr($signature, 0, 7);
+}
