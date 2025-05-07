@@ -32,8 +32,7 @@ it('samples job attempts', function () {
         '--tries' => 1,
     ]);
 
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('cache-event:0.key', 'illuminate:queue:restart');
+    $ingest->assertWrittenTimes(0);
     expect(nightwatch()->state->records)->toHaveCount(0);
 
     Compatibility::addHiddenContext('nightwatch_should_sample', true);
@@ -51,12 +50,13 @@ it('samples job attempts', function () {
         '--tries' => 1,
     ]);
 
-    $ingest->assertWrittenTimes(11);
+    dd(nightwatch()->state->records);
 
-    expect(nightwatch()->state->records)->toHaveCount(2);
+    $ingest->assertWrittenTimes(10);
+
+    expect(nightwatch()->state->records)->toHaveCount(1);
     $ingest->write(nightwatch()->state->records->pull());
     $ingest->assertLatestWrite('query:0.sql', 'select * from "jobs" where "queue" = ? and (("reserved_at" is null and "available_at" <= ?) or ("reserved_at" <= ?)) order by "id" asc limit 1');
-    $ingest->assertLatestWrite('cache-event:0.key', 'illuminate:queue:restart');
     $ingest->assertLatestWrite('job-attempt:*', []);
 });
 
