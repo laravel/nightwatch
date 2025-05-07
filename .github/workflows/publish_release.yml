@@ -58,14 +58,13 @@ jobs:
           read -ra VERSION <<< $(<version.txt)
 
           echo "Bumping ${VERSION_TYPE} version"
-          echo "Was: ${VERSION[0]}.${VERSION[1]}.${VERSION[2]}"
+          echo "Was: ${VERSION[*]}"
 
           VERSION[$INDEX]=$((VERSION[$INDEX] + 1))
-          VERSION="${VERSION[0]}.${VERSION[1]}.${VERSION[2]}"
 
-          echo "Now: ${VERSION}"
-          echo "${VERSION}" > version.txt
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION[*]}" >> "$GITHUB_OUTPUT"
+          echo "Now: ${VERSION[*]}"
+          echo "${VERSION[*]}" > version.txt
 
       - uses: EndBug/add-and-commit@v9
         with:
