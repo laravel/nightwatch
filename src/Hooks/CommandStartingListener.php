@@ -17,6 +17,7 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Queue\Events\Looping;
+use Illuminate\Queue\Events\WorkerStopping;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\State\CommandState;
@@ -66,7 +67,7 @@ final class CommandStartingListener
         /**
          * @see \Laravel\Nightwatch\Core::ingest()
          */
-        $this->events->listen(Looping::class, (new LoopingListener($this->nightwatch))(...));
+        $this->events->listen([Looping::class, WorkerStopping::class], (new WorkerEventListener($this->nightwatch))(...));
 
         /**
          * @see \Laravel\Nightwatch\State\CommandState::reset()

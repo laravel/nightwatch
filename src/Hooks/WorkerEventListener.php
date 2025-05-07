@@ -8,7 +8,7 @@ use Laravel\Nightwatch\State\CommandState;
 /**
  * @internal
  */
-final class LoopingListener
+final class WorkerEventListener
 {
     /**
      * @param  Core<CommandState>  $nightwatch

@@ -51,14 +51,13 @@ it('samples job attempts', function () {
         '--tries' => 1,
     ]);
 
-    $ingest->assertWrittenTimes(11);
+    $ingest->assertWrittenTimes(12);
 
     for ($i = 1; $i < 11; $i++) {
         $ingest->assertWrite($i, 'job-attempt:0.name', 'App\Jobs\MyJob');
     }
 
-    expect(nightwatch()->state->records)->toHaveCount(1);
-    $ingest->write(nightwatch()->state->records->pull());
+    expect(nightwatch()->state->records)->toHaveCount(0);
     $ingest->assertLatestWrite('query:0.sql', 'select * from "jobs" where "queue" = ? and (("reserved_at" is null and "available_at" <= ?) or ("reserved_at" <= ?)) order by "id" asc limit 1');
     $ingest->assertLatestWrite('job-attempt:*', []);
 });
