@@ -2,8 +2,13 @@
 
 namespace Laravel\Nightwatch\Hooks;
 
+use Illuminate\Queue\Events\JobPopping;
+use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Queue\Events\Looping;
+use Illuminate\Queue\Events\WorkerStopping;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
+use Throwable;
 
 /**
  * @internal
@@ -19,8 +24,16 @@ final class WorkerEventListener
         //
     }
 
-    public function __invoke(): void
+    public function __invoke(Looping|JobPopping|JobProcessing|WorkerStopping $event): void
     {
-        $this->nightwatch->ingest();
+        try {
+            match ($event::class) {
+                Looping::class, WorkerStopping::class => $this->nightwatch->ingest(),
+                JobPopping::class => $this->nightwatch->resetStateForNextJob(),
+                JobProcessing::class => $this->nightwatch->prepareForJob($event->job),
+            };
+        } catch (Throwable $e) {
+            $this->nightwatch->report($e);
+        }
     }
 }

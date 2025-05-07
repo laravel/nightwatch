@@ -66,19 +66,16 @@ final class CommandStartingListener
 
         /**
          * @see \Laravel\Nightwatch\Core::ingest()
-         */
-        $this->events->listen([Looping::class, WorkerStopping::class], (new WorkerEventListener($this->nightwatch))(...));
-
-        /**
          * @see \Laravel\Nightwatch\State\CommandState::reset()
-         */
-        $this->events->listen(JobPopping::class, (new JobPoppingListener($this->nightwatch))(...));
-
-        /**
          * @see \Laravel\Nightwatch\State\CommandState::$timestamp
          * @see \Laravel\Nightwatch\State\CommandState::$id
          */
-        $this->events->listen(JobProcessing::class, (new JobProcessingListener($this->nightwatch))(...));
+        $this->events->listen([
+            Looping::class,
+            JobPopping::class,
+            JobProcessing::class,
+            WorkerStopping::class,
+        ], (new WorkerEventListener($this->nightwatch))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
