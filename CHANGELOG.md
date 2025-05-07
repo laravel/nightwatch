@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.4.0...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.5.0...1.x)
+
+## [v1.5.0](https://github.com/laravel/nightwatch/compare/v1.4.0...v1.5.0) - 2025-05-07
+
+### What's Changed
+
+* Revert to MIT license by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/155
+* Fix intermittent ingest issues by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/152
+* Always read base url from env by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/159
+* Automagically restart the agent by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/156
+* Add release action by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/160
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.4.0...v1.5.0
 
 ## [v1.4.0](https://github.com/laravel/nightwatch/compare/v1.3.0...v1.4.0) - 2025-04-28
 
