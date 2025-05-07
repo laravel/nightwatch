@@ -83,7 +83,8 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          generate_release_notes: false
+          body: ${{ steps.notes.outputs.release-notes }}
           make_latest: true
           name: "v${{ steps.bump-version.outputs.version }}"
           tag_name: "v${{ steps.bump-version.outputs.version }}"
