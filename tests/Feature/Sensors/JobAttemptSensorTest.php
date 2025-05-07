@@ -58,7 +58,7 @@ it('ingests processed job attempts', function ($workCommand) use ($workOptions) 
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(1);
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -106,7 +106,7 @@ it('ingests released job attempts', function ($workCommand) use ($workOptions) {
 
     Artisan::call($workCommand, [...$workOptions, '--tries' => 2]);
 
-    $ingest->assertWrittenTimes(1);
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -158,7 +158,7 @@ it('ingests manually released job attempts', function ($workCommand) use ($workO
 
     Artisan::call($workCommand, [...$workOptions, '--tries' => 2]);
 
-    $ingest->assertWrittenTimes(1);
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -206,7 +206,7 @@ it('ingests job failed job attempts', function ($workCommand) use ($workOptions)
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(1);
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -266,7 +266,7 @@ it('captures closure job', function ($workCommand) use ($workOptions) {
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(1);
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -315,7 +315,7 @@ it('captures queued event listener', function ($workCommand) use ($workOptions) 
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(1);
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -364,7 +364,7 @@ it('captures queued mail', function ($workCommand) use ($workOptions) {
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(1);
+    $ingest->assertWrittenTimes(2);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -433,11 +433,11 @@ it('captures multiple job attempts', function ($workCommand) use ($workOptions) 
 
     Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 3, '--tries' => 2]);
 
-    $ingest->assertWrittenTimes(2);
-    $ingest->assertWrite(0, 'job-attempt:0.attempt', 1);
-    $ingest->assertWrite(0, 'exception:0.message', 'Job failed');
-    $ingest->assertWrite(1, 'job-attempt:0.attempt', 2);
+    $ingest->assertWrittenTimes(3);
+    $ingest->assertWrite(1, 'job-attempt:0.attempt', 1);
     $ingest->assertWrite(1, 'exception:0.message', 'Job failed');
+    $ingest->assertWrite(2, 'job-attempt:0.attempt', 2);
+    $ingest->assertWrite(2, 'exception:0.message', 'Job failed');
 })->with($workCommands);
 
 final class ProcessedJob implements ShouldQueue

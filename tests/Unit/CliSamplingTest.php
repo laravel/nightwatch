@@ -32,7 +32,8 @@ it('samples job attempts', function () {
         '--tries' => 1,
     ]);
 
-    $ingest->assertWrittenTimes(0);
+    $ingest->assertWrittenTimes(1);
+    expect($ingest->latestWriteAsString())->toBe('[]');
     expect(nightwatch()->state->records)->toHaveCount(0);
 
     Compatibility::addHiddenContext('nightwatch_should_sample', true);
@@ -50,7 +51,11 @@ it('samples job attempts', function () {
         '--tries' => 1,
     ]);
 
-    $ingest->assertWrittenTimes(10);
+    $ingest->assertWrittenTimes(11);
+
+    for ($i = 1; $i < 11; $i++) {
+        $ingest->assertWrite($i, 'job-attempt:0.name', 'App\Jobs\MyJob');
+    }
 
     expect(nightwatch()->state->records)->toHaveCount(1);
     $ingest->write(nightwatch()->state->records->pull());

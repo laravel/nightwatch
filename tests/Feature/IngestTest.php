@@ -22,7 +22,7 @@ it('handles ingesting zero records', function () {
     $response = get('/users');
 
     $response->assertOk();
-    expect($exceptions)->toHaveCount(2);
+    expect($exceptions)->toHaveCount(1);
     expect($exceptions[0]->getMessage())->toBe('Whoops exception!');
     expect($ingest->latestWriteAsString())->toBe('[]');
 });
