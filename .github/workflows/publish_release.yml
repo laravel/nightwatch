@@ -73,6 +73,14 @@ jobs:
           tag: "v${{ steps.bump-version.outputs.version }}"
           push: true
 
+      - name: Generate release notes
+        id: notes
+        uses: RedCrafter07/release-notes-action@main
+        with:
+          tag-name: v${{ steps.bump-version.outputs.version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: "1.x"
+
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
