@@ -54,11 +54,11 @@ it('ingests processed job attempts', function ($workCommand) use ($workOptions) 
     ]);
     ProcessedJob::dispatch();
 
+    nightwatch()->state->records->flush();
+
     Artisan::call($workCommand, $workOptions);
 
-    // When the queue worker starts, a cache event for `illuminate:queue:restart` is triggered,
-    // which is ingested in the first loop. The second loop ingests the job attempt.
-    $ingest->assertWrittenTimes(2);
+    $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -102,10 +102,11 @@ it('ingests released job attempts', function ($workCommand) use ($workOptions) {
         $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
     ]);
     FailedJob::dispatch();
+    nightwatch()->state->records->flush();
 
     Artisan::call($workCommand, [...$workOptions, '--tries' => 2]);
 
-    $ingest->assertWrittenTimes(2);
+    $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -153,10 +154,11 @@ it('ingests manually released job attempts', function ($workCommand) use ($workO
         $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
     ]);
     ReleasedJob::dispatch();
+    nightwatch()->state->records->flush();
 
     Artisan::call($workCommand, [...$workOptions, '--tries' => 2]);
 
-    $ingest->assertWrittenTimes(2);
+    $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -200,10 +202,11 @@ it('ingests job failed job attempts', function ($workCommand) use ($workOptions)
         $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
     ]);
     FailedJob::dispatch();
+    nightwatch()->state->records->flush();
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(2);
+    $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -259,10 +262,11 @@ it('captures closure job', function ($workCommand) use ($workOptions) {
     dispatch(function () {
         travelTo(now()->addMicroseconds(2500));
     });
+    nightwatch()->state->records->flush();
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(2);
+    $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -307,10 +311,11 @@ it('captures queued event listener', function ($workCommand) use ($workOptions) 
     ]);
     Event::listen(MyEvent::class, MyEventListener::class);
     Event::dispatch(new MyEvent);
+    nightwatch()->state->records->flush();
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(2);
+    $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -354,12 +359,12 @@ it('captures queued mail', function ($workCommand) use ($workOptions) {
         $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
     ]);
     Config::set('mail.default', 'log');
-
     Mail::to('tim@laravel.com')->queue(new MyQueuedMail);
+    nightwatch()->state->records->flush();
 
     Artisan::call($workCommand, $workOptions);
 
-    $ingest->assertWrittenTimes(2);
+    $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
         [
             'v' => 1,
@@ -424,14 +429,15 @@ it('captures queued mail', function ($workCommand) use ($workOptions) {
 it('captures multiple job attempts', function ($workCommand) use ($workOptions) {
     $ingest = fakeIngest();
     FailedJob::dispatch();
+    nightwatch()->state->records->flush();
 
     Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 3, '--tries' => 2]);
 
-    $ingest->assertWrittenTimes(3);
-    $ingest->assertWrite(1, 'job-attempt:0.attempt', 1);
+    $ingest->assertWrittenTimes(2);
+    $ingest->assertWrite(0, 'job-attempt:0.attempt', 1);
+    $ingest->assertWrite(0, 'exception:0.message', 'Job failed');
+    $ingest->assertWrite(1, 'job-attempt:0.attempt', 2);
     $ingest->assertWrite(1, 'exception:0.message', 'Job failed');
-    $ingest->assertWrite(2, 'job-attempt:0.attempt', 2);
-    $ingest->assertWrite(2, 'exception:0.message', 'Job failed');
 })->with($workCommands);
 
 final class ProcessedJob implements ShouldQueue
