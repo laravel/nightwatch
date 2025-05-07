@@ -50,8 +50,6 @@ it('samples job attempts', function () {
         '--tries' => 1,
     ]);
 
-    dd(nightwatch()->state->records);
-
     $ingest->assertWrittenTimes(10);
 
     expect(nightwatch()->state->records)->toHaveCount(1);
