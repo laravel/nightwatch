@@ -3,6 +3,19 @@
 namespace Laravel\Nightwatch;
 
 use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\Command;
+use Laravel\Nightwatch\Records\Exception;
+use Laravel\Nightwatch\Records\JobAttempt;
+use Laravel\Nightwatch\Records\Log;
+use Laravel\Nightwatch\Records\Mail;
+use Laravel\Nightwatch\Records\Notification;
+use Laravel\Nightwatch\Records\OutgoingRequest;
+use Laravel\Nightwatch\Records\Query;
+use Laravel\Nightwatch\Records\QueuedJob;
+use Laravel\Nightwatch\Records\Request;
+use Laravel\Nightwatch\Records\ScheduledTask;
+use Laravel\Nightwatch\Records\User;
 use RuntimeException;
 use Throwable;
 
@@ -48,13 +61,9 @@ final class Ingest implements LocalIngest
         ];
     }
 
-    public function write(Payload $payload): void
+    public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|JobAttempt|Mail|Notification|Log|User|ScheduledTask $record): void
     {
-        if ($payload->isEmpty()) {
-            return;
-        }
-
-        $this->ingest($payload);
+        $this->buffer->write($record);
     }
 
     public function flush(): void
