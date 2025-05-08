@@ -338,7 +338,6 @@ it('does not attach route middleware when not sampling', function ($terminatingE
     });
 
     for ($i = 0; $i < 10; $i++) {
-
         get('test')->assertOk();
 
         expect($middleware)->toBe([]);
@@ -348,7 +347,6 @@ it('does not attach route middleware when not sampling', function ($terminatingE
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
-
         get('test')->assertOk();
 
         expect($middleware)->toBe($expectedMiddleware);
