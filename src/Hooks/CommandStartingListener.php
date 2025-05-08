@@ -62,7 +62,7 @@ final class CommandStartingListener
         $this->nightwatch->configureForJobs();
 
         /**
-         * @see \Laravel\Nightwatch\State\CommandState::reset()
+         * @see \Laravel\Nightwatch\State\CommandState::flush()
          */
         $this->events->listen(JobPopping::class, (new JobPoppingListener($this->nightwatch))(...));
 

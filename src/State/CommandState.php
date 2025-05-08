@@ -104,7 +104,7 @@ final class CommandState
         return memory_get_peak_usage(true);
     }
 
-    public function reset(): void
+    public function flush(): void
     {
         $this->exceptions = 0;
         $this->logs = 0;

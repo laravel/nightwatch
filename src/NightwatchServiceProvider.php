@@ -425,7 +425,7 @@ final class NightwatchServiceProvider extends ServiceProvider
          *
          * Jobs...
          * @see \Laravel\Nightwatch\State\CommandState::$source
-         * @see \Laravel\Nightwatch\State\CommandState::reset()
+         * @see \Laravel\Nightwatch\State\CommandState::flush()
          * @see \Laravel\Nightwatch\State\CommandState::$timestamp
          * @see \Laravel\Nightwatch\State\CommandState::$id
          * @see \Laravel\Nightwatch\Records\JobAttempt
