@@ -9,7 +9,7 @@ use function expect;
 
 class PayloadTest extends TestCase
 {
-    public function test_it_can_create_a_whole_payload_in_one_append_call()
+    public function test_it_can_create_a_whole_payload_in_one_append_call(): void
     {
         $payload = new Payload;
 
@@ -21,7 +21,7 @@ class PayloadTest extends TestCase
         expect($payload->complete)->toBeTrue();
     }
 
-    public function test_it_can_contain_more_than_one_colon()
+    public function test_it_can_contain_more_than_one_colon(): void
     {
         $payload = new Payload;
 
@@ -33,7 +33,7 @@ class PayloadTest extends TestCase
         expect($payload->complete)->toBeTrue();
     }
 
-    public function test_it_can_incrememtally_create_a_completed_payload()
+    public function test_it_can_incrememtally_create_a_completed_payload(): void
     {
         $payload = new Payload;
 
@@ -80,7 +80,7 @@ class PayloadTest extends TestCase
         expect($payload->complete)->toBeTrue();
     }
 
-    public function test_it_is_not_completed_when_it_contains_too_much_data()
+    public function test_it_is_not_completed_when_it_contains_too_much_data(): void
     {
         $payload = new Payload;
 
@@ -91,7 +91,7 @@ class PayloadTest extends TestCase
         expect($payload->complete)->toBeFalse();
     }
 
-    public function test_it_it_can_ingest_empty_strings()
+    public function test_it_it_can_ingest_empty_strings(): void
     {
         $payload = new Payload;
 
@@ -102,7 +102,7 @@ class PayloadTest extends TestCase
         expect($payload->complete)->toBeFalse();
     }
 
-    public function test_it_can_have_a_signature_of_any_length()
+    public function test_it_can_have_a_signature_of_any_length(): void
     {
         $payload = new Payload;
 

@@ -156,7 +156,7 @@ class IngestDetailsRepositoryTest extends TestCase
     }
 
     /**
-     * @return iterable<array<mixed>>
+     * @return iterable<array{0: array<mixed>}>
      */
     public static function unexpectedResponsePayloads(): iterable
     {
