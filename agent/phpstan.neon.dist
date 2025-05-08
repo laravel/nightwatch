@@ -8,9 +8,6 @@ parameters:
           message: '#.*#'
           path: tests/Pest.php
       -
-          identifier: 'outOfClass.self'
-          path: tests
-      -
           message: '#.*#'
           path: tests/ArchitectureTest.php
       - '#Call to an undefined method Pest\\Expectation\<Tests\\BrowserFake\|null\>::toBeProcessing\(\)#'
