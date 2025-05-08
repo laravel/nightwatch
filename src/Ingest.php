@@ -8,6 +8,7 @@ use Throwable;
 
 use function call_user_func;
 use function fclose;
+use function feof;
 use function fread;
 use function fwrite;
 use function gettype;
@@ -46,9 +47,9 @@ final class Ingest implements LocalIngest
         ];
     }
 
-    public function write(string $payload): void
+    public function write(Payload $payload): void
     {
-        if ($payload === '[]') {
+        if ($payload->isEmpty()) {
             return;
         }
 
@@ -57,14 +58,14 @@ final class Ingest implements LocalIngest
 
     public function ping(): void
     {
-        $this->ingest('PING');
+        $this->ingest(Payload::text('PING'));
     }
 
-    private function ingest(string $payload): void
+    private function ingest(Payload $payload): void
     {
         $stream = $this->createStream();
 
-        $this->sendPayload($stream, strlen($payload).':'.$payload);
+        $this->sendPayload($stream, $payload);
 
         $this->waitForAcknowledgment($stream);
 
@@ -94,11 +95,11 @@ final class Ingest implements LocalIngest
     /**
      * @param  resource  $stream
      */
-    private function sendPayload($stream, string $payload): void
+    private function sendPayload($stream, Payload $payload): void
     {
         $written = 0;
-        $remainingPayload = $payload;
-        $payloadLength = strlen($payload);
+        $remainingPayload = $payload->pull();
+        $payloadLength = strlen($remainingPayload);
 
         while (true) {
             $thisWrite = fwrite($stream, $remainingPayload);
@@ -123,6 +124,7 @@ final class Ingest implements LocalIngest
     private function waitForAcknowledgment($stream): void
     {
         $response = '';
+        $attempts = 0;
 
         do {
             // We are expecting a 4-byte response of "2:OK"...
@@ -133,8 +135,8 @@ final class Ingest implements LocalIngest
             }
 
             $response .= $part;
-
-        } while (strlen($response) < 4);
+            $attempts++;
+        } while (strlen($response) < 4 && ! feof($stream) && $attempts < 5);
 
         if ($response !== '2:OK') {
             $this->closeStreamAfterError("Unexpected response from agent [{$response}]", $stream);

@@ -8,6 +8,7 @@ use RuntimeException;
 
 use function is_string;
 use function json_encode;
+use function signature;
 use function strlen;
 
 class TcpServerFake extends EventEmitter implements ServerInterface
@@ -16,6 +17,8 @@ class TcpServerFake extends EventEmitter implements ServerInterface
      * @var list<Connection>
      */
     public array $connections = [];
+
+    public bool $closed = false;
 
     /**
      * @param  string|list<array<string, mixed>>  $records
@@ -27,7 +30,8 @@ class TcpServerFake extends EventEmitter implements ServerInterface
         }
 
         $records = json_encode($records, flags: JSON_THROW_ON_ERROR);
-        $records = strlen($records).':'.$records;
+
+        $records = (strlen($records) + 8).':'.signature().':'.$records;
 
         return new PendingConnection($this, $records);
     }
@@ -49,6 +53,6 @@ class TcpServerFake extends EventEmitter implements ServerInterface
 
     public function close()
     {
-        throw new RuntimeException(__FUNCTION__);
+        $this->closed = true;
     }
 }

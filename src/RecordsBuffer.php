@@ -46,17 +46,17 @@ class RecordsBuffer implements Countable
         return count($this->records);
     }
 
-    public function pull(): string
+    public function pull(): Payload
     {
         if ($this->records === []) {
-            return '[]';
+            return Payload::json('[]');
         }
 
         $records = json_encode($this->records, flags: JSON_THROW_ON_ERROR);
 
         $this->records = [];
 
-        return $records;
+        return Payload::json($records);
     }
 
     public function flush(): void

@@ -45,7 +45,11 @@ it('gracefully handles exceptions', function () {
 
     expect($thrownInScheduledTaskSensor)->toBeFalse();
     expect($thrownInExceptionSensor)->toBeTrue();
-    expect($unrecoverableExceptions)->toHaveCount(1);
+    expect($unrecoverableExceptions)->toHaveCount(2);
+    expect($unrecoverableExceptions[0]->getMessage())->toBe('Whoops!');
+    // This exception is only thrown in tests to ensure we don't
+    // accidently write empty payloads.
+    expect($unrecoverableExceptions[1]->getMessage())->toBe('The payload was empty.');
     expect(nightwatch()->state->exceptions)->toBe(1);
 
     forgetRecordedExceptions(1);

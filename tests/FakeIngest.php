@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Payload;
 use RuntimeException;
 
 use function collect;
@@ -14,7 +15,6 @@ use function expect;
 use function is_array;
 use function json_decode;
 use function str_contains;
-use function strlen;
 use function value;
 
 final class FakeIngest implements LocalIngest
@@ -24,13 +24,13 @@ final class FakeIngest implements LocalIngest
      */
     public array $writes = [];
 
-    public function write(string $payload): void
+    public function write(Payload $payload): void
     {
-        if (strlen($payload) === 0) {
+        if ($payload->isEmpty()) {
             throw new RuntimeException('The payload was empty.');
         }
 
-        $this->writes[] = $payload;
+        $this->writes[] = $payload->rawPayload();
     }
 
     public function ping(): void
