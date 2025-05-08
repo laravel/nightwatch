@@ -442,6 +442,60 @@ it('captures multiple job attempts', function ($workCommand) use ($workOptions) 
     $ingest->assertWrite(2, 'exception:0.message', 'Job failed');
 })->with($workCommands);
 
+it('captures manually reported exceptions', function ($workCommand) use ($workOptions) {
+    $ingest = fakeIngest();
+    Str::createUuidsUsingSequence([
+        $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
+        $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
+    ]);
+    $line = __LINE__ + 1;
+    dispatch(function () {
+        travelTo(now()->addMicroseconds(2500));
+
+        report('Whoops!');
+    });
+    nightwatch()->state->records->flush();
+
+    Artisan::call($workCommand, $workOptions);
+
+    $ingest->assertWrittenTimes(3);
+    $ingest->assertWrite(1, 'job-attempt:*', [
+        [
+            'v' => 1,
+            't' => 'job-attempt',
+            'timestamp' => 946688523.456789,
+            'deploy' => 'v1.2.3',
+            'server' => 'web-01',
+            '_group' => hash('xxh128', "Closure (JobAttemptSensorTest.php:{$line})"),
+            'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+            'user' => '',
+            'job_id' => $jobId,
+            'attempt_id' => $attemptId,
+            'attempt' => 1,
+            'name' => "Closure (JobAttemptSensorTest.php:{$line})",
+            'connection' => 'database',
+            'queue' => 'default',
+            'status' => 'processed',
+            'duration' => 2500,
+            'exceptions' => 1,
+            'logs' => 0,
+            'queries' => 4,
+            'lazy_loads' => 0,
+            'jobs_queued' => 0,
+            'mail' => 0,
+            'notifications' => 0,
+            'outgoing_requests' => 0,
+            'files_read' => 0,
+            'files_written' => 0,
+            'cache_events' => 0,
+            'hydrated_models' => 0,
+            'peak_memory_usage' => 1234,
+            'exception_preview' => '',
+        ],
+    ]);
+    $ingest->assertWrite(1, 'exception:0.message', 'Whoops!');
+})->with($workCommands);
+
 final class ProcessedJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
