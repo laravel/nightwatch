@@ -3,4 +3,4 @@
 use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
 
 return (new Configuration)
-    ->ignoreUnknownFunctions(['signature']);
+    ->ignoreUnknownFunctions(['signature', 'run']);
