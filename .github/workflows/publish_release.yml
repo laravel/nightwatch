@@ -1,0 +1,98 @@
+name: Create release
+run-name: ${{ format('Create {0} release', inputs.version_type) }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  publish:
+    name: Publish release
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+
+    steps:
+      - name: Exit early if not on 1.x
+        if: github.ref != 'refs/heads/1.x'
+        run: exit 1
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.NIGHTWATCH_PERMISSIONS_APP_ID }}
+          private-key: ${{ secrets.NIGHTWATCH_PERMISSIONS_APP_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Bump version
+        id: bump-version
+        run: |
+          VERSION_TYPE=${{ github.event.inputs.version_type }}
+
+          if [[ "${VERSION_TYPE}" == "major" ]]; then
+            INDEX=0
+          elif [[ "${VERSION_TYPE}" == "minor" ]]; then
+            INDEX=1
+          elif [[ "${VERSION_TYPE}" == "patch" ]]; then
+            INDEX=2
+          else
+            echo "Unknown version type [${VERSION_TYPE}]"
+            exit 1
+          fi
+
+          IFS="."
+          read -ra VERSION <<< $(<version.txt)
+
+          echo "Bumping ${VERSION_TYPE} version"
+          echo "Was: ${VERSION[*]}"
+
+          VERSION[$INDEX]=$((VERSION[$INDEX] + 1))
+
+          echo "version=${VERSION[*]}" >> "$GITHUB_OUTPUT"
+          echo "Now: ${VERSION[*]}"
+          echo "${VERSION[*]}" > version.txt
+
+      - uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
+          message: "Bump version to v${{ steps.bump-version.outputs.version }}"
+          tag: "v${{ steps.bump-version.outputs.version }}"
+          push: true
+
+      - name: Generate release notes
+        id: notes
+        uses: RedCrafter07/release-notes-action@main
+        with:
+          tag-name: v${{ steps.bump-version.outputs.version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: "1.x"
+
+      - name: Update Changelog
+        uses: stefanzweifel/changelog-updater-action@v1
+        with:
+          release-notes: ${{ steps.notes.outputs.release-notes }}
+          latest-version: "v${{ github.event.release.tag_name }}"
+          compare-url-target-revision: "1.x"
+          parse-github-usernames: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: false
+          body: ${{ steps.notes.outputs.release-notes }}
+          make_latest: true
+          name: "v${{ steps.bump-version.outputs.version }}"
+          tag_name: "v${{ steps.bump-version.outputs.version }}"

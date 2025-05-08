@@ -12,16 +12,22 @@ use React\Promise\PromiseInterface;
 use RuntimeException;
 use Throwable;
 
+use function array_key_last;
 use function call_user_func;
+use function count;
 use function gzencode;
 use function json_decode;
 use function microtime;
+use function React\Promise\all;
 use function strlen;
 use function substr;
 
 class Ingest
 {
-    private int $concurrentRequests = 0;
+    /**
+     * @var array<int<0, max>, PromiseInterface<null>>
+     */
+    private array $concurrentRequests = [];
 
     private ?TimerInterface $sendBufferAfterDelayTimer = null;
 
@@ -55,29 +61,42 @@ class Ingest
         $this->buffer->write($payload);
 
         if ($this->buffer->reachedThreshold()) {
-            $records = $this->buffer->pull();
-
             if ($this->sendBufferAfterDelayTimer !== null) {
                 $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
 
                 $this->sendBufferAfterDelayTimer = null;
             }
 
-            $this->ingest($records);
+            $this->digest();
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->sendBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, function (): void {
-                $records = $this->buffer->pull();
-
+            $this->sendBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, function () {
                 $this->sendBufferAfterDelayTimer = null;
 
-                $this->ingest($records);
+                $this->digest();
             });
         }
+    }
+
+    /**
+     * @return PromiseInterface<null>
+     */
+    public function forceDigest(): PromiseInterface
+    {
+        if ($this->sendBufferAfterDelayTimer !== null) {
+            $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
+        }
+
+        if ($this->buffer->isNotEmpty()) {
+            $this->digest();
+        }
+
+        return all($this->concurrentRequests)->then(static fn () => null);
     }
 
     public function pauseIngestion(): void
     {
         $this->buffer = new NullBuffer;
+
         $this->streamBufferBackup->flush();
     }
 
@@ -86,9 +105,11 @@ class Ingest
         $this->buffer = $this->streamBufferBackup;
     }
 
-    private function ingest(string $payload): void
+    private function digest(): void
     {
-        if ($this->concurrentRequests >= $this->concurrentRequestLimit) {
+        $payload = $this->buffer->pull();
+
+        if (count($this->concurrentRequests) >= $this->concurrentRequestLimit) {
             call_user_func($this->onIngestError, new RuntimeException("Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing"), 0.0);
 
             return;
@@ -103,10 +124,10 @@ class Ingest
             return;
         }
 
-        $this->concurrentRequests++;
         $start = microtime(true);
+        $currentRequestKey = (array_key_last($this->concurrentRequests) ?? -1) + 1;
 
-        $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails) use ($payload, &$start): PromiseInterface {
+        ($this->concurrentRequests[$currentRequestKey] = $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails) use ($payload, &$start): PromiseInterface {
             $start = microtime(true);
 
             if ($ingestDetails === null) {
@@ -120,7 +141,7 @@ class Ingest
                 ],
                 body: $payload,
             );
-        })->then(function (ResponseInterface $response) use (&$start): void {
+        })->then(function (ResponseInterface $response) use (&$start): null {
             /** @var array{remaining: int} */
             $content = json_decode($response->getBody()->getContents(), associative: true, flags: JSON_THROW_ON_ERROR);
 
@@ -130,14 +151,18 @@ class Ingest
 
                 call_user_func($this->onOverQuota, microtime(true) - $start);
 
-                return;
+                return null;
             }
 
             call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
-        })->catch(function (Throwable $e) use (&$start): void {
+
+            return null;
+        })->catch(function (Throwable $e) use (&$start): null {
             call_user_func($this->onIngestError, $this->parseException($e), microtime(true) - $start);
-        })->finally(function (): void {
-            $this->concurrentRequests--;
+
+            return null;
+        }))->finally(function () use ($currentRequestKey): void {
+            unset($this->concurrentRequests[$currentRequestKey]);
         });
     }
 

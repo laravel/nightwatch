@@ -13,11 +13,13 @@ use React\Socket\TcpServer;
 use Throwable;
 
 use function date;
+use function file_get_contents;
 use function gethostname;
 use function in_array;
 use function round;
 use function rtrim;
 use function str_replace;
+use function substr;
 
 require __DIR__.'/../vendor/react/promise/src/functions_include.php';
 require __DIR__.'/../vendor/autoload.php';
@@ -57,13 +59,6 @@ $ingestTimeout ??= 10;
 $server ??= (string) gethostname();
 
 /*
- * Internal state...
- */
-
-$debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
-$basePath = str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
-
-/*
  * Logging helpers...
  */
 
@@ -73,6 +68,23 @@ $info = static function (string $message): void {
 $error = static function (string $message): void {
     echo date('Y-m-d H:i:s').' [ERROR] '.$message.PHP_EOL;
 };
+
+/*
+ * Internal state...
+ */
+
+$debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
+/** @var ?string $basePath */
+$basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
+$signature = file_get_contents($basePath.'/signature.txt');
+
+if ($signature === false) {
+    $error("Unable to read the agent's signature");
+
+    return;
+} else {
+    $signature = substr($signature, 0, 7);
+}
 
 /*
  * Initialize services...
@@ -140,10 +152,20 @@ $ingest = new Ingest(
 
 $server = new Server(
     serverResolver: $serverResolver ?? static fn (): ServerInterface => new TcpServer($listenOn),
+    signature: $signature,
     onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]"),
     onServerError: static fn (Throwable $e) => $error("Server error: {$e->getMessage()}"),
     onConnectionError: static fn (Throwable $e) => $error("Connection error: {$e->getMessage()}"),
     onPayloadReceived: $ingest->write(...),
+    onInvalidSignature: static function () use ($info, $loop, $ingest) {
+        $info('Incoming signature has changed');
+
+        $ingest->forceDigest()->finally(static function () use ($info, $loop) {
+            $loop->stop();
+
+            $info('Shutting down');
+        });
+    },
 );
 
 /*

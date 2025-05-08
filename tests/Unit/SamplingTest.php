@@ -269,7 +269,7 @@ it('samples user', function () {
         nightwatch()->captureUser();
     }
 
-    expect(json_decode(nightwatch()->state->records->pull()))->toBe([]);
+    expect(json_decode(nightwatch()->state->records->pull()->rawPayload()))->toBe([]);
 
     nightwatch()->sampling['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
@@ -278,7 +278,7 @@ it('samples user', function () {
         nightwatch()->captureUser();
     }
 
-    $users = collect(json_decode(nightwatch()->state->records->pull()));
+    $users = collect(json_decode(nightwatch()->state->records->pull()->rawPayload()));
     expect($users)->toHaveCount(10);
     expect($users->pluck('id')->every(fn ($id) => $id === '123'))->toBeTrue();
 });
@@ -293,7 +293,7 @@ it('samples requests', function () {
         nightwatch()->request($request, $response);
     }
 
-    expect(json_decode(nightwatch()->state->records->pull()))->toBe([]);
+    expect(json_decode(nightwatch()->state->records->pull()->rawPayload()))->toBe([]);
 
     nightwatch()->sampling['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
@@ -302,7 +302,7 @@ it('samples requests', function () {
         nightwatch()->request($request, $response);
     }
 
-    $requests = collect(json_decode(nightwatch()->state->records->pull()));
+    $requests = collect(json_decode(nightwatch()->state->records->pull()->rawPayload()));
     expect($requests)->toHaveCount(10);
     expect($requests->pluck('url')->every(fn ($url) => $url === 'https://laravel.com/'))->toBeTrue();
 });
