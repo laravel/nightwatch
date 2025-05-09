@@ -6,7 +6,20 @@ use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Contracts\LocalIngest;
-use Laravel\Nightwatch\Payload;
+use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\Command;
+use Laravel\Nightwatch\Records\Exception;
+use Laravel\Nightwatch\Records\JobAttempt;
+use Laravel\Nightwatch\Records\Log;
+use Laravel\Nightwatch\Records\Mail;
+use Laravel\Nightwatch\Records\Notification;
+use Laravel\Nightwatch\Records\OutgoingRequest;
+use Laravel\Nightwatch\Records\Query;
+use Laravel\Nightwatch\Records\QueuedJob;
+use Laravel\Nightwatch\Records\Request;
+use Laravel\Nightwatch\Records\ScheduledTask;
+use Laravel\Nightwatch\Records\User;
+use Laravel\Nightwatch\RecordsBuffer;
 use RuntimeException;
 
 use function collect;
@@ -24,8 +37,21 @@ final class FakeIngest implements LocalIngest
      */
     public array $writes = [];
 
-    public function write(Payload $payload): void
+    public function __construct(
+        public RecordsBuffer $buffer = new RecordsBuffer,
+    ) {
+        //
+    }
+
+    public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|JobAttempt|Mail|Notification|Log|User|ScheduledTask $record): void
     {
+        $this->buffer->write($record);
+    }
+
+    public function digest(): void
+    {
+        $payload = $this->buffer->pull();
+
         if ($payload->isEmpty()) {
             throw new RuntimeException('The payload was empty.');
         }
@@ -36,6 +62,11 @@ final class FakeIngest implements LocalIngest
     public function ping(): void
     {
         //
+    }
+
+    public function flush(): void
+    {
+        $this->buffer->flush();
     }
 
     public function assertWrittenTimes(int $expected): self

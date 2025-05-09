@@ -1,6 +1,5 @@
 <?php
 
-use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Payload;
 
 use function Pest\Laravel\artisan;
@@ -14,7 +13,7 @@ it('fails when nightwatch is disabled', function () {
 });
 
 it('fails when ingest throws an exception while pinging', function () {
-    nightwatch()->ingest = new class implements LocalIngest
+    nightwatch()->ingest = new class extends FakeIngest
     {
         public function write(Payload $payload): void
         {
@@ -32,7 +31,7 @@ it('fails when ingest throws an exception while pinging', function () {
 });
 
 it('can ping', function () {
-    nightwatch()->ingest = new class implements LocalIngest
+    nightwatch()->ingest = new class extends FakeIngest
     {
         public function write(Payload $payload): void
         {

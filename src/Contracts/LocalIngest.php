@@ -25,5 +25,7 @@ interface LocalIngest
 
     public function ping(): void;
 
+    public function digest(): void;
+
     public function flush(): void;
 }

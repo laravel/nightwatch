@@ -73,11 +73,20 @@ final class Ingest implements LocalIngest
 
     public function ping(): void
     {
-        $this->ingest(Payload::text('PING'));
+        $this->transmit(Payload::text('PING'));
     }
 
-    private function ingest(Payload $payload): void
+    public function digest(): void
     {
+        $this->transmit($this->buffer->pull());
+    }
+
+    private function transmit(Payload $payload): void
+    {
+        if ($payload->isEmpty()) {
+            return;
+        }
+
         $stream = $this->createStream();
 
         $this->sendPayload($stream, $payload);

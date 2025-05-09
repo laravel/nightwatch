@@ -59,14 +59,14 @@ final class Core
     /**
      * @internal
      */
-    public function ingest(): void
+    public function digest(): void
     {
         if (! $this->shouldSample) {
             return;
         }
 
         try {
-            $this->ingest->write($this->state->records->pull());
+            $this->ingest->digest();
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }

@@ -1,6 +1,5 @@
 <?php
 
-use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Payload;
 
@@ -9,7 +8,7 @@ it('gracefully handles exceptions thrown while ingesting', function () {
     Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
         $exceptions[] = $e;
     });
-    nightwatch()->ingest = new class implements LocalIngest
+    nightwatch()->ingest = new class extends FakeIngest
     {
         public bool $thrownInWrite = false;
 
@@ -26,7 +25,7 @@ it('gracefully handles exceptions thrown while ingesting', function () {
         }
     };
 
-    nightwatch()->ingest();
+    nightwatch()->digest();
 
     expect(nightwatch()->ingest->thrownInWrite)->toBeTrue();
     expect($exceptions)->toHaveCount(1);

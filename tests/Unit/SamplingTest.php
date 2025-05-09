@@ -388,7 +388,7 @@ it('samples ingest', function () {
         name: '',
         username: '',
     ));
-    nightwatch()->ingest();
+    nightwatch()->digest();
 
     expect(nightwatch()->state->records)->toHaveCount(1);
     $ingest->assertWrittenTimes(0);
@@ -401,7 +401,7 @@ it('samples ingest', function () {
         name: '',
         username: '',
     ));
-    nightwatch()->ingest();
+    nightwatch()->digest();
 
     expect(nightwatch()->state->records)->toHaveCount(0);
     $ingest->assertWrittenTimes(1);
