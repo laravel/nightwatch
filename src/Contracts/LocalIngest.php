@@ -23,7 +23,7 @@ interface LocalIngest
 {
     public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|JobAttempt|Mail|Notification|Log|User|ScheduledTask $record): void;
 
-    public function flush(): void;
-
     public function ping(): void;
+
+    public function flush(): void;
 }
