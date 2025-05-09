@@ -4,7 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Database\Events\QueryExecuted;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Ingest;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\State\CommandState;
@@ -23,7 +23,7 @@ final class QuerySensor
 {
     public function __construct(
         private Clock $clock,
-        private Ingest $ingest,
+        private LocalIngest $ingest,
         private RequestState|CommandState $executionState,
         private Location $location,
     ) {

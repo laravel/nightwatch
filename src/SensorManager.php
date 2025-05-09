@@ -16,6 +16,7 @@ use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Queue\Events\JobAttempted;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
@@ -118,7 +119,7 @@ final class SensorManager
     public $commandSensor;
 
     public function __construct(
-        private Ingest $ingest,
+        public LocalIngest $ingest,
         private RequestState|CommandState $executionState,
         private Clock $clock,
         public Location $location,
@@ -285,5 +286,23 @@ final class SensorManager
         );
 
         $sensor();
+    }
+
+    public function flush(): void
+    {
+        $this->cacheEventSensor = null;
+        $this->exceptionSensor = null;
+        $this->logSensor = null;
+        $this->outgoingRequestSensor = null;
+        $this->querySensor = null;
+        $this->queuedJobSensor = null;
+        $this->jobAttemptSensor = null;
+        $this->notificationSensor = null;
+        $this->mailSensor = null;
+        $this->userSensor = null;
+        $this->stageSensor = null;
+        $this->scheduledTaskSensor = null;
+        $this->requestSensor = null;
+        $this->commandSensor = null;
     }
 }

@@ -5,7 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Queue\Events\JobAttempted;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
-use Laravel\Nightwatch\Ingest;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\State\CommandState;
 
@@ -24,7 +24,7 @@ final class JobAttemptSensor
      */
     public function __construct(
         private CommandState $executionState,
-        private Ingest $ingest,
+        private LocalIngest $ingest,
         private Clock $clock,
         private array $connectionConfig,
     ) {

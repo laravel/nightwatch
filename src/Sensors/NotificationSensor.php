@@ -5,7 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Ingest;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -24,7 +24,7 @@ final class NotificationSensor
     private ?float $startTime = null;
 
     public function __construct(
-        private Ingest $ingest,
+        private LocalIngest $ingest,
         private RequestState|CommandState $executionState,
         private Clock $clock,
     ) {

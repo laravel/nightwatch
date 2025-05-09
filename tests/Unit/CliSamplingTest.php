@@ -48,7 +48,7 @@ it('samples job attempts', function () {
     $ingest->assertWrittenTimes(10);
 
     expect(nightwatch()->state->records)->toHaveCount(1);
-    $ingest->write(nightwatch()->state->records->pull());
+    $ingest->digest();
     $ingest->assertLatestWrite('cache-event:0.key', 'illuminate:queue:restart');
     $ingest->assertLatestWrite('job-attempt:*', []);
 })->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');

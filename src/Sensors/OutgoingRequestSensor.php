@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Laravel\Nightwatch\Ingest;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -20,7 +20,7 @@ use function round;
 final class OutgoingRequestSensor
 {
     public function __construct(
-        private Ingest $ingest,
+        private LocalIngest $ingest,
         private RequestState|CommandState $executionState,
     ) {
         //

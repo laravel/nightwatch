@@ -7,6 +7,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Event;
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\State\CommandState;
@@ -100,9 +101,11 @@ function setPhpVersion(string $version): void
     nightwatch()->state->phpVersion = $version;
 }
 
-function fakeIngest(): FakeIngest
+function fakeIngest(?LocalIngest $fake = null): FakeIngest
 {
-    return nightwatch()->ingest = new FakeIngest;
+    nightwatch()->sensor->flush();
+
+    return nightwatch()->ingest = nightwatch()->sensor->ingest = $fake ?? new FakeIngest;
 }
 
 function prependListener(string $event, callable $listener): void

@@ -11,7 +11,7 @@ use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Ingest;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Records\ScheduledTask;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
@@ -35,7 +35,7 @@ final class ScheduledTaskSensor
 {
     public function __construct(
         private CommandState $executionState,
-        private Ingest $ingest,
+        private LocalIngest $ingest,
         private Clock $clock,
     ) {
         //

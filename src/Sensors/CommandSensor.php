@@ -3,8 +3,8 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Ingest;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\State\CommandState;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -20,7 +20,7 @@ final class CommandSensor
 {
     public function __construct(
         private CommandState $executionState,
-        private Ingest $ingest,
+        private LocalIngest $ingest,
     ) {
         //
     }

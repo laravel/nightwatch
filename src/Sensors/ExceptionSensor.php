@@ -4,7 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Ingest;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\State\CommandState;
@@ -32,7 +32,7 @@ final class ExceptionSensor
 {
     public function __construct(
         private Clock $clock,
-        private Ingest $ingest,
+        private LocalIngest $ingest,
         private RequestState|CommandState $executionState,
         private Location $location,
     ) {

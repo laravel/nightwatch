@@ -30,7 +30,7 @@ use function json_decode;
 use function str_contains;
 use function value;
 
-final class FakeIngest implements LocalIngest
+class FakeIngest implements LocalIngest
 {
     /**
      * @var list<string>

@@ -4,8 +4,8 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
+use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\Ingest;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -28,7 +28,7 @@ use function strlen;
 final class RequestSensor
 {
     public function __construct(
-        private Ingest $ingest,
+        private LocalIngest $ingest,
         private RequestState $requestState,
     ) {
         //
