@@ -10,12 +10,11 @@ use Tests\Response;
 use Tests\TestCase;
 use Tests\Timer;
 
-use function expect;
 use function gethostname;
 use function json_encode;
 use function preg_quote;
-use function run;
 use function str_repeat;
+use function strlen;
 
 class IngestDetailsRepositoryTest extends TestCase
 {
@@ -26,21 +25,21 @@ class IngestDetailsRepositoryTest extends TestCase
             Response::throwWhileProcessing('Whoops!'),
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
-        expect($browser)->toHaveSent([
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $browser->assertPending([]);
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication failed {duration}: Whoops!
-        OUTPUT);
-        expect($loop)->toHaveRun([]);
+        OUTPUT, $output);
+        $loop->assertRun([]);
     }
 
     public function test_it_handles_4xx_errors(): void
@@ -50,21 +49,21 @@ class IngestDetailsRepositoryTest extends TestCase
             new Response('Whoops!', 400),
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
-        expect($browser)->toHaveSent([
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $browser->assertPending([]);
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication failed {duration}: 400 \[Whoops!\]
-        OUTPUT);
-        expect($loop)->toHaveRun([]);
+        OUTPUT, $output);
+        $loop->assertRun([]);
     }
 
     public function test_it_handles_5xx_errors(): void
@@ -74,21 +73,21 @@ class IngestDetailsRepositoryTest extends TestCase
             Response::internalServerError('Whoops!'),
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
-        expect($browser)->toHaveSent([
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $browser->assertPending([]);
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication failed {duration}: 500 \[Whoops!\]
-        OUTPUT);
-        expect($loop)->toHaveRun([]);
+        OUTPUT, $output);
+        $loop->assertRun([]);
     }
 
     #[DataProvider('malformedJson')]
@@ -99,21 +98,21 @@ class IngestDetailsRepositoryTest extends TestCase
             new Response($body),
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
-        expect($browser)->toHaveSent([
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $browser->assertPending([]);
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication failed {duration}: Syntax error
-        OUTPUT);
-        expect($loop)->toHaveRun([]);
+        OUTPUT, $output);
+        $loop->assertRun([]);
     }
 
     /**
@@ -137,22 +136,22 @@ class IngestDetailsRepositoryTest extends TestCase
             new Response($payload),
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
-        expect($browser)->toHaveSent([
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
+        $browser->assertPending([]);
         $payload = preg_quote(json_encode($payload, flags: JSON_THROW_ON_ERROR), '#');
-        expect($output)->toMatchLog(<<<OUTPUT
+        $this->assertLogMatches(<<<OUTPUT
         {date} {info} Authentication failed {duration}: Invalid authentication response \[{$payload}\]
-        OUTPUT);
-        expect($loop)->toHaveRun([]);
+        OUTPUT, $output);
+        $loop->assertRun([]);
     }
 
     /**
@@ -175,7 +174,7 @@ class IngestDetailsRepositoryTest extends TestCase
             Response::jwt(),
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
@@ -186,30 +185,28 @@ class IngestDetailsRepositoryTest extends TestCase
         /** @var ?string $token */
         $token = $_SERVER['NIGHTWATCH_TOKEN'] ?? null;
 
-        expect($baseUrl)
-            ->toBeString()
-            ->toStartWith('https://');
-        expect($token)
-            ->toBeString()
-            ->toHaveLength(44);
-        expect($e)->toBeNull($e?->getMessage() ?? '');
-        expect($browser->timeout)->toBe(10.0);
-        expect($browser->connectionTimeout)->toBe(5.0);
-        expect($browser->baseUrl)->toBe($baseUrl);
-        expect($browser->headers)->toBe([
+        $this->assertIsString($baseUrl);
+        $this->assertStringStartsWith('https://', $baseUrl);
+        $this->assertIsString($token);
+        $this->assertSame(44, strlen($token));
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $this->assertSame(10.0, $browser->timeout);
+        $this->assertSame(5.0, $browser->connectionTimeout);
+        $this->assertSame($baseUrl, $browser->baseUrl);
+        $this->assertSame([
             'accept' => 'application/json',
             'authorization' => "Bearer {$token}",
             'content-type' => 'application/json',
             'nightwatch-server' => gethostname(),
-        ]);
-        expect($browser)->toHaveSent([
+        ], $browser->headers);
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $browser->assertPending([]);
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        OUTPUT);
-        expect($loop)->toHaveRun([]);
+        OUTPUT, $output);
+        $loop->assertRun([]);
     }
 
     public function test_it_refreshes_the_token_based_on_refresh_in(): void
@@ -224,38 +221,38 @@ class IngestDetailsRepositoryTest extends TestCase
             Response::jwt(),
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
+        $this->assertNull($e, $e?->getMessage() ?? '');
         $scheduleRefreshIn = 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn';
-        expect($loop)->toHaveRun([
+        $loop->assertRun([
             new Timer(interval: 5, runAt: 5, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 10, runAt: 5 + 10, scheduledAt: 5, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 300, runAt: 5 + 10 + 300, scheduledAt: 15, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 3_600, runAt: 5 + 10 + 300 + 3_600, scheduledAt: 5 + 10 + 300, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($loop)->toHavePending([
+        $loop->assertPending([
             new Timer(interval: 3_600, runAt: 5 + 10 + 300 + 3_600 + 3_600, scheduledAt: 5 + 10 + 300 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($browser)->toHaveSent([
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $browser->assertPending([]);
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Authentication successful {duration}
         {date} {info} Authentication failed {duration}: 500 \[\]
         {date} {info} Authentication successful {duration}
         {date} {info} Authentication successful {duration}
-        OUTPUT);
+        OUTPUT, $output);
     }
 
     public function test_it_uses_the_quick_retry_back_off_strategy_if_the_agent_has_not_yet_authenticated_and_encouters_a_runtime_exception(): void
@@ -289,15 +286,15 @@ class IngestDetailsRepositoryTest extends TestCase
             Response::throwWhileProcessing('Whoops 24!'), // 1h
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
+        $this->assertNull($e, $e?->getMessage() ?? '');
         $scheduleRefreshIn = 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn';
-        expect($loop)->toHaveRun([
+        $loop->assertRun([
             new Timer(interval: 2.5, runAt: 2.5, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 5, runAt: 2.5 + 5, scheduledAt: 2.5, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 10, runAt: 2.5 + 5 + 10, scheduledAt: 2.5 + 5, scheduledBy: $scheduleRefreshIn),
@@ -322,10 +319,10 @@ class IngestDetailsRepositoryTest extends TestCase
             new Timer(interval: 3_600, runAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 3_600, runAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($loop)->toHavePending([
+        $loop->assertPending([
             new Timer(interval: 3_600, runAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($browser)->toHaveSent([
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
@@ -351,8 +348,8 @@ class IngestDetailsRepositoryTest extends TestCase
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $browser->assertPending([]);
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication failed {duration}: Whoops 1!
         {date} {info} Authentication failed {duration}: Whoops 2!
         {date} {info} Authentication failed {duration}: Whoops 3!
@@ -377,7 +374,7 @@ class IngestDetailsRepositoryTest extends TestCase
         {date} {info} Authentication failed {duration}: Whoops 22!
         {date} {info} Authentication failed {duration}: Whoops 23!
         {date} {info} Authentication failed {duration}: Whoops 24!
-        OUTPUT);
+        OUTPUT, $output);
     }
 
     public function test_it_uses_the_quick_retry_back_off_strategy_if_the_agent_has_not_yet_authenticated_and_receives_an_unknown_error_response(): void
@@ -411,15 +408,15 @@ class IngestDetailsRepositoryTest extends TestCase
             Response::internalServerError('Whoops 24!'), // 1h
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
+        $this->assertNull($e, $e?->getMessage() ?? '');
         $scheduleRefreshIn = 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn';
-        expect($loop)->toHaveRun([
+        $loop->assertRun([
             new Timer(interval: 2.5, runAt: 2.5, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 5, runAt: 2.5 + 5, scheduledAt: 2.5, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 10, runAt: 2.5 + 5 + 10, scheduledAt: 2.5 + 5, scheduledBy: $scheduleRefreshIn),
@@ -444,11 +441,11 @@ class IngestDetailsRepositoryTest extends TestCase
             new Timer(interval: 3_600, runAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 3_600, runAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($loop)->toHavePending([
+        $loop->assertPending([
             new Timer(interval: 3_600, runAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 2.5 + 5 + 10 + 15 + 30 + 60 + 120 + 240 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($browser)->toHavePending([]);
-        expect($browser)->toHaveSent([
+        $browser->assertPending([]);
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
@@ -474,7 +471,7 @@ class IngestDetailsRepositoryTest extends TestCase
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
         ]);
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication failed {duration}: 500 \[Whoops 1!\]
         {date} {info} Authentication failed {duration}: 501 \[Whoops 2!\]
         {date} {info} Authentication failed {duration}: 400 \[Whoops 3!\]
@@ -499,7 +496,7 @@ class IngestDetailsRepositoryTest extends TestCase
         {date} {info} Authentication failed {duration}: 500 \[Whoops 22!\]
         {date} {info} Authentication failed {duration}: 500 \[Whoops 23!\]
         {date} {info} Authentication failed {duration}: 500 \[Whoops 24!\]
-        OUTPUT);
+        OUTPUT, $output);
     }
 
     public function test_it_schedules_a_refresh_after_1_hour_if_the_agent_has_not_yet_authenticated_and_receives_an_unauthenticated_response(): void
@@ -513,35 +510,35 @@ class IngestDetailsRepositoryTest extends TestCase
             Response::unauthenticated('Invalid environment token'),
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
+        $this->assertNull($e, $e?->getMessage() ?? '');
         $scheduleRefreshIn = 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn';
-        expect($loop)->toHaveRun([
+        $loop->assertRun([
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 3_600, runAt: 3_600 + 3_600, scheduledAt: 3_600, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($loop)->toHavePending([
+        $loop->assertPending([
             new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($browser)->toHaveSent([
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $browser->assertPending([]);
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication failed {duration}: 401 \[{"message":"Missing token"}\]
         {date} {info} Authentication failed {duration}: 401 \[{"message":"Missing token"}\]
         {date} {info} Authentication failed {duration}: 401 \[{"message":"Invalid environment token"}\]
         {date} {info} Authentication failed {duration}: 401 \[{"message":"Invalid environment token"}\]
-        OUTPUT);
+        OUTPUT, $output);
     }
 
     public function test_it_uses_the_slow_retry_back_off_strategy_if_the_agent_has_already_authenticated_and_encouters_a_runtime_exception(): void
@@ -568,15 +565,15 @@ class IngestDetailsRepositoryTest extends TestCase
             Response::throwWhileProcessing('Whoops 16!'), // 3_600s
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
+        $this->assertNull($e, $e?->getMessage() ?? '');
         $scheduleRefreshIn = 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn';
-        expect($loop)->toHaveRun([
+        $loop->assertRun([
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 300, runAt: 3_600 + 300, scheduledAt: 3_600, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 300, runAt: 3_600 + 300 + 300, scheduledAt: 3_600 + 300, scheduledBy: $scheduleRefreshIn),
@@ -594,10 +591,10 @@ class IngestDetailsRepositoryTest extends TestCase
             new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($loop)->toHavePending([
+        $loop->assertPending([
             new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($browser)->toHaveSent([
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
@@ -616,8 +613,8 @@ class IngestDetailsRepositoryTest extends TestCase
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $browser->assertPending([]);
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Authentication failed {duration}: Whoops 1!
         {date} {info} Authentication failed {duration}: Whoops 2!
@@ -635,7 +632,7 @@ class IngestDetailsRepositoryTest extends TestCase
         {date} {info} Authentication failed {duration}: Whoops 14!
         {date} {info} Authentication failed {duration}: Whoops 15!
         {date} {info} Authentication failed {duration}: Whoops 16!
-        OUTPUT);
+        OUTPUT, $output);
     }
 
     public function test_it_uses_the_slow_retry_back_off_strategy_if_the_agent_has_already_authenticated_and_receives_an_unknown_error_response(): void
@@ -662,15 +659,15 @@ class IngestDetailsRepositoryTest extends TestCase
             Response::internalServerError('Whoops 16!'), // 3_600s
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
+        $this->assertNull($e, $e?->getMessage() ?? '');
         $scheduleRefreshIn = 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn';
-        expect($loop)->toHaveRun([
+        $loop->assertRun([
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 300, runAt: 3_600 + 300, scheduledAt: 3_600, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 300, runAt: 3_600 + 300 + 300, scheduledAt: 3_600 + 300, scheduledBy: $scheduleRefreshIn),
@@ -688,10 +685,10 @@ class IngestDetailsRepositoryTest extends TestCase
             new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($loop)->toHavePending([
+        $loop->assertPending([
             new Timer(interval: 3_600, runAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($browser)->toHaveSent([
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
@@ -710,8 +707,8 @@ class IngestDetailsRepositoryTest extends TestCase
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $browser->assertPending([]);
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Authentication failed {duration}: 500 \[Whoops 1!\]
         {date} {info} Authentication failed {duration}: 501 \[Whoops 2!\]
@@ -729,7 +726,7 @@ class IngestDetailsRepositoryTest extends TestCase
         {date} {info} Authentication failed {duration}: 500 \[Whoops 14!\]
         {date} {info} Authentication failed {duration}: 500 \[Whoops 15!\]
         {date} {info} Authentication failed {duration}: 500 \[Whoops 16!\]
-        OUTPUT);
+        OUTPUT, $output);
     }
 
     public function test_it_schedules_a_refresh_after_1_hour_if_the_agent_has_authenticated_and_receives_an_unauthenticated_response(): void
@@ -744,38 +741,38 @@ class IngestDetailsRepositoryTest extends TestCase
             Response::unauthenticated('Invalid environment token'),
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
+        $this->assertNull($e, $e?->getMessage() ?? '');
         $scheduleRefreshIn = 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn';
-        expect($loop)->toHaveRun([
+        $loop->assertRun([
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 3_600, runAt: 3_600 + 3_600, scheduledAt: 3_600, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($loop)->toHavePending([
+        $loop->assertPending([
             new Timer(interval: 3_600, runAt: 3_600 + 3_600 + 3_600 + 3_600 + 3_600, scheduledAt: 3_600 + 3_600 + 3_600 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
-        expect($browser)->toHaveSent([
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $browser->assertPending([]);
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Authentication failed {duration}: 401 \[{"message":"Missing token"}\]
         {date} {info} Authentication failed {duration}: 401 \[{"message":"Missing token"}\]
         {date} {info} Authentication failed {duration}: 401 \[{"message":"Invalid environment token"}\]
         {date} {info} Authentication failed {duration}: 401 \[{"message":"Invalid environment token"}\]
-        OUTPUT);
+        OUTPUT, $output);
     }
 
     public function test_it_limits_response_body_included_in_logs(): void
@@ -786,30 +783,30 @@ class IngestDetailsRepositoryTest extends TestCase
             Response::internalServerError(str_repeat('a', 256)),
         ]);
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $browser,
             loop: $loop,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
+        $this->assertNull($e, $e?->getMessage() ?? '');
         $scheduledBy = 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn';
-        expect($loop)->toHaveRun([
+        $loop->assertRun([
             new Timer(interval: 2.5, runAt: 2.5, scheduledAt: 0, scheduledBy: $scheduledBy),
         ]);
-        expect($loop)->toHavePending([
+        $loop->assertPending([
             new Timer(interval: 5, runAt: 7.5, scheduledAt: 2.5, scheduledBy: $scheduledBy),
         ]);
-        expect($browser)->toHaveSent([
+        $browser->assertSent([
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
         ]);
-        expect($browser)->toHavePending([]);
+        $browser->assertPending([]);
         $firstBody = str_repeat('a', 255);
         $secondBody = str_repeat('a', 250);
-        expect($output)->toMatchLog(<<<OUTPUT
+        $this->assertLogMatches(<<<OUTPUT
         {date} {info} Authentication failed {duration}: 500 \[{$firstBody}\]
         {date} {info} Authentication failed {duration}: 500 \[{$secondBody}\[\.\.\.\]\]
-        OUTPUT);
+        OUTPUT, $output);
     }
 }

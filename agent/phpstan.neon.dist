@@ -5,17 +5,5 @@ parameters:
   level: max
   ignoreErrors:
       -
-          message: '#.*#'
-          path: tests/Pest.php
-      -
-          message: '#.*#'
-          path: tests/ArchitectureTest.php
-      - '#Call to an undefined method Pest\\Expectation\<Tests\\BrowserFake\|null\>::toBeProcessing\(\)#'
-      - '#Call to an undefined method Pest\\Expectation\<Tests\\BrowserFake\|null\>::toHavePending\(\)#'
-      - '#Call to an undefined method Pest\\Expectation\<Tests\\BrowserFake\|null\>::toHaveSentNothing\(\)#'
-      - '#Call to an undefined method Pest\\Expectation\<Tests\\BrowserFake\|null\>::toHaveSent\(\)#'
-      - '#Call to an undefined method Pest\\Expectation\<Tests\\LoopFake\|null\>::toHaveCanceled\(\)#'
-      - '#Call to an undefined method Pest\\Expectation\<Tests\\LoopFake\|null\>::toHavePending\(\)#'
-      - '#Call to an undefined method Pest\\Expectation\<Tests\\LoopFake\|null\>::toHaveRun\(\)#'
-      - '#Call to an undefined method Pest\\Expectation\<Tests\\TcpServerFake\|null\>::toHaveConnections\(\)#'
-      - '#Call to an undefined method Pest\\Expectation\<string\|null\>::toMatchLog\(\)#'
+          identifier: 'paramOut.type'
+          path: tests/TestCase.php

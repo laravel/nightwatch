@@ -11,10 +11,6 @@ use Tests\TcpServerFake;
 use Tests\TestCase;
 use Tests\Timer;
 
-use function expect;
-use function run;
-use function signature;
-
 class ServerTest extends TestCase
 {
     public function test_it_responds_with_ok(): void
@@ -26,7 +22,7 @@ class ServerTest extends TestCase
 
         $loop->addTimer(1, $server->pendingConnection([['t' => 'request']]));
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $ingestDetailsBrowser,
             ingestBrowser: $ingestBrowser,
@@ -34,27 +30,27 @@ class ServerTest extends TestCase
             server: $server,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
-        expect($server)->toHaveConnections([
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $server->assertHandled([
             Connection::closed('2:OK'),
         ]);
-        expect($server->closed)->toBeFalse();
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $server->assertOpen();
+        $this->assertLogMatches(<<<'OUTPUT'
             {date} {info} Authentication successful {duration}
-            OUTPUT);
-        expect($loop)->toHaveRun([
+            OUTPUT, $output);
+        $loop->assertRun([
             new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
         ]);
-        expect($loop)->toHavePending([
+        $loop->assertPending([
             new Timer(interval: 10, runAt: 11, scheduledAt: 1, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
-        expect($ingestDetailsBrowser)->toHaveSent([
+        $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
-        expect($ingestDetailsBrowser)->toHavePending([]);
-        expect($ingestBrowser)->toHaveSentNothing();
-        expect($ingestBrowser)->toHavePending([]);
+        $ingestDetailsBrowser->assertPending([]);
+        $ingestBrowser->assertSent([]);
+        $ingestBrowser->assertPending([]);
     }
 
     public function test_it_can_be_pinged(): void
@@ -63,11 +59,11 @@ class ServerTest extends TestCase
         $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake;
-        $signature = signature();
+        $signature = $this->agentSignature();
 
         $loop->addTimer(0, $server->pendingConnection("12:{$signature}:PING"));
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $ingestDetailsBrowser,
             ingestBrowser: $ingestBrowser,
@@ -75,26 +71,26 @@ class ServerTest extends TestCase
             server: $server,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
-        expect($server)->toHaveConnections([
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $server->assertHandled([
             Connection::closed('2:OK'),
         ]);
-        expect($server->closed)->toBeFalse();
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $server->assertOpen();
+        $this->assertLogMatches(<<<'OUTPUT'
             {date} {info} Authentication successful {duration}
-            OUTPUT);
-        expect($loop)->toHaveRun([
+            OUTPUT, $output);
+        $loop->assertRun([
             new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: $this->functionName()),
         ]);
-        expect($loop)->toHavePending([
+        $loop->assertPending([
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
-        expect($ingestDetailsBrowser)->toHaveSent([
+        $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
-        expect($ingestDetailsBrowser)->toHavePending([]);
-        expect($ingestBrowser)->toHaveSentNothing();
-        expect($ingestBrowser)->toHavePending([]);
+        $ingestDetailsBrowser->assertPending([]);
+        $ingestBrowser->assertSent([]);
+        $ingestBrowser->assertPending([]);
     }
 
     public function test_it_stops_loop_when_an_incorrect_signature_is_received(): void
@@ -106,7 +102,7 @@ class ServerTest extends TestCase
 
         $loop->addTimer(1, $server->pendingConnection('12:INVALID:[{}]'));
 
-        [$output, $e] = run(
+        [$output, $e] = $this->runAgent(
             via: 'source',
             ingestDetailsBrowser: $ingestDetailsBrowser,
             ingestBrowser: $ingestBrowser,
@@ -114,28 +110,28 @@ class ServerTest extends TestCase
             server: $server,
         );
 
-        expect($e)->toBeNull($e?->getMessage() ?? '');
-        expect($server)->toHaveConnections([
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $server->assertHandled([
             Connection::closed('2:OK'),
         ]);
-        expect($server->closed)->toBeTrue();
-        expect($output)->toMatchLog(<<<'OUTPUT'
+        $server->assertClosed();
+        $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Incoming signature has changed
         {date} {info} Shutting down
-        OUTPUT);
-        expect($loop)->toHaveRun([
+        OUTPUT, $output);
+        $loop->assertRun([
             new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
         ]);
-        expect($loop)->toHavePending([
+        $loop->assertPending([
             new Timer(interval: 3_600, runAt: null, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
-        expect($loop->stopped)->toBeTrue();
-        expect($ingestDetailsBrowser)->toHaveSent([
+        $this->assertTrue($loop->stopped);
+        $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
-        expect($ingestDetailsBrowser)->toHavePending([]);
-        expect($ingestBrowser)->toHaveSentNothing();
-        expect($ingestBrowser)->toHavePending([]);
+        $ingestDetailsBrowser->assertPending([]);
+        $ingestBrowser->assertSent([]);
+        $ingestBrowser->assertPending([]);
     }
 }

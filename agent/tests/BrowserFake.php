@@ -3,11 +3,14 @@
 namespace Tests;
 
 use Laravel\NightwatchAgent\Contracts\Browser;
+use PHPUnit\Framework\Assert;
 use React\Promise\PromiseInterface;
 use RuntimeException;
 
+use function array_map;
 use function array_search;
 use function array_shift;
+use function gzdecode;
 use function json_encode;
 
 class BrowserFake implements Browser
@@ -65,5 +68,64 @@ class BrowserFake implements Browser
 
             unset($this->processingResponses[$index]);
         });
+    }
+
+    /**
+     * @param  list<Response>  $responses
+     */
+    public function assertPending(array $responses): self
+    {
+        Assert::assertEquals($responses, $this->pendingResponses);
+
+        return $this;
+    }
+
+    /**
+     * @param  list<Request>  $requests
+     */
+    public function assertSent(array $requests): self
+    {
+        foreach ($requests as $request) {
+            if (($this->headers['content-encoding'] ?? null) === 'gzip') {
+                $body = gzdecode($request->body);
+
+                if ($body === false) {
+                    throw new RuntimeException('Unable to uncompress request payload.');
+                }
+
+                $request->body = $body;
+            }
+        }
+
+        $actual = array_map(
+            function ($request) {
+                [$url, $headers, $body] = $request;
+
+                if (($this->headers['content-encoding'] ?? null) === 'gzip') {
+                    $body = gzdecode($body);
+
+                    if ($body === false) {
+                        throw new RuntimeException('Unable to uncompress request payload.');
+                    }
+                }
+
+                return new Request($url, $headers, $body);
+            },
+            $this->sentRequests,
+        );
+
+        Assert::assertEquals($requests, $actual);
+
+        return $this;
+    }
+
+    /**
+     * @param  list<Response>  $responses
+     */
+    public function assertProcessing(array $responses): self
+    {
+        Assert::assertEquals($responses, $this->processingResponses);
+
+        return $this;
     }
 }

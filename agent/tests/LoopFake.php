@@ -2,8 +2,9 @@
 
 namespace Tests;
 
+use PHPUnit\Framework\Assert;
 use React\EventLoop\LoopInterface;
-use React\EventLoop\Timer\Timer;
+use React\EventLoop\Timer\Timer as ReactTimer;
 use React\EventLoop\TimerInterface;
 use RuntimeException;
 
@@ -84,7 +85,7 @@ class LoopFake implements LoopInterface
      */
     public function addTimer($interval, $callback): TimerInterface
     {
-        $timer = new Timer($interval, $callback, periodic: false);
+        $timer = new ReactTimer($interval, $callback, periodic: false);
 
         $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
         $class = $frame['class'] ?? '';
@@ -226,5 +227,54 @@ class LoopFake implements LoopInterface
 
             return $a['runAt'] < $b['runAt'] ? -1 : 1;
         });
+    }
+
+    /**
+     * @param  list<Timer>  $timers
+     */
+    public function assertPending(array $timers): self
+    {
+        $actual = array_map(fn ($timer) => new Timer(
+            interval: $timer['interval'],
+            runAt: $timer['runAt'],
+            scheduledBy: $timer['scheduledBy'],
+            scheduledAt: $timer['scheduledAt'],
+        ), $this->pendingTimers);
+
+        Assert::assertEquals($timers, $actual);
+
+        return $this;
+    }
+
+    /**
+     * @param  list<Timer>  $timers
+     */
+    public function assertRun(array $timers): self
+    {
+        $actual = array_map(fn ($timer) => new Timer(
+            interval: $timer['interval'],
+            runAt: $timer['runAt'],
+            scheduledBy: $timer['scheduledBy'],
+            scheduledAt: $timer['scheduledAt'],
+        ), $this->timersRun);
+
+        Assert::assertEquals($timers, $actual);
+
+        return $this;
+    }
+
+    /**
+     * @param  list<Timer>  $timers
+     */
+    public function assertCanceled(array $timers): self
+    {
+        Assert::assertEquals($timers, array_map(fn ($timer) => new Timer(
+            interval: $timer['interval'],
+            canceledAt: $timer['canceledAt'],
+            scheduledBy: $timer['scheduledBy'],
+            scheduledAt: $timer['scheduledAt'],
+        ), $this->canceledTimers));
+
+        return $this;
     }
 }
