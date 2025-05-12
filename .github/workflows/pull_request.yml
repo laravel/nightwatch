@@ -317,4 +317,4 @@ jobs:
         env:
           NIGHTWATCH_TOKEN: ${{ secrets.NIGHTWATCH_TOKEN }}
           NIGHTWATCH_BASE_URL: ${{ secrets.NIGHTWATCH_BASE_URL }}
-        run: vendor/bin/pest --coverage
+        run: vendor/bin/phpunit --coverage-text --show-uncovered-for-coverage-text
