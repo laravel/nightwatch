@@ -170,8 +170,6 @@ it('ingests failed tasks', function () {
         ],
     ]);
     $this->ingest->assertLatestWrite('exception:0.message', 'Unhandled error');
-
-    forgetRecordedExceptions(1);
 });
 
 it('resets trace ID and timestamp on each task run', function () {

@@ -34,8 +34,6 @@ it('gracefully handles exceptions while capturing stage', function () {
 
         return true;
     });
-
-    forgetRecordedExceptions(1);
 });
 
 it('gracefully handles exceptions while capturing user', function () {
@@ -63,8 +61,6 @@ it('gracefully handles exceptions while capturing user', function () {
 
         return true;
     });
-
-    forgetRecordedExceptions(1);
 });
 
 it('gracefully handles exceptions while capturing request', function () {
@@ -91,6 +87,4 @@ it('gracefully handles exceptions while capturing request', function () {
 
         return true;
     });
-
-    forgetRecordedExceptions(1);
 });

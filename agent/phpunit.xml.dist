@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit colors="true">
+<phpunit
+    colors="true"
+    bootstrap="./tests/bootstrap.php"
+>
     <testsuites>
         <testsuite name="Unit">
             <directory suffix="Test.php">./tests/Unit</directory>
@@ -9,9 +12,6 @@
         </testsuite>
         <testsuite name="Integration">
             <directory suffix="Test.php">./tests/Integration</directory>
-        </testsuite>
-        <testsuite name="Architecture">
-            <file>tests/ArchitectureTest.php</file>
         </testsuite>
     </testsuites>
     <source>

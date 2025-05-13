@@ -116,5 +116,6 @@ final class RequestState
         $this->filesWritten = 0;
         $this->cacheEvents = 0;
         $this->hydratedModels = 0;
+        $this->exceptionPreview = '';
     }
 }

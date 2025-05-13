@@ -23,6 +23,4 @@ it('gracefully handles exceptions', function () {
 
     expect($buffer->thrownInFlush)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
-
-    forgetRecordedExceptions(1);
 });

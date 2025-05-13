@@ -174,8 +174,6 @@ it('samples exceptions', function () {
     }
 
     expect(nightwatch()->state->exceptions)->toBe(10);
-
-    forgetRecordedExceptions(10);
 });
 
 it('samples queued jobs', function () {

@@ -51,6 +51,4 @@ it('gracefully handles exceptions', function () {
     // accidently write empty payloads.
     expect($unrecoverableExceptions[1]->getMessage())->toBe('The payload was empty.');
     expect(nightwatch()->state->exceptions)->toBe(1);
-
-    forgetRecordedExceptions(1);
 });

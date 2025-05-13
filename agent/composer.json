@@ -30,8 +30,6 @@
         "ext-pcntl": "*",
         "evenement/evenement": "^3.0",
         "laravel/pint": "1.21.0",
-        "pestphp/pest": "^3.7.4",
-        "pestphp/pest-plugin-arch": "^3.1",
         "phpstan/phpstan": "^2.1.6",
         "phpunit/phpunit": "^11.5.3",
         "react/stream": "^1.4",
@@ -60,7 +58,7 @@
             "@php vendor/bin/pint --cache-file=.pint.cache"
         ],
         "test": [
-            "@php vendor/bin/pest"
+            "@php vendor/bin/phpunit"
         ],
         "build": [
             "bash ./build.sh"
@@ -72,9 +70,6 @@
     },
     "config": {
         "sort-packages": true,
-        "allow-plugins": {
-            "pestphp/pest-plugin": true
-        },
         "autoloader-suffix": "zUjV6thn8dELeOw6"
     },
     "minimum-stability": "stable",

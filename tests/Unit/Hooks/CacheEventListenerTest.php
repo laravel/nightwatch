@@ -18,6 +18,4 @@ it('gracefully handles exceptions', function () {
 
     expect($thrownInCacheEventSensor)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
-
-    forgetRecordedExceptions(1);
 })->skip(fn () => ! Compatibility::$cacheFailuresCapturable, 'Requires a more recent framework version');

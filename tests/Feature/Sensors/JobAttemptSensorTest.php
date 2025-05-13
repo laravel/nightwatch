@@ -187,8 +187,6 @@ it('ingests job failed job attempts', function ($workCommand) use ($workOptions)
     ]);
     $ingest->assertLatestWrite('exception:0.execution_source', 'job');
     $ingest->assertLatestWrite('exception:0.execution_id', $attemptId);
-
-    forgetRecordedExceptions(1);
 })->with($workCommands);
 
 it('does not ingest jobs dispatched on the sync queue', function () {
@@ -381,8 +379,19 @@ it('captures multiple job attempts', function ($workCommand) use ($workOptions) 
     $ingest->assertWrite(0, 'exception:0.message', 'Job failed');
     $ingest->assertWrite(1, 'job-attempt:0.attempt', 2);
     $ingest->assertWrite(1, 'exception:0.message', 'Job failed');
+})->with($workCommands);
 
-    forgetRecordedExceptions(1);
+it('resets the state between job attempts', function ($workCommand) use ($workOptions) {
+    $ingest = fakeIngest();
+
+    FailedJob::dispatch();
+    ProcessedJob::dispatch();
+
+    Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 2, '--tries' => 1]);
+
+    $ingest->assertWrittenTimes(2);
+    $ingest->assertWrite(0, 'job-attempt:0.exception_preview', 'Job failed');
+    $ingest->assertWrite(1, 'job-attempt:0.exception_preview', '');
 })->with($workCommands);
 
 final class ProcessedJob implements ShouldQueue
