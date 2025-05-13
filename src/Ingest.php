@@ -38,6 +38,7 @@ final class Ingest implements LocalIngest
         string $transmitTo,
         private float $connectionTimeout,
         float $timeout,
+        private int $threshold,
         public $streamFactory,
         public RecordsBuffer $buffer,
     ) {
@@ -52,6 +53,10 @@ final class Ingest implements LocalIngest
     public function write(Record $record): void
     {
         $this->buffer->write($record);
+
+        if ($this->buffer->count() > $this->threshold) {
+            $this->digest();
+        }
     }
 
     public function flush(): void

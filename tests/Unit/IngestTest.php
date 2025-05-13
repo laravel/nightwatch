@@ -385,6 +385,52 @@ it('only attempts to read from the stream 5 times', function () {
     ]);
 });
 
+it('does not trigger ingest before reaching threshold', function () {
+    $writes = [];
+    StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
+        $writes[] = $value;
+
+        return strlen($value);
+    });
+
+    for ($i = 0; $i < 500; $i++) {
+        nightwatch()->ingest->write(new FakeRecord);
+    }
+
+    expect($writes)->toHaveCount(0);
+});
+
+it('triggers ingest after exceeding threshold', function () {
+    $writes = [];
+    StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
+        $writes[] = $value;
+
+        return strlen($value);
+    });
+
+    for ($i = 0; $i < 500; $i++) {
+        nightwatch()->ingest->write(new FakeRecord);
+    }
+
+    expect($writes)->toHaveCount(0);
+
+    nightwatch()->ingest->write(new FakeRecord);
+
+    expect($writes)->toHaveCount(2);
+    expect(implode('', $writes))->toBe('10029:'.Payload::SIGNATURE.':['.implode(',', array_fill(0, 501, json_encode(new FakeRecord))).']');
+
+    for ($i = 0; $i < 500; $i++) {
+        nightwatch()->ingest->write(new FakeRecord);
+    }
+
+    expect($writes)->toHaveCount(2);
+
+    nightwatch()->ingest->write(new FakeRecord);
+
+    expect($writes)->toHaveCount(4);
+    expect(implode('', $writes))->toBe(str_repeat('10029:'.Payload::SIGNATURE.':['.implode(',', array_fill(0, 501, json_encode(new FakeRecord))).']', 2));
+});
+
 class StreamWrapper
 {
     public $context;
