@@ -6,7 +6,6 @@ use Closure;
 use Illuminate\Foundation\Application;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\LazyValue;
-use Laravel\Nightwatch\RecordsBuffer;
 use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
 
@@ -64,7 +63,6 @@ final class RequestState
         public int $filesWritten = 0,
         public int $cacheEvents = 0,
         public int $hydratedModels = 0,
-        public RecordsBuffer $records = new RecordsBuffer,
         public string $phpVersion = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION.'.'.PHP_RELEASE_VERSION,
         public string $laravelVersion = Application::VERSION,
         public string $executionPreview = '',
