@@ -24,6 +24,4 @@ it('gracefully handles exceptions', function () {
 
     expect($thrownInMailSensor)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
-
-    forgetRecordedExceptions(1);
 });

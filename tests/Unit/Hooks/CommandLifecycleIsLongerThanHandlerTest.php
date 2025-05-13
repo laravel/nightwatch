@@ -34,6 +34,4 @@ it('gracefully handles exceptions', function () {
 
         return true;
     });
-
-    forgetRecordedExceptions(2);
 });

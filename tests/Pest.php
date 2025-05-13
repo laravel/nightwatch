@@ -119,15 +119,6 @@ function fixturePath(string $path): string
     return join_paths(__DIR__, 'fixtures', $path);
 }
 
-function forgetRecordedExceptions(int $count)
-{
-    if ((($existing = nightwatch()->state->exceptions) - $count) < 0) {
-        throw new RuntimeException("Attempting to forget {$count} captured exceptions. Only found {$existing}.");
-    }
-
-    nightwatch()->state->exceptions -= $count;
-}
-
 class MyEvent
 {
     use Dispatchable;

@@ -26,8 +26,6 @@ it('gracefully handles exceptions when capturing execution preview', function ()
     expect($request->thrownInGetMethod)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
     expect($response->content())->toBe('response');
-
-    forgetRecordedExceptions(1);
 });
 
 it('gracefully handles exceptions when the terminating event doesn\'t exist', function () {
@@ -59,8 +57,6 @@ it('gracefully handles exceptions when the terminating event doesn\'t exist', fu
 
     expect($thrownInStageSensor)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
-
-    forgetRecordedExceptions(1);
 });
 
 it('handles response types that laravel does not wrap', function () {
@@ -94,6 +90,4 @@ it('handles response types that laravel does not wrap', function () {
 
     expect($thrownInStageSensor)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
-
-    forgetRecordedExceptions(1);
 });
