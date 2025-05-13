@@ -500,7 +500,7 @@ it('resets the state between job attempts', function ($workCommand) use ($workOp
     FailedJob::dispatch();
     ProcessedJob::dispatch();
 
-    Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 2, '--tries' => 1]);
+    Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 10]);
 
     $ingest->assertWrittenTimes(3);
     $ingest->assertWrite(1, 'job-attempt:0.exception_preview', 'Job failed');
