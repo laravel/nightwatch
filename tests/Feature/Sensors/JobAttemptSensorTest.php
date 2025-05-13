@@ -385,6 +385,19 @@ it('captures multiple job attempts', function ($workCommand) use ($workOptions) 
     forgetRecordedExceptions(1);
 })->with($workCommands);
 
+it('resets the state between job attempts', function ($workCommand) use ($workOptions) {
+    $ingest = fakeIngest();
+
+    FailedJob::dispatch();
+    ProcessedJob::dispatch();
+
+    Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 2, '--tries' => 1]);
+
+    $ingest->assertWrittenTimes(2);
+    $ingest->assertWrite(0, 'job-attempt:0.exception_preview', 'Job failed');
+    $ingest->assertWrite(1, 'job-attempt:0.exception_preview', '');
+})->with($workCommands);
+
 final class ProcessedJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;

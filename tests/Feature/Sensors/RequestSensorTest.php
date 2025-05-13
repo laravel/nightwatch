@@ -708,3 +708,16 @@ it('supports custom request methods', function () {
     $ingest->assertLatestWrite('request:0.method', 'BLAH');
     $ingest->assertLatestWrite('request:0.route_methods', ['BLAH']);
 });
+
+it('resets the state between requests', function () {
+    $ingest = fakeIngest();
+    Route::get('/unhappy', fn () => throw new \Exception('Unhappy!'));
+    Route::get('/happy', fn () => 'Happy!');
+
+    get('/unhappy');
+    get('/happy');
+
+    $ingest->assertWrittenTimes(2);
+    $ingest->assertWrite(0, 'request:0.exception_preview', 'Unhappy!');
+    $ingest->assertWrite(1, 'request:0.exception_preview', '');
+});

@@ -45,5 +45,8 @@ final class RequestLifecycleIsLongerThanHandler
         }
 
         $this->nightwatch->ingest();
+
+        // TODO: Move this to an Octane-only hook.
+        $this->nightwatch->state->reset();
     }
 }
