@@ -145,8 +145,6 @@ it('ingests released job attempts', function ($workCommand) use ($workOptions) {
     ]);
     $ingest->assertWrite(1, 'exception:0.execution_source', 'job');
     $ingest->assertWrite(1, 'exception:0.execution_id', $attemptId);
-
-    forgetRecordedExceptions(1);
 })->with($workCommands);
 
 it('ingests manually released job attempts', function ($workCommand) use ($workOptions) {
@@ -494,6 +492,19 @@ it('captures manually reported exceptions', function ($workCommand) use ($workOp
         ],
     ]);
     $ingest->assertWrite(1, 'exception:0.message', 'Whoops!');
+})->with($workCommands);
+
+it('resets the state between job attempts', function ($workCommand) use ($workOptions) {
+    $ingest = fakeIngest();
+
+    FailedJob::dispatch();
+    ProcessedJob::dispatch();
+
+    Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 2, '--tries' => 1]);
+
+    $ingest->assertWrittenTimes(3);
+    $ingest->assertWrite(1, 'job-attempt:0.exception_preview', 'Job failed');
+    $ingest->assertWrite(2, 'job-attempt:0.exception_preview', '');
 })->with($workCommands);
 
 final class ProcessedJob implements ShouldQueue

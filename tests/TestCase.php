@@ -10,7 +10,6 @@ use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
-use RuntimeException;
 
 use function env;
 use function now;
@@ -37,10 +36,6 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function tearDown(): void
     {
-        if (($count = $this->core->state->exceptions) > 0) {
-            throw new RuntimeException("{$count} exception(s) were captured that you did not forget. Remember to call `forgetRecordedExceptions(\$count)` at the end of your test after asserting against the expected exception count.");
-        }
-
         Str::createUuidsNormally();
 
         parent::tearDown();

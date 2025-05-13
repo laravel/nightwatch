@@ -48,6 +48,4 @@ it('gracefully handles exceptions', function () {
     expect($unrecoverableExceptions)->toHaveCount(1);
     expect($unrecoverableExceptions[0]->getMessage())->toBe('Whoops!');
     expect(nightwatch()->state->exceptions)->toBe(1);
-
-    forgetRecordedExceptions(1);
 });

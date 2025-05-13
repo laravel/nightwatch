@@ -311,8 +311,6 @@ it('captures exceptions', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('request:0.exceptions', 2);
     $ingest->assertLatestWrite('request:0.exception_preview', 'Unhandled error');
-
-    forgetRecordedExceptions(2);
 });
 
 it('doesn\'t capture the exception preview for handled exceptions', function () {
@@ -329,8 +327,6 @@ it('doesn\'t capture the exception preview for handled exceptions', function () 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('request:0.exceptions', 1);
     $ingest->assertLatestWrite('request:0.exception_preview', '');
-
-    forgetRecordedExceptions(1);
 });
 
 it('consistently sorts the route methods', function () {
@@ -707,4 +703,17 @@ it('supports custom request methods', function () {
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('request:0.method', 'BLAH');
     $ingest->assertLatestWrite('request:0.route_methods', ['BLAH']);
+});
+
+it('resets the state between requests', function () {
+    $ingest = fakeIngest();
+    Route::get('/unhappy', fn () => throw new \Exception('Unhappy!'));
+    Route::get('/happy', fn () => 'Happy!');
+
+    get('/unhappy');
+    get('/happy');
+
+    $ingest->assertWrittenTimes(2);
+    $ingest->assertWrite(0, 'request:0.exception_preview', 'Unhappy!');
+    $ingest->assertWrite(1, 'request:0.exception_preview', '');
 });

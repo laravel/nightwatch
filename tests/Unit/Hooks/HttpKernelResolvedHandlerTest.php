@@ -84,8 +84,6 @@ it('gracefully handles exceptions when prepending middleware', function () {
 
     expect($kernel->thrownInPrependMiddleware)->toBeTrue();
     expect(nightwatch()->state->exceptions)->toBe(1);
-
-    forgetRecordedExceptions(1);
 });
 
 it('gracefully handles exceptions when determining whether to sample the request', function () {
