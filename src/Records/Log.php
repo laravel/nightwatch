@@ -9,7 +9,7 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class Log
+final class Log extends Record
 {
     public int $v = 1;
 

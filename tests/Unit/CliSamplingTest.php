@@ -31,7 +31,7 @@ it('samples job attempts', function () {
     ]);
 
     $ingest->assertWrittenTimes(0);
-    expect(nightwatch()->state->records)->toHaveCount(0);
+    expect(nightwatch()->ingest->buffer)->toHaveCount(0);
 
     Compatibility::addHiddenContext('nightwatch_should_sample', true);
 
@@ -47,7 +47,7 @@ it('samples job attempts', function () {
 
     $ingest->assertWrittenTimes(10);
 
-    expect(nightwatch()->state->records)->toHaveCount(1);
+    expect(nightwatch()->ingest->buffer)->toHaveCount(1);
     $ingest->digest();
     $ingest->assertLatestWrite('cache-event:0.key', 'illuminate:queue:restart');
     $ingest->assertLatestWrite('job-attempt:*', []);
@@ -174,7 +174,7 @@ it('samples commands', function () {
         nightwatch()->command($input, 0);
     }
 
-    expect(json_decode(nightwatch()->state->records->pull()->rawPayload()))->toBe([]);
+    expect(json_decode(nightwatch()->ingest->buffer->pull()->rawPayload()))->toBe([]);
 
     nightwatch()->sampling['commands'] = 1.0;
     nightwatch()->configureSampling('commands');
@@ -184,7 +184,7 @@ it('samples commands', function () {
         nightwatch()->command($input, 0);
     }
 
-    $commands = collect(json_decode(nightwatch()->state->records->pull()->rawPayload()));
+    $commands = collect(json_decode(nightwatch()->ingest->buffer->pull()->rawPayload()));
     expect($commands)->toHaveCount(10);
     expect($commands->pluck('name')->every(fn ($name) => $name === 'app:build'))->toBeTrue();
 });

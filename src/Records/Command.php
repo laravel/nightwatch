@@ -8,7 +8,7 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class Command
+final class Command extends Record
 {
     public int $v = 1;
 

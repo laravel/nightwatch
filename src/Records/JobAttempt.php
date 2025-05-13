@@ -8,7 +8,7 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class JobAttempt
+final class JobAttempt extends Record
 {
     public int $v = 1;
 

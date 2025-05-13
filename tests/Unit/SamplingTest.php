@@ -269,7 +269,7 @@ it('samples user', function () {
         nightwatch()->captureUser();
     }
 
-    expect(json_decode(nightwatch()->state->records->pull()->rawPayload()))->toBe([]);
+    expect(json_decode(nightwatch()->ingest->buffer->pull()->rawPayload()))->toBe([]);
 
     nightwatch()->sampling['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
@@ -278,7 +278,7 @@ it('samples user', function () {
         nightwatch()->captureUser();
     }
 
-    $users = collect(json_decode(nightwatch()->state->records->pull()->rawPayload()));
+    $users = collect(json_decode(nightwatch()->ingest->buffer->pull()->rawPayload()));
     expect($users)->toHaveCount(10);
     expect($users->pluck('id')->every(fn ($id) => $id === '123'))->toBeTrue();
 });
@@ -293,7 +293,7 @@ it('samples requests', function () {
         nightwatch()->request($request, $response);
     }
 
-    expect(json_decode(nightwatch()->state->records->pull()->rawPayload()))->toBe([]);
+    expect(json_decode(nightwatch()->ingest->buffer->pull()->rawPayload()))->toBe([]);
 
     nightwatch()->sampling['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
@@ -302,7 +302,7 @@ it('samples requests', function () {
         nightwatch()->request($request, $response);
     }
 
-    $requests = collect(json_decode(nightwatch()->state->records->pull()->rawPayload()));
+    $requests = collect(json_decode(nightwatch()->ingest->buffer->pull()->rawPayload()));
     expect($requests)->toHaveCount(10);
     expect($requests->pluck('url')->every(fn ($url) => $url === 'https://laravel.com/'))->toBeTrue();
 });
@@ -390,7 +390,7 @@ it('samples ingest', function () {
     ));
     nightwatch()->digest();
 
-    expect(nightwatch()->state->records)->toHaveCount(1);
+    expect(nightwatch()->ingest->buffer)->toHaveCount(1);
     $ingest->assertWrittenTimes(0);
 
     nightwatch()->sampling['requests'] = 1;
@@ -403,7 +403,7 @@ it('samples ingest', function () {
     ));
     nightwatch()->digest();
 
-    expect(nightwatch()->state->records)->toHaveCount(0);
+    expect(nightwatch()->ingest->buffer)->toHaveCount(0);
     $ingest->assertWrittenTimes(1);
 });
 
@@ -412,7 +412,7 @@ it('discards records captured before sampling rate decided', function () {
     nightwatch()->sampling['requests'] = 0.0;
     $count = null;
     Route::get('/test', function () use (&$count) {
-        $count = nightwatch()->state->records->count();
+        $count = nightwatch()->ingest->buffer->count();
     });
 
     get('test')->assertOk();

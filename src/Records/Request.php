@@ -10,7 +10,7 @@ use function array_map;
 /**
  * @internal
  */
-final class Request
+final class Request extends Record
 {
     public int $v = 1;
 

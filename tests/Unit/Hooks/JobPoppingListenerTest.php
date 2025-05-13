@@ -5,7 +5,7 @@ use Laravel\Nightwatch\Hooks\JobPoppingListener;
 use Laravel\Nightwatch\RecordsBuffer;
 
 it('gracefully handles exceptions', function () {
-    nightwatch()->state->records = $buffer = new class extends RecordsBuffer
+    nightwatch()->ingest->buffer = $buffer = new class extends RecordsBuffer
     {
         public bool $thrownInFlush = false;
 

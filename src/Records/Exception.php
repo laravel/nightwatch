@@ -9,7 +9,7 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class Exception
+final class Exception extends Record
 {
     public int $v = 1;
 

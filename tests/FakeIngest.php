@@ -6,19 +6,7 @@ use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Contracts\LocalIngest;
-use Laravel\Nightwatch\Records\CacheEvent;
-use Laravel\Nightwatch\Records\Command;
-use Laravel\Nightwatch\Records\Exception;
-use Laravel\Nightwatch\Records\JobAttempt;
-use Laravel\Nightwatch\Records\Log;
-use Laravel\Nightwatch\Records\Mail;
-use Laravel\Nightwatch\Records\Notification;
-use Laravel\Nightwatch\Records\OutgoingRequest;
-use Laravel\Nightwatch\Records\Query;
-use Laravel\Nightwatch\Records\QueuedJob;
-use Laravel\Nightwatch\Records\Request;
-use Laravel\Nightwatch\Records\ScheduledTask;
-use Laravel\Nightwatch\Records\User;
+use Laravel\Nightwatch\Records\Record;
 use Laravel\Nightwatch\RecordsBuffer;
 use RuntimeException;
 
@@ -43,7 +31,7 @@ class FakeIngest implements LocalIngest
         //
     }
 
-    public function write(Request|Command|Exception|CacheEvent|OutgoingRequest|Query|QueuedJob|JobAttempt|Mail|Notification|Log|User|ScheduledTask $record): void
+    public function write(Record $record): void
     {
         $this->buffer->write($record);
     }

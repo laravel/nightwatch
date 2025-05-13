@@ -18,6 +18,7 @@ arch('final classes')->expect('Laravel\Nightwatch')
     ->ignoring([
         'Laravel\Nightwatch\Concerns',
         'Laravel\Nightwatch\Contracts',
+        Laravel\Nightwatch\Records\Record::class,
         Laravel\Nightwatch\RecordsBuffer::class,
         Laravel\Nightwatch\ExecutionStage::class,
     ]);
