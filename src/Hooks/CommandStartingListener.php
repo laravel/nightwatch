@@ -79,7 +79,7 @@ final class CommandStartingListener
 
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
-         * @see \Laravel\Nightwatch\Core::ingest()
+         * @see \Laravel\Nightwatch\Core::digest()
          */
         $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->nightwatch))(...));
     }
@@ -91,7 +91,7 @@ final class CommandStartingListener
         $this->events->listen(ScheduledTaskStarting::class, (new ScheduledTaskStartingListener($this->nightwatch))(...));
 
         /**
-         * @see \Laravel\Nightwatch\Core::ingest()
+         * @see \Laravel\Nightwatch\Core::digest()
          */
         $this->events->listen([
             ScheduledTaskFinished::class,
@@ -124,7 +124,7 @@ final class CommandStartingListener
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Records\Command
-         * @see \Laravel\Nightwatch\Core::ingest()
+         * @see \Laravel\Nightwatch\Core::digest()
          *
          * TODO Check this isn't a memory leak in Octane.
          * TODO Check if we can cache this handler between requests on Octane. Same goes for other
