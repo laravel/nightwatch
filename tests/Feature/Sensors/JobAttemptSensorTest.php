@@ -30,7 +30,6 @@ beforeEach(function () {
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
 
     setTraceId('0d3ca349-e222-4982-ac23-2343692de258');
-    Config::set('cache.default', 'array');
     Config::set('queue.default', 'database');
     Redis::command('FLUSHALL');
 });
