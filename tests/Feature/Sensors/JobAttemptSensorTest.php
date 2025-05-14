@@ -356,7 +356,6 @@ it('captures queued mail', function ($workCommand) use ($workOptions) {
         $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
         $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
     ]);
-    Config::set('mail.default', 'log');
     Mail::to('tim@laravel.com')->queue(new MyQueuedMail);
     nightwatch()->state->records->flush();
 
@@ -411,7 +410,7 @@ it('captures queued mail', function ($workCommand) use ($workOptions) {
             'execution_preview' => 'MyQueuedMail',
             'execution_stage' => 'action',
             'user' => '',
-            'mailer' => 'log',
+            'mailer' => 'array',
             'class' => Compatibility::$mailableClassNameCapturable ? 'MyQueuedMail' : '',
             'subject' => 'My Queued Mail',
             'to' => 1,
