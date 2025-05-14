@@ -15,7 +15,6 @@ beforeAll(function () {
 });
 
 it('samples job attempts', function () {
-    Config::set('queue.default', 'database');
     $ingest = fakeIngest();
     Compatibility::addHiddenContext('nightwatch_should_sample', false);
 
@@ -63,7 +62,6 @@ it('samples job attempts', function () {
 });
 
 it('preparing for next job', function () {
-    Config::set('queue.default', 'database');
     nightwatch()->clock->microtimeResolver = fn () => 5.5;
     nightwatch()->state->setId('previous');
     nightwatch()->state->executionPreview = 'previous';
