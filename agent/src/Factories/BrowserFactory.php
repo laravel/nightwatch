@@ -29,7 +29,8 @@ class BrowserFactory
 
         $browser = (new ReactBrowser($connector))
             ->withTimeout($timeout)
-            ->withBase($baseUrl);
+            ->withBase($baseUrl)
+            ->withoutHeader('User-Agent');
 
         foreach ($headers as $key => $value) {
             $browser = $browser->withHeader($key, $value);
