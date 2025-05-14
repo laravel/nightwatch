@@ -502,7 +502,7 @@ it('resets the state between job attempts', function ($workCommand) use ($workOp
 
     Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 10]);
 
-    $ingest->assertWrittenTimes(3);
+    $ingest->assertWrittenTimes(4);
     $ingest->assertWrite(1, 'job-attempt:0.exception_preview', 'Job failed');
     $ingest->assertWrite(2, 'job-attempt:0.exception_preview', '');
 })->with($workCommands);
