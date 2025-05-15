@@ -22,8 +22,6 @@ it('samples job attempts', function () {
         MyJob::dispatch();
     }
 
-    nightwatch()->state->records->flush();
-
     Artisan::call('queue:work', [
         '--max-jobs' => 10,
         '--sleep' => 0,
@@ -39,8 +37,6 @@ it('samples job attempts', function () {
     for ($i = 0; $i < 10; $i++) {
         MyJob::dispatch();
     }
-
-    nightwatch()->state->records->flush();
 
     Artisan::call('queue:work', [
         '--max-jobs' => 10,
