@@ -50,6 +50,7 @@ final class RequestLifecycleIsLongerThanHandler
 
         // TODO: Move this to an Octane-only hook.
         $this->nightwatch->state->flush();
-        memory_reset_peak_usage();
+        // $this->nightwatch->ingest->flush();
+        // memory_reset_peak_usage();
     }
 }
