@@ -150,7 +150,7 @@ it('ingests manually released job attempts', function ($workCommand) use ($workO
     ]);
     ReleasedJob::dispatch();
 
-    Artisan::call($workCommand, [...$workOptions, '--tries' => 2]);
+    Artisan::call($workCommand, $workOptions);
 
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite('job-attempt:*', [
@@ -417,7 +417,7 @@ it('captures multiple job attempts', function ($workCommand) use ($workOptions) 
     $ingest = fakeIngest();
     FailedJob::dispatch();
 
-    Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 3, '--tries' => 2]);
+    Artisan::call($workCommand, [...$workOptions, '--max-jobs' => 2, '--tries' => 2]);
 
     $ingest->assertWrittenTimes(2);
     $ingest->assertWrite(0, 'job-attempt:0.attempt', 1);
