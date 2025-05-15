@@ -476,7 +476,19 @@ it('captures manually reported exceptions', function ($workCommand) use ($workOp
             'exception_preview' => '',
         ],
     ]);
-    $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+    $ingest->assertLatestWrite('exception:0', function ($exception) use ($line) {
+        expect($exception)->toMatchArray([
+            'message' => 'Whoops!',
+            'handled' => true,
+            'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+            'execution_source' => 'job',
+            'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+            'execution_preview' => "Closure (JobAttemptSensorTest.php:{$line})",
+            'execution_stage' => 'action',
+        ]);
+
+        return true;
+    });
 })->with($workCommands);
 
 it('resets the state between job attempts', function ($workCommand) use ($workOptions) {
@@ -606,33 +618,6 @@ it('captures counts occuring outside job execution', function ($workCommand) use
         ]);
         expect($write[6])->toMatchArray([
             't' => 'outgoing-request',
-        ]);
-
-        return true;
-    });
-})->with($workCommands);
-
-it('can manually report exceptions', function ($workCommand) use ($workOptions) {
-    $ingest = fakeIngest();
-    Str::createUuidsUsingSequence([
-        $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
-        $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
-    ]);
-
-    ExceptionReportingJob::dispatch();
-    Artisan::call($workCommand, $workOptions);
-
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('job-attempt:0.name', 'ExceptionReportingJob');
-    $ingest->assertLatestWrite('exception:0', function ($exception) {
-        expect($exception)->toMatchArray([
-            'message' => 'Whoops!',
-            'handled' => true,
-            'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
-            'execution_source' => 'job',
-            'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
-            'execution_preview' => 'ExceptionReportingJob',
-            'execution_stage' => 'action',
         ]);
 
         return true;
