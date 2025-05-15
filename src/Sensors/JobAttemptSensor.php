@@ -30,7 +30,6 @@ final class JobAttemptSensor
         private CommandState $executionState,
         private LocalIngest $ingest,
         private Clock $clock,
-        // why is this unused now?
         private array $connectionConfig,
     ) {
         //
