@@ -13,7 +13,6 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
 
 use function hash;
-use function in_array;
 use function round;
 
 /**
@@ -62,27 +61,19 @@ final class JobAttemptSensor
                 default => 'processed',
             },
             duration: (int) round(($now - $this->executionState->timestamp) * 1_000_000),
-            // When the job throws an exception, it will be captured after the job is recorded.
-            // We need to add 1 to the exceptions count to account for the exception that will be captured later.
-            exceptions: $this->executionState->exceptions + (in_array(
-                $event::class,
-                [JobReleasedAfterException::class, JobFailed::class],
-                true
-            ) ? 1 : 0),
-            logs: $this->executionState->logs,
-            // When the job fails, a query is executed to insert into the failed_jobs table if the app is using the database queue.
-            // This query is executed after the job is recorded, so we lazily evaluate the queries count.
+            exceptions: new LazyValue(fn () => $this->executionState->exceptions),
+            logs: new LazyValue(fn () => $this->executionState->logs),
             queries: new LazyValue(fn () => $this->executionState->queries),
-            lazy_loads: $this->executionState->lazyLoads,
-            jobs_queued: $this->executionState->jobsQueued,
-            mail: $this->executionState->mail,
-            notifications: $this->executionState->notifications,
-            outgoing_requests: $this->executionState->outgoingRequests,
-            files_read: $this->executionState->filesRead,
-            files_written: $this->executionState->filesWritten,
-            cache_events: $this->executionState->cacheEvents,
-            hydrated_models: $this->executionState->hydratedModels,
-            peak_memory_usage: $this->executionState->peakMemory(),
+            lazy_loads: new LazyValue(fn () => $this->executionState->lazyLoads),
+            jobs_queued: new LazyValue(fn () => $this->executionState->jobsQueued),
+            mail: new LazyValue(fn () => $this->executionState->mail),
+            notifications: new LazyValue(fn () => $this->executionState->notifications),
+            outgoing_requests: new LazyValue(fn () => $this->executionState->outgoingRequests),
+            files_read: new LazyValue(fn () => $this->executionState->filesRead),
+            files_written: new LazyValue(fn () => $this->executionState->filesWritten),
+            cache_events: new LazyValue(fn () => $this->executionState->cacheEvents),
+            hydrated_models: new LazyValue(fn () => $this->executionState->hydratedModels),
+            peak_memory_usage: new LazyValue(fn () => $this->executionState->peakMemory()),
             exception_preview: new LazyValue(fn () => Str::tinyText($this->executionState->exceptionPreview)),
         ));
     }

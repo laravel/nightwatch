@@ -510,16 +510,3 @@ it('captures duration in microseconds', function () {
         ],
     ]);
 })->skip(fn () => ! Compatibility::$cacheDurationCapturable, 'Requires a more recent framework version');
-
-it('does not capture ignored keys', function () {
-    $ingest = fakeIngest();
-    Route::post('/users', function () {
-        Cache::driver('array')->get('illuminate:queue:restart');
-    });
-
-    $response = post('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('cache-event:*', []);
-});

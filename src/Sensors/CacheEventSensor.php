@@ -40,10 +40,6 @@ final class CacheEventSensor
         ForgettingKey::class,
     ];
 
-    private const IGNORED_KEYS = [
-        'illuminate:queue:restart',
-    ];
-
     public function __construct(
         private Clock $clock,
         private RequestState|CommandState $executionState,
@@ -53,10 +49,6 @@ final class CacheEventSensor
 
     public function __invoke(CacheEvent $event): void
     {
-        if (in_array($event->key, self::IGNORED_KEYS, true)) {
-            return;
-        }
-
         $now = $this->clock->microtime();
 
         if (Compatibility::$cacheDurationCapturable) {

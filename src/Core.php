@@ -59,10 +59,10 @@ final class Core
     /**
      * @internal
      */
-    public function ingest(): void
+    public function ingest(): self
     {
-        if (! $this->shouldSample) {
-            return;
+        if (! $this->shouldSample || $this->waitingForJob) {
+            return $this;
         }
 
         try {
@@ -70,5 +70,7 @@ final class Core
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }
+
+        return $this;
     }
 }

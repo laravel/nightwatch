@@ -53,6 +53,8 @@ trait CapturesState
      */
     public bool $shouldSample = true;
 
+    private bool $waitingForJob = false;
+
     /**
      * @var WeakMap<Route, bool>
      */
@@ -279,9 +281,18 @@ trait CapturesState
     /**
      * @internal
      */
+    public function waitForJob(): void
+    {
+        $this->waitingForJob = true;
+    }
+
+    /**
+     * @internal
+     */
     public function configureForJobs(): void
     {
         $this->state->source = 'job';
+        $this->waitingForJob = true;
     }
 
     /**
@@ -304,6 +315,7 @@ trait CapturesState
             return;
         }
 
+        $this->waitingForJob = false;
         $this->state->timestamp = $this->clock->microtime();
         $this->state->setId((string) Str::uuid());
         $this->state->executionPreview = Str::tinyText($job->resolveName());
