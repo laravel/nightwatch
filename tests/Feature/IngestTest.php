@@ -22,10 +22,7 @@ it('handles ingesting zero records', function () {
     $response = get('/users');
 
     $response->assertOk();
-    expect($exceptions)->toHaveCount(2);
+    expect($exceptions)->toHaveCount(1);
     expect($exceptions[0]->getMessage())->toBe('Whoops exception!');
-    // This exception is only thrown in tests to ensure
-    // we don't accidently write an empty payload.
-    expect($exceptions[1]->getMessage())->toBe('The payload was empty.');
-    $ingest->assertWrittenTimes(0);
+    expect($ingest->latestWriteAsString())->toBe('[]');
 });

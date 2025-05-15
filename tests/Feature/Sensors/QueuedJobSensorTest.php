@@ -34,8 +34,6 @@ beforeEach(function () {
     setTraceId('00000000-0000-0000-0000-000000000000');
     setExecutionId('00000000-0000-0000-0000-000000000001');
     setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
-
-    Config::set('queue.default', 'database');
 });
 
 it('can ingest queued jobs', function () {
@@ -121,7 +119,6 @@ it('captures queued event queue name', function () {
             return false;
         }
     });
-    Config::set('queue.default', 'database');
 
     Route::post('/users', function () {
         Event::listen('my-event', MyListenerWithCustomQueue::class);
@@ -146,7 +143,6 @@ it('captures queued mail', function () {
             return false;
         }
     });
-    Config::set('queue.default', 'database');
 
     Route::post('/users', function () {
         Str::createUuidsUsingSequence([
@@ -217,7 +213,6 @@ it('handles missing queue value', function () {
             return false;
         }
     });
-    Config::set('queue.default', 'database');
     Route::post('/users', function () {
         MyJob::dispatch();
         MyJob::dispatch()->onQueue('foobar');

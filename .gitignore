@@ -5,5 +5,5 @@
 /composer.lock
 /node_modules
 /phpunit.xml
-/tests/database.sqlite
+/tests/database.sqlite*
 /vendor

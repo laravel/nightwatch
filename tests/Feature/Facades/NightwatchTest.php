@@ -58,3 +58,12 @@ it('handles unrecoverable exceptions statelessly', function () {
     expect($handled)->toHaveCount(1);
     expect(app()->resolved(Core::class))->toBeFalse();
 });
+
+it('silences exceptions thrown while handling exceptions', function () {
+    Nightwatch::handleUnrecoverableExceptionsUsing(function (): object {
+        // Should return an object. Returning an int to cause an exception.
+        return 5;
+    });
+
+    Nightwatch::unrecoverableExceptionOccurred(new RuntimeException('Whoops!'));
+});

@@ -43,7 +43,11 @@ final class Nightwatch extends Facade
     public static function unrecoverableExceptionOccurred(Throwable $e): void
     {
         if (self::$handleUnrecoverableExceptionsUsing) {
-            call_user_func(self::$handleUnrecoverableExceptionsUsing, $e);
+            try {
+                call_user_func(self::$handleUnrecoverableExceptionsUsing, $e);
+            } catch (Throwable $e) {
+                //
+            }
         }
     }
 }

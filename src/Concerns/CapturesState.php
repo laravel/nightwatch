@@ -15,9 +15,11 @@ use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
-use Illuminate\Queue\Events\JobAttempted;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
+use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
@@ -50,6 +52,8 @@ trait CapturesState
      * @internal
      */
     public bool $shouldSample = true;
+
+    private bool $waitingForJob = false;
 
     /**
      * @var WeakMap<Route, bool>
@@ -218,7 +222,7 @@ trait CapturesState
     /**
      * @internal
      */
-    public function jobAttempt(JobAttempted $event): void
+    public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
         if (! $this->shouldSample) {
             return;
@@ -277,9 +281,18 @@ trait CapturesState
     /**
      * @internal
      */
+    public function waitForJob(): void
+    {
+        $this->waitingForJob = true;
+    }
+
+    /**
+     * @internal
+     */
     public function configureForJobs(): void
     {
         $this->state->source = 'job';
+        $this->waitingForJob = true;
     }
 
     /**
@@ -302,6 +315,7 @@ trait CapturesState
             return;
         }
 
+        $this->waitingForJob = false;
         $this->state->timestamp = $this->clock->microtime();
         $this->state->setId((string) Str::uuid());
         $this->state->executionPreview = Str::tinyText($job->resolveName());

@@ -7,7 +7,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Payload;
-use RuntimeException;
 
 use function collect;
 use function count;
@@ -26,10 +25,6 @@ final class FakeIngest implements LocalIngest
 
     public function write(Payload $payload): void
     {
-        if ($payload->isEmpty()) {
-            throw new RuntimeException('The payload was empty.');
-        }
-
         $this->writes[] = $payload->rawPayload();
     }
 
@@ -93,7 +88,7 @@ final class FakeIngest implements LocalIngest
         return $this->assertWrite(count($this->writes) - 1, $key, $expected);
     }
 
-    public function latestWriteAsString(): string
+    public function latestWriteAsString(): ?string
     {
         return Arr::last($this->writes);
     }

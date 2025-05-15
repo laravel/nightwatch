@@ -13,9 +13,11 @@ use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
-use Illuminate\Queue\Events\JobAttempted;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
+use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
@@ -78,7 +80,7 @@ final class SensorManager
     public $queuedJobSensor;
 
     /**
-     * @var (callable(JobAttempted): void)|null
+     * @var (callable(JobProcessed|JobReleasedAfterException|JobFailed): void)|null
      */
     public $jobAttemptSensor;
 
@@ -242,7 +244,7 @@ final class SensorManager
         $sensor($event);
     }
 
-    public function jobAttempt(JobAttempted $event): void
+    public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
         $sensor = $this->jobAttemptSensor ??= new JobAttemptSensor(
             executionState: $this->executionState, // @phpstan-ignore argument.type
