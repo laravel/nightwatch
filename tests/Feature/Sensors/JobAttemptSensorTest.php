@@ -612,6 +612,33 @@ it('captures counts occuring outside job execution', function ($workCommand) use
     });
 })->with($workCommands);
 
+it('can manually report exceptions', function ($workCommand) use ($workOptions) {
+    $ingest = fakeIngest();
+    Str::createUuidsUsingSequence([
+        $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
+        $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
+    ]);
+
+    ExceptionReportingJob::dispatch();
+    Artisan::call($workCommand, $workOptions);
+
+    $ingest->assertWrittenTimes(1);
+    $ingest->assertLatestWrite('job-attempt:0.name', 'ExceptionReportingJob');
+    $ingest->assertLatestWrite('exception:0', function ($exception) {
+        expect($exception)->toMatchArray([
+            'message' => 'Whoops!',
+            'handled' => true,
+            'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+            'execution_source' => 'job',
+            'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+            'execution_preview' => 'ExceptionReportingJob',
+            'execution_stage' => 'action',
+        ]);
+
+        return true;
+    });
+})->with($workCommands);
+
 final class ProcessedJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -643,6 +670,18 @@ final class FailedJob implements ShouldQueue
         travelTo(now()->addMicroseconds(2500));
 
         throw new RuntimeException('Job failed');
+    }
+}
+
+final class ExceptionReportingJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public function handle()
+    {
+        travelTo(now()->addMicroseconds(2500));
+
+        report(new RuntimeException('Whoops!'));
     }
 }
 
