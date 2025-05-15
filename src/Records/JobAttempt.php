@@ -32,7 +32,7 @@ final class JobAttempt
      * @param  LazyValue<int>  $cache_events
      * @param  LazyValue<int>  $hydrated_models
      * @param  LazyValue<int>  $peak_memory_usage
-     * @param  LazyValue<int>  $exception_preview
+     * @param  LazyValue<string>  $exception_preview
      */
     public function __construct(
         public float $timestamp,

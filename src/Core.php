@@ -58,6 +58,8 @@ final class Core
 
     /**
      * @internal
+     *
+     * @return $this
      */
     public function ingest(): self
     {
