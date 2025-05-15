@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Collection;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Payload;
 use Tests\FakeRecord;
 
@@ -41,10 +42,17 @@ it('configures the stream', function () {
 });
 
 it('throws an exception when unable to set read timeout', function () {
+    $exceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
+    });
     StreamWrapper::intercept('stream_set_option', fn () => false);
 
     nightwatch()->ingest->write(new FakeRecord);
     nightwatch()->digest();
+
+    expect($exceptions)->toHaveCount(1);
+    throw $exceptions[0];
 })->throws(RuntimeException::class, <<<'MESSAGE'
 Failed configuring agent read timeout
 
@@ -96,10 +104,17 @@ it('can write the payload in one write', function () {
 });
 
 it('throws an exception if initial write to stream fails', function () {
+    $exceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
+    });
     StreamWrapper::intercept('stream_write', fn (string $value) => false);
 
     nightwatch()->ingest->write(new FakeRecord);
     nightwatch()->digest();
+
+    expect($exceptions)->toHaveCount(1);
+    throw $exceptions[0];
 })->throws(RuntimeException::class, <<<'MESSAGE'
 Unable to write to the agent. Written [0] Expected [32]
 
@@ -143,6 +158,10 @@ it('can write the payload in multiple write', function () {
 });
 
 it('throws an exception if subsequent writes to stream fails', function () {
+    $exceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
+    });
     $writes = 0;
     StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
         if ($writes === 2) {
@@ -156,6 +175,9 @@ it('throws an exception if subsequent writes to stream fails', function () {
 
     nightwatch()->ingest->write(new FakeRecord);
     nightwatch()->digest();
+
+    expect($exceptions)->toHaveCount(1);
+    throw $exceptions[0];
 })->throws(RuntimeException::class, <<<'MESSAGE'
 Unable to write to the agent. Written [6] Expected [32]
 
@@ -222,6 +244,10 @@ it('can read multiple times from stream', function () {
 });
 
 it('throws an exception if stream EOFs before getting the expected response', function () {
+    $exceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
+    });
     $response = ['2', ':', false];
     StreamWrapper::intercept('stream_read', function () use (&$response) {
         if ($response === [':']) {
@@ -233,6 +259,9 @@ it('throws an exception if stream EOFs before getting the expected response', fu
 
     nightwatch()->ingest->write(new FakeRecord);
     nightwatch()->digest();
+
+    expect($exceptions)->toHaveCount(1);
+    throw $exceptions[0];
 })->throws(RuntimeException::class, <<<'MESSAGE'
 Failed reading from the agent
 
@@ -244,10 +273,17 @@ Unread bytes: 0
 MESSAGE);
 
 it('throws when an unexpected response is received', function () {
+    $exceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
+    });
     StreamWrapper::intercept('stream_read', fn () => 'XXXXXXXXXXXXXXXXXXXXXXX');
 
     nightwatch()->ingest->write(new FakeRecord);
     nightwatch()->digest();
+
+    expect($exceptions)->toHaveCount(1);
+    throw $exceptions[0];
 })->throws(RuntimeException::class, <<<'MESSAGE'
 Unexpected response from agent [XXXX]
 
@@ -266,6 +302,10 @@ it('closes the stream', function () {
 });
 
 it('does not retrieve meta of already closed stream', function () {
+    $exceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
+    });
     $stream = null;
     nightwatch()->ingest->streamFactory = function ($address, $timeout) use (&$stream) {
         $stream = fopen($address, 'r+');
@@ -281,6 +321,9 @@ it('does not retrieve meta of already closed stream', function () {
 
     nightwatch()->ingest->write(new FakeRecord);
     nightwatch()->digest();
+
+    expect($exceptions)->toHaveCount(1);
+    throw $exceptions[0];
 })->throws(RuntimeException::class, <<<'MESSAGE'
 Failed reading from the agent
 
@@ -288,6 +331,10 @@ Stream already closed
 MESSAGE);
 
 it('stops attempting to read once the stream has reached eof', function () {
+    $exceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
+    });
     $reads = 0;
     StreamWrapper::intercept('stream_read', function () use (&$reads) {
         $reads++;
@@ -299,15 +346,12 @@ it('stops attempting to read once the stream has reached eof', function () {
         return '';
     });
 
-    try {
-        nightwatch()->ingest->write(new FakeRecord);
-        nightwatch()->digest();
-    } catch (Throwable $e) {
-        //
-    }
+    nightwatch()->ingest->write(new FakeRecord);
+    nightwatch()->digest();
 
-    expect($e)->toBeInstanceOf(RuntimeException::class);
-    expect($e->getMessage())->toBe(<<<'MESSAGE'
+    expect($exceptions)->toHaveCount(1);
+    expect($exceptions[0])->toBeInstanceOf(RuntimeException::class);
+    expect($exceptions[0]->getMessage())->toBe(<<<'MESSAGE'
     Unexpected response from agent []
 
     Timed out: false
@@ -335,6 +379,10 @@ it('stops attempting to read once the stream has reached eof', function () {
 });
 
 it('only attempts to read from the stream 5 times', function () {
+    $exceptions = [];
+    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        $exceptions[] = $e;
+    });
     $reads = 0;
     StreamWrapper::intercept('stream_read', function () use (&$reads) {
         $reads++;
@@ -342,16 +390,13 @@ it('only attempts to read from the stream 5 times', function () {
         return '';
     });
 
-    try {
-        nightwatch()->ingest->write(new FakeRecord);
-        nightwatch()->digest();
-    } catch (Throwable $e) {
-        //
-    }
+    nightwatch()->ingest->write(new FakeRecord);
+    nightwatch()->digest();
 
     expect($reads)->toBe(5);
-    expect($e)->toBeInstanceOf(RuntimeException::class);
-    expect($e->getMessage())->toBe(<<<'MESSAGE'
+    expect($exceptions)->toHaveCount(1);
+    expect($exceptions[0])->toBeInstanceOf(RuntimeException::class);
+    expect($exceptions[0]->getMessage())->toBe(<<<'MESSAGE'
     Unexpected response from agent []
 
     Timed out: false

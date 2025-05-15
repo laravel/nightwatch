@@ -8,7 +8,6 @@ use Illuminate\Support\Str;
 use Laravel\Nightwatch\Contracts\LocalIngest;
 use Laravel\Nightwatch\Records\Record;
 use Laravel\Nightwatch\RecordsBuffer;
-use RuntimeException;
 
 use function collect;
 use function count;
@@ -38,13 +37,7 @@ class FakeIngest implements LocalIngest
 
     public function digest(): void
     {
-        $payload = $this->buffer->pull();
-
-        if ($payload->isEmpty()) {
-            throw new RuntimeException('The payload was empty.');
-        }
-
-        $this->writes[] = $payload->rawPayload();
+        $this->writes[] = $this->buffer->pull()->rawPayload();
     }
 
     public function ping(): void
@@ -112,7 +105,7 @@ class FakeIngest implements LocalIngest
         return $this->assertWrite(count($this->writes) - 1, $key, $expected);
     }
 
-    public function latestWriteAsString(): string
+    public function latestWriteAsString(): ?string
     {
         return Arr::last($this->writes);
     }
