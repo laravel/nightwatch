@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -177,7 +176,6 @@ it('samples exceptions', function () {
 });
 
 it('samples queued jobs', function () {
-    Config::set('queue.default', 'database');
     nightwatch()->sampling['requests'] = 0;
     nightwatch()->configureSampling('requests');
 

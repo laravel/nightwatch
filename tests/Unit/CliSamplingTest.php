@@ -1,7 +1,6 @@
 <?php
 
 use App\Jobs\MyJob;
-use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
@@ -16,7 +15,6 @@ beforeAll(function () {
 });
 
 it('samples job attempts', function () {
-    Config::set('queue.default', 'database');
     $ingest = fakeIngest();
     Compatibility::addHiddenContext('nightwatch_should_sample', false);
 
@@ -47,14 +45,14 @@ it('samples job attempts', function () {
 
     $ingest->assertWrittenTimes(10);
 
-    expect(nightwatch()->state->records)->toHaveCount(1);
-    $ingest->write(nightwatch()->state->records->pull());
-    $ingest->assertLatestWrite('cache-event:0.key', 'illuminate:queue:restart');
-    $ingest->assertLatestWrite('job-attempt:*', []);
-})->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');
+    for ($i = 1; $i < 10; $i++) {
+        $ingest->assertWrite($i, 'job-attempt:0.name', 'App\Jobs\MyJob');
+    }
+
+    expect(nightwatch()->state->records)->toHaveCount(0);
+});
 
 it('preparing for next job', function () {
-    Config::set('queue.default', 'database');
     nightwatch()->clock->microtimeResolver = fn () => 5.5;
     nightwatch()->state->setId('previous');
     nightwatch()->state->executionPreview = 'previous';
@@ -88,7 +86,7 @@ it('preparing for next job', function () {
     expect(json_encode(nightwatch()->state->id()))->toBe('"1CF1F203-73A5-4E9D-8662-12E1C712F130"');
     expect(nightwatch()->state->executionPreview)->toBe('current');
     expect(nightwatch()->state->timestamp)->toBe(5.5);
-})->skip(version_compare(Application::VERSION, '11.0.0', '<'), 'Laravel 10 support is pending');
+});
 
 it('can configure command sampling', function () {
     nightwatch()->sampling['commands'] = 0;
