@@ -26,8 +26,7 @@ abstract class TestCase extends OrchestraTestCase
         parent::setUp();
 
         $this->core = $this->app->make(Core::class);
-        $this->core->executionState->flush();
-        $this->core->ingest->flush();
+        $this->core->flush();
         $this->core->clock->microtimeResolver = fn () => (float) now()->format('U.u');
         Nightwatch::handleUnrecoverableExceptionsUsing(fn ($e) => throw $e);
         Compatibility::$context = [];
