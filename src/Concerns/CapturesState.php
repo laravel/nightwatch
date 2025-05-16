@@ -72,8 +72,7 @@ trait CapturesState
         Compatibility::addHiddenContext('nightwatch_should_sample', $this->shouldSample);
 
         if (! $this->shouldSample) {
-            $this->executionState->flush();
-            $this->ingest->flush();
+            $this->flush();
         }
     }
 
@@ -301,8 +300,7 @@ trait CapturesState
      */
     public function prepareForNextJob(): void
     {
-        $this->executionState->flush();
-        $this->ingest->flush();
+        $this->flush();
         memory_reset_peak_usage();
     }
 
@@ -376,8 +374,7 @@ trait CapturesState
          * Since `schedule:run` executes multiple tasks sequentially,
          * we need to clear previous task data to avoid metric pollution.
          */
-        $this->executionState->flush();
-        $this->ingest->flush();
+        $this->flush();
         memory_reset_peak_usage();
 
         $trace = (string) Str::uuid();
@@ -401,5 +398,14 @@ trait CapturesState
     public function shouldCaptureLogs(): bool
     {
         return $this->shouldSample && $this->enabled();
+    }
+
+    /**
+     * @internal
+     */
+    public function flush(): void
+    {
+        $this->executionState->flush();
+        $this->ingest->flush();
     }
 }
