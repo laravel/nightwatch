@@ -3,14 +3,14 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\User;
 use Laravel\Nightwatch\State\RequestState;
 
 final class UserSensor
 {
     public function __construct(
-        private LocalIngest $ingest,
+        private Ingest $ingest,
         private RequestState $requestState,
         public Clock $clock,
     ) {

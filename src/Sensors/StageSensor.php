@@ -12,8 +12,8 @@ use function round;
 final class StageSensor
 {
     public function __construct(
-        private Clock $clock,
         private RequestState|CommandState $executionState,
+        private Clock $clock,
     ) {
         //
     }

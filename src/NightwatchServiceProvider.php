@@ -111,7 +111,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->registerAndCaptureConfig();
             $this->registerBindings();
 
-            if (! $this->core->enabled) {
+            if (! $this->core->enabled()) {
                 return;
             }
 
@@ -199,7 +199,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     private function buildAndRegisterCore(): void
     {
         $clock = new Clock;
-        $state = $this->executionState();
+        $executionState = $this->executionState();
 
         $this->app->instance(Core::class, $this->core = new Core(
             ingest: $ingest = new Ingest(
@@ -212,7 +212,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             ),
             sensor: new SensorManager(
                 ingest: $ingest,
-                executionState: $state,
+                executionState: $executionState,
                 clock: $clock = new Clock,
                 location: new Location(
                     basePath: $this->app->basePath(),
@@ -220,12 +220,14 @@ final class NightwatchServiceProvider extends ServiceProvider
                 ),
                 config: $this->config,
             ),
-            state: $state,
+            executionState: $executionState,
             clock: $clock,
-            enabled: ($this->nightwatchConfig['enabled'] ?? true),
-            sampling: [
-                'requests' => $this->configuredSampleRate('requests'),
-                'commands' => $this->configuredSampleRate('commands'),
+            config: [
+                'enabled' => $this->nightwatchConfig['enabled'] ?? true,
+                'sampling' => [
+                    'requests' => $this->configuredSampleRate('requests'),
+                    'commands' => $this->configuredSampleRate('commands'),
+                ],
             ],
         ));
     }

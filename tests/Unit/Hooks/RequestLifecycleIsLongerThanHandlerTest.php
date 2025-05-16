@@ -16,7 +16,7 @@ it('gracefully handles exceptions while capturing stage', function () {
 
         throw new RuntimeException('Whoops!');
     };
-    nightwatch()->state->stage = ExecutionStage::Bootstrap;
+    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
 
     $startedAt = now();
     $request = Request::create('/test');

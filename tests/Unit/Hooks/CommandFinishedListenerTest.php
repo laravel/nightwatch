@@ -15,8 +15,8 @@ it('gracefully handles exceptions', function () {
 
         throw new RuntimeException('Whoops!');
     };
-    nightwatch()->state->stage = ExecutionStage::Bootstrap;
-    nightwatch()->state->name = 'app:build';
+    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
+    nightwatch()->executionState->name = 'app:build';
 
     $event = new CommandFinished(
         'app:build', new StringInput('app:build'), new NullOutput, 1
@@ -26,5 +26,5 @@ it('gracefully handles exceptions', function () {
     $listener($event);
 
     expect($thrownInStageSensor)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });

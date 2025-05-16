@@ -28,7 +28,7 @@ it('gracefully handles exceptions', function () {
     expect($thrownInScheduledTaskSensor)->toBeTrue();
     expect($thrownInExceptionSensor)->toBeFalse();
     expect($unrecoverableExceptions)->toHaveCount(0);
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 
     $thrownInScheduledTaskSensor = false;
     $thrownInExceptionSensor = false;
@@ -47,5 +47,5 @@ it('gracefully handles exceptions', function () {
     expect($thrownInExceptionSensor)->toBeTrue();
     expect($unrecoverableExceptions)->toHaveCount(1);
     expect($unrecoverableExceptions[0]->getMessage())->toBe('Whoops!');
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });

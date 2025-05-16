@@ -12,7 +12,7 @@ it('gracefully handles exceptions', function () {
 
         throw new RuntimeException('Whoops!');
     };
-    nightwatch()->state->stage = ExecutionStage::Bootstrap;
+    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
     $thrownInCommandSensor = false;
     nightwatch()->sensor->commandSensor = function () use (&$thrownInCommandSensor) {
         $thrownInCommandSensor = true;
@@ -25,7 +25,7 @@ it('gracefully handles exceptions', function () {
 
     expect($thrownInStageSensor)->toBeTrue();
     expect($thrownInCommandSensor)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(2);
+    expect(nightwatch()->executionState->exceptions)->toBe(2);
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite(function ($records) {
         expect($records)->toHaveCount(2);

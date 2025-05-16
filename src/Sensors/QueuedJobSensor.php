@@ -8,7 +8,7 @@ use Illuminate\Queue\Events\JobQueueing;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
-use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -35,7 +35,7 @@ final class QueuedJobSensor
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
      */
     public function __construct(
-        private LocalIngest $ingest,
+        private Ingest $ingest,
         private RequestState|CommandState $executionState,
         private Clock $clock,
         private array $connectionConfig,

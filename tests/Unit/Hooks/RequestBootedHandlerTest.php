@@ -10,11 +10,11 @@ it('gracefully handles exceptions', function () {
 
         throw new RuntimeException('Whoops!');
     };
-    nightwatch()->state->stage = ExecutionStage::Bootstrap;
+    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
 
     $handler = new RequestBootedHandler(nightwatch());
     $handler(app());
 
     expect($thrownInStageSensor)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });

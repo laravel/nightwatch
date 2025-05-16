@@ -25,7 +25,7 @@ final class PreparingResponseListener
     public function __invoke(PreparingResponse $event): void
     {
         try {
-            if ($this->nightwatch->state->stage === ExecutionStage::Action) {
+            if ($this->nightwatch->executionState->stage === ExecutionStage::Action) {
                 $this->nightwatch->stage(ExecutionStage::Render);
             }
         } catch (Throwable $e) {

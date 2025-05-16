@@ -5,7 +5,7 @@ namespace Tests;
 use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\Record;
 use Laravel\Nightwatch\RecordsBuffer;
 
@@ -17,7 +17,7 @@ use function json_decode;
 use function str_contains;
 use function value;
 
-class FakeIngest implements LocalIngest
+class FakeIngest implements Ingest
 {
     /**
      * @var list<string>

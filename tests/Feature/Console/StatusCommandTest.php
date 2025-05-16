@@ -5,7 +5,7 @@ use Tests\FakeIngest;
 use function Pest\Laravel\artisan;
 
 it('fails when nightwatch is disabled', function () {
-    nightwatch()->enabled = false;
+    nightwatch()->config['enabled'] = false;
 
     artisan('nightwatch:status')
         ->expectsOutputToContain('Nightwatch is disabled')

@@ -18,19 +18,19 @@ it('gracefully handles exceptions', function () {
     $handler->handle($record);
 
     expect($thrownInLogSensor)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 
     $thrownInLogSensor = false;
     $handler->handleBatch([null]);
 
     expect($thrownInLogSensor)->toBeFalse();
-    expect(nightwatch()->state->exceptions)->toBe(2);
+    expect(nightwatch()->executionState->exceptions)->toBe(2);
 
     expect($handler->close())->toBeNull();
     expect($thrownInLogSensor)->toBeFalse();
-    expect(nightwatch()->state->exceptions)->toBe(2);
+    expect(nightwatch()->executionState->exceptions)->toBe(2);
 
     expect($handler->isHandling($record))->toBeTrue();
     expect($thrownInLogSensor)->toBeFalse();
-    expect(nightwatch()->state->exceptions)->toBe(2);
+    expect(nightwatch()->executionState->exceptions)->toBe(2);
 });

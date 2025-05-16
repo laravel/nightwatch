@@ -25,7 +25,7 @@ it('gracefully handles exceptions for JobPopping event', function () {
     $listener($event);
 
     expect($buffer->thrownInFlush)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });
 
 it('gracefully handles exceptions for JobProcessing event', function () {
@@ -43,5 +43,5 @@ it('gracefully handles exceptions for JobProcessing event', function () {
     $listener($event);
 
     expect($thrownInMicrotimeResolver)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });

@@ -4,7 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Database\Events\QueryExecuted;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\State\CommandState;
@@ -22,9 +22,9 @@ use function str_contains;
 final class QuerySensor
 {
     public function __construct(
-        private Clock $clock,
-        private LocalIngest $ingest,
+        private Ingest $ingest,
         private RequestState|CommandState $executionState,
+        private Clock $clock,
         private Location $location,
     ) {
         //

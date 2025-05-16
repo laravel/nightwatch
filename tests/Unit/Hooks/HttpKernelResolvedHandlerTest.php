@@ -83,11 +83,11 @@ it('gracefully handles exceptions when prepending middleware', function () {
     $handler($kernel, app());
 
     expect($kernel->thrownInPrependMiddleware)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });
 
 it('gracefully handles exceptions when determining whether to sample the request', function () {
-    nightwatch()->sampling = [];
+    nightwatch()->config['sampling'] = [];
     $exceptions = [];
     Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
         $exceptions[] = $e;

@@ -7,7 +7,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Event;
 use Laravel\Nightwatch\Compatibility;
-use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\State\CommandState;
@@ -28,12 +28,12 @@ function nightwatch(): Core
 
 function requestState(): RequestState
 {
-    return nightwatch()->state;
+    return nightwatch()->executionState;
 }
 
 function commandState(): CommandState
 {
-    return nightwatch()->state;
+    return nightwatch()->executionState;
 }
 
 function forceRequestExecutionState(): void
@@ -51,9 +51,9 @@ function forceCommandExecutionState(): void
 function setExecutionStart(CarbonImmutable $timestamp): void
 {
     syncClock($timestamp);
-    nightwatch()->state->stageDurations[ExecutionStage::Bootstrap->value] = 0;
-    nightwatch()->state->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
-    nightwatch()->state->stage = match (nightwatch()->state::class) {
+    nightwatch()->executionState->stageDurations[ExecutionStage::Bootstrap->value] = 0;
+    nightwatch()->executionState->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
+    nightwatch()->executionState->stage = match (nightwatch()->executionState::class) {
         RequestState::class => ExecutionStage::BeforeMiddleware,
         CommandState::class => ExecutionStage::Action,
     };
@@ -61,47 +61,47 @@ function setExecutionStart(CarbonImmutable $timestamp): void
 
 function syncClock(DateTimeInterface $timestamp): void
 {
-    nightwatch()->state->timestamp = (float) $timestamp->format('U.u');
+    nightwatch()->executionState->timestamp = (float) $timestamp->format('U.u');
     travelTo($timestamp);
 }
 
 function setDeploy(string $deploy): void
 {
-    nightwatch()->state->deploy = $deploy;
+    nightwatch()->executionState->deploy = $deploy;
 }
 
 function setServerName(string $server): void
 {
-    nightwatch()->state->server = $server;
+    nightwatch()->executionState->server = $server;
 }
 
 function setTraceId(string $traceId): void
 {
-    nightwatch()->state->trace = $traceId;
+    nightwatch()->executionState->trace = $traceId;
     Compatibility::addHiddenContext('nightwatch_trace_id', $traceId);
 }
 
 function setExecutionId(string $executionId): void
 {
-    nightwatch()->state->setId($executionId);
+    nightwatch()->executionState->setId($executionId);
 }
 
 function setPeakMemory(int $value): void
 {
-    nightwatch()->state->peakMemoryResolver = fn () => $value;
+    nightwatch()->executionState->peakMemoryResolver = fn () => $value;
 }
 
 function setLaravelVersion(string $version): void
 {
-    nightwatch()->state->laravelVersion = $version;
+    nightwatch()->executionState->laravelVersion = $version;
 }
 
 function setPhpVersion(string $version): void
 {
-    nightwatch()->state->phpVersion = $version;
+    nightwatch()->executionState->phpVersion = $version;
 }
 
-function fakeIngest(?LocalIngest $fake = null): FakeIngest
+function fakeIngest(?Ingest $fake = null): FakeIngest
 {
     nightwatch()->sensor->flush();
 

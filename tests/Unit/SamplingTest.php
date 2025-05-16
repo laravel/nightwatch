@@ -26,7 +26,7 @@ beforeAll(function () {
 });
 
 it('can configure request sampling', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     $sampled = 0;
 
     for ($i = 0; $i < 1000; $i++) {
@@ -38,7 +38,7 @@ it('can configure request sampling', function () {
 
     expect($sampled)->toBe(0);
 
-    nightwatch()->sampling['requests'] = 0.25;
+    nightwatch()->config['sampling']['requests'] = 0.25;
     $sampled = 0;
 
     for ($i = 0; $i < 1000; $i++) {
@@ -50,7 +50,7 @@ it('can configure request sampling', function () {
 
     expect($sampled)->toEqualWithDelta(250, 50);
 
-    nightwatch()->sampling['requests'] = 0.5;
+    nightwatch()->config['sampling']['requests'] = 0.5;
     $sampled = 0;
 
     for ($i = 0; $i < 1000; $i++) {
@@ -62,7 +62,7 @@ it('can configure request sampling', function () {
 
     expect($sampled)->toEqualWithDelta(500, 50);
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     $sampled = 0;
 
     for ($i = 0; $i < 1000; $i++) {
@@ -76,127 +76,127 @@ it('can configure request sampling', function () {
 });
 
 it('samples queries', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         DB::table('users')->get();
     }
 
-    expect(nightwatch()->state->queries)->toBe(0);
+    expect(nightwatch()->executionState->queries)->toBe(0);
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         DB::table('users')->get();
     }
 
-    expect(nightwatch()->state->queries)->toBe(10);
+    expect(nightwatch()->executionState->queries)->toBe(10);
 });
 
 it('samples notifications', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
     }
 
-    expect(nightwatch()->state->notifications)->toBe(0);
+    expect(nightwatch()->executionState->notifications)->toBe(0);
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
     }
 
-    expect(nightwatch()->state->notifications)->toBe(10);
+    expect(nightwatch()->executionState->notifications)->toBe(10);
 });
 
 it('samples mail', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         Mail::to('tim@laravel.com')->send(new MyMail);
     }
 
-    expect(nightwatch()->state->mail)->toBe(0);
+    expect(nightwatch()->executionState->mail)->toBe(0);
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         Mail::to('tim@laravel.com')->send(new MyMail);
     }
 
-    expect(nightwatch()->state->mail)->toBe(10);
+    expect(nightwatch()->executionState->mail)->toBe(10);
 });
 
 it('samples cache', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         Cache::get('foo');
     }
 
-    expect(nightwatch()->state->cacheEvents)->toBe(0);
+    expect(nightwatch()->executionState->cacheEvents)->toBe(0);
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         Cache::get('foo');
     }
 
-    expect(nightwatch()->state->cacheEvents)->toBe(10);
+    expect(nightwatch()->executionState->cacheEvents)->toBe(10);
 });
 
 it('samples exceptions', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         report('Whoops!');
     }
 
-    expect(nightwatch()->state->exceptions)->toBe(0);
+    expect(nightwatch()->executionState->exceptions)->toBe(0);
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         report('Whoops!');
     }
 
-    expect(nightwatch()->state->exceptions)->toBe(10);
+    expect(nightwatch()->executionState->exceptions)->toBe(10);
 });
 
 it('samples queued jobs', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         MyJob::dispatch();
     }
 
-    expect(nightwatch()->state->jobsQueued)->toBe(0);
+    expect(nightwatch()->executionState->jobsQueued)->toBe(0);
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         MyJob::dispatch();
     }
 
-    expect(nightwatch()->state->jobsQueued)->toBe(10);
+    expect(nightwatch()->executionState->jobsQueued)->toBe(10);
 });
 
 it('samples outgoing requests', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
 
     Http::fake([
@@ -207,57 +207,57 @@ it('samples outgoing requests', function () {
         Http::get('https://nightwatch.laravel.com');
     }
 
-    expect(nightwatch()->state->outgoingRequests)->toBe(0);
+    expect(nightwatch()->executionState->outgoingRequests)->toBe(0);
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         Http::get('https://nightwatch.laravel.com');
     }
 
-    expect(nightwatch()->state->outgoingRequests)->toBe(10);
+    expect(nightwatch()->executionState->outgoingRequests)->toBe(10);
 });
 
 it('samples stage', function () {
     nightwatch()->stage(ExecutionStage::Bootstrap);
 
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
 
     nightwatch()->stage(ExecutionStage::Render);
 
-    expect(nightwatch()->state->stage)->toBe(ExecutionStage::Bootstrap);
+    expect(nightwatch()->executionState->stage)->toBe(ExecutionStage::Bootstrap);
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     nightwatch()->stage(ExecutionStage::Render);
 
-    expect(nightwatch()->state->stage)->toBe(ExecutionStage::Render);
+    expect(nightwatch()->executionState->stage)->toBe(ExecutionStage::Render);
 });
 
 it('samples remembering user', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
     $user = new GenericUser(['id' => 123, 'remember_token' => '']);
 
     Auth::login($user);
     Auth::logout();
 
-    expect(nightwatch()->state->user->id()->jsonSerialize())->toBe('');
+    expect(nightwatch()->executionState->user->id()->jsonSerialize())->toBe('');
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     Auth::login($user);
     Auth::logout();
 
-    expect(nightwatch()->state->user->id()->jsonSerialize())->toBe('123');
+    expect(nightwatch()->executionState->user->id()->jsonSerialize())->toBe('123');
 });
 
 it('samples user', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
     Auth::login(new GenericUser(['id' => 123, 'remember_token' => '']));
 
@@ -267,7 +267,7 @@ it('samples user', function () {
 
     expect(json_decode(nightwatch()->ingest->buffer->pull()->rawPayload()))->toBe([]);
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
@@ -280,7 +280,7 @@ it('samples user', function () {
 });
 
 it('samples requests', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
     $request = Request::create('https://laravel.com');
     $response = new Response;
@@ -291,7 +291,7 @@ it('samples requests', function () {
 
     expect(json_decode(nightwatch()->ingest->buffer->pull()->rawPayload()))->toBe([]);
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
@@ -304,29 +304,29 @@ it('samples requests', function () {
 });
 
 it('samples logs', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         Log::channel('nightwatch')->info('Hello world');
     }
 
-    expect(nightwatch()->state->logs)->toBe(0);
+    expect(nightwatch()->executionState->logs)->toBe(0);
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
         Log::channel('nightwatch')->info('Hello world');
     }
 
-    expect(nightwatch()->state->logs)->toBe(10);
+    expect(nightwatch()->executionState->logs)->toBe(10);
 });
 
 it('does not attach route middleware when not sampling', function ($terminatingEventExists, $expectedMiddleware) {
     Compatibility::$terminatingEventExists = $terminatingEventExists;
     fakeIngest();
-    nightwatch()->sampling['requests'] = 0.0;
+    nightwatch()->config['sampling']['requests'] = 0.0;
     nightwatch()->configureSampling('requests');
     $middleware = [];
     Route::get('/test', function () use (&$middleware) {
@@ -339,7 +339,7 @@ it('does not attach route middleware when not sampling', function ($terminatingE
         expect($middleware)->toBe([]);
     }
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
 
     for ($i = 0; $i < 10; $i++) {
@@ -354,7 +354,7 @@ it('does not attach route middleware when not sampling', function ($terminatingE
 
 it('samples capuring request preview', function () {
     fakeIngest();
-    nightwatch()->sampling['requests'] = 0.0;
+    nightwatch()->config['sampling']['requests'] = 0.0;
     nightwatch()->configureSampling('requests');
     Route::get('/test', function () {
         //
@@ -362,21 +362,21 @@ it('samples capuring request preview', function () {
 
     get('test')->assertOk();
 
-    expect(nightwatch()->state->executionPreview)->toBe('');
+    expect(nightwatch()->executionState->executionPreview)->toBe('');
 
-    nightwatch()->sampling['requests'] = 1.0;
+    nightwatch()->config['sampling']['requests'] = 1.0;
     nightwatch()->configureSampling('requests');
     app()->forgetScopedInstances();
 
     get('test')->assertOk();
 
-    expect(nightwatch()->state->executionPreview)->toBe('GET /test');
+    expect(nightwatch()->executionState->executionPreview)->toBe('GET /test');
 });
 
 it('samples ingest', function () {
     $ingest = fakeIngest();
 
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
     nightwatch()->ingest->write(new User(
         timestamp: microtime(true),
@@ -389,7 +389,7 @@ it('samples ingest', function () {
     expect(nightwatch()->ingest->buffer)->toHaveCount(1);
     $ingest->assertWrittenTimes(0);
 
-    nightwatch()->sampling['requests'] = 1;
+    nightwatch()->config['sampling']['requests'] = 1;
     nightwatch()->configureSampling('requests');
     nightwatch()->ingest->write(new User(
         timestamp: microtime(true),
@@ -405,7 +405,7 @@ it('samples ingest', function () {
 
 it('discards records captured before sampling rate decided', function () {
     DB::table('users')->get();
-    nightwatch()->sampling['requests'] = 0.0;
+    nightwatch()->config['sampling']['requests'] = 0.0;
     $count = null;
     Route::get('/test', function () use (&$count) {
         $count = nightwatch()->ingest->buffer->count();
@@ -417,14 +417,14 @@ it('discards records captured before sampling rate decided', function () {
 });
 
 it('adds context for job sampling', function () {
-    nightwatch()->sampling['requests'] = 0;
+    nightwatch()->config['sampling']['requests'] = 0;
     nightwatch()->configureSampling('requests');
 
     $shouldSample = Compatibility::getHiddenContext('nightwatch_should_sample');
 
     expect($shouldSample)->toBe(false);
 
-    nightwatch()->sampling['requests'] = 1;
+    nightwatch()->config['sampling']['requests'] = 1;
     nightwatch()->configureSampling('requests');
 
     $shouldSample = Compatibility::getHiddenContext('nightwatch_should_sample');

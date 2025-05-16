@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\Log;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -16,7 +16,7 @@ use function json_encode;
 final class LogSensor
 {
     public function __construct(
-        private LocalIngest $ingest,
+        private Ingest $ingest,
         private RequestState|CommandState $executionState,
     ) {
         //

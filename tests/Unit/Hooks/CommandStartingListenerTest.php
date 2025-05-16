@@ -77,5 +77,5 @@ it('gracefully handles custom kernel implementations', function () {
     $listener = new CommandStartingListener($events, nightwatch(), $kernel);
     $listener($event);
 
-    expect(nightwatch()->state->exceptions)->toBe(0);
+    expect(nightwatch()->executionState->exceptions)->toBe(0);
 });

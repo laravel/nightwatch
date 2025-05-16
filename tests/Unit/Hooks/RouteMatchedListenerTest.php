@@ -34,5 +34,5 @@ it('gracefully handles exceptions', function () {
     $handler = new RouteMatchedListener(nightwatch());
     $handler($event);
 
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });
