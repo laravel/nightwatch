@@ -438,7 +438,7 @@ it('does not trigger ingest before reaching threshold', function () {
         return strlen($value);
     });
 
-    for ($i = 0; $i < 500; $i++) {
+    for ($i = 0; $i < 499; $i++) {
         nightwatch()->ingest->write(new FakeRecord);
     }
 
@@ -453,7 +453,7 @@ it('triggers ingest after exceeding threshold', function () {
         return strlen($value);
     });
 
-    for ($i = 0; $i < 500; $i++) {
+    for ($i = 0; $i < 499; $i++) {
         nightwatch()->ingest->write(new FakeRecord);
     }
 
@@ -462,9 +462,9 @@ it('triggers ingest after exceeding threshold', function () {
     nightwatch()->ingest->write(new FakeRecord);
 
     expect($writes)->toHaveCount(2);
-    expect(implode('', $writes))->toBe('10029:'.Payload::SIGNATURE.':['.implode(',', array_fill(0, 501, json_encode(new FakeRecord))).']');
+    expect(implode('', $writes))->toBe('10009:'.Payload::SIGNATURE.':['.implode(',', array_fill(0, 500, json_encode(new FakeRecord))).']');
 
-    for ($i = 0; $i < 500; $i++) {
+    for ($i = 0; $i < 499; $i++) {
         nightwatch()->ingest->write(new FakeRecord);
     }
 
@@ -473,7 +473,7 @@ it('triggers ingest after exceeding threshold', function () {
     nightwatch()->ingest->write(new FakeRecord);
 
     expect($writes)->toHaveCount(4);
-    expect(implode('', $writes))->toBe(str_repeat('10029:'.Payload::SIGNATURE.':['.implode(',', array_fill(0, 501, json_encode(new FakeRecord))).']', 2));
+    expect(implode('', $writes))->toBe(str_repeat('10009:'.Payload::SIGNATURE.':['.implode(',', array_fill(0, 500, json_encode(new FakeRecord))).']', 2));
 });
 
 class StreamWrapper
