@@ -109,7 +109,6 @@ class QueuedJobSensorTest extends TestCase
     public function test_it_does_not_ingest_jobs_dispatched_on_the_sync_queue()
     {
         $ingest = $this->fakeIngest();
-        $this->withoutExceptionHandling();
         Route::post('/users', function () {
             MyJob::dispatchSync();
             MyJob::dispatch()->onConnection('sync');

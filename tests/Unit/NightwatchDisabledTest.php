@@ -5,7 +5,6 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use Orchestra\Testbench\Foundation\Env;
 
 use function Pest\Laravel\get;
-use function Pest\Laravel\withoutExceptionHandling;
 
 beforeAll(function () {
     Env::getRepository()->set('NIGHTWATCH_ENABLED', '0');
@@ -23,7 +22,6 @@ it('gracefully ignores reported exceptions when nightwatch is disabled', functio
     $ingest = fakeIngest();
     Route::get('/users', fn () => Nightwatch::report(new RuntimeException));
 
-    withoutExceptionHandling();
     $response = get('/users');
 
     $response->assertOk();
