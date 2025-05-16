@@ -80,4 +80,10 @@ class FilteringAndMappingTest extends TestCase
     {
         $this->markTestIncomplete('TODO');
     }
+
+    public function test_it_can_modify_records()
+    {
+        // e.g., mask a password
+        $this->markTestIncomplete('TODO');
+    }
 }
