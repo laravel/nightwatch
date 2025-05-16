@@ -41,6 +41,7 @@
         "pestphp/pest-plugin-arch": "^2.0|^3.0",
         "pestphp/pest-plugin-laravel": "^2.0|^3.0",
         "phpstan/phpstan": "^1.0",
+        "phpunit/phpunit": "^11.5",
         "ramsey/uuid": "^4.0",
         "spatie/laravel-ignition": "^2.0",
         "symfony/mailer": "^6.0|^7.0",
