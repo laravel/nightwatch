@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Carbon\CarbonImmutable;
+use Closure;
 use DateTimeInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Env;
@@ -19,8 +20,11 @@ use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 use function collect;
 use function env;
+use function fopen;
 use function Illuminate\Filesystem\join_paths;
 use function now;
+use function stream_wrapper_register;
+use function stream_wrapper_unregister;
 use function touch;
 
 abstract class TestCase extends OrchestraTestCase
@@ -34,6 +38,9 @@ abstract class TestCase extends OrchestraTestCase
         parent::setUp();
 
         Http::preventStrayRequests();
+        Str::createUuidsNormally();
+        FakeTcpStream::flush();
+        @stream_wrapper_unregister('tcp');
 
         Nightwatch::handleUnrecoverableExceptionsUsing(fn ($e) => throw $e);
         Compatibility::$context = [];
@@ -45,8 +52,6 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function tearDown(): void
     {
-        Str::createUuidsNormally();
-
         unset($this->core);
 
         parent::tearDown();
@@ -55,6 +60,18 @@ abstract class TestCase extends OrchestraTestCase
     protected function beforeRefreshingDatabase(): void
     {
         touch(env('DB_DATABASE'));
+    }
+
+    /**
+     * @return (Closure(): list<FakeTcpStream>)
+     */
+    protected function fakeTcpStreams(): Closure
+    {
+        stream_wrapper_register('tcp', FakeTcpStream::class);
+
+        $this->core->ingest->streamFactory = fn ($address, $timeout) => fopen($address, 'r+');
+
+        return fn () => FakeTcpStream::$instances;
     }
 
     protected function prependListener(string $event, callable $listener): void

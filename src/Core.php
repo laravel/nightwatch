@@ -50,6 +50,14 @@ final class Core
     /**
      * @api
      */
+    public function filter(callable $callback): void
+    {
+        $this->ingest->filter($callback);
+    }
+
+    /**
+     * @api
+     */
     public function guzzleMiddleware(): callable
     {
         return new GuzzleMiddleware($this);

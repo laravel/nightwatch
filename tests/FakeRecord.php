@@ -6,5 +6,9 @@ use Laravel\Nightwatch\Records\Record;
 
 class FakeRecord extends Record
 {
-    public string $t = 'fake-record';
+    public function __construct(
+        public string $t = 'fake-record',
+    ) {
+        //
+    }
 }

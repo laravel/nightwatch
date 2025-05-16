@@ -32,6 +32,11 @@ final class Ingest implements IngestContract
     private array $timeout;
 
     /**
+     * @var list<(callable(Record): bool)>
+     */
+    private array $filters = [];
+
+    /**
      * @param  (callable(string $address, float $timeout): resource)  $streamFactory
      */
     public function __construct(
@@ -48,6 +53,11 @@ final class Ingest implements IngestContract
             'seconds' => $seconds = (int) $timeout,
             'microseconds' => intval(($timeout - $seconds) * 1_000_000),
         ];
+    }
+
+    public function filter(callable $callback): void
+    {
+        $this->filters[] = $callback;
     }
 
     public function write(Record $record): void
@@ -71,7 +81,7 @@ final class Ingest implements IngestContract
 
     public function digest(): void
     {
-        $this->transmit($this->buffer->pull());
+        $this->transmit($this->buffer->pull($this->filters));
     }
 
     private function transmit(Payload $payload): void

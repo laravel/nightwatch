@@ -5,6 +5,8 @@ namespace Laravel\Nightwatch;
 use Countable;
 use Laravel\Nightwatch\Records\Record;
 
+use function array_filter;
+use function array_values;
 use function count;
 use function json_encode;
 
@@ -28,15 +30,22 @@ class RecordsBuffer implements Countable
         return count($this->records);
     }
 
-    public function pull(): Payload
+    public function pull(array $filters): Payload
     {
         if ($this->records === []) {
             return Payload::json('[]');
         }
 
-        $records = json_encode($this->records, flags: JSON_THROW_ON_ERROR);
-
+        $records = $this->records;
         $this->records = [];
+
+        foreach ($filters as $filter) {
+            $records = array_filter($records, $filter);
+        }
+
+        $records = array_values($records);
+
+        $records = json_encode($records, flags: JSON_THROW_ON_ERROR);
 
         return Payload::json($records);
     }
