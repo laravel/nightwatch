@@ -1,51 +1,63 @@
 <?php
 
+namespace Tests\Feature\Sensors;
+
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Compatibility;
+use Tests\TestCase;
 
-use function Pest\Laravel\freezeTime;
-use function Pest\Laravel\get;
-use function Pest\Laravel\travelTo;
+use function class_exists;
+use function now;
 
-beforeAll(function () {
-    forceRequestExecutionState();
-});
+class StageSensorTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        $this->forceRequestExecutionState();
 
-it('captures the terminating phase when the terminating event does not exist', function () {
-    freezeTime();
-    Compatibility::$terminatingEventExists = false;
-    $ingest = fakeIngest();
-    Route::get('/users', function () {
-        app()->terminating(function () {
-            travelTo(now()->addMicroseconds(123));
+        parent::setUp();
+    }
+
+    public function test_it_captures_the_terminating_phase_when_the_terminating_event_does_not_exist()
+    {
+        $this->freezeTime();
+        Compatibility::$terminatingEventExists = false;
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function () {
+            $this->app->terminating(function () {
+                $this->travelTo(now()->addMicroseconds(123));
+            });
+
+            return [];
         });
 
-        return [];
-    });
+        $response = $this->get('/users');
 
-    $response = get('/users');
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.terminating', 123);
+    }
 
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request:0.terminating', 123);
-});
+    public function test_it_captures_the_terminating_phase_when_the_terminating_event_does_exist()
+    {
+        $this->markTestSkippedWhen(! class_exists(Terminating::class), 'Terminating event does not exist');
 
-it('captures the terminating phase when the terminating event does exist', function () {
-    freezeTime();
-    Compatibility::$terminatingEventExists = true;
-    $ingest = fakeIngest();
-    Route::get('/users', function () {
-        app()->terminating(function () {
-            travelTo(now()->addMicroseconds(123));
+        $this->freezeTime();
+        Compatibility::$terminatingEventExists = true;
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function () {
+            $this->app->terminating(function () {
+                $this->travelTo(now()->addMicroseconds(123));
+            });
+
+            return [];
         });
 
-        return [];
-    });
+        $response = $this->get('/users');
 
-    $response = get('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('request:0.terminating', 123);
-})->skip(! class_exists(Terminating::class));
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.terminating', 123);
+    }
+}

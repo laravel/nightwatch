@@ -1,212 +1,223 @@
 <?php
 
+namespace Tests\Feature\Sensors;
+
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Tests\TestCase;
 
-use function Pest\Laravel\actingAs;
-use function Pest\Laravel\get;
-
-beforeAll(function () {
-    forceRequestExecutionState();
-});
-
-beforeEach(function () {
-    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
-});
-
-it('captures authenticated users', function () {
-    $ingest = fakeIngest();
-    Route::get('/users', fn () => []);
-    $user = User::make([
-        'id' => '567',
-        'name' => 'Tim MacDonald',
-        'email' => 'tim@laravel.com',
-    ]);
-
-    $response = actingAs($user)->get('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('user:*', [[
-        'v' => 1,
-        't' => 'user',
-        'timestamp' => 946688523.456789,
-        'id' => '567',
-        'name' => 'Tim MacDonald',
-        'username' => 'tim@laravel.com',
-    ]]);
-});
-
-it('handles non-eloquent user objects with no email or username', function () {
-    $ingest = fakeIngest();
-    Route::get('/users', fn () => []);
-    $user = new GenericUser([
-        'id' => '567',
-    ]);
-
-    $response = actingAs($user)->get('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('user:*', [[
-        'v' => 1,
-        't' => 'user',
-        'timestamp' => 946688523.456789,
-        'id' => '567',
-        'name' => '',
-        'username' => '',
-    ]]);
-});
-
-it('does not capture guests', function () {
-    $ingest = fakeIngest();
-    Route::get('/users', fn () => []);
-
-    $response = get('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('user:*', []);
-});
-
-it('can customize the capture of user details', function () {
-    $ingest = fakeIngest();
-    Route::get('/users', fn () => []);
-    $user = User::make([
-        'id' => '567',
-        'name' => 'Tim MacDonald',
-        'email' => 'tim@laravel.com',
-    ]);
-    Nightwatch::user(fn (Authenticatable $user) => [
-        'id' => '123',
-        'name' => 'Tim',
-        'username' => 'timacdonald',
-    ]);
-
-    $response = actingAs($user)->get('/users');
-
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('user:*', [[
-        'v' => 1,
-        't' => 'user',
-        'timestamp' => 946688523.456789,
-        'id' => '123',
-        'name' => 'Tim',
-        'username' => 'timacdonald',
-    ]]);
-});
-
-it('handles authenticatable objects without name or email properties', function () {
-    $ingest = fakeIngest();
-    Route::get('/users', fn () => []);
-    $user = new class implements Authenticatable
+class UserSensorTest extends TestCase
+{
+    protected function setUp(): void
     {
-        public function getAuthIdentifierName()
+        $this->forceRequestExecutionState();
+
+        parent::setUp();
+
+        $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    }
+
+    public function test_it_captures_authenticated_users()
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', fn () => []);
+        $user = User::make([
+            'id' => '567',
+            'name' => 'Tim MacDonald',
+            'email' => 'tim@laravel.com',
+        ]);
+
+        $response = $this->actingAs($user)->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('user:*', [[
+            'v' => 1,
+            't' => 'user',
+            'timestamp' => 946688523.456789,
+            'id' => '567',
+            'name' => 'Tim MacDonald',
+            'username' => 'tim@laravel.com',
+        ]]);
+    }
+
+    public function test_it_handles_non_eloquent_user_objects_with_no_email_or_username()
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', fn () => []);
+        $user = new GenericUser([
+            'id' => '567',
+        ]);
+
+        $response = $this->actingAs($user)->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('user:*', [[
+            'v' => 1,
+            't' => 'user',
+            'timestamp' => 946688523.456789,
+            'id' => '567',
+            'name' => '',
+            'username' => '',
+        ]]);
+    }
+
+    public function test_it_does_not_capture_guests()
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', fn () => []);
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('user:*', []);
+    }
+
+    public function test_it_can_customize_the_capture_of_user_details()
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', fn () => []);
+        $user = User::make([
+            'id' => '567',
+            'name' => 'Tim MacDonald',
+            'email' => 'tim@laravel.com',
+        ]);
+        Nightwatch::user(fn (Authenticatable $user) => [
+            'id' => '123',
+            'name' => 'Tim',
+            'username' => 'timacdonald',
+        ]);
+
+        $response = $this->actingAs($user)->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('user:*', [[
+            'v' => 1,
+            't' => 'user',
+            'timestamp' => 946688523.456789,
+            'id' => '123',
+            'name' => 'Tim',
+            'username' => 'timacdonald',
+        ]]);
+    }
+
+    public function test_it_handles_authenticatable_objects_without_name_or_email_properties()
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', fn () => []);
+        $user = new class implements Authenticatable
         {
-            return 'id-name';
-        }
+            public function getAuthIdentifierName()
+            {
+                return 'id-name';
+            }
 
-        /**
-         * Get the unique identifier for the user.
-         *
-         * @return mixed
-         */
-        public function getAuthIdentifier()
-        {
-            return '123';
-        }
+            /**
+             * Get the unique identifier for the user.
+             *
+             * @return mixed
+             */
+            public function getAuthIdentifier()
+            {
+                return '123';
+            }
 
-        public function getAuthPasswordName()
-        {
-            return 'password-name';
-        }
+            public function getAuthPasswordName()
+            {
+                return 'password-name';
+            }
 
-        public function getAuthPassword()
-        {
-            return 'hunter2';
-        }
+            public function getAuthPassword()
+            {
+                return 'hunter2';
+            }
 
-        public function getRememberToken()
-        {
-            return 'remember-me-token';
-        }
+            public function getRememberToken()
+            {
+                return 'remember-me-token';
+            }
 
-        public function setRememberToken($value)
-        {
-            //
-        }
+            public function setRememberToken($value)
+            {
+                //
+            }
 
-        public function getRememberTokenName()
-        {
-            return 'remember-me-token-name';
-        }
-    };
+            public function getRememberTokenName()
+            {
+                return 'remember-me-token-name';
+            }
+        };
 
-    $response = actingAs($user)->get('/users');
+        $response = $this->actingAs($user)->get('/users');
 
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('user:*', [[
-        'v' => 1,
-        't' => 'user',
-        'timestamp' => 946688523.456789,
-        'id' => '123',
-        'name' => '',
-        'username' => '',
-    ]]);
-});
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('user:*', [[
+            'v' => 1,
+            't' => 'user',
+            'timestamp' => 946688523.456789,
+            'id' => '123',
+            'name' => '',
+            'username' => '',
+        ]]);
+    }
 
-it('can only collect the user id', function () {
-    $ingest = fakeIngest();
-    Route::get('/users', fn () => []);
-    $user = User::make([
-        'id' => '567',
-        'name' => 'Tim MacDonald',
-        'email' => 'tim@laravel.com',
-    ]);
-    Nightwatch::user(fn (Authenticatable $user) => [
-        'id' => '123',
-    ]);
+    public function test_it_can_only_collect_the_user_id()
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', fn () => []);
+        $user = User::make([
+            'id' => '567',
+            'name' => 'Tim MacDonald',
+            'email' => 'tim@laravel.com',
+        ]);
+        Nightwatch::user(fn (Authenticatable $user) => [
+            'id' => '123',
+        ]);
 
-    $response = actingAs($user)->get('/users');
+        $response = $this->actingAs($user)->get('/users');
 
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('user:*', [[
-        'v' => 1,
-        't' => 'user',
-        'timestamp' => 946688523.456789,
-        'id' => '123',
-        'name' => '',
-        'username' => '',
-    ]]);
-});
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('user:*', [[
+            'v' => 1,
+            't' => 'user',
+            'timestamp' => 946688523.456789,
+            'id' => '123',
+            'name' => '',
+            'username' => '',
+        ]]);
+    }
 
-it('it captures the user id even when excluded from the Nightwatch::user return array', function () {
-    $ingest = fakeIngest();
-    Route::get('/users', fn () => []);
-    $user = User::make([
-        'id' => '567',
-        'name' => 'Tim MacDonald',
-        'email' => 'tim@laravel.com',
-    ]);
-    Nightwatch::user(fn (Authenticatable $user) => []);
+    public function test_it_it_captures_the_user_id_even_when_excluded_from_the_nightwatch_user_return_array()
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', fn () => []);
+        $user = User::make([
+            'id' => '567',
+            'name' => 'Tim MacDonald',
+            'email' => 'tim@laravel.com',
+        ]);
+        Nightwatch::user(fn (Authenticatable $user) => []);
 
-    $response = actingAs($user)->get('/users');
+        $response = $this->actingAs($user)->get('/users');
 
-    $response->assertOk();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('user:*', [[
-        'v' => 1,
-        't' => 'user',
-        'timestamp' => 946688523.456789,
-        'id' => '567',
-        'name' => '',
-        'username' => '',
-    ]]);
-});
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('user:*', [[
+            'v' => 1,
+            't' => 'user',
+            'timestamp' => 946688523.456789,
+            'id' => '567',
+            'name' => '',
+            'username' => '',
+        ]]);
+    }
+}

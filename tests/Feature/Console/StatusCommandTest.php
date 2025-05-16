@@ -1,34 +1,44 @@
 <?php
 
+namespace Tests\Feature\Console;
+
+use RuntimeException;
 use Tests\FakeIngest;
+use Tests\TestCase;
 
-use function Pest\Laravel\artisan;
-
-it('fails when nightwatch is disabled', function () {
-    nightwatch()->enabled = false;
-
-    artisan('nightwatch:status')
-        ->expectsOutputToContain('Nightwatch is disabled')
-        ->assertExitCode(1);
-});
-
-it('fails when ingest throws an exception while pinging', function () {
-    fakeIngest(new class extends FakeIngest
+class StatusCommandTest extends TestCase
+{
+    public function test_it_fails_when_nightwatch_is_disabled()
     {
-        public function ping(): void
+        $this->core->enabled = false;
+
+        $this->artisan('nightwatch:status')
+            ->expectsOutputToContain('Nightwatch is disabled')
+            ->assertExitCode(1)
+            ->run();
+    }
+
+    public function test_it_fails_when_ingest_throws_an_exception_while_pinging()
+    {
+        $this->fakeIngest(new class extends FakeIngest
         {
-            throw new RuntimeException('Whoops!');
-        }
-    });
-    artisan('nightwatch:status')
-        ->expectsOutputToContain('Whoops!')
-        ->assertExitCode(1);
-});
+            public function ping(): void
+            {
+                throw new RuntimeException('Whoops!');
+            }
+        });
 
-it('can ping', function () {
-    fakeIngest();
+        $this->artisan('nightwatch:status')
+            ->expectsOutputToContain('Whoops!')
+            ->assertExitCode(1);
+    }
 
-    artisan('nightwatch:status')
-        ->expectsOutputToContain('The Nightwatch agent is running and accepting connections')
-        ->assertExitCode(0);
-});
+    public function test_it_can_ping()
+    {
+        $this->fakeIngest();
+
+        $this->artisan('nightwatch:status')
+            ->expectsOutputToContain('The Nightwatch agent is running and accepting connections')
+            ->assertExitCode(0);
+    }
+}

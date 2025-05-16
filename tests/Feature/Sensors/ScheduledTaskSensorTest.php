@@ -1,6 +1,9 @@
 <?php
 
+namespace Tests\Feature\Sensors;
+
 use Carbon\CarbonImmutable;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -10,272 +13,293 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Nightwatch\Types\Str;
+use Tests\TestCase;
 
-use function Pest\Laravel\travelTo;
+use function dirname;
+use function hash;
+use function now;
 
-uses(WithConsoleEvents::class);
+class ScheduledTaskSensorTest extends TestCase
+{
+    use WithConsoleEvents;
 
-beforeAll(function () {
-    forceCommandExecutionState();
-});
+    protected function setUp(): void
+    {
+        $this->forceCommandExecutionState();
 
-beforeEach(function () {
-    $this->ingest = fakeIngest();
-    setDeploy('v1.2.3');
-    setServerName('scheduler-01');
-    setPeakMemory(1234);
-    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
-    Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000000');
-    app()->setBasePath(dirname(app()->basePath()));
-});
+        parent::setUp();
 
-afterEach(function () {
-    Str::createUuidsNormally();
-});
+        $this->setDeploy('v1.2.3');
+        $this->setServerName('scheduler-01');
+        $this->setPeakMemory(1234);
+        $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+        // --- //
+        Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000000');
+        $this->app->setBasePath(dirname($this->app->basePath()));
+    }
 
-it('ingests processed tasks', function () {
-    $line = __LINE__ + 1;
-    $task = app(Schedule::class)->call(fn () => travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
-    $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
+    public function test_it_ingests_processed_tasks()
+    {
+        $ingest = $this->fakeIngest();
+        $line = __LINE__ + 1;
+        $task = $this->app[Schedule::class]->call(fn () => $this->travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
+        $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
 
-    Artisan::call('schedule:run');
+        Artisan::call('schedule:run');
 
-    $this->ingest->assertWrittenTimes(1);
-    $this->ingest->assertLatestWrite('scheduled-task:*', [
-        [
-            'v' => 1,
-            't' => 'scheduled-task',
-            'timestamp' => 946688523.456789,
-            'deploy' => 'v1.2.3',
-            'server' => 'scheduler-01',
-            '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone}"),
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'name' => $name,
-            'cron' => '* * * * *',
-            'timezone' => 'UTC',
-            'without_overlapping' => false,
-            'on_one_server' => false,
-            'run_in_background' => false,
-            'even_in_maintenance_mode' => false,
-            'status' => 'processed',
-            'duration' => 1_000_000,
-            'exceptions' => 0,
-            'logs' => 0,
-            'queries' => 0,
-            'lazy_loads' => 0,
-            'jobs_queued' => 0,
-            'mail' => 0,
-            'notifications' => 0,
-            'outgoing_requests' => 0,
-            'files_read' => 0,
-            'files_written' => 0,
-            'cache_events' => 0,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 1234,
-            'exception_preview' => '',
-        ],
-    ]);
-});
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:*', [
+            [
+                'v' => 1,
+                't' => 'scheduled-task',
+                'timestamp' => 946688523.456789,
+                'deploy' => 'v1.2.3',
+                'server' => 'scheduler-01',
+                '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone}"),
+                'trace_id' => '00000000-0000-0000-0000-000000000000',
+                'name' => $name,
+                'cron' => '* * * * *',
+                'timezone' => 'UTC',
+                'without_overlapping' => false,
+                'on_one_server' => false,
+                'run_in_background' => false,
+                'even_in_maintenance_mode' => false,
+                'status' => 'processed',
+                'duration' => 1_000_000,
+                'exceptions' => 0,
+                'logs' => 0,
+                'queries' => 0,
+                'lazy_loads' => 0,
+                'jobs_queued' => 0,
+                'mail' => 0,
+                'notifications' => 0,
+                'outgoing_requests' => 0,
+                'files_read' => 0,
+                'files_written' => 0,
+                'cache_events' => 0,
+                'hydrated_models' => 0,
+                'peak_memory_usage' => 1234,
+                'exception_preview' => '',
+            ],
+        ]);
+    }
 
-it('ingests skipped tasks', function () {
-    $line = __LINE__ + 1;
-    $task = app(Schedule::class)->call(fn () => travelTo(now()->addMicroseconds(1_000_000)))
-        ->skip(fn () => true)
-        ->everyMinute();
-    $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
+    public function test_it_ingests_skipped_tasks()
+    {
+        $ingest = $this->fakeIngest();
+        $line = __LINE__ + 1;
+        $task = $this->app[Schedule::class]->call(fn () => $this->travelTo(now()->addMicroseconds(1_000_000)))
+            ->skip(fn () => true)
+            ->everyMinute();
+        $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
 
-    Artisan::call('schedule:run');
+        Artisan::call('schedule:run');
 
-    $this->ingest->assertWrittenTimes(1);
-    $this->ingest->assertLatestWrite('scheduled-task:*', [
-        [
-            'v' => 1,
-            't' => 'scheduled-task',
-            'timestamp' => 946688523.456789,
-            'deploy' => 'v1.2.3',
-            'server' => 'scheduler-01',
-            '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone}"),
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'name' => $name,
-            'cron' => '* * * * *',
-            'timezone' => 'UTC',
-            'without_overlapping' => false,
-            'on_one_server' => false,
-            'run_in_background' => false,
-            'even_in_maintenance_mode' => false,
-            'status' => 'skipped',
-            'duration' => 0,
-            'exceptions' => 0,
-            'logs' => 0,
-            'queries' => 0,
-            'lazy_loads' => 0,
-            'jobs_queued' => 0,
-            'mail' => 0,
-            'notifications' => 0,
-            'outgoing_requests' => 0,
-            'files_read' => 0,
-            'files_written' => 0,
-            'cache_events' => 0,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 0,
-            'exception_preview' => '',
-        ],
-    ]);
-});
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:*', [
+            [
+                'v' => 1,
+                't' => 'scheduled-task',
+                'timestamp' => 946688523.456789,
+                'deploy' => 'v1.2.3',
+                'server' => 'scheduler-01',
+                '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone}"),
+                'trace_id' => '00000000-0000-0000-0000-000000000000',
+                'name' => $name,
+                'cron' => '* * * * *',
+                'timezone' => 'UTC',
+                'without_overlapping' => false,
+                'on_one_server' => false,
+                'run_in_background' => false,
+                'even_in_maintenance_mode' => false,
+                'status' => 'skipped',
+                'duration' => 0,
+                'exceptions' => 0,
+                'logs' => 0,
+                'queries' => 0,
+                'lazy_loads' => 0,
+                'jobs_queued' => 0,
+                'mail' => 0,
+                'notifications' => 0,
+                'outgoing_requests' => 0,
+                'files_read' => 0,
+                'files_written' => 0,
+                'cache_events' => 0,
+                'hydrated_models' => 0,
+                'peak_memory_usage' => 0,
+                'exception_preview' => '',
+            ],
+        ]);
+    }
 
-it('ingests failed tasks', function () {
-    $line = __LINE__ + 1;
-    $task = app(Schedule::class)->call(function () {
-        travelTo(now()->addMicroseconds(1_000_000));
+    public function test_it_ingests_failed_tasks()
+    {
+        $ingest = $this->fakeIngest();
+        $line = __LINE__ + 1;
+        $task = $this->app[Schedule::class]->call(function () {
+            $this->travelTo(now()->addMicroseconds(1_000_000));
 
-        throw new Exception('Unhandled error');
-    })->everyMinute();
-    $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
+            throw new Exception('Unhandled error');
+        })->everyMinute();
+        $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
 
-    Artisan::call('schedule:run');
+        Artisan::call('schedule:run');
 
-    $this->ingest->assertWrittenTimes(1);
-    $this->ingest->assertLatestWrite('scheduled-task:*', [
-        [
-            'v' => 1,
-            't' => 'scheduled-task',
-            'timestamp' => 946688523.456789,
-            'deploy' => 'v1.2.3',
-            'server' => 'scheduler-01',
-            '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone}"),
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'name' => $name,
-            'cron' => '* * * * *',
-            'timezone' => 'UTC',
-            'without_overlapping' => false,
-            'on_one_server' => false,
-            'run_in_background' => false,
-            'even_in_maintenance_mode' => false,
-            'status' => 'failed',
-            'duration' => 1_000_000,
-            'exceptions' => 1,
-            'logs' => 0,
-            'queries' => 0,
-            'lazy_loads' => 0,
-            'jobs_queued' => 0,
-            'mail' => 0,
-            'notifications' => 0,
-            'outgoing_requests' => 0,
-            'files_read' => 0,
-            'files_written' => 0,
-            'cache_events' => 0,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 1234,
-            'exception_preview' => 'Unhandled error',
-        ],
-    ]);
-    $this->ingest->assertLatestWrite('exception:0.message', 'Unhandled error');
-});
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:*', [
+            [
+                'v' => 1,
+                't' => 'scheduled-task',
+                'timestamp' => 946688523.456789,
+                'deploy' => 'v1.2.3',
+                'server' => 'scheduler-01',
+                '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone}"),
+                'trace_id' => '00000000-0000-0000-0000-000000000000',
+                'name' => $name,
+                'cron' => '* * * * *',
+                'timezone' => 'UTC',
+                'without_overlapping' => false,
+                'on_one_server' => false,
+                'run_in_background' => false,
+                'even_in_maintenance_mode' => false,
+                'status' => 'failed',
+                'duration' => 1_000_000,
+                'exceptions' => 1,
+                'logs' => 0,
+                'queries' => 0,
+                'lazy_loads' => 0,
+                'jobs_queued' => 0,
+                'mail' => 0,
+                'notifications' => 0,
+                'outgoing_requests' => 0,
+                'files_read' => 0,
+                'files_written' => 0,
+                'cache_events' => 0,
+                'hydrated_models' => 0,
+                'peak_memory_usage' => 1234,
+                'exception_preview' => 'Unhandled error',
+            ],
+        ]);
+        $ingest->assertLatestWrite('exception:0.message', 'Unhandled error');
+    }
 
-it('resets trace ID and timestamp on each task run', function () {
-    app(Schedule::class)->call(fn () => travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
+    public function test_it_resets_trace_i_d_and_timestamp_on_each_task_run()
+    {
+        $ingest = $this->fakeIngest();
+        $this->app[Schedule::class]->call(fn () => $this->travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
 
-    Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000001');
-    Artisan::call('schedule:run');
+        Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000001');
+        Artisan::call('schedule:run');
 
-    $this->ingest->assertWrittenTimes(1);
-    $this->ingest->assertLatestWrite('scheduled-task:0.trace_id', '00000000-0000-0000-0000-000000000001');
-    $this->ingest->assertLatestWrite('scheduled-task:0.timestamp', 946688523.456789);
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:0.trace_id', '00000000-0000-0000-0000-000000000001');
+        $ingest->assertLatestWrite('scheduled-task:0.timestamp', 946688523.456789);
 
-    Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000002');
-    Artisan::call('schedule:run');
+        Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000002');
+        Artisan::call('schedule:run');
 
-    $this->ingest->assertWrittenTimes(2);
-    $this->ingest->assertLatestWrite('scheduled-task:0.trace_id', '00000000-0000-0000-0000-000000000002');
-    $this->ingest->assertLatestWrite('scheduled-task:0.timestamp', 946688524.456789);
-});
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertLatestWrite('scheduled-task:0.trace_id', '00000000-0000-0000-0000-000000000002');
+        $ingest->assertLatestWrite('scheduled-task:0.timestamp', 946688524.456789);
+    }
 
-describe('task name normalization', function () {
-    it('normalizes task name for named closure', function () {
-        app(Schedule::class)->call(fn () => travelTo(now()->addMicroseconds(1_000_000)))
+    public function test_it_normalizes_task_name_for_named_closure()
+    {
+        $ingest = $this->fakeIngest();
+        $this->app[Schedule::class]->call(fn () => $this->travelTo(now()->addMicroseconds(1_000_000)))
             ->name('named-closure')
             ->everyMinute();
 
         Artisan::call('schedule:run');
 
-        $this->ingest->assertWrittenTimes(1);
-        $this->ingest->assertLatestWrite('scheduled-task:0.name', 'named-closure');
-    });
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:0.name', 'named-closure');
+    }
 
-    it('normalizes task name for invokable class', function () {
-        class ProcessFlights
-        {
-            public function __invoke()
-            {
-                //
-            }
-        }
-
-        app(Schedule::class)->call(new ProcessFlights)->everyMinute();
+    public function test_it_normalizes_task_name_for_invokable_class()
+    {
+        $ingest = $this->fakeIngest();
+        $this->app[Schedule::class]->call(new ProcessFlights)->everyMinute();
 
         Artisan::call('schedule:run');
 
-        $this->ingest->assertWrittenTimes(1);
-        $this->ingest->assertLatestWrite('scheduled-task:0.name', 'ProcessFlights');
-    });
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:0.name', 'Tests\Feature\Sensors\ProcessFlights');
+    }
 
-    it('normalizes task name for artisan command', function () {
+    public function test_it_normalizes_task_name_for_artisan_command()
+    {
+        $ingest = $this->fakeIngest();
         Artisan::command('app:fly {destination} {--force} {--compress}', function () {
             //
         });
 
-        app(Schedule::class)->command('app:fly tokyo')->everyMinute();
+        $this->app[Schedule::class]->command('app:fly tokyo')->everyMinute();
 
         Artisan::call('schedule:run');
 
-        $this->ingest->assertWrittenTimes(1);
-        $this->ingest->assertLatestWrite('scheduled-task:0.name', 'php artisan app:fly tokyo');
-    });
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:0.name', 'php artisan app:fly tokyo');
+    }
 
-    it('normalizes task name for queued job', function () {
-        class GenerateReport implements ShouldQueue
-        {
-            use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-            public function handle()
-            {
-                //
-            }
-        }
-
-        app(Schedule::class)->job(new GenerateReport)->everyMinute();
+    public function test_it_normalizes_task_name_for_queued_job()
+    {
+        $ingest = $this->fakeIngest();
+        $this->app[Schedule::class]->job(new GenerateReport)->everyMinute();
 
         Artisan::call('schedule:run');
 
-        $this->ingest->assertWrittenTimes(1);
-        $this->ingest->assertLatestWrite('scheduled-task:0.name', 'GenerateReport');
-    });
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:0.name', 'Tests\Feature\Sensors\GenerateReport');
+    }
 
-    it('normalizes task name for job class method call', function () {
-        class GenerateInvoice implements ShouldQueue
-        {
-            use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-            public function handle()
-            {
-                //
-            }
-        }
-
-        app(Schedule::class)->call([new GenerateInvoice, 'handle']);
+    public function test_it_normalizes_task_name_for_job_class_method_call()
+    {
+        $ingest = $this->fakeIngest();
+        $this->app[Schedule::class]->call([new GenerateInvoice, 'handle']);
 
         Artisan::call('schedule:run');
 
-        $this->ingest->assertWrittenTimes(1);
-        $this->ingest->assertLatestWrite('scheduled-task:0.name', 'GenerateInvoice');
-    });
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:0.name', 'Tests\Feature\Sensors\GenerateInvoice');
+    }
 
-    it('normalizes task name for shell command', function () {
-        app(Schedule::class)->exec('find ./storage/logs -type f -mtime +7 -delete')->everyMinute();
+    public function test_it_normalizes_task_name_for_shell_command()
+    {
+        $ingest = $this->fakeIngest();
+        $this->app[Schedule::class]->exec('find ./storage/logs -type f -mtime +7 -delete')->everyMinute();
 
         Artisan::call('schedule:run');
 
-        $this->ingest->assertWrittenTimes(1);
-        $this->ingest->assertLatestWrite('scheduled-task:0.name', 'find ./storage/logs -type f -mtime +7 -delete');
-    });
-});
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:0.name', 'find ./storage/logs -type f -mtime +7 -delete');
+    }
+}
+
+class ProcessFlights
+{
+    public function __invoke()
+    {
+        //
+    }
+}
+
+class GenerateReport implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public function handle()
+    {
+        //
+    }
+}
+
+class GenerateInvoice implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public function handle()
+    {
+        //
+    }
+}

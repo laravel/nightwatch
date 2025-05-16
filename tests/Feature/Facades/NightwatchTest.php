@@ -1,69 +1,87 @@
 <?php
 
+namespace Tests\Feature\Facades;
+
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use ReflectionClass;
+use RuntimeException;
+use Tests\TestCase;
+use Throwable;
 
-it('resolves to bound singleton instance of the Core class', function () {
-    expect(Nightwatch::getFacadeRoot())->toBeInstanceOf(Core::class);
+use function expect;
 
-    expect(Nightwatch::getFacadeRoot())->toBe(app(Core::class));
+class NightwatchTest extends TestCase
+{
+    public function test_it_resolves_to_bound_singleton_instance_of_the_core_class()
+    {
+        expect(Nightwatch::getFacadeRoot())->toBeInstanceOf(Core::class);
 
-    Facade::clearResolvedInstances();
-    expect(Nightwatch::getFacadeRoot())->toBe(app(Core::class));
-});
+        expect(Nightwatch::getFacadeRoot())->toBe($this->app[Core::class]);
 
-it('silently discards unrecoverable exceptions by default', function () {
-    (new ReflectionClass(Nightwatch::class))->getProperty('handleUnrecoverableExceptionsUsing')->setValue(null);
-    $calls = 0;
-    Log::listen(function () use (&$calls) {
-        $calls++;
-    });
+        Facade::clearResolvedInstances();
+        expect(Nightwatch::getFacadeRoot())->toBe($this->app[Core::class]);
+    }
 
-    Nightwatch::unrecoverableExceptionOccurred(new RuntimeException('Whoops!'));
+    public function test_it_silently_discards_unrecoverable_exceptions_by_default()
+    {
+        (new ReflectionClass(Nightwatch::class))->getProperty('handleUnrecoverableExceptionsUsing')->setValue(null);
+        $calls = 0;
+        Log::listen(function () use (&$calls) {
+            $calls++;
+        });
 
-    expect($calls)->toBe(0);
-});
+        Nightwatch::unrecoverableExceptionOccurred(new RuntimeException('Whoops!'));
 
-it('can register a callback to handle unrecoverable exceptions', function () {
-    $handled = [];
-    Nightwatch::handleUnrecoverableExceptionsUsing(function (Throwable $e) use (&$handled) {
-        $handled[] = $e;
-    });
+        expect($calls)->toBe(0);
+    }
 
-    Nightwatch::unrecoverableExceptionOccurred($first = new RuntimeException('Whoops!'));
-    Nightwatch::unrecoverableExceptionOccurred($second = new RuntimeException('Whoops!'));
+    public function test_it_can_register_a_callback_to_handle_unrecoverable_exceptions()
+    {
+        $handled = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function (Throwable $e) use (&$handled) {
+            $handled[] = $e;
+        });
 
-    expect($handled)->toBe([
-        $first,
-        $second,
-    ]);
-});
+        Nightwatch::unrecoverableExceptionOccurred($first = new RuntimeException('Whoops!'));
+        Nightwatch::unrecoverableExceptionOccurred($second = new RuntimeException('Whoops!'));
 
-it('handles unrecoverable exceptions statelessly', function () {
-    app()->forgetInstance(Core::class);
-    $resolved = false;
-    Nightwatch::resolved(function () use (&$resolved) {
-        $resolved = true;
-    });
+        expect($handled)->toBe([
+            $first,
+            $second,
+        ]);
+    }
 
-    $handled = [];
-    Nightwatch::handleUnrecoverableExceptionsUsing(function (Throwable $e) use (&$handled) {
-        $handled[] = $e;
-    });
-    Nightwatch::unrecoverableExceptionOccurred($first = new RuntimeException('Whoops!'));
+    public function test_it_handles_unrecoverable_exceptions_statelessly()
+    {
+        $this->app->forgetInstance(Core::class);
+        $resolved = false;
+        Nightwatch::resolved(function () use (&$resolved) {
+            $resolved = true;
+        });
 
-    expect($resolved)->toBeFalse();
-    expect($handled)->toHaveCount(1);
-    expect(app()->resolved(Core::class))->toBeFalse();
-});
+        $handled = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function (Throwable $e) use (&$handled) {
+            $handled[] = $e;
+        });
+        Nightwatch::unrecoverableExceptionOccurred($first = new RuntimeException('Whoops!'));
 
-it('silences exceptions thrown while handling exceptions', function () {
-    Nightwatch::handleUnrecoverableExceptionsUsing(function (): object {
-        // Should return an object. Returning an int to cause an exception.
-        return 5;
-    });
+        expect($resolved)->toBeFalse();
+        expect($handled)->toHaveCount(1);
+        expect($this->app->resolved(Core::class))->toBeFalse();
+    }
 
-    Nightwatch::unrecoverableExceptionOccurred(new RuntimeException('Whoops!'));
-});
+    public function test_it_silences_exceptions_thrown_while_handling_exceptions()
+    {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function (): object {
+            // Should return an object. Returning an int to cause an exception.
+            return 5;
+        });
+
+        Nightwatch::unrecoverableExceptionOccurred(new RuntimeException('Whoops!'));
+
+        $this->assertTrue(true);
+    }
+}

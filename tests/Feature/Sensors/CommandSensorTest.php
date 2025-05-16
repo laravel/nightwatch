@@ -1,226 +1,237 @@
 <?php
 
+namespace Tests\Feature\Sensors;
+
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Laravel\Nightwatch\Compatibility;
 use Symfony\Component\Console\Input\StringInput;
+use Tests\TestCase;
 
-use function Pest\Laravel\travelTo;
+use function array_shift;
+use function expect;
+use function hash;
+use function now;
 
-uses(WithConsoleEvents::class);
+class CommandSensorTest extends TestCase
+{
+    use WithConsoleEvents;
 
-beforeAll(function () {
-    forceCommandExecutionState();
-});
+    protected function setUp(): void
+    {
+        $this->forceCommandExecutionState();
 
-beforeEach(function () {
-    setDeploy('v1.2.3');
-    setServerName('web-01');
-    setPeakMemory(1234);
-    setTraceId('00000000-0000-0000-0000-000000000000');
-    setExecutionId('00000000-0000-0000-0000-000000000001');
-    setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
-});
+        parent::setUp();
 
-it('can ingest commands', function () {
-    $ingest = fakeIngest();
-    Artisan::command('app:build {destination} {--force} {--compress}', function () {
-        DB::table('users')->get();
+        $this->setDeploy('v1.2.3');
+        $this->setServerName('web-01');
+        $this->setPeakMemory(1234);
+        $this->setTraceId('00000000-0000-0000-0000-000000000000');
+        $this->setExecutionId('00000000-0000-0000-0000-000000000001');
+        $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    }
 
-        travelTo(now()->addMicroseconds(1234567));
+    public function test_it_can_ingest_commands()
+    {
+        $ingest = $this->fakeIngest();
+        Artisan::command('app:build {destination} {--force} {--compress}', function () {
+            DB::table('users')->get();
 
-        return 3;
-    });
+            Date::setTestNow(now()->addMicroseconds(1234567));
 
-    $status = Artisan::handle($input = new StringInput('app:build path/to/output --force'));
-    Artisan::terminate($input, $status);
+            return 3;
+        });
 
-    expect($status)->toBe(3);
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite('command:*', [
-        [
-            'v' => 1,
-            't' => 'command',
-            'timestamp' => 946688523.456789,
-            'deploy' => 'v1.2.3',
-            'server' => 'web-01',
-            '_group' => hash('xxh128', 'app:build'),
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'class' => 'Illuminate\Foundation\Console\ClosureCommand',
-            'name' => 'app:build',
-            'command' => 'app:build path/to/output --force',
-            'exit_code' => 3,
-            'duration' => 1234567,
-            'bootstrap' => 0,
-            'action' => 1234567,
-            'terminating' => 0,
-            'exceptions' => 0,
-            'logs' => 0,
-            'queries' => 1,
-            'lazy_loads' => 0,
-            'jobs_queued' => 0,
-            'mail' => 0,
-            'notifications' => 0,
-            'outgoing_requests' => 0,
-            'files_read' => 0,
-            'files_written' => 0,
-            'cache_events' => 0,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 1234,
-            'exception_preview' => '',
-        ],
-    ]);
-    $ingest->assertLatestWrite('query:0.execution_preview', 'app:build');
-});
-
-it('filters out the list command')->todo();
-it('filters out the queue:work command')->todo();
-it('filters out the queue:listen command')->todo();
-it('filters out the horizon:work command')->todo();
-
-it('modifies status code to value in range of 0-255', function () {
-    $ingest = fakeIngest();
-    $status = [
-        -1,
-        0,
-        1,
-        254,
-        255,
-        256,
-    ];
-    Artisan::command('app:build {destination} {--force} {--compress}', function () use (&$status) {
-        return array_shift($status);
-    });
-
-    $run = function () {
         $status = Artisan::handle($input = new StringInput('app:build path/to/output --force'));
         Artisan::terminate($input, $status);
 
-        return $status;
-    };
+        expect($status)->toBe(3);
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('command:*', [
+            [
+                'v' => 1,
+                't' => 'command',
+                'timestamp' => 946688523.456789,
+                'deploy' => 'v1.2.3',
+                'server' => 'web-01',
+                '_group' => hash('xxh128', 'app:build'),
+                'trace_id' => '00000000-0000-0000-0000-000000000000',
+                'class' => 'Illuminate\Foundation\Console\ClosureCommand',
+                'name' => 'app:build',
+                'command' => 'app:build path/to/output --force',
+                'exit_code' => 3,
+                'duration' => 1234567,
+                'bootstrap' => 0,
+                'action' => 1234567,
+                'terminating' => 0,
+                'exceptions' => 0,
+                'logs' => 0,
+                'queries' => 1,
+                'lazy_loads' => 0,
+                'jobs_queued' => 0,
+                'mail' => 0,
+                'notifications' => 0,
+                'outgoing_requests' => 0,
+                'files_read' => 0,
+                'files_written' => 0,
+                'cache_events' => 0,
+                'hydrated_models' => 0,
+                'peak_memory_usage' => 1234,
+                'exception_preview' => '',
+            ],
+        ]);
+        $ingest->assertLatestWrite('query:0.execution_preview', 'app:build');
+    }
 
-    expect($run())->toBe(-1);
-    $ingest->assertLatestWrite('command:0.exit_code', 255);
+    public function test_it_modifies_status_code_to_value_in_range_of_0_255()
+    {
+        $ingest = $this->fakeIngest();
+        $status = [
+            -1,
+            0,
+            1,
+            254,
+            255,
+            256,
+        ];
+        Artisan::command('app:build {destination} {--force} {--compress}', function () use (&$status) {
+            return array_shift($status);
+        });
 
-    expect($run())->toBe(0);
-    $ingest->assertLatestWrite('command:0.exit_code', 0);
+        $run = function () {
+            $status = Artisan::handle($input = new StringInput('app:build path/to/output --force'));
+            Artisan::terminate($input, $status);
 
-    expect($run())->toBe(1);
-    $ingest->assertLatestWrite('command:0.exit_code', 1);
+            return $status;
+        };
 
-    expect($run())->toBe(254);
-    $ingest->assertLatestWrite('command:0.exit_code', 254);
+        expect($run())->toBe(-1);
+        $ingest->assertLatestWrite('command:0.exit_code', 255);
 
-    expect($run())->toBe(255);
-    $ingest->assertLatestWrite('command:0.exit_code', 255);
+        expect($run())->toBe(0);
+        $ingest->assertLatestWrite('command:0.exit_code', 0);
 
-    expect($run())->toBe(256);
-    $ingest->assertLatestWrite('command:0.exit_code', 255);
-});
+        expect($run())->toBe(1);
+        $ingest->assertLatestWrite('command:0.exit_code', 1);
 
-it('only captures the first command that runs', function () {
-    $ingest = fakeIngest();
-    Artisan::command('child', function () {
-        return 99;
-    });
-    Artisan::registerCommand(app(ParentCommand::class));
+        expect($run())->toBe(254);
+        $ingest->assertLatestWrite('command:0.exit_code', 254);
 
-    $run = function () {
-        $status = Artisan::handle($input = new StringInput('parent'));
+        expect($run())->toBe(255);
+        $ingest->assertLatestWrite('command:0.exit_code', 255);
 
-        Artisan::terminate($input, $status);
+        expect($run())->toBe(256);
+        $ingest->assertLatestWrite('command:0.exit_code', 255);
+    }
 
-        return $status;
-    };
+    public function test_it_only_captures_the_first_command_that_runs()
+    {
+        $ingest = $this->fakeIngest();
+        Artisan::command('child', function () {
+            return 99;
+        });
+        Artisan::registerCommand($this->app[ParentCommand::class]);
 
-    expect($run())->toBe(0);
-    $ingest->assertLatestWrite('command:*', [
-        [
-            'v' => 1,
-            't' => 'command',
-            'timestamp' => 946688523.456789,
-            'deploy' => 'v1.2.3',
-            'server' => 'web-01',
-            '_group' => hash('xxh128', 'parent'),
-            'trace_id' => '00000000-0000-0000-0000-000000000000',
-            'class' => 'ParentCommand',
-            'name' => 'parent',
-            'command' => 'parent',
-            'exit_code' => 0,
-            'duration' => 0,
-            'bootstrap' => 0,
-            'action' => 0,
-            'terminating' => 0,
-            'exceptions' => 0,
-            'logs' => 0,
-            'queries' => 0,
-            'lazy_loads' => 0,
-            'jobs_queued' => 0,
-            'mail' => 0,
-            'notifications' => 0,
-            'outgoing_requests' => 0,
-            'files_read' => 0,
-            'files_written' => 0,
-            'cache_events' => 0,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 1234,
-            'exception_preview' => '',
-        ],
-    ]);
-});
+        $run = function () {
+            $status = Artisan::handle($input = new StringInput('parent'));
 
-it('child commands do not progress the modify execution stage', function () {
-    $ingest = fakeIngest();
-    Artisan::command('parent', function () {
-        Artisan::call('child');
+            Artisan::terminate($input, $status);
 
-        Cache::get('foo');
-    });
-    Artisan::command('child', function () {
-        //
-    });
+            return $status;
+        };
 
-    $run = function () {
-        $status = Artisan::handle($input = new StringInput('parent'));
+        expect($run())->toBe(0);
+        $ingest->assertLatestWrite('command:*', [
+            [
+                'v' => 1,
+                't' => 'command',
+                'timestamp' => 946688523.456789,
+                'deploy' => 'v1.2.3',
+                'server' => 'web-01',
+                '_group' => hash('xxh128', 'parent'),
+                'trace_id' => '00000000-0000-0000-0000-000000000000',
+                'class' => 'Tests\Feature\Sensors\ParentCommand',
+                'name' => 'parent',
+                'command' => 'parent',
+                'exit_code' => 0,
+                'duration' => 0,
+                'bootstrap' => 0,
+                'action' => 0,
+                'terminating' => 0,
+                'exceptions' => 0,
+                'logs' => 0,
+                'queries' => 0,
+                'lazy_loads' => 0,
+                'jobs_queued' => 0,
+                'mail' => 0,
+                'notifications' => 0,
+                'outgoing_requests' => 0,
+                'files_read' => 0,
+                'files_written' => 0,
+                'cache_events' => 0,
+                'hydrated_models' => 0,
+                'peak_memory_usage' => 1234,
+                'exception_preview' => '',
+            ],
+        ]);
+    }
 
-        Artisan::terminate($input, $status);
+    public function test_it_child_commands_do_not_progress_the_modify_execution_stage()
+    {
+        $ingest = $this->fakeIngest();
+        Artisan::command('parent', function () {
+            Artisan::call('child');
 
-        return $status;
-    };
+            Cache::get('foo');
+        });
+        Artisan::command('child', function () {
+            //
+        });
 
-    expect($run())->toBe(0);
-    $ingest->assertLatestWrite('command:0.cache_events', 1);
-    $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
-});
+        $run = function () {
+            $status = Artisan::handle($input = new StringInput('parent'));
 
-it('child commands do not progress the modify execution stage when terminating event does not exist', function () {
-    $ingest = fakeIngest();
-    Artisan::command('parent', function () {
-        Artisan::call('child');
+            Artisan::terminate($input, $status);
 
-        Cache::get('foo');
-    });
-    Artisan::command('child', function () {
-        //
-    });
-    Compatibility::$terminatingEventExists = false;
+            return $status;
+        };
 
-    $run = function () {
-        $status = Artisan::handle($input = new StringInput('parent'));
+        expect($run())->toBe(0);
+        $ingest->assertLatestWrite('command:0.cache_events', 1);
+        $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
+    }
 
-        Artisan::terminate($input, $status);
+    public function test_it_child_commands_do_not_progress_the_modify_execution_stage_when_terminating_event_does_not_exist()
+    {
+        $ingest = $this->fakeIngest();
+        Artisan::command('parent', function () {
+            Artisan::call('child');
 
-        return $status;
-    };
+            Cache::get('foo');
+        });
+        Artisan::command('child', function () {
+            //
+        });
+        Compatibility::$terminatingEventExists = false;
 
-    expect($run())->toBe(0);
-    $ingest->assertLatestWrite('command:0.cache_events', 1);
-    $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
-});
+        $run = function () {
+            $status = Artisan::handle($input = new StringInput('parent'));
+
+            Artisan::terminate($input, $status);
+
+            return $status;
+        };
+
+        expect($run())->toBe(0);
+        $ingest->assertLatestWrite('command:0.cache_events', 1);
+        $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
+    }
+}
 
 class ParentCommand extends Command
 {

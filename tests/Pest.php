@@ -19,7 +19,7 @@ use function Pest\Laravel\travelTo;
 
 $_ENV['APP_BASE_PATH'] = realpath(__DIR__.'/../workbench/').'/';
 
-uses(Tests\TestCase::class)->in('Unit', 'Feature');
+uses(Tests\TestCase::class)->in('Unit');
 
 function nightwatch(): Core
 {
