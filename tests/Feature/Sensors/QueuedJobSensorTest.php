@@ -33,6 +33,7 @@ class QueuedJobSensorTest extends TestCase
     protected function setUp(): void
     {
         $this->forceRequestExecutionState();
+
         parent::setUp();
 
         $this->setDeploy('v1.2.3');
