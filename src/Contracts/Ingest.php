@@ -11,7 +11,9 @@ interface Ingest
 {
     public function write(Record $record): void;
 
-    public function ping(): void;
+    public function ping(): void; // todo remove
+
+    public function filter(callable $filter): void;
 
     public function digest(): void;
 

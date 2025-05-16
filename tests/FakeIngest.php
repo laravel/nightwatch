@@ -24,6 +24,8 @@ class FakeIngest implements Ingest
      */
     public array $writes = [];
 
+    public array $filters = [];
+
     public function __construct(
         public RecordsBuffer $buffer = new RecordsBuffer,
     ) {
@@ -35,9 +37,14 @@ class FakeIngest implements Ingest
         $this->buffer->write($record);
     }
 
+    public function filter(callable $filter): void
+    {
+        $this->filters[] = $filter;
+    }
+
     public function digest(): void
     {
-        $this->writes[] = $this->buffer->pull()->rawPayload();
+        $this->writes[] = $this->buffer->pull($this->filters)->rawPayload();
     }
 
     public function ping(): void

@@ -30,7 +30,10 @@ class RecordsBuffer implements Countable
         return count($this->records);
     }
 
-    public function pull(array $filters): Payload
+    /**
+     * @param  list<(callable(Record): bool)>  $filters
+     */
+    public function pull(array $filters = []): Payload
     {
         if ($this->records === []) {
             return Payload::json('[]');
