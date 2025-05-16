@@ -10,7 +10,7 @@ class StatusCommandTest extends TestCase
 {
     public function test_it_fails_when_nightwatch_is_disabled()
     {
-        $this->core->enabled = false;
+        $this->core->config['enabled'] = false;
 
         $this->artisan('nightwatch:status')
             ->expectsOutputToContain('Nightwatch is disabled')

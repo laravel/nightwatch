@@ -16,7 +16,7 @@ use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Compatibility;
-use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -42,9 +42,9 @@ final class CacheEventSensor
     ];
 
     public function __construct(
-        private Clock $clock,
-        private LocalIngest $ingest,
+        private Ingest $ingest,
         private RequestState|CommandState $executionState,
+        private Clock $clock,
     ) {
         //
     }

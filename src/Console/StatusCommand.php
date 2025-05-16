@@ -30,7 +30,7 @@ final class StatusCommand extends Command
      */
     public function handle(Core $nightwatch): int
     {
-        if (! $nightwatch->enabled) {
+        if (! $nightwatch->enabled()) {
             $this->components->error('Nightwatch is disabled');
 
             return 1;

@@ -21,5 +21,5 @@ it('gracefully handles exceptions', function () {
     $processor($record);
 
     expect($record->thrownInWith)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });

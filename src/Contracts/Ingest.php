@@ -7,7 +7,7 @@ use Laravel\Nightwatch\Records\Record;
 /**
  * @internal
  */
-interface LocalIngest
+interface Ingest
 {
     public function write(Record $record): void;
 

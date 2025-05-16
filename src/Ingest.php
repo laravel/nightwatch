@@ -2,7 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
-use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Records\Record;
 use RuntimeException;
 use Throwable;
@@ -22,7 +22,7 @@ use function substr;
 /**
  * @internal
  */
-final class Ingest implements LocalIngest
+final class Ingest implements IngestContract
 {
     private string $transmitTo;
 

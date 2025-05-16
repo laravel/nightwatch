@@ -67,13 +67,12 @@ trait CapturesState
      */
     public function configureSampling(string $by): void
     {
-        $this->shouldSample = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $this->sampling[$by];
+        $this->shouldSample = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $this->config['sampling'][$by];
 
         Compatibility::addHiddenContext('nightwatch_should_sample', $this->shouldSample);
 
         if (! $this->shouldSample) {
-            $this->state->flush();
-            $this->ingest->flush();
+            $this->flush();
         }
     }
 
@@ -82,7 +81,7 @@ trait CapturesState
      */
     public function report(Throwable $e): void
     {
-        if (! $this->shouldSample || ! $this->enabled) {
+        if (! $this->shouldSample || ! $this->enabled()) {
             return;
         }
 
@@ -193,7 +192,7 @@ trait CapturesState
             return;
         }
 
-        $this->state->user->remember($user);
+        $this->executionState->user->remember($user);
     }
 
     /**
@@ -241,7 +240,7 @@ trait CapturesState
             return;
         }
 
-        $this->state->executionPreview = Str::tinyText(
+        $this->executionState->executionPreview = Str::tinyText(
             $request->getMethod().' '.$request->getBaseUrl().$request->getPathInfo()
         );
     }
@@ -292,17 +291,16 @@ trait CapturesState
      */
     public function configureForJobs(): void
     {
-        $this->state->source = 'job';
+        $this->executionState->source = 'job';
         $this->waitingForJob = true;
     }
 
     /**
      * @internal
      */
-    public function resetStateForNextJob(): void
+    public function prepareForNextJob(): void
     {
-        $this->state->flush();
-        $this->ingest->flush();
+        $this->flush();
         memory_reset_peak_usage();
     }
 
@@ -318,9 +316,9 @@ trait CapturesState
         }
 
         $this->waitingForJob = false;
-        $this->state->timestamp = $this->clock->microtime();
-        $this->state->setId((string) Str::uuid());
-        $this->state->executionPreview = Str::tinyText($job->resolveName());
+        $this->executionState->timestamp = $this->clock->microtime();
+        $this->executionState->setId((string) Str::uuid());
+        $this->executionState->executionPreview = Str::tinyText($job->resolveName());
     }
 
     /**
@@ -329,7 +327,7 @@ trait CapturesState
     public function captureArtisan(Artisan $artisan): void
     {
         /** @var Core<CommandState> $this */
-        $this->state->artisan = $artisan;
+        $this->executionState->artisan = $artisan;
     }
 
     /**
@@ -342,8 +340,8 @@ trait CapturesState
             return;
         }
 
-        $this->state->name = $name;
-        $this->state->executionPreview = Str::tinyText($name);
+        $this->executionState->name = $name;
+        $this->executionState->executionPreview = Str::tinyText($name);
     }
 
     /**
@@ -363,28 +361,27 @@ trait CapturesState
      */
     public function configureForScheduledTasks(): void
     {
-        $this->state->source = 'schedule';
+        $this->executionState->source = 'schedule';
     }
 
     /**
      * @internal
      */
-    public function prepareForScheduledTask(): void
+    public function prepareForNextScheduledTask(): void
     {
         /*
          * Reset state for the current scheduled task execution.
          * Since `schedule:run` executes multiple tasks sequentially,
          * we need to clear previous task data to avoid metric pollution.
          */
-        $this->state->flush();
-        $this->ingest->flush();
+        $this->flush();
         memory_reset_peak_usage();
 
         $trace = (string) Str::uuid();
         Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
-        $this->state->trace = $trace;
-        $this->state->setId($trace);
-        $this->state->timestamp = $this->clock->microtime();
+        $this->executionState->trace = $trace;
+        $this->executionState->setId($trace);
+        $this->executionState->timestamp = $this->clock->microtime();
     }
 
     /**
@@ -400,6 +397,15 @@ trait CapturesState
      */
     public function shouldCaptureLogs(): bool
     {
-        return $this->shouldSample && $this->enabled;
+        return $this->shouldSample && $this->enabled();
+    }
+
+    /**
+     * @internal
+     */
+    public function flush(): void
+    {
+        $this->executionState->flush();
+        $this->ingest->flush();
     }
 }

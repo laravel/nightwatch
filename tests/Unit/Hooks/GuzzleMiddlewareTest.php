@@ -43,5 +43,5 @@ it('gracefully handles exceptions in the after middleware', function () {
 
     expect($thrownInOutgoingRequestSensor)->toBeTrue();
     expect((string) $response->getBody())->toBe('ok');
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });

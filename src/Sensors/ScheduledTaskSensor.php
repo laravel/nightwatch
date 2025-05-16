@@ -11,7 +11,7 @@ use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\ScheduledTask;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
@@ -34,8 +34,8 @@ use function str_replace;
 final class ScheduledTaskSensor
 {
     public function __construct(
-        private CommandState $executionState,
-        private LocalIngest $ingest,
+        private Ingest $ingest,
+        private CommandState $commandState,
         private Clock $clock,
     ) {
         //
@@ -54,11 +54,11 @@ final class ScheduledTaskSensor
         }
 
         $this->ingest->write(new ScheduledTask(
-            timestamp: $this->executionState->timestamp,
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
+            timestamp: $this->commandState->timestamp,
+            deploy: $this->commandState->deploy,
+            server: $this->commandState->server,
             _group: hash('xxh128', "{$name},{$event->task->expression},{$timezone}"),
-            trace_id: $this->executionState->trace,
+            trace_id: $this->commandState->trace,
             name: $name,
             cron: $event->task->expression,
             timezone: $timezone,
@@ -70,21 +70,21 @@ final class ScheduledTaskSensor
                 ScheduledTaskFinished::class => 'processed',
                 ScheduledTaskFailed::class => 'failed',
             },
-            duration: (int) round(($now - $this->executionState->timestamp) * 1_000_000),
-            exceptions: $this->executionState->exceptions,
-            logs: $this->executionState->logs,
-            queries: $this->executionState->queries,
-            lazy_loads: $this->executionState->lazyLoads,
-            jobs_queued: $this->executionState->jobsQueued,
-            mail: $this->executionState->mail,
-            notifications: $this->executionState->notifications,
-            outgoing_requests: $this->executionState->outgoingRequests,
-            files_read: $this->executionState->filesRead,
-            files_written: $this->executionState->filesWritten,
-            cache_events: $this->executionState->cacheEvents,
-            hydrated_models: $this->executionState->hydratedModels,
-            peak_memory_usage: $this->executionState->peakMemory(),
-            exception_preview: $this->executionState->exceptionPreview,
+            duration: (int) round(($now - $this->commandState->timestamp) * 1_000_000),
+            exceptions: $this->commandState->exceptions,
+            logs: $this->commandState->logs,
+            queries: $this->commandState->queries,
+            lazy_loads: $this->commandState->lazyLoads,
+            jobs_queued: $this->commandState->jobsQueued,
+            mail: $this->commandState->mail,
+            notifications: $this->commandState->notifications,
+            outgoing_requests: $this->commandState->outgoingRequests,
+            files_read: $this->commandState->filesRead,
+            files_written: $this->commandState->filesWritten,
+            cache_events: $this->commandState->cacheEvents,
+            hydrated_models: $this->commandState->hydratedModels,
+            peak_memory_usage: $this->commandState->peakMemory(),
+            exception_preview: $this->commandState->exceptionPreview,
         ));
     }
 
@@ -149,8 +149,8 @@ final class ScheduledTaskSensor
     {
         $this->ingest->write(new ScheduledTask(
             timestamp: $timestamp,
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
+            deploy: $this->commandState->deploy,
+            server: $this->commandState->server,
             _group: hash('xxh128', "{$name},{$event->task->expression},{$timezone}"),
             trace_id: (string) Str::uuid(),
             name: $name,

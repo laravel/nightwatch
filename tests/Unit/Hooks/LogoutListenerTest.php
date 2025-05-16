@@ -9,5 +9,5 @@ test('it gracefully handles exceptions', function () {
     $listener = new LogoutListener(nightwatch());
     $listener($event);
 
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });

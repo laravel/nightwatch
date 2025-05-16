@@ -23,7 +23,7 @@ final class ReportableHandler
 
     public function __invoke(Throwable $e): void
     {
-        if ($this->nightwatch->state->source === 'schedule') {
+        if ($this->nightwatch->executionState->source === 'schedule') {
             return;
         }
 

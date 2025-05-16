@@ -24,7 +24,7 @@ it('gracefully handles exceptions when capturing execution preview', function ()
     $response = $middleware->handle($request, $next);
 
     expect($request->thrownInGetMethod)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
     expect($response->content())->toBe('response');
 });
 
@@ -36,7 +36,7 @@ it('gracefully handles exceptions when the terminating event doesn\'t exist', fu
 
         throw new RuntimeException('Whoops!');
     };
-    nightwatch()->state->stage = ExecutionStage::Bootstrap;
+    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
 
     $middleware = new GlobalMiddleware(nightwatch());
     $request = Request::create('/test');
@@ -56,7 +56,7 @@ it('gracefully handles exceptions when the terminating event doesn\'t exist', fu
     $middleware->terminate($request, $response);
 
     expect($thrownInStageSensor)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });
 
 it('handles response types that laravel does not wrap', function () {
@@ -67,7 +67,7 @@ it('handles response types that laravel does not wrap', function () {
 
         throw new RuntimeException('Whoops!');
     };
-    nightwatch()->state->stage = ExecutionStage::Bootstrap;
+    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
 
     $middleware = new GlobalMiddleware(nightwatch());
     $request = Request::create('/test');
@@ -89,5 +89,5 @@ it('handles response types that laravel does not wrap', function () {
     $middleware->terminate($request, $response);
 
     expect($thrownInStageSensor)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });

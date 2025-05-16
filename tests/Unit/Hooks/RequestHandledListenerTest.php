@@ -12,7 +12,7 @@ it('gracefully handles exceptions', function () {
 
         throw new RuntimeException('Whoops!');
     };
-    nightwatch()->state->stage = ExecutionStage::Bootstrap;
+    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
 
     $event = new RequestHandled(Request::create('/tests'), response(''));
 
@@ -20,5 +20,5 @@ it('gracefully handles exceptions', function () {
     $listener($event);
 
     expect($thrownInStageSensor)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });

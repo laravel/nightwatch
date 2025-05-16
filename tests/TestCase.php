@@ -39,8 +39,7 @@ abstract class TestCase extends OrchestraTestCase
         Compatibility::$context = [];
 
         $this->core = $this->app->make(Core::class);
-        $this->core->state->flush();
-        $this->core->ingest->flush();
+        $this->core->flush();
         $this->core->clock->microtimeResolver = fn () => (float) now()->format('U.u');
     }
 
@@ -93,22 +92,22 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function setDeploy(string $deploy): void
     {
-        $this->core->state->deploy = $deploy;
+        $this->core->executionState->deploy = $deploy;
     }
 
     protected function setServerName(string $server): void
     {
-        $this->core->state->server = $server;
+        $this->core->executionState->server = $server;
     }
 
     protected function setPeakMemory(int $value): void
     {
-        $this->core->state->peakMemoryResolver = fn () => $value;
+        $this->core->executionState->peakMemoryResolver = fn () => $value;
     }
 
     protected function setTraceId(string $traceId): void
     {
-        $this->core->state->trace = $traceId;
+        $this->core->executionState->trace = $traceId;
 
         Compatibility::addHiddenContext('nightwatch_trace_id', $traceId);
     }
@@ -116,9 +115,9 @@ abstract class TestCase extends OrchestraTestCase
     protected function setExecutionStart(CarbonImmutable $timestamp): void
     {
         $this->syncClock($timestamp);
-        $this->core->state->stageDurations[ExecutionStage::Bootstrap->value] = 0;
-        $this->core->state->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
-        $this->core->state->stage = match ($this->core->state::class) {
+        $this->core->executionState->stageDurations[ExecutionStage::Bootstrap->value] = 0;
+        $this->core->executionState->currentExecutionStageStartedAtMicrotime = (float) $timestamp->format('U.u');
+        $this->core->executionState->stage = match ($this->core->executionState::class) {
             RequestState::class => ExecutionStage::BeforeMiddleware,
             CommandState::class => ExecutionStage::Action,
         };
@@ -126,23 +125,23 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function setExecutionId(string $executionId): void
     {
-        $this->core->state->setId($executionId);
+        $this->core->executionState->setId($executionId);
     }
 
     protected function syncClock(DateTimeInterface $timestamp): void
     {
-        $this->core->state->timestamp = (float) $timestamp->format('U.u');
+        $this->core->executionState->timestamp = (float) $timestamp->format('U.u');
 
         $this->travelTo($timestamp);
     }
 
     protected function setPhpVersion(string $version): void
     {
-        $this->core->state->phpVersion = $version;
+        $this->core->executionState->phpVersion = $version;
     }
 
     protected function setLaravelVersion(string $version): void
     {
-        $this->core->state->laravelVersion = $version;
+        $this->core->executionState->laravelVersion = $version;
     }
 }

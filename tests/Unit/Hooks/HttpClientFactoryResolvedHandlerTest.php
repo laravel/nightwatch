@@ -20,5 +20,5 @@ it('gracefully handles exceptions', function () {
     $handler($factory);
 
     expect($factory->thrownInGlobalMiddleware)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });

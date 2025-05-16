@@ -16,5 +16,5 @@ it('gracefully handles exceptions', function () {
     $handler($event);
 
     expect($thrownInQueuedJobSensor)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });

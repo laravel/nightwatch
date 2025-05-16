@@ -21,7 +21,7 @@ it('gracefully handles exceptions', function () {
     $handler($exceptionHandler);
 
     expect($exceptionHandler->thrownInReportable)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 });
 
 it('gracefully handles custom exception handlers', function () {

@@ -17,5 +17,5 @@ it('gracefully handles exceptions', function () {
     $listener($event);
 
     expect($thrownInCacheEventSensor)->toBeTrue();
-    expect(nightwatch()->state->exceptions)->toBe(1);
+    expect(nightwatch()->executionState->exceptions)->toBe(1);
 })->skip(fn () => ! Compatibility::$cacheFailuresCapturable, 'Requires a more recent framework version');
