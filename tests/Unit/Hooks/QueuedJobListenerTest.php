@@ -15,6 +15,6 @@ it('gracefully handles exceptions', function () {
     $handler = new QueuedJobListener(nightwatch());
     $handler($event);
 
-    expect($thrownInQueuedJobSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInQueuedJobSensor);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });

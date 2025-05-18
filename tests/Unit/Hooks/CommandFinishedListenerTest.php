@@ -25,6 +25,6 @@ it('gracefully handles exceptions', function () {
     $listener = new CommandFinishedListener(nightwatch());
     $listener($event);
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInStageSensor);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });

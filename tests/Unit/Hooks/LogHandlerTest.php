@@ -17,20 +17,20 @@ it('gracefully handles exceptions', function () {
     $handler = new LogHandler(nightwatch());
     $handler->handle($record);
 
-    expect($thrownInLogSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInLogSensor);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 
     $thrownInLogSensor = false;
     $handler->handleBatch([null]);
 
-    expect($thrownInLogSensor)->toBeFalse();
-    expect(nightwatch()->executionState->exceptions)->toBe(2);
+    $this->assertFalse($thrownInLogSensor);
+    $this->assertSame(2, nightwatch()->executionState->exceptions);
 
-    expect($handler->close())->toBeNull();
-    expect($thrownInLogSensor)->toBeFalse();
-    expect(nightwatch()->executionState->exceptions)->toBe(2);
+    $this->assertNull($handler->close());
+    $this->assertFalse($thrownInLogSensor);
+    $this->assertSame(2, nightwatch()->executionState->exceptions);
 
-    expect($handler->isHandling($record))->toBeTrue();
-    expect($thrownInLogSensor)->toBeFalse();
-    expect(nightwatch()->executionState->exceptions)->toBe(2);
+    $this->assertTrue($handler->isHandling($record));
+    $this->assertFalse($thrownInLogSensor);
+    $this->assertSame(2, nightwatch()->executionState->exceptions);
 });

@@ -15,6 +15,6 @@ it('gracefully handles exceptions', function () {
     $handler = new CommandBootedHandler(nightwatch());
     $handler(app());
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInStageSensor);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });

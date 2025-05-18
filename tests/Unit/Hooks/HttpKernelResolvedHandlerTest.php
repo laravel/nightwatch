@@ -33,7 +33,8 @@ it('gracefully handles custom exception handlers', function () {
     $handler = new HttpKernelResolvedHandler(nightwatch());
     $handler($kernel, app());
 
-    expect(true)->toBe(true);
+    // This test passes if an exception is not thrown...
+    $this->assertTrue(true);
 });
 
 it('gracefully handles exceptions when registering lifecycle handler', function () {
@@ -57,8 +58,8 @@ it('gracefully handles exceptions when registering lifecycle handler', function 
     $handler = new HttpKernelResolvedHandler(nightwatch());
     $handler($kernel, app());
 
-    expect($kernel->thrownInWhenRequestLifecycleIsLongerThan)->toBeTrue();
-    expect($unrecoverableExceptions)->toHaveCount(1);
+    $this->assertTrue($kernel->thrownInWhenRequestLifecycleIsLongerThan);
+    $this->assertCount(1, $unrecoverableExceptions);
 });
 
 it('gracefully handles exceptions when prepending middleware', function () {
@@ -82,8 +83,8 @@ it('gracefully handles exceptions when prepending middleware', function () {
     $handler = new HttpKernelResolvedHandler(nightwatch());
     $handler($kernel, app());
 
-    expect($kernel->thrownInPrependMiddleware)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($kernel->thrownInPrependMiddleware);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });
 
 it('gracefully handles exceptions when determining whether to sample the request', function () {
@@ -94,12 +95,12 @@ it('gracefully handles exceptions when determining whether to sample the request
     });
     $kernel = app(HttpKernel::class);
 
-    expect(nightwatch()->shouldSample)->toBeTrue();
+    $this->assertTrue(nightwatch()->shouldSample);
 
     $handler = new HttpKernelResolvedHandler(nightwatch());
     $handler($kernel, app());
 
-    expect(nightwatch()->shouldSample)->toBeFalse();
-    expect($exceptions)->toHaveCount(1);
-    expect($exceptions[0]->getMessage())->toBe('Undefined array key "requests"');
+    $this->assertFalse(nightwatch()->shouldSample);
+    $this->assertCount(1, $exceptions);
+    $this->assertSame('Undefined array key "requests"', $exceptions[0]->getMessage());
 });

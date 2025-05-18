@@ -21,7 +21,6 @@ use Throwable;
 use function array_map;
 use function base_path;
 use function dirname;
-use function expect;
 use function fclose;
 use function fopen;
 use function gettype;
@@ -198,7 +197,7 @@ class ExceptionSensorTest extends TestCase
 
     public function test_it_handles_view_exceptions()
     {
-        expect(App::providerIsLoaded(IgnitionServiceProvider::class))->toBe(false);
+        $this->assertFalse(App::providerIsLoaded(IgnitionServiceProvider::class));
 
         $ingest = $this->fakeIngest();
         Route::view('exception', 'exception');
@@ -218,7 +217,7 @@ class ExceptionSensorTest extends TestCase
     public function test_it_handles_spatie_view_exceptions()
     {
         App::register(IgnitionServiceProvider::class);
-        expect(App::providerIsLoaded(IgnitionServiceProvider::class))->toBe(true);
+        $this->assertTrue(App::providerIsLoaded(IgnitionServiceProvider::class));
 
         $ingest = $this->fakeIngest();
         Route::view('exception', 'exception');

@@ -10,7 +10,6 @@ use Monolog\LogRecord;
 use RuntimeException;
 use Tests\TestCase;
 
-use function expect;
 use function microtime;
 use function now;
 
@@ -43,11 +42,11 @@ class LogSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.logs', 1);
         $ingest->assertLatestWrite('log:*', function (array $records) {
-            expect($records)->toHaveCount(1);
-            expect($records[0])->toHaveKey('timestamp');
-            expect($records[0]['timestamp'])->toBeFloat();
-            expect($records[0]['timestamp'])->toEqualWithDelta(microtime(true), 0.1);
-            expect(Arr::except($records[0], 'timestamp'))->toBe([
+            $this->assertCount(1, $records);
+            $this->assertArrayHasKey('timestamp', $records[0]);
+            $this->assertIsFloat($records[0]['timestamp']);
+            $this->assertEqualsWithDelta($records[0]['timestamp'], microtime(true), 0.1);
+            $this->assertSame([
                 'v' => 1,
                 't' => 'log',
                 'deploy' => 'v1.2.3',
@@ -62,7 +61,7 @@ class LogSensorTest extends TestCase
                 'message' => 'hello world',
                 'context' => '{}',
                 'extra' => '{}',
-            ]);
+            ], Arr::except($records[0], 'timestamp'));
 
             return true;
         });
@@ -143,10 +142,10 @@ class LogSensorTest extends TestCase
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00');
-        expect($datetime->getTimezone()->getName())->toBe('Australia/Melbourne');
-        expect($carbon->getTimezone()->getName())->toBe('Australia/Melbourne');
-        expect($datetimeImmutable->getTimezone()->getName())->toBe('Australia/Melbourne');
-        expect($carbonImmutable->getTimezone()->getName())->toBe('Australia/Melbourne');
+        $this->assertSame('Australia/Melbourne', $datetime->getTimezone()->getName());
+        $this->assertSame('Australia/Melbourne', $carbon->getTimezone()->getName());
+        $this->assertSame('Australia/Melbourne', $datetimeImmutable->getTimezone()->getName());
+        $this->assertSame('Australia/Melbourne', $carbonImmutable->getTimezone()->getName());
     }
 
     public function test_it_captures_log_context()

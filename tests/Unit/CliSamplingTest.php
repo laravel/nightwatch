@@ -29,7 +29,7 @@ it('samples job attempts', function () {
     ]);
 
     $ingest->assertWrittenTimes(0);
-    expect(nightwatch()->ingest->buffer)->toHaveCount(0);
+    $this->assertCount(0, nightwatch()->ingest->buffer);
 
     Compatibility::addHiddenContext('nightwatch_should_sample', true);
 
@@ -49,7 +49,7 @@ it('samples job attempts', function () {
         $ingest->assertWrite($i, 'job-attempt:0.name', 'App\Jobs\MyJob');
     }
 
-    expect(nightwatch()->ingest->buffer)->toHaveCount(0);
+    $this->assertCount(0, nightwatch()->ingest->buffer);
 });
 
 it('preparing for next job', function () {
@@ -67,9 +67,9 @@ it('preparing for next job', function () {
         }
     });
 
-    expect(json_encode(nightwatch()->executionState->id()))->toBe('"previous"');
-    expect(nightwatch()->executionState->executionPreview)->toBe('previous');
-    expect(nightwatch()->executionState->timestamp)->toBe(0.0);
+    $this->assertSame('"previous"', json_encode(nightwatch()->executionState->id()));
+    $this->assertSame('previous', nightwatch()->executionState->executionPreview);
+    $this->assertSame(0.0, nightwatch()->executionState->timestamp);
 
     Compatibility::addHiddenContext('nightwatch_should_sample', true);
     Str::createUuidsUsingSequence([
@@ -83,9 +83,9 @@ it('preparing for next job', function () {
         }
     });
 
-    expect(json_encode(nightwatch()->executionState->id()))->toBe('"1CF1F203-73A5-4E9D-8662-12E1C712F130"');
-    expect(nightwatch()->executionState->executionPreview)->toBe('current');
-    expect(nightwatch()->executionState->timestamp)->toBe(5.5);
+    $this->assertSame('"1CF1F203-73A5-4E9D-8662-12E1C712F130"', json_encode(nightwatch()->executionState->id()));
+    $this->assertSame('current', nightwatch()->executionState->executionPreview);
+    $this->assertSame(5.5, nightwatch()->executionState->timestamp);
 });
 
 it('can configure command sampling', function () {
@@ -99,7 +99,7 @@ it('can configure command sampling', function () {
         }
     }
 
-    expect($sampled)->toBe(0);
+    $this->assertSame(0, $sampled);
 
     nightwatch()->config['sampling']['commands'] = 0.25;
     $sampled = 0;
@@ -111,7 +111,7 @@ it('can configure command sampling', function () {
         }
     }
 
-    expect($sampled)->toEqualWithDelta(250, 50);
+    $this->assertEqualsWithDelta($sampled, 250, 50);
 
     nightwatch()->config['sampling']['commands'] = 0.5;
     $sampled = 0;
@@ -123,7 +123,7 @@ it('can configure command sampling', function () {
         }
     }
 
-    expect($sampled)->toEqualWithDelta(500, 50);
+    $this->assertEqualsWithDelta($sampled, 500, 50);
 
     nightwatch()->config['sampling']['commands'] = 1.0;
     $sampled = 0;
@@ -135,7 +135,7 @@ it('can configure command sampling', function () {
         }
     }
 
-    expect($sampled)->toBe(1000);
+    $this->assertSame(1000, $sampled);
 });
 
 it('samples preparing for command', function () {
@@ -146,15 +146,15 @@ it('samples preparing for command', function () {
 
     nightwatch()->prepareForCommand('current');
 
-    expect(nightwatch()->executionState->name)->toBe('previous');
-    expect(nightwatch()->executionState->executionPreview)->toBe('previous');
+    $this->assertSame('previous', nightwatch()->executionState->name);
+    $this->assertSame('previous', nightwatch()->executionState->executionPreview);
 
     nightwatch()->shouldSample = true;
 
     nightwatch()->prepareForCommand('current');
 
-    expect(nightwatch()->executionState->name)->toBe('current');
-    expect(nightwatch()->executionState->executionPreview)->toBe('current');
+    $this->assertSame('current', nightwatch()->executionState->name);
+    $this->assertSame('current', nightwatch()->executionState->executionPreview);
 });
 
 it('samples commands', function () {
@@ -172,7 +172,7 @@ it('samples commands', function () {
         nightwatch()->command($input, 0);
     }
 
-    expect(json_decode(nightwatch()->ingest->buffer->pull()->rawPayload()))->toBe([]);
+    $this->assertSame('[]', nightwatch()->ingest->buffer->pull()->rawPayload());
 
     nightwatch()->config['sampling']['commands'] = 1.0;
     nightwatch()->configureSampling('commands');
@@ -183,6 +183,6 @@ it('samples commands', function () {
     }
 
     $commands = collect(json_decode(nightwatch()->ingest->buffer->pull()->rawPayload()));
-    expect($commands)->toHaveCount(10);
-    expect($commands->pluck('name')->every(fn ($name) => $name === 'app:build'))->toBeTrue();
+    $this->assertCount(10, $commands);
+    $this->assertTrue($commands->pluck('name')->every(fn ($name) => $name === 'app:build'));
 });

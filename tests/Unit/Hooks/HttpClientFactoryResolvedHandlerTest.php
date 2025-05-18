@@ -19,6 +19,6 @@ it('gracefully handles exceptions', function () {
     $handler = new HttpClientFactoryResolvedHandler(nightwatch());
     $handler($factory);
 
-    expect($factory->thrownInGlobalMiddleware)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($factory->thrownInGlobalMiddleware);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });

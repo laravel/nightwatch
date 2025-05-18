@@ -20,8 +20,8 @@ use Tests\TestCase;
 
 use function class_exists;
 use function dirname;
-use function expect;
 use function hash;
+use function in_array;
 use function now;
 
 class QuerySensorTest extends TestCase
@@ -65,7 +65,7 @@ class QuerySensorTest extends TestCase
         // Workbench replaces `testing` with `sqlite`. Will capture it dynamically
         // so that the tests pass whether workbench has configured its own database
         // or not.
-        expect($connection = Config::get('database.default'))->toBeIn(['testing', 'sqlite']);
+        $this->assertTrue(in_array($connection = Config::get('database.default'), ['testing', 'sqlite'], true));
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);

@@ -7,7 +7,6 @@ use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
 
-use function expect;
 use function version_compare;
 
 class ApplicationTest extends TestCase
@@ -24,9 +23,9 @@ class ApplicationTest extends TestCase
         Env::getRepository()->set('APP_CONFIG_CACHE', $this->app->getCachedConfigPath());
 
         $result = Artisan::call('config:cache');
-        expect($result)->toBe(0);
+        $this->assertSame(0, $result);
 
         $result = Artisan::call('config:clear');
-        expect($result)->toBe(0);
+        $this->assertSame(0, $result);
     }
 }

@@ -14,7 +14,6 @@ use Symfony\Component\Console\Input\StringInput;
 use Tests\TestCase;
 
 use function array_shift;
-use function expect;
 use function hash;
 use function now;
 
@@ -50,7 +49,7 @@ class CommandSensorTest extends TestCase
         $status = Artisan::handle($input = new StringInput('app:build path/to/output --force'));
         Artisan::terminate($input, $status);
 
-        expect($status)->toBe(3);
+        $this->assertSame(3, $status);
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('command:*', [
             [
@@ -110,22 +109,22 @@ class CommandSensorTest extends TestCase
             return $status;
         };
 
-        expect($run())->toBe(-1);
+        $this->assertSame(-1, $run());
         $ingest->assertLatestWrite('command:0.exit_code', 255);
 
-        expect($run())->toBe(0);
+        $this->assertSame(0, $run());
         $ingest->assertLatestWrite('command:0.exit_code', 0);
 
-        expect($run())->toBe(1);
+        $this->assertSame(1, $run());
         $ingest->assertLatestWrite('command:0.exit_code', 1);
 
-        expect($run())->toBe(254);
+        $this->assertSame(254, $run());
         $ingest->assertLatestWrite('command:0.exit_code', 254);
 
-        expect($run())->toBe(255);
+        $this->assertSame(255, $run());
         $ingest->assertLatestWrite('command:0.exit_code', 255);
 
-        expect($run())->toBe(256);
+        $this->assertSame(256, $run());
         $ingest->assertLatestWrite('command:0.exit_code', 255);
     }
 
@@ -145,7 +144,7 @@ class CommandSensorTest extends TestCase
             return $status;
         };
 
-        expect($run())->toBe(0);
+        $this->assertSame(0, $run());
         $ingest->assertLatestWrite('command:*', [
             [
                 'v' => 1,
@@ -201,7 +200,7 @@ class CommandSensorTest extends TestCase
             return $status;
         };
 
-        expect($run())->toBe(0);
+        $this->assertSame(0, $run());
         $ingest->assertLatestWrite('command:0.cache_events', 1);
         $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
     }
@@ -227,7 +226,7 @@ class CommandSensorTest extends TestCase
             return $status;
         };
 
-        expect($run())->toBe(0);
+        $this->assertSame(0, $run());
         $ingest->assertLatestWrite('command:0.cache_events', 1);
         $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
     }

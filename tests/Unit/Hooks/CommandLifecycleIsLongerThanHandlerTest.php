@@ -23,14 +23,14 @@ it('gracefully handles exceptions', function () {
     $handler = new CommandLifecycleIsLongerThanHandler(nightwatch());
     $handler(now(), new StringInput('app:build'), 3);
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect($thrownInCommandSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(2);
+    $this->assertTrue($thrownInStageSensor);
+    $this->assertTrue($thrownInCommandSensor);
+    $this->assertSame(2, nightwatch()->executionState->exceptions);
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite(function ($records) {
-        expect($records)->toHaveCount(2);
-        expect($records[0]['t'])->toBe('exception');
-        expect($records[1]['t'])->toBe('exception');
+        $this->assertCount(2, $records);
+        $this->assertSame('exception', $records[0]['t']);
+        $this->assertSame('exception', $records[1]['t']);
 
         return true;
     });

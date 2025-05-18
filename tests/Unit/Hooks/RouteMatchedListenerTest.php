@@ -13,15 +13,15 @@ it('gracefully handles middleware registered as a string', function () {
     $route = new Route(['GET'], '/users', ['middleware' => 'api']);
     $event = new RouteMatched($route, $request);
 
-    expect($route->action['middleware'])->toBe('api');
+    $this->assertSame('api', $route->action['middleware']);
 
     $handler = new RouteMatchedListener(nightwatch());
     $handler($event);
 
     if (Compatibility::$terminatingEventExists) {
-        expect($route->action['middleware'])->toBe(['api', RouteMiddleware::class]);
+        $this->assertSame(['api', RouteMiddleware::class], $route->action['middleware']);
     } else {
-        expect($route->action['middleware'])->toBe([GlobalMiddleware::class, 'api', RouteMiddleware::class]);
+        $this->assertSame([GlobalMiddleware::class, 'api', RouteMiddleware::class], $route->action['middleware']);
     }
 });
 
@@ -34,5 +34,5 @@ it('gracefully handles exceptions', function () {
     $handler = new RouteMatchedListener(nightwatch());
     $handler($event);
 
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });

@@ -25,10 +25,10 @@ it('gracefully handles exceptions', function () {
     $handler = new ScheduledTaskListener(nightwatch());
     $handler($event);
 
-    expect($thrownInScheduledTaskSensor)->toBeTrue();
-    expect($thrownInExceptionSensor)->toBeFalse();
-    expect($unrecoverableExceptions)->toHaveCount(0);
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInScheduledTaskSensor);
+    $this->assertFalse($thrownInExceptionSensor);
+    $this->assertCount(0, $unrecoverableExceptions);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 
     $thrownInScheduledTaskSensor = false;
     $thrownInExceptionSensor = false;
@@ -43,9 +43,9 @@ it('gracefully handles exceptions', function () {
 
     $handler($event);
 
-    expect($thrownInScheduledTaskSensor)->toBeFalse();
-    expect($thrownInExceptionSensor)->toBeTrue();
-    expect($unrecoverableExceptions)->toHaveCount(1);
-    expect($unrecoverableExceptions[0]->getMessage())->toBe('Whoops!');
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertFalse($thrownInScheduledTaskSensor);
+    $this->assertTrue($thrownInExceptionSensor);
+    $this->assertCount(1, $unrecoverableExceptions);
+    $this->assertSame('Whoops!', $unrecoverableExceptions[0]->getMessage());
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });

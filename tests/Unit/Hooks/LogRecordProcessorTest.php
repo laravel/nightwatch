@@ -20,6 +20,6 @@ it('gracefully handles exceptions', function () {
     $processor = new LogRecordProcessor(nightwatch(), 'Y-m-d H:i:s');
     $processor($record);
 
-    expect($record->thrownInWith)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($record->thrownInWith);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });

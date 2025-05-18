@@ -16,7 +16,7 @@ it('gracefully handles exceptions', function () {
     $listener = new ArtisanStartingListener(nightwatch());
     $listener($event);
 
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 })->skip(version_compare(Application::VERSION, '12.0.0', '<'), <<<'MESSAGE'
 This test only fails when there are type declations which where introduced in 12.x
 MESSAGE);

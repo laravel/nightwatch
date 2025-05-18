@@ -20,8 +20,8 @@ it('gracefully handles exceptions', function () {
     $handler = new ExceptionHandlerResolvedHandler(nightwatch());
     $handler($exceptionHandler);
 
-    expect($exceptionHandler->thrownInReportable)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($exceptionHandler->thrownInReportable);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });
 
 it('gracefully handles custom exception handlers', function () {
@@ -57,5 +57,5 @@ it('gracefully handles custom exception handlers', function () {
     $handler($exceptionHandler);
     $exceptionHandler->report(new RuntimeException('Test'));
 
-    expect($exceptions)->toHaveCount(0);
+    $this->assertCount(0, $exceptions);
 });

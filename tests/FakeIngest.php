@@ -8,10 +8,10 @@ use Illuminate\Support\Str;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\Record;
 use Laravel\Nightwatch\RecordsBuffer;
+use PHPUnit\Framework\Assert;
 
 use function collect;
 use function count;
-use function expect;
 use function is_array;
 use function json_decode;
 use function str_contains;
@@ -52,14 +52,14 @@ class FakeIngest implements Ingest
 
     public function assertWrittenTimes(int $expected): self
     {
-        expect($actual = count($this->writes))->toBe($expected, "Expected to have written [{$expected}]. Instead, was written [{$actual}].");
+        Assert::assertSame($expected, $actual = count($this->writes), "Expected to have written [{$expected}]. Instead, was written [{$actual}].");
 
         return $this;
     }
 
     public function assertWrite(int $index, string|array|Closure $key, mixed $expected = null): self
     {
-        expect(count($this->writes))->toBeGreaterThan($index, 'Expected to have '.($index + 1).' writes. '.count($this->writes).' found.');
+        Assert::assertGreaterThan($index, count($this->writes), 'Expected to have '.($index + 1).' writes. '.count($this->writes).' found.');
 
         $write = $this->decodedWrite($index);
 
@@ -68,7 +68,7 @@ class FakeIngest implements Ingest
         }
 
         if (is_array($key)) {
-            expect($write)->toBe($key, 'Failed asserting that the payload matched.');
+            Assert::assertSame($key, $write, 'Failed asserting that the payload matched.');
 
             return $this;
         }
@@ -82,18 +82,18 @@ class FakeIngest implements Ingest
 
         if ($key === '*') {
             if ($expected instanceof Closure) {
-                expect($expected($write))->toBeTrue("The expected value was not found at [{$key}].");
+                Assert::assertTrue($expected($write), "The expected value was not found at [{$key}].");
             } else {
-                expect($write)->toBe(value($expected, $write), "The expected value was not found at [{$key}].");
+                Assert::assertSame(value($expected, $write), $write, "The expected value was not found at [{$key}].");
             }
         } else {
-            expect(Arr::has($write, $key))->toBeTrue("The key [{$key}] does not exist in the latest write.");
+            Assert::assertTrue(Arr::has($write, $key), "The key [{$key}] does not exist in the latest write.");
             $actual = Arr::get($write, $key);
 
             if ($expected instanceof Closure) {
-                expect($expected($actual))->toBeTrue("The expected value was not found at [{$key}].");
+                Assert::assertTrue($expected($actual), "The expected value was not found at [{$key}].");
             } else {
-                expect($actual)->toBe(value($expected, $actual), "The expected value was not found at [{$key}].");
+                Assert::assertSame(value($expected, $actual), $actual, "The expected value was not found at [{$key}].");
             }
         }
 

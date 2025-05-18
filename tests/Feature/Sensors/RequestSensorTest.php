@@ -18,7 +18,6 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Tests\TestCase;
 
-use function expect;
 use function fseek;
 use function fwrite;
 use function hash;
@@ -310,8 +309,8 @@ class RequestSensorTest extends TestCase
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
-        expect($ingest->latestWriteAsString())->not->toContain('ryuta');
-        expect($ingest->latestWriteAsString())->not->toContain('secret');
+        $this->assertStringNotContainsString('ryuta', $ingest->latestWriteAsString());
+        $this->assertStringNotContainsString('secret', $ingest->latestWriteAsString());
     }
 
     public function test_it_captures_the_duration_in_microseconds()

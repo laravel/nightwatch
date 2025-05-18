@@ -26,8 +26,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Tests\TestCase;
 
+use function array_keys;
 use function dispatch;
-use function expect;
 use function hash;
 use function now;
 use function report;
@@ -499,15 +499,15 @@ class JobAttemptSensorTest extends TestCase
             ],
         ]);
         $ingest->assertLatestWrite('exception:0', function ($exception) use ($line) {
-            expect($exception)->toMatchArray([
-                'message' => 'Whoops!',
-                'handled' => true,
+            $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                 'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
                 'execution_source' => 'job',
                 'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
                 'execution_preview' => "Closure (JobAttemptSensorTest.php:{$line})",
                 'execution_stage' => 'action',
-            ]);
+                'message' => 'Whoops!',
+                'handled' => true,
+            ], $exception, array_keys($expected));
 
             return true;
         });
@@ -538,9 +538,9 @@ class JobAttemptSensorTest extends TestCase
         });
         Artisan::call($workCommand, ['--max-time' => 0.05, '--sleep' => 0]);
 
-        expect($loops)->toBeGreaterThan(50);
+        $this->assertGreaterThan(50, $loops);
         $ingest->assertWrittenTimes(0);
-        expect($this->core->ingest->buffer)->toHaveCount(2); // popping query + illuminate:queue:restart
+        $this->assertCount(2, $this->core->ingest->buffer);  // popping query + illuminate:queue:restart
     }
 
     #[DataProvider('workCommands')]
@@ -562,58 +562,58 @@ class JobAttemptSensorTest extends TestCase
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($write) {
-            expect($write)->toHaveCount(6);
-            expect($write[0])->toMatchArray([
+            $this->assertCount(6, $write);
+            $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                 't' => 'query',
+                'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                'execution_source' => 'job',
+                'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                'execution_stage' => 'action',
                 'sql' => 'select * from "jobs" where "queue" = ? and (("reserved_at" is null and "available_at" <= ?) or ("reserved_at" <= ?)) order by "id" asc limit 1',
-                'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
-                'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
-                'execution_source' => 'job',
-                'execution_stage' => 'action',
-                'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
-            ]);
-            expect($write[1])->toMatchArray([
+            ], $write[0], array_keys($expected));
+            $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                 't' => 'query',
+                'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                'execution_source' => 'job',
+                'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                'execution_stage' => 'action',
                 'sql' => 'update "jobs" set "reserved_at" = ?, "attempts" = ? where "id" = ?',
-                'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
-                'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
-                'execution_source' => 'job',
-                'execution_stage' => 'action',
-                'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
-            ]);
-            expect($write[2])->toMatchArray([
+            ], $write[1], array_keys($expected));
+            $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                 't' => 'query',
+                'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                'execution_source' => 'job',
+                'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                'execution_stage' => 'action',
                 'sql' => 'select * from "jobs" where "id" = ? limit 1',
-                'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
-                'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
-                'execution_source' => 'job',
-                'execution_stage' => 'action',
-                'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
-            ]);
-            expect($write[3])->toMatchArray([
+            ], $write[2], array_keys($expected));
+            $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                 't' => 'query',
+                'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                'execution_source' => 'job',
+                'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                'execution_stage' => 'action',
                 'sql' => 'delete from "jobs" where "id" = ?',
-                'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
-                'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
-                'execution_source' => 'job',
-                'execution_stage' => 'action',
-                'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
-            ]);
-            expect($write[4])->toMatchArray([
+            ], $write[3], array_keys($expected));
+            $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                 't' => 'job-attempt',
+                'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
                 'name' => 'Tests\Feature\Sensors\ProcessedJob',
-                'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
-            ]);
-            expect($write[5])->toMatchArray([
+            ], $write[4], array_keys($expected));
+            $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                 't' => 'cache-event',
-                'key' => 'illuminate:queue:restart',
                 'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
-                'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
                 'execution_source' => 'job',
-                'execution_stage' => 'action',
+                'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
                 'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                'execution_stage' => 'action',
                 'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
-            ]);
+                'key' => 'illuminate:queue:restart',
+            ], $write[5], array_keys($expected));
 
             return true;
         });
@@ -641,14 +641,14 @@ class JobAttemptSensorTest extends TestCase
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($write) {
-            expect($write)->toHaveCount(7);
-            expect($write[4])->toMatchArray([
+            $this->assertCount(7, $write);
+            $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                 't' => 'job-attempt',
                 'outgoing_requests' => 1,
-            ]);
-            expect($write[6])->toMatchArray([
+            ], $write[4], array_keys($expected));
+            $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                 't' => 'outgoing-request',
-            ]);
+            ], $write[6], array_keys($expected));
 
             return true;
         });

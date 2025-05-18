@@ -25,12 +25,12 @@ it('gracefully handles exceptions while capturing stage', function () {
     $handler = new RequestLifecycleIsLongerThanHandler(nightwatch());
     $handler($startedAt, $request, $response);
 
-    expect($thrownInStageSensor)->toBeTrue();
+    $this->assertTrue($thrownInStageSensor);
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite(function ($records) {
-        expect($records)->toHaveCount(2);
-        expect($records[0]['t'])->toBe('exception');
-        expect($records[1]['t'])->toBe('request');
+        $this->assertCount(2, $records);
+        $this->assertSame('exception', $records[0]['t']);
+        $this->assertSame('request', $records[1]['t']);
 
         return true;
     });
@@ -52,12 +52,12 @@ it('gracefully handles exceptions while capturing user', function () {
     $handler = new RequestLifecycleIsLongerThanHandler(nightwatch());
     $handler($startedAt, $request, $response);
 
-    expect($thrownInUserSensor)->toBeTrue();
+    $this->assertTrue($thrownInUserSensor);
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite(function ($records) {
-        expect($records)->toHaveCount(2);
-        expect($records[0]['t'])->toBe('exception');
-        expect($records[1]['t'])->toBe('request');
+        $this->assertCount(2, $records);
+        $this->assertSame('exception', $records[0]['t']);
+        $this->assertSame('request', $records[1]['t']);
 
         return true;
     });
@@ -79,11 +79,11 @@ it('gracefully handles exceptions while capturing request', function () {
     $handler = new RequestLifecycleIsLongerThanHandler(nightwatch());
     $handler($startedAt, $request, $response);
 
-    expect($thrownInRequestSensor)->toBeTrue();
+    $this->assertTrue($thrownInRequestSensor);
     $ingest->assertWrittenTimes(1);
     $ingest->assertLatestWrite(function ($records) {
-        expect($records)->toHaveCount(1);
-        expect($records[0]['t'])->toBe('exception');
+        $this->assertCount(1, $records);
+        $this->assertSame('exception', $records[0]['t']);
 
         return true;
     });

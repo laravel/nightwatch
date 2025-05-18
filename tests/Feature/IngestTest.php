@@ -7,8 +7,6 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use RuntimeException;
 use Tests\TestCase;
 
-use function expect;
-
 class IngestTest extends TestCase
 {
     protected function setUp(): void
@@ -32,8 +30,8 @@ class IngestTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertOk();
-        expect($exceptions)->toHaveCount(1);
-        expect($exceptions[0]->getMessage())->toBe('Whoops exception!');
-        expect($ingest->latestWriteAsString())->toBe('[]');
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Whoops exception!', $exceptions[0]->getMessage());
+        $this->assertSame('[]', $ingest->latestWriteAsString());
     }
 }

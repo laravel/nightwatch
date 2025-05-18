@@ -16,6 +16,6 @@ it('gracefully handles exceptions', function () {
     $handler = new NotificationListener(nightwatch());
     $handler($event);
 
-    expect($thrownInNotificationSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInNotificationSensor);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });

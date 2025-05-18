@@ -14,7 +14,6 @@ use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Tests\TestCase;
 
-use function expect;
 use function hash;
 use function now;
 use function str_repeat;
@@ -203,8 +202,8 @@ class OutgoingRequestSensorTest extends TestCase
         $ingest->assertLatestWrite('outgoing-request:0.url', 'https://laravel.com');
         $ingest->assertLatestWrite('outgoing-request:1.url', 'https://laravel.com');
         $ingest->assertLatestWrite('outgoing-request:2.url', 'https://laravel.com');
-        expect($ingest->latestWriteAsString())->not->toContain('ryuta');
-        expect($ingest->latestWriteAsString())->not->toContain('secret');
+        $this->assertStringNotContainsString('ryuta', $ingest->latestWriteAsString());
+        $this->assertStringNotContainsString('secret', $ingest->latestWriteAsString());
     }
 
     public function test_it_can_use_guzzle_directly()

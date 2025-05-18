@@ -20,7 +20,7 @@ it('gracefully handles exceptions', function () {
     $handler = new ReportableHandler(nightwatch());
     $handler($exception);
 
-    expect($thrownInExceptionSensor)->toBeTrue();
-    expect($unrecoverableExceptions)->toHaveCount(1);
-    expect($unrecoverableExceptions[0]->getMessage())->toBe('Whoops sensor!');
+    $this->assertTrue($thrownInExceptionSensor);
+    $this->assertCount(1, $unrecoverableExceptions);
+    $this->assertSame('Whoops sensor!', $unrecoverableExceptions[0]->getMessage());
 });

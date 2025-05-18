@@ -28,7 +28,7 @@ it('gracefully handles exceptions', function () {
     $listener = new CommandStartingListener($events, nightwatch(), $kernel);
     $listener($event);
 
-    expect($unrecoverableExceptions)->toHaveCount(1);
+    $this->assertCount(1, $unrecoverableExceptions);
 })->skip(version_compare(Application::VERSION, '12.0.0', '<'), <<<'MESSAGE'
 This test only fails when there are type declations which where introduced in 12.x
 MESSAGE);
@@ -77,5 +77,5 @@ it('gracefully handles custom kernel implementations', function () {
     $listener = new CommandStartingListener($events, nightwatch(), $kernel);
     $listener($event);
 
-    expect(nightwatch()->executionState->exceptions)->toBe(0);
+    $this->assertSame(0, nightwatch()->executionState->exceptions);
 });

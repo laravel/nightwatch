@@ -24,6 +24,6 @@ it('gracefully handles exceptions', function () {
     $handler = new ScheduledTaskStartingListener(nightwatch());
     $handler($event);
 
-    expect($thrownInMicrotimeResolver)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInMicrotimeResolver);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });

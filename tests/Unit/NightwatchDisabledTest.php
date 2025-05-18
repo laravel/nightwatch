@@ -16,7 +16,7 @@ afterAll(function () {
 });
 
 it('can disable Nightwatch via the environment', function () {
-    expect(nightwatch()->enabled())->toBe(false);
+    $this->assertFalse(nightwatch()->enabled());
 });
 
 it('gracefully ignores reported exceptions when nightwatch is disabled', function () {
@@ -28,7 +28,7 @@ it('gracefully ignores reported exceptions when nightwatch is disabled', functio
 
     $response->assertOk();
     $ingest->assertWrittenTimes(0);
-    expect(nightwatch()->executionState->exceptions)->toBe(0);
+    $this->assertSame(0, nightwatch()->executionState->exceptions);
 });
 
 it('gracefully ignores logs when nightwatch is disabled', function () {
@@ -39,6 +39,6 @@ it('gracefully ignores logs when nightwatch is disabled', function () {
 
     $response->assertOk();
     $ingest->assertWrittenTimes(0);
-    expect(nightwatch()->executionState->logs)->toBe(0);
-    expect(nightwatch()->executionState->exceptions)->toBe(0);
+    $this->assertSame(0, nightwatch()->executionState->logs);
+    $this->assertSame(0, nightwatch()->executionState->exceptions);
 });

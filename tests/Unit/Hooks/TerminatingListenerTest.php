@@ -19,6 +19,6 @@ it('gracefully handles exceptions', function () {
     $listener = new TerminatingListener(nightwatch());
     $listener($event);
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInStageSensor);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 })->skip(fn () => ! Compatibility::$terminatingEventExists, 'Requires a more recent framework version');

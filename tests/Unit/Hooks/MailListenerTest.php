@@ -22,6 +22,6 @@ it('gracefully handles exceptions', function () {
     $handler = new MailListener(nightwatch());
     $handler($event);
 
-    expect($thrownInMailSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInMailSensor);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });

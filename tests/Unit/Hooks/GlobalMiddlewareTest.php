@@ -23,9 +23,9 @@ it('gracefully handles exceptions when capturing execution preview', function ()
     $middleware = new GlobalMiddleware(nightwatch());
     $response = $middleware->handle($request, $next);
 
-    expect($request->thrownInGetMethod)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
-    expect($response->content())->toBe('response');
+    $this->assertTrue($request->thrownInGetMethod);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
+    $this->assertSame('response', $response->content());
 });
 
 it('gracefully handles exceptions when the terminating event doesn\'t exist', function () {
@@ -49,14 +49,14 @@ it('gracefully handles exceptions when the terminating event doesn\'t exist', fu
 
     $response = $middleware->handle($request, $next);
 
-    expect($thrownInStageSensor)->toBeFalse();
-    expect($response->content())->toBe('response');
-    expect($nextCalledWith)->toBe($request);
+    $this->assertFalse($thrownInStageSensor);
+    $this->assertSame('response', $response->content());
+    $this->assertSame($request, $nextCalledWith);
 
     $middleware->terminate($request, $response);
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInStageSensor);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });
 
 it('handles response types that laravel does not wrap', function () {
@@ -82,12 +82,12 @@ it('handles response types that laravel does not wrap', function () {
 
     $response = $middleware->handle($request, $next);
 
-    expect($thrownInStageSensor)->toBeFalse();
-    expect($response)->toBeInstanceOf(StreamedResponse::class);
-    expect($nextCalledWith)->toBe($request);
+    $this->assertFalse($thrownInStageSensor);
+    $this->assertInstanceOf(StreamedResponse::class, $response);
+    $this->assertSame($request, $nextCalledWith);
 
     $middleware->terminate($request, $response);
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInStageSensor);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });

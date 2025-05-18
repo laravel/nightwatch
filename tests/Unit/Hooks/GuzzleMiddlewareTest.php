@@ -22,10 +22,10 @@ it('gracefully handles exceptions in the before middleware', function () {
     $stack = $middleware(fn () => new FulfilledPromise(new Response(body: 'ok')));
     $response = $stack(new Request('GET', '/test'), [])->wait();
 
-    expect($thrownInMicrotimeResolver)->toBeTrue();
-    expect($exceptions)->toHaveCount(1);
-    expect($exceptions[0]->getMessage())->toBe('Whoops!');
-    expect((string) $response->getBody())->toBe('ok');
+    $this->assertTrue($thrownInMicrotimeResolver);
+    $this->assertCount(1, $exceptions);
+    $this->assertSame('Whoops!', $exceptions[0]->getMessage());
+    $this->assertSame('ok', (string) $response->getBody());
 });
 
 it('gracefully handles exceptions in the after middleware', function () {
@@ -41,7 +41,7 @@ it('gracefully handles exceptions in the after middleware', function () {
 
     $response = $stack(new Request('GET', '/test'), [])->wait();
 
-    expect($thrownInOutgoingRequestSensor)->toBeTrue();
-    expect((string) $response->getBody())->toBe('ok');
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInOutgoingRequestSensor);
+    $this->assertSame('ok', (string) $response->getBody());
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });

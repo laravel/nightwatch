@@ -15,7 +15,7 @@ it('can find the file in the trace', function () {
 
     $file = $location->forException($e);
 
-    expect($file)->toBe(['app/Models/User.php', 5]);
+    $this->assertSame(['app/Models/User.php', 5], $file);
 });
 
 it('skips vendor files in trace when a non-vendor file exists', function () {
@@ -37,7 +37,7 @@ it('skips vendor files in trace when a non-vendor file exists', function () {
 
     $file = $location->forException($e);
 
-    expect($file)->toBe(['app/Models/User.php', 5]);
+    $this->assertSame(['app/Models/User.php', 5], $file);
 });
 
 it('skips artisan files when a non-vendor file exists', function () {
@@ -59,7 +59,7 @@ it('skips artisan files when a non-vendor file exists', function () {
 
     $file = $location->forException($e);
 
-    expect($file)->toBe(['app/Models/User.php', 5]);
+    $this->assertSame(['app/Models/User.php', 5], $file);
 });
 
 it('skips index.php file when a non-vendor file exists', function () {
@@ -81,7 +81,7 @@ it('skips index.php file when a non-vendor file exists', function () {
 
     $file = $location->forException($e);
 
-    expect($file)->toBe(['app/Models/User.php', 5]);
+    $this->assertSame(['app/Models/User.php', 5], $file);
 });
 
 it('handles missing line number', function () {
@@ -101,7 +101,7 @@ it('handles missing line number', function () {
 
     $file = $location->forException($e);
 
-    expect($file)->toBe(['app/Models/User.php', null]);
+    $this->assertSame(['app/Models/User.php', null], $file);
 });
 
 it('uses the path of the exception when it is non vendor', function () {
@@ -113,7 +113,7 @@ it('uses the path of the exception when it is non vendor', function () {
 
     $file = $location->forException($e);
 
-    expect($file)->toBe(['app/Models/User.php', 5]);
+    $this->assertSame(['app/Models/User.php', 5], $file);
 });
 
 it('falls back to trace when exception is thrown in vendor frame', function () {
@@ -135,7 +135,7 @@ it('falls back to trace when exception is thrown in vendor frame', function () {
 
     $file = $location->forException($e);
 
-    expect($file)->toBe(['app/Models/User.php', 5]);
+    $this->assertSame(['app/Models/User.php', 5], $file);
 });
 
 it('uses the thrown location when no non-vendor file is found', function () {
@@ -153,7 +153,7 @@ it('uses the thrown location when no non-vendor file is found', function () {
 
     $file = $location->forException($e);
 
-    expect($file)->toBe(['vendor/foo/bar/Baz1.php', 5]);
+    $this->assertSame(['vendor/foo/bar/Baz1.php', 5], $file);
 });
 
 it('finds first non-vendor frame from query trace', function () {
@@ -182,7 +182,7 @@ it('finds first non-vendor frame from query trace', function () {
         ],
     ]);
 
-    expect($file)->toBe(['app/Models/User.php', 5]);
+    $this->assertSame(['app/Models/User.php', 5], $file);
 });
 
 it('ignores internal frames when there is no non-vendor frames', function () {
@@ -203,7 +203,7 @@ it('ignores internal frames when there is no non-vendor frames', function () {
         ],
     ]);
 
-    expect($file)->toBe(['vendor/foo/bar/Baz.php', 9]);
+    $this->assertSame(['vendor/foo/bar/Baz.php', 9], $file);
 });
 
 it('uses first non-internal vendor frames', function () {
@@ -224,5 +224,5 @@ it('uses first non-internal vendor frames', function () {
         ],
     ]);
 
-    expect($file)->toBe(['vendor/foo/bar/Baz1.php', 9]);
+    $this->assertSame(['vendor/foo/bar/Baz1.php', 9], $file);
 });

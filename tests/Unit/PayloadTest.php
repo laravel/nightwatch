@@ -5,7 +5,7 @@ use Laravel\Nightwatch\Payload;
 it('can determine if a JSON payload is empty', function ($value, $empty) {
     $payload = Payload::json(json_encode($value, flags: JSON_THROW_ON_ERROR));
 
-    expect($payload->isEmpty())->toBe($empty);
+    $this->assertSame($empty, $payload->isEmpty());
 })->with([
     [null, true],
     [true, false],
@@ -25,7 +25,7 @@ it('can determine if a JSON payload is empty', function ($value, $empty) {
 it('can determine if a TEXT payload is empty', function ($value, $empty) {
     $payload = Payload::text($value);
 
-    expect($payload->isEmpty())->toBe($empty);
+    $this->assertSame($empty, $payload->isEmpty());
 })->with([
     ['', true],
     [' ', false],
@@ -36,7 +36,7 @@ it('can pull the bencoded signed value', function () {
     $payload = Payload::text('abc123');
     $encoded = $payload->pull();
 
-    expect($encoded)->toBe('14:'.Payload::SIGNATURE.':abc123');
+    $this->assertSame('14:'.Payload::SIGNATURE.':abc123', $encoded);
 });
 
 it('can only pull the payload once', function () {
@@ -47,17 +47,17 @@ it('can only pull the payload once', function () {
         $payload->pull();
         throw new RuntimeException;
     } catch (Throwable $e) {
-        expect($e->getMessage())->toBe('Payload has already been read');
+        $this->assertSame('Payload has already been read', $e->getMessage());
     }
 });
 
 it('frees memory after pulling the payload', function () {
     $payload = Payload::text('abc123');
 
-    expect($payload->rawPayload())->toBe('abc123');
+    $this->assertSame('abc123', $payload->rawPayload());
 
     $payload->pull();
-    expect($payload->rawPayload())->toBe('');
+    $this->assertSame('', $payload->rawPayload());
 });
 
 it('has up-to-date signature', function () {
@@ -69,5 +69,5 @@ it('has up-to-date signature', function () {
 
     $signature = substr($signature, 0, 7);
 
-    expect(Payload::SIGNATURE)->toBe($signature);
+    $this->assertSame($signature, Payload::SIGNATURE);
 });

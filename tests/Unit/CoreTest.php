@@ -22,7 +22,7 @@ it('gracefully handles exceptions thrown while ingesting', function () {
 
     nightwatch()->digest();
 
-    expect(nightwatch()->ingest->thrownInDigest)->toBeTrue();
-    expect($exceptions)->toHaveCount(1);
-    expect($exceptions[0]->getMessage())->toBe('Whoops!');
+    $this->assertTrue(nightwatch()->ingest->thrownInDigest);
+    $this->assertCount(1, $exceptions);
+    $this->assertSame('Whoops!', $exceptions[0]->getMessage());
 });

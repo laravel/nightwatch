@@ -25,10 +25,10 @@ it('gracefully handles exceptions', function () {
     $middleware = new RouteMiddleware(nightwatch());
     $response = $middleware->handle($request, $next);
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect($response)->toBe('response');
-    expect($nextCalledWith)->toBe($request);
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInStageSensor);
+    $this->assertSame('response', $response);
+    $this->assertSame($request, $nextCalledWith);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });
 
 it('handles response types that laravel does not wrap', function () {
@@ -53,8 +53,8 @@ it('handles response types that laravel does not wrap', function () {
     $middleware = new RouteMiddleware(nightwatch());
     $response = $middleware->handle($request, $next);
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect($response)->toBeInstanceOf(StreamedResponse::class);
-    expect($nextCalledWith)->toBe($request);
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+    $this->assertTrue($thrownInStageSensor);
+    $this->assertInstanceOf(StreamedResponse::class, $response);
+    $this->assertSame($request, $nextCalledWith);
+    $this->assertSame(1, nightwatch()->executionState->exceptions);
 });
