@@ -1,28 +1,36 @@
 <?php
 
+namespace Tests\Unit;
+
 use Laravel\Nightwatch\Facades\Nightwatch;
+use RuntimeException;
 use Tests\FakeIngest;
+use Tests\TestCase;
 
-it('gracefully handles exceptions thrown while ingesting', function () {
-    $exceptions = [];
-    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
-        $exceptions[] = $e;
-    });
-    fakeIngest(new class extends FakeIngest
+class CoreTest extends TestCase
+{
+    public function test_it_gracefully_handles_exceptions_thrown_while_ingesting()
     {
-        public bool $thrownInDigest = false;
-
-        public function digest(): void
+        $exceptions = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+            $exceptions[] = $e;
+        });
+        $this->fakeIngest(new class extends FakeIngest
         {
-            $this->thrownInDigest = true;
+            public bool $thrownInDigest = false;
 
-            throw new RuntimeException('Whoops!');
-        }
-    });
+            public function digest(): void
+            {
+                $this->thrownInDigest = true;
 
-    nightwatch()->digest();
+                throw new RuntimeException('Whoops!');
+            }
+        });
 
-    $this->assertTrue(nightwatch()->ingest->thrownInDigest);
-    $this->assertCount(1, $exceptions);
-    $this->assertSame('Whoops!', $exceptions[0]->getMessage());
-});
+        $this->core->digest();
+
+        $this->assertTrue($this->core->ingest->thrownInDigest);
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Whoops!', $exceptions[0]->getMessage());
+    }
+}
