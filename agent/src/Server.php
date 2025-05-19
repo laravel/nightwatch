@@ -5,7 +5,6 @@ namespace Laravel\NightwatchAgent;
 use Closure;
 use React\Socket\ConnectionInterface;
 use React\Socket\ServerInterface;
-use RuntimeException;
 use Throwable;
 
 use function call_user_func;
@@ -15,8 +14,8 @@ class Server
     /**
      * @param  (Closure(): ServerInterface)  $serverResolver
      * @param  (Closure(): mixed)  $onServerStarted
-     * @param  (Closure(Throwable $e): mixed)  $onServerError
-     * @param  (Closure(Throwable $e): mixed)  $onConnectionError
+     * @param  (Closure(string $message): mixed)  $onServerError
+     * @param  (Closure(string $message): mixed)  $onConnectionError
      * @param  (Closure(string $payload): mixed)  $onPayloadReceived
      * @param  (Closure(): mixed)  $onInvalidSignature
      */
@@ -51,7 +50,7 @@ class Server
 
             $connection->on('close', function () use ($server, $payload) {
                 if (! $payload->complete) {
-                    call_user_func($this->onConnectionError, new RuntimeException("Incomplete payload received. Length: [{$payload->length}] Value: [{$payload->value}]"));
+                    call_user_func($this->onConnectionError, "Incomplete payload received. Length: [{$payload->length}] Value: [{$payload->value}]");
 
                     return;
                 }
@@ -72,7 +71,7 @@ class Server
             });
 
             $connection->on('error', function (Throwable $e): void {
-                call_user_func($this->onConnectionError, $e);
+                call_user_func($this->onConnectionError, $e->getMessage());
             });
         });
 

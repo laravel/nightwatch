@@ -47,7 +47,7 @@ class IngestDetailsRepository
      * @param  LoopInterface  $loop
      * @param  Browser  $browser
      * @param  (Closure(IngestDetails $ingestDetails, float $duration): mixed)  $onAuthenticationSuccess
-     * @param  (Closure(Throwable $e, float $duration): mixed)  $onAuthenticationError
+     * @param  (Closure(string $message, float $duration): mixed)  $onAuthenticationError
      * @param  (Closure(): mixed)  $onUnderQuota
      */
     public function __construct(
@@ -73,13 +73,13 @@ class IngestDetailsRepository
         return $this->ingestDetails ??= $this->refresh();
     }
 
-    public function markOverQuota(): void
+    public function markOverQuota(int|float|null $refreshIn = null): void
     {
         $this->overQuota = true;
 
         $this->loop->cancelTimer($this->refreshTimer); // @phpstan-ignore argument.type
 
-        $this->scheduleRefreshIn(60 * 15);
+        $this->scheduleRefreshIn($refreshIn ?? 60 * 15);
     }
 
     /**
@@ -116,11 +116,15 @@ class IngestDetailsRepository
                 // TODO if the current token has expired we should `null` it.
                 $duration ??= microtime(true) - $start;
 
-                [$e, $interval] = $this->parseException($e);
+                [$message, $stop, $refreshIn] = $this->parseException($e);
 
-                $this->scheduleRefreshIn($interval);
+                if ($stop) {
+                    $this->ingestDetails = resolve(null);
+                }
 
-                call_user_func($this->onAuthenticationError, $e, $duration);
+                $this->scheduleRefreshIn($refreshIn);
+
+                call_user_func($this->onAuthenticationError, $message, $duration);
 
                 return null;
             });
@@ -162,7 +166,7 @@ class IngestDetailsRepository
     }
 
     /**
-     * @return array{0: Throwable, 1: int|float}
+     * @return array{0: string, 1: bool, 2: int|float}
      */
     private function parseException(Throwable $e): array
     {
@@ -172,36 +176,48 @@ class IngestDetailsRepository
     }
 
     /**
-     * @return array{0: Throwable, 1: int|float}
+     * @return array{0: string, 1: bool, 2: int|float}
      */
     private function parseResponseException(ResponseException $e): array
     {
-        $status = $e->getResponse()->getStatusCode();
-        $body = $e->getResponse()->getBody()->getContents();
+        $message = (string) $e->getResponse()->getBody();
+        $stop = false;
+        $refreshIn = null;
 
-        if (strlen($body) > 255) {
-            $body = substr($body, 0, 250).'[...]';
+        try {
+            /** @var array{ message?: string, refresh_in?: int|float, stop?: bool } $json */
+            $json = json_decode($message, associative: true, flags: JSON_THROW_ON_ERROR);
+
+            $message = $json['message'] ?? $message;
+            $stop = $json['stop'] ?? $stop;
+            $refreshIn = $json['refresh_in'] ?? $refreshIn;
+        } catch (Throwable $exception) {
+            //
         }
 
-        $e = new RuntimeException("{$status} [{$body}]");
-
-        if ($status === 401) {
-            return [$e, 3_600];
+        if (strlen($message) > 1005) {
+            $message = substr($message, 0, 1000).'[...]';
         }
 
-        return $this->hasAuthenticated
-            ? [$e, $this->slowRetryStrategy()]
-            : [$e, $this->quickRetryStrategy()];
+        $refreshIn ??= ($this->hasAuthenticated
+            ? $this->slowRetryStrategy()
+            : $this->quickRetryStrategy());
+
+        return [
+            "{$e->getResponse()->getStatusCode()} [{$message}]",
+            $stop,
+            $refreshIn,
+        ];
     }
 
     /**
-     * @return array{0: Throwable, 1: int|float}
+     * @return array{0: string, 1: bool, 2: int|float}
      */
     private function parseNonResponseException(Throwable $e): array
     {
         return $this->hasAuthenticated
-            ? [$e, $this->slowRetryStrategy()]
-            : [$e, $this->quickRetryStrategy()];
+            ? [$e->getMessage(), false, $this->slowRetryStrategy()]
+            : [$e->getMessage(), false, $this->quickRetryStrategy()];
     }
 
     private function quickRetryStrategy(): int|float
