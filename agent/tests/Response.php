@@ -50,7 +50,7 @@ class Response
     public static function unauthenticated(
         array $payload = [
             'message' => 'Invalid environment token',
-            'retry_in' => 3_600,
+            'refresh_in' => 3_600,
         ],
         int $duration = 0,
         array $headers = ['Content-Type' => 'application/json'],

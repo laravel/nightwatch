@@ -183,7 +183,7 @@ class IngestDetailsRepository
             $json = json_decode($message, associative: true, flags: JSON_THROW_ON_ERROR);
 
             $message = $json['message'] ?? $message;
-            $retryIn = $json['retry_in'] ?? $retryIn;
+            $retryIn = $json['refresh_in'] ?? $retryIn;
         } catch (Throwable $e) {
             //
         }

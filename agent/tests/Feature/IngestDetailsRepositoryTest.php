@@ -722,13 +722,13 @@ class IngestDetailsRepositoryTest extends TestCase
         OUTPUT, $output);
     }
 
-    public function test_it_can_control_retry_in_via_app_response(): void
+    public function test_it_can_control_refresh_in_via_app_response(): void
     {
         $loop = new LoopFake(runForSeconds: 100);
         $ingestDetailsBrowser = new BrowserFake([
-            Response::unauthenticated(['message' => 'FIRST', 'retry_in' => 33]),
-            Response::unauthenticated(['message' => 'SECOND', 'retry_in' => 66]),
-            Response::unauthenticated(['message' => 'THIRD', 'retry_in' => 99]),
+            Response::unauthenticated(['message' => 'FIRST', 'refresh_in' => 33]),
+            Response::unauthenticated(['message' => 'SECOND', 'refresh_in' => 66]),
+            Response::unauthenticated(['message' => 'THIRD', 'refresh_in' => 99]),
         ]);
 
         [$output, $e] = $this->runAgent(
@@ -849,7 +849,7 @@ class IngestDetailsRepositoryTest extends TestCase
         ];
 
         yield 'json missing values' => [
-            new Response(['retry_in' => null, 'message' => null], status: 403), '403 [{"retry_in":null,"message":null}]',
+            new Response(['refresh_in' => null, 'message' => null], status: 403), '403 [{"refresh_in":null,"message":null}]',
         ];
     }
 }
