@@ -1107,4 +1107,9 @@ class IngestTest extends TestCase
         ]);
         $ingestBrowser->assertPending([]);
     }
+
+    public function test_it_handles_response_with_non_json_content(): void
+    {
+        $this->markTestIncomplete('TODO');
+    }
 }
