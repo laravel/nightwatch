@@ -795,9 +795,7 @@ class IngestTest extends TestCase
         ]);
         $ingestBrowser = new BrowserFake([
             Response::ingested(),
-            new Response([
-                'stop' => true,
-            ]),
+            new Response(['stop' => true]),
         ]);
         $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
         $loop->addTimer(11, $server->pendingConnection([['t' => 'request']]));
