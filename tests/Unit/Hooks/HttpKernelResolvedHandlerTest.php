@@ -12,26 +12,26 @@ use Tests\TestCase;
 
 class HttpKernelResolvedHandlerTest extends TestCase
 {
-    public function test_it_gracefully_handles_custom_exception_handlers()
+    public function test_it_gracefully_handles_custom_exception_handlers(): void
     {
         $kernel = new class implements HttpKernel
         {
-            public function bootstrap()
+            public function bootstrap(): void
             {
                 //
             }
 
-            public function handle($request)
+            public function handle($request): void
             {
                 //
             }
 
-            public function terminate($request, $response)
+            public function terminate($request, $response): void
             {
                 //
             }
 
-            public function getApplication()
+            public function getApplication(): void
             {
                 //
             }
@@ -44,10 +44,10 @@ class HttpKernelResolvedHandlerTest extends TestCase
         $this->assertTrue(true);
     }
 
-    public function test_it_gracefully_handles_exceptions_when_registering_lifecycle_handler()
+    public function test_it_gracefully_handles_exceptions_when_registering_lifecycle_handler(): void
     {
         $unrecoverableExceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions): void {
             $unrecoverableExceptions[] = $e;
         });
 
@@ -55,7 +55,7 @@ class HttpKernelResolvedHandlerTest extends TestCase
         {
             public bool $thrownInWhenRequestLifecycleIsLongerThan = false;
 
-            public function whenRequestLifecycleIsLongerThan($threshold, $handler)
+            public function whenRequestLifecycleIsLongerThan($threshold, $handler): void
             {
                 $this->thrownInWhenRequestLifecycleIsLongerThan = true;
 
@@ -70,10 +70,10 @@ class HttpKernelResolvedHandlerTest extends TestCase
         $this->assertCount(1, $unrecoverableExceptions);
     }
 
-    public function test_it_gracefully_handles_exceptions_when_prepending_middleware()
+    public function test_it_gracefully_handles_exceptions_when_prepending_middleware(): void
     {
         $unrecoverableExceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions): void {
             $unrecoverableExceptions[] = $e;
         });
 
@@ -81,7 +81,7 @@ class HttpKernelResolvedHandlerTest extends TestCase
         {
             public bool $thrownInPrependMiddleware = false;
 
-            public function prependMiddleware($middleware)
+            public function prependMiddleware($middleware): void
             {
                 $this->thrownInPrependMiddleware = true;
 
@@ -96,11 +96,11 @@ class HttpKernelResolvedHandlerTest extends TestCase
         $this->assertSame(1, $this->core->executionState->exceptions);
     }
 
-    public function test_it_gracefully_handles_exceptions_when_determining_whether_to_sample_the_request()
+    public function test_it_gracefully_handles_exceptions_when_determining_whether_to_sample_the_request(): void
     {
         $this->core->config['sampling'] = [];
         $exceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
         $kernel = $this->app[HttpKernel::class];

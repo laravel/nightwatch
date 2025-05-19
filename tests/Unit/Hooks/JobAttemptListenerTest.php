@@ -10,10 +10,10 @@ use Tests\TestCase;
 
 class JobAttemptListenerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $thrownInJobAttemptSensor = false;
-        $this->core->sensor->jobAttemptSensor = function () use (&$thrownInJobAttemptSensor) {
+        $this->core->sensor->jobAttemptSensor = function () use (&$thrownInJobAttemptSensor): void {
             $thrownInJobAttemptSensor = true;
 
             throw new RuntimeException('Whoops!');

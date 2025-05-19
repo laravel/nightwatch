@@ -9,10 +9,10 @@ use Tests\TestCase;
 
 class QueuedJobListenerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $thrownInQueuedJobSensor = false;
-        $this->core->sensor->queuedJobSensor = function () use (&$thrownInQueuedJobSensor) {
+        $this->core->sensor->queuedJobSensor = function () use (&$thrownInQueuedJobSensor): void {
             $thrownInQueuedJobSensor = true;
 
             throw new RuntimeException('Whoops!');

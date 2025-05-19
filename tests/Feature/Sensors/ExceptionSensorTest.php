@@ -57,12 +57,12 @@ class ExceptionSensorTest extends TestCase
         ini_set('zend.exception_ignore_args', '0');
     }
 
-    public function test_it_can_ingest_thrown_exceptions()
+    public function test_it_can_ingest_thrown_exceptions(): void
     {
         $ingest = $this->fakeIngest();
         $trace = null;
         $line = null;
-        Route::get('/users', function () use (&$trace, &$line) {
+        Route::get('/users', function () use (&$trace, &$line): void {
             $line = __LINE__ + 1;
             $e = new MyException('Whoops!');
 
@@ -110,11 +110,11 @@ class ExceptionSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_captures_the_code()
+    public function test_it_captures_the_code(): void
     {
         $ingest = $this->fakeIngest();
         $line = null;
-        Route::get('/users', function () use (&$line) {
+        Route::get('/users', function () use (&$line): void {
             $line = __LINE__ + 1;
             throw new MyException('Whoops!', 999);
         });
@@ -127,12 +127,12 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('exception:0.code', '999');
     }
 
-    public function test_it_can_ingest_reported_exceptions()
+    public function test_it_can_ingest_reported_exceptions(): void
     {
         $ingest = $this->fakeIngest();
         $trace = null;
         $line = null;
-        Route::get('/users', function () use (&$trace, &$line) {
+        Route::get('/users', function () use (&$trace, &$line): void {
             $line = __LINE__ + 1;
             $e = new MyException('Whoops!');
 
@@ -179,10 +179,10 @@ class ExceptionSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_captures_aggregate_exception_data_on_the_request()
+    public function test_it_captures_aggregate_exception_data_on_the_request(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function () {
+        Route::get('/users', function (): void {
             report(new RuntimeException('Whoops!'));
             report(new RuntimeException('Whoops!'));
             throw new RuntimeException('Whoops!');
@@ -195,7 +195,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.exceptions', 3);
     }
 
-    public function test_it_handles_view_exceptions()
+    public function test_it_handles_view_exceptions(): void
     {
         $this->assertFalse(App::providerIsLoaded(IgnitionServiceProvider::class));
 
@@ -214,7 +214,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('exception:0._group', hash('xxh128', 'Exception,999,workbench/resources/views/exception.blade.php,'));
     }
 
-    public function test_it_handles_spatie_view_exceptions()
+    public function test_it_handles_spatie_view_exceptions(): void
     {
         App::register(IgnitionServiceProvider::class);
         $this->assertTrue(App::providerIsLoaded(IgnitionServiceProvider::class));
@@ -234,7 +234,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('exception:0._group', hash('xxh128', 'Exception,999,workbench/resources/views/exception.blade.php,6'));
     }
 
-    public function test_it_handles_unknown_lines_for_internal_locations()
+    public function test_it_handles_unknown_lines_for_internal_locations(): void
     {
         $ingest = $this->fakeIngest();
         $e = new Exception('Whoops!');
@@ -245,7 +245,7 @@ class ExceptionSensorTest extends TestCase
                 'file' => base_path('app/Models/User.php'),
             ],
         ]);
-        Route::get('/users', function () use ($e) {
+        Route::get('/users', function () use ($e): void {
             throw $e;
         });
 
@@ -257,11 +257,11 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('exception:0.line', 0);
     }
 
-    public function test_it_captures_handled_and_unhandled_exceptions()
+    public function test_it_captures_handled_and_unhandled_exceptions(): void
     {
         $ingest = $this->fakeIngest();
         $e = new Exception('Whoops!');
-        Route::get('/users', function () use ($e) {
+        Route::get('/users', function () use ($e): void {
             report($e);
 
             throw $e;
@@ -275,7 +275,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('exception:1.handled', false);
     }
 
-    public function test_it_handles_the_file_in_the_trace()
+    public function test_it_handles_the_file_in_the_trace(): void
     {
         $ingest = $this->fakeIngest();
         $e = new Exception('Whoops!');
@@ -291,7 +291,7 @@ class ExceptionSensorTest extends TestCase
                 'file' => 'the/file.php',
             ],
         ]);
-        Route::get('/users', function () use ($e) {
+        Route::get('/users', function () use ($e): void {
             throw $e;
         });
 
@@ -315,7 +315,7 @@ class ExceptionSensorTest extends TestCase
         ]));
     }
 
-    public function test_it_handles_the_line_in_the_trace()
+    public function test_it_handles_the_line_in_the_trace(): void
     {
         $ingest = $this->fakeIngest();
         $e = new Exception('Whoops!');
@@ -331,7 +331,7 @@ class ExceptionSensorTest extends TestCase
                 'line' => 5,
             ],
         ]);
-        Route::get('/users', function () use ($e) {
+        Route::get('/users', function () use ($e): void {
             throw $e;
         });
 
@@ -355,7 +355,7 @@ class ExceptionSensorTest extends TestCase
         ]));
     }
 
-    public function test_it_handles_the_class_in_the_trace()
+    public function test_it_handles_the_class_in_the_trace(): void
     {
         $ingest = $this->fakeIngest();
         $e = new Exception('Whoops!');
@@ -371,7 +371,7 @@ class ExceptionSensorTest extends TestCase
                 'class' => 'TheClass',
             ],
         ]);
-        Route::get('/users', function () use ($e) {
+        Route::get('/users', function () use ($e): void {
             throw $e;
         });
 
@@ -395,7 +395,7 @@ class ExceptionSensorTest extends TestCase
         ]));
     }
 
-    public function test_it_handles_the_function_in_the_trace()
+    public function test_it_handles_the_function_in_the_trace(): void
     {
         $ingest = $this->fakeIngest();
         $e = new Exception('Whoops!');
@@ -411,7 +411,7 @@ class ExceptionSensorTest extends TestCase
                 'function' => 'the_function',
             ],
         ]);
-        Route::get('/users', function () use ($e) {
+        Route::get('/users', function () use ($e): void {
             throw $e;
         });
 
@@ -435,7 +435,7 @@ class ExceptionSensorTest extends TestCase
         ]));
     }
 
-    public function test_it_handles_the_args_in_the_trace()
+    public function test_it_handles_the_args_in_the_trace(): void
     {
         $ingest = $this->fakeIngest();
         $e = new Exception('Whoops!');
@@ -466,7 +466,7 @@ class ExceptionSensorTest extends TestCase
                 ],
             ],
         ]);
-        Route::get('/users', function () use ($e) {
+        Route::get('/users', function () use ($e): void {
             throw $e;
         });
 
@@ -496,7 +496,7 @@ class ExceptionSensorTest extends TestCase
         fclose($resourceToClose);
     }
 
-    public function test_it_handles_named_arguments_for_variadic_functions()
+    public function test_it_handles_named_arguments_for_variadic_functions(): void
     {
         $args = [];
         try {
@@ -512,7 +512,7 @@ class ExceptionSensorTest extends TestCase
                 'args' => $args,
             ],
         ]);
-        Route::get('/users', function () use ($e) {
+        Route::get('/users', function () use ($e): void {
             throw $e;
         });
 
@@ -528,10 +528,10 @@ class ExceptionSensorTest extends TestCase
         ]));
     }
 
-    public function test_it_handles_ini_setting_disabling_args_in_exceptions()
+    public function test_it_handles_ini_setting_disabling_args_in_exceptions(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function (Request $request) {
+        Route::get('/users', function (Request $request): void {
             throw new RuntimeException;
         });
 
@@ -548,10 +548,10 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
     }
 
-    public function test_it_strips_base_path_from_trace_files()
+    public function test_it_strips_base_path_from_trace_files(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function () {
+        Route::get('/users', function (): void {
             throw new RuntimeException;
         });
 
@@ -562,12 +562,12 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '"file":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Route.php:'));
     }
 
-    public function test_it_can_manually_report_exceptions()
+    public function test_it_can_manually_report_exceptions(): void
     {
         $ingest = $this->fakeIngest();
         $trace = null;
         $line = null;
-        Route::get('/users', function () use (&$trace, &$line) {
+        Route::get('/users', function () use (&$trace, &$line): void {
             $line = __LINE__ + 1;
             $e = new MyException('Whoops!');
 
@@ -614,10 +614,10 @@ class ExceptionSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_handles_pdo_exceptions_where_the_code_is_a_string()
+    public function test_it_handles_pdo_exceptions_where_the_code_is_a_string(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function () {
+        Route::get('/users', function (): void {
             DB::table('__foo__')->get();
         });
 

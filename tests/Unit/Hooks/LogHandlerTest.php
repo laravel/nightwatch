@@ -11,10 +11,10 @@ use Tests\TestCase;
 
 class LogHandlerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $thrownInLogSensor = false;
-        $this->core->sensor->logSensor = function () use (&$thrownInLogSensor) {
+        $this->core->sensor->logSensor = function () use (&$thrownInLogSensor): void {
             $thrownInLogSensor = true;
 
             throw new RuntimeException('Whoops!');

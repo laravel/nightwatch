@@ -30,10 +30,10 @@ class CacheEventSensorTest extends TestCase
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     }
 
-    public function test_it_can_ingest_cache_misses()
+    public function test_it_can_ingest_cache_misses(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Cache::get('users:345');
         });
 
@@ -65,11 +65,11 @@ class CacheEventSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_can_ingest_cache_hits()
+    public function test_it_can_ingest_cache_hits(): void
     {
         $ingest = $this->fakeIngest();
         Cache::put('users:345', 'xxxx');
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Cache::get('users:345');
         });
 
@@ -120,7 +120,7 @@ class CacheEventSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_can_ingest_cache_hits_and_misses_with_multiple_keys()
+    public function test_it_can_ingest_cache_hits_and_misses_with_multiple_keys(): void
     {
         $ingest = $this->fakeIngest();
         Config::set('cache.stores.custom', [
@@ -139,7 +139,7 @@ class CacheEventSensorTest extends TestCase
             'events' => true,
         ]));
 
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Cache::driver('custom')->put('users:345', 'xxxx');
             Cache::driver('custom')->getMultiple(['users:345', 'users:678']);
         });
@@ -210,10 +210,10 @@ class CacheEventSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_can_ingest_cache_writes()
+    public function test_it_can_ingest_cache_writes(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Cache::put('users:345', 'xxxx', 60);
         });
 
@@ -244,7 +244,7 @@ class CacheEventSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_can_ingest_cache_write_failures()
+    public function test_it_can_ingest_cache_write_failures(): void
     {
         $this->markTestSkippedWhen(! Compatibility::$cacheFailuresCapturable, 'Requires a more recent framework version');
 
@@ -262,7 +262,7 @@ class CacheEventSensorTest extends TestCase
         }, [
             'events' => true,
         ]));
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Cache::driver('custom')->put('users:345', 'xxxx', 60);
         });
 
@@ -294,7 +294,7 @@ class CacheEventSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_can_ingest_cache_writes_with_multiple_keys()
+    public function test_it_can_ingest_cache_writes_with_multiple_keys(): void
     {
         $ingest = $this->fakeIngest();
         Config::set('cache.stores.custom', [
@@ -313,7 +313,7 @@ class CacheEventSensorTest extends TestCase
             'events' => true,
         ]));
 
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Cache::driver('custom')->putMany(['users:345' => 'abc', 'users:678' => 'def'], 60);
         });
 
@@ -364,10 +364,10 @@ class CacheEventSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_can_ingest_cache_deletes()
+    public function test_it_can_ingest_cache_deletes(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Cache::put('users:345', 'xxxx');
             Cache::forget('users:345');
         });
@@ -420,7 +420,7 @@ class CacheEventSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_can_ingest_cache_delete_failures()
+    public function test_it_can_ingest_cache_delete_failures(): void
     {
         $this->markTestSkippedWhen(! Compatibility::$cacheFailuresCapturable, 'Requires a more recent framework version');
 
@@ -438,7 +438,7 @@ class CacheEventSensorTest extends TestCase
         }, [
             'events' => true,
         ]));
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Cache::driver('custom')->forget('users:345');
         });
 
@@ -470,10 +470,10 @@ class CacheEventSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_handles_cache_drivers_with_no_store_configured()
+    public function test_it_handles_cache_drivers_with_no_store_configured(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Cache::repository(new ArrayStore)->get('users:345');
         });
 
@@ -484,7 +484,7 @@ class CacheEventSensorTest extends TestCase
         $ingest->assertLatestWrite('cache-event:0.store', '');
     }
 
-    public function test_it_captures_duration_in_microseconds()
+    public function test_it_captures_duration_in_microseconds(): void
     {
         $this->markTestSkippedWhen(! Compatibility::$cacheDurationCapturable, 'Requires a more recent framework version');
 
@@ -504,7 +504,7 @@ class CacheEventSensorTest extends TestCase
         }, [
             'events' => true,
         ]));
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Cache::driver('custom')->get('users:345');
         });
 

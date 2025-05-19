@@ -18,14 +18,14 @@ use function version_compare;
 
 class CommandStartingListenerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $this->markTestSkippedWhen(version_compare(Application::VERSION, '12.0.0', '<'), <<<'MESSAGE'
             This test only fails when there are type declations which where introduced in 12.x
             MESSAGE);
 
         $unrecoverableExceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions): void {
             $unrecoverableExceptions[] = $e;
         });
         $events = $this->app[Dispatcher::class];
@@ -44,12 +44,12 @@ class CommandStartingListenerTest extends TestCase
         $this->assertCount(1, $unrecoverableExceptions);
     }
 
-    public function test_it_gracefully_handles_custom_kernel_implementations()
+    public function test_it_gracefully_handles_custom_kernel_implementations(): void
     {
         $events = $this->app[Dispatcher::class];
         $kernel = new class implements Kernel
         {
-            public function bootstrap()
+            public function bootstrap(): void
             {
                 //
             }
@@ -79,7 +79,7 @@ class CommandStartingListenerTest extends TestCase
                 return '';
             }
 
-            public function terminate($input, $status)
+            public function terminate($input, $status): void
             {
                 //
             }

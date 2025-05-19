@@ -38,7 +38,7 @@ class ScheduledTaskSensorTest extends TestCase
         $this->app->setBasePath(dirname($this->app->basePath()));
     }
 
-    public function test_it_ingests_processed_tasks()
+    public function test_it_ingests_processed_tasks(): void
     {
         $ingest = $this->fakeIngest();
         $line = __LINE__ + 1;
@@ -84,7 +84,7 @@ class ScheduledTaskSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_ingests_skipped_tasks()
+    public function test_it_ingests_skipped_tasks(): void
     {
         $ingest = $this->fakeIngest();
         $line = __LINE__ + 1;
@@ -132,11 +132,11 @@ class ScheduledTaskSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_ingests_failed_tasks()
+    public function test_it_ingests_failed_tasks(): void
     {
         $ingest = $this->fakeIngest();
         $line = __LINE__ + 1;
-        $task = $this->app[Schedule::class]->call(function () {
+        $task = $this->app[Schedule::class]->call(function (): void {
             $this->travelTo(now()->addMicroseconds(1_000_000));
 
             throw new Exception('Unhandled error');
@@ -183,7 +183,7 @@ class ScheduledTaskSensorTest extends TestCase
         $ingest->assertLatestWrite('exception:0.message', 'Unhandled error');
     }
 
-    public function test_it_resets_trace_i_d_and_timestamp_on_each_task_run()
+    public function test_it_resets_trace_i_d_and_timestamp_on_each_task_run(): void
     {
         $ingest = $this->fakeIngest();
         $this->app[Schedule::class]->call(fn () => $this->travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
@@ -203,7 +203,7 @@ class ScheduledTaskSensorTest extends TestCase
         $ingest->assertLatestWrite('scheduled-task:0.timestamp', 946688524.456789);
     }
 
-    public function test_it_normalizes_task_name_for_named_closure()
+    public function test_it_normalizes_task_name_for_named_closure(): void
     {
         $ingest = $this->fakeIngest();
         $this->app[Schedule::class]->call(fn () => $this->travelTo(now()->addMicroseconds(1_000_000)))
@@ -216,7 +216,7 @@ class ScheduledTaskSensorTest extends TestCase
         $ingest->assertLatestWrite('scheduled-task:0.name', 'named-closure');
     }
 
-    public function test_it_normalizes_task_name_for_invokable_class()
+    public function test_it_normalizes_task_name_for_invokable_class(): void
     {
         $ingest = $this->fakeIngest();
         $this->app[Schedule::class]->call(new ProcessFlights)->everyMinute();
@@ -227,10 +227,10 @@ class ScheduledTaskSensorTest extends TestCase
         $ingest->assertLatestWrite('scheduled-task:0.name', 'Tests\Feature\Sensors\ProcessFlights');
     }
 
-    public function test_it_normalizes_task_name_for_artisan_command()
+    public function test_it_normalizes_task_name_for_artisan_command(): void
     {
         $ingest = $this->fakeIngest();
-        Artisan::command('app:fly {destination} {--force} {--compress}', function () {
+        Artisan::command('app:fly {destination} {--force} {--compress}', function (): void {
             //
         });
 
@@ -242,7 +242,7 @@ class ScheduledTaskSensorTest extends TestCase
         $ingest->assertLatestWrite('scheduled-task:0.name', 'php artisan app:fly tokyo');
     }
 
-    public function test_it_normalizes_task_name_for_queued_job()
+    public function test_it_normalizes_task_name_for_queued_job(): void
     {
         $ingest = $this->fakeIngest();
         $this->app[Schedule::class]->job(new GenerateReport)->everyMinute();
@@ -253,7 +253,7 @@ class ScheduledTaskSensorTest extends TestCase
         $ingest->assertLatestWrite('scheduled-task:0.name', 'Tests\Feature\Sensors\GenerateReport');
     }
 
-    public function test_it_normalizes_task_name_for_job_class_method_call()
+    public function test_it_normalizes_task_name_for_job_class_method_call(): void
     {
         $ingest = $this->fakeIngest();
         $this->app[Schedule::class]->call([new GenerateInvoice, 'handle']);
@@ -264,7 +264,7 @@ class ScheduledTaskSensorTest extends TestCase
         $ingest->assertLatestWrite('scheduled-task:0.name', 'Tests\Feature\Sensors\GenerateInvoice');
     }
 
-    public function test_it_normalizes_task_name_for_shell_command()
+    public function test_it_normalizes_task_name_for_shell_command(): void
     {
         $ingest = $this->fakeIngest();
         $this->app[Schedule::class]->exec('find ./storage/logs -type f -mtime +7 -delete')->everyMinute();
@@ -278,7 +278,7 @@ class ScheduledTaskSensorTest extends TestCase
 
 class ProcessFlights
 {
-    public function __invoke()
+    public function __invoke(): void
     {
         //
     }
@@ -288,7 +288,7 @@ class GenerateReport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function handle()
+    public function handle(): void
     {
         //
     }
@@ -298,7 +298,7 @@ class GenerateInvoice implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function handle()
+    public function handle(): void
     {
         //
     }

@@ -10,10 +10,10 @@ use Tests\TestCase;
 
 class NotificationListenerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $thrownInNotificationSensor = false;
-        $this->core->sensor->notificationSensor = function () use (&$thrownInNotificationSensor) {
+        $this->core->sensor->notificationSensor = function () use (&$thrownInNotificationSensor): void {
             $thrownInNotificationSensor = true;
 
             throw new RuntimeException('Whoops!');

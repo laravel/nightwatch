@@ -25,12 +25,12 @@ class NightwatchDisabledTest extends TestCase
         Env::getRepository()->clear('NIGHTWATCH_ENABLED');
     }
 
-    public function test_it_can_disable_nightwatch_via_the_environment()
+    public function test_it_can_disable_nightwatch_via_the_environment(): void
     {
         $this->assertFalse($this->core->enabled());
     }
 
-    public function test_it_gracefully_ignores_reported_exceptions_when_nightwatch_is_disabled()
+    public function test_it_gracefully_ignores_reported_exceptions_when_nightwatch_is_disabled(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => Nightwatch::report(new RuntimeException));
@@ -42,7 +42,7 @@ class NightwatchDisabledTest extends TestCase
         $this->assertSame(0, $this->core->executionState->exceptions);
     }
 
-    public function test_it_gracefully_ignores_logs_when_nightwatch_is_disabled()
+    public function test_it_gracefully_ignores_logs_when_nightwatch_is_disabled(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => Log::channel('nightwatch')->info('Hello world'));

@@ -44,7 +44,7 @@ class QueuedJobSensorTest extends TestCase
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     }
 
-    public function test_it_can_ingest_queued_jobs()
+    public function test_it_can_ingest_queued_jobs(): void
     {
         $ingest = $this->fakeIngest();
         $this->prependListener(QueryExecuted::class, function (QueryExecuted $event) {
@@ -56,7 +56,7 @@ class QueuedJobSensorTest extends TestCase
 
             $this->travelTo(now()->addMicroseconds(5200));
         });
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
             MyJob::dispatch();
         });
@@ -89,13 +89,13 @@ class QueuedJobSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_falls_back_to_the_connections_default_queue()
+    public function test_it_falls_back_to_the_connections_default_queue(): void
     {
         $this->markTestSkippedWhen(! Compatibility::$queueNameCapturable, 'Requires a more recent framework version');
 
         $ingest = $this->fakeIngest();
         Config::set('queue.connections.database.queue', 'connection-default');
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             MyJob::dispatch();
         });
 
@@ -106,10 +106,10 @@ class QueuedJobSensorTest extends TestCase
         $ingest->assertLatestWrite('queued-job:0.queue', 'connection-default');
     }
 
-    public function test_it_does_not_ingest_jobs_dispatched_on_the_sync_queue()
+    public function test_it_does_not_ingest_jobs_dispatched_on_the_sync_queue(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             MyJob::dispatchSync();
             MyJob::dispatch()->onConnection('sync');
             Bus::dispatchNow(new MyJob);
@@ -124,7 +124,7 @@ class QueuedJobSensorTest extends TestCase
         $ingest->assertLatestWrite('queued-job:*', []);
     }
 
-    public function test_it_captures_queued_event_queue_name()
+    public function test_it_captures_queued_event_queue_name(): void
     {
         $this->markTestSkippedWhen(! Compatibility::$queueNameCapturable, 'Requires a more recent framework version');
 
@@ -135,7 +135,7 @@ class QueuedJobSensorTest extends TestCase
             }
         });
 
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Event::listen('my-event', MyListenerWithCustomQueue::class);
             Event::listen(MyQueuedJobEvent::class, MyListenerWithCustomQueue::class);
             Event::listen(MyQueuedJobEvent::class, MyListenerWithViaQueue::class);
@@ -151,7 +151,7 @@ class QueuedJobSensorTest extends TestCase
         $ingest->assertLatestWrite('queued-job:2.queue', 'custom_queue');
     }
 
-    public function test_it_captures_queued_mail()
+    public function test_it_captures_queued_mail(): void
     {
         $ingest = $this->fakeIngest();
         $this->prependListener(QueryExecuted::class, function (QueryExecuted $event) {
@@ -160,7 +160,7 @@ class QueuedJobSensorTest extends TestCase
             }
         });
 
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Str::createUuidsUsingSequence([
                 Uuid::fromString('00000000-0000-0000-0000-000000000002'),
             ]);
@@ -191,7 +191,7 @@ class QueuedJobSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_normalizes_sqs_queue_names()
+    public function test_it_normalizes_sqs_queue_names(): void
     {
         $this->markTestSkippedWhen(! Compatibility::$queueNameCapturable, 'Requires a more recent framework version');
 
@@ -225,7 +225,7 @@ class QueuedJobSensorTest extends TestCase
         $ingest->assertLatestWrite('queued-job:0.queue', 'queue-name');
     }
 
-    public function test_it_handles_missing_queue_value()
+    public function test_it_handles_missing_queue_value(): void
     {
         $this->markTestSkippedWhen(! Compatibility::$queueNameCapturable, 'Requires a more recent framework version');
         $ingest = $this->fakeIngest();
@@ -234,7 +234,7 @@ class QueuedJobSensorTest extends TestCase
                 return false;
             }
         });
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             MyJob::dispatch();
             MyJob::dispatch()->onQueue('foobar');
         });
@@ -252,7 +252,7 @@ final class MyJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function handle()
+    public function handle(): void
     {
         //
     }

@@ -9,10 +9,10 @@ use Tests\TestCase;
 
 class RequestBootedHandlerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $thrownInStageSensor = false;
-        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor): void {
             $thrownInStageSensor = true;
 
             throw new RuntimeException('Whoops!');

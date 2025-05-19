@@ -20,11 +20,11 @@ class RequestLifecycleIsLongerThanHandlerTest extends TestCase
         parent::setUp();
     }
 
-    public function test_it_gracefully_handles_exceptions_while_capturing_stage()
+    public function test_it_gracefully_handles_exceptions_while_capturing_stage(): void
     {
         $ingest = $this->fakeIngest();
         $thrownInStageSensor = false;
-        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor): void {
             $thrownInStageSensor = true;
 
             throw new RuntimeException('Whoops!');
@@ -49,11 +49,11 @@ class RequestLifecycleIsLongerThanHandlerTest extends TestCase
         });
     }
 
-    public function test_it_gracefully_handles_exceptions_while_capturing_user()
+    public function test_it_gracefully_handles_exceptions_while_capturing_user(): void
     {
         $ingest = $this->fakeIngest();
         $thrownInUserSensor = false;
-        $this->core->sensor->userSensor = function () use (&$thrownInUserSensor) {
+        $this->core->sensor->userSensor = function () use (&$thrownInUserSensor): void {
             $thrownInUserSensor = true;
 
             throw new RuntimeException('Whoops!');
@@ -77,11 +77,11 @@ class RequestLifecycleIsLongerThanHandlerTest extends TestCase
         });
     }
 
-    public function test_it_gracefully_handles_exceptions_while_capturing_request()
+    public function test_it_gracefully_handles_exceptions_while_capturing_request(): void
     {
         $ingest = $this->fakeIngest();
         $thrownInRequestSensor = false;
-        $this->core->sensor->requestSensor = function () use (&$thrownInRequestSensor) {
+        $this->core->sensor->requestSensor = function () use (&$thrownInRequestSensor): void {
             $thrownInRequestSensor = true;
 
             throw new RuntimeException('Whoops!');

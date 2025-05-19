@@ -39,7 +39,7 @@ class SamplingTest extends TestCase
         parent::setUp();
     }
 
-    public function test_it_can_configure_request_sampling()
+    public function test_it_can_configure_request_sampling(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $sampled = 0;
@@ -90,7 +90,7 @@ class SamplingTest extends TestCase
         $this->assertSame(1000, $sampled);
     }
 
-    public function test_it_samples_queries()
+    public function test_it_samples_queries(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
@@ -111,7 +111,7 @@ class SamplingTest extends TestCase
         $this->assertSame(10, $this->core->executionState->queries);
     }
 
-    public function test_it_samples_notifications()
+    public function test_it_samples_notifications(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
@@ -132,7 +132,7 @@ class SamplingTest extends TestCase
         $this->assertSame(10, $this->core->executionState->notifications);
     }
 
-    public function test_it_samples_mail()
+    public function test_it_samples_mail(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
@@ -153,7 +153,7 @@ class SamplingTest extends TestCase
         $this->assertSame(10, $this->core->executionState->mail);
     }
 
-    public function test_it_samples_cache()
+    public function test_it_samples_cache(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
@@ -174,7 +174,7 @@ class SamplingTest extends TestCase
         $this->assertSame(10, $this->core->executionState->cacheEvents);
     }
 
-    public function test_it_samples_exceptions()
+    public function test_it_samples_exceptions(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
@@ -195,7 +195,7 @@ class SamplingTest extends TestCase
         $this->assertSame(10, $this->core->executionState->exceptions);
     }
 
-    public function test_it_samples_queued_jobs()
+    public function test_it_samples_queued_jobs(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
@@ -216,7 +216,7 @@ class SamplingTest extends TestCase
         $this->assertSame(10, $this->core->executionState->jobsQueued);
     }
 
-    public function test_it_samples_outgoing_requests()
+    public function test_it_samples_outgoing_requests(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
@@ -241,7 +241,7 @@ class SamplingTest extends TestCase
         $this->assertSame(10, $this->core->executionState->outgoingRequests);
     }
 
-    public function test_it_samples_stage()
+    public function test_it_samples_stage(): void
     {
         $this->core->stage(ExecutionStage::Bootstrap);
 
@@ -260,7 +260,7 @@ class SamplingTest extends TestCase
         $this->assertSame(ExecutionStage::Render, $this->core->executionState->stage);
     }
 
-    public function test_it_samples_remembering_user()
+    public function test_it_samples_remembering_user(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
@@ -280,7 +280,7 @@ class SamplingTest extends TestCase
         $this->assertSame('123', $this->core->executionState->user->id()->jsonSerialize());
     }
 
-    public function test_it_samples_user()
+    public function test_it_samples_user(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
@@ -304,7 +304,7 @@ class SamplingTest extends TestCase
         $this->assertTrue($users->pluck('id')->every(fn ($id) => $id === '123'));
     }
 
-    public function test_it_samples_requests()
+    public function test_it_samples_requests(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
@@ -329,7 +329,7 @@ class SamplingTest extends TestCase
         $this->assertTrue($requests->pluck('url')->every(fn ($url) => $url === 'https://laravel.com/'));
     }
 
-    public function test_it_samples_logs()
+    public function test_it_samples_logs(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
@@ -351,14 +351,14 @@ class SamplingTest extends TestCase
     }
 
     #[DataProvider('routeMiddleware')]
-    public function test_it_does_not_attach_route_middleware_when_not_sampling(bool $terminatingEventExists, array $expectedMiddleware)
+    public function test_it_does_not_attach_route_middleware_when_not_sampling(bool $terminatingEventExists, array $expectedMiddleware): void
     {
         Compatibility::$terminatingEventExists = $terminatingEventExists;
         $this->fakeIngest();
         $this->core->config['sampling']['requests'] = 0.0;
         $this->core->configureSampling('requests');
         $middleware = [];
-        Route::get('/test', function () use (&$middleware) {
+        Route::get('/test', function () use (&$middleware): void {
             $middleware = request()->route()->middleware();
         });
 
@@ -384,12 +384,12 @@ class SamplingTest extends TestCase
         yield [false, [GlobalMiddleware::class, RouteMiddleware::class]];
     }
 
-    public function test_it_samples_capuring_request_preview()
+    public function test_it_samples_capuring_request_preview(): void
     {
         $this->fakeIngest();
         $this->core->config['sampling']['requests'] = 0.0;
         $this->core->configureSampling('requests');
-        Route::get('/test', function () {
+        Route::get('/test', function (): void {
             //
         });
 
@@ -406,7 +406,7 @@ class SamplingTest extends TestCase
         $this->assertSame('GET /test', $this->core->executionState->executionPreview);
     }
 
-    public function test_it_samples_ingest()
+    public function test_it_samples_ingest(): void
     {
         $ingest = $this->fakeIngest();
 
@@ -437,12 +437,12 @@ class SamplingTest extends TestCase
         $ingest->assertWrittenTimes(1);
     }
 
-    public function test_it_discards_records_captured_before_sampling_rate_decided()
+    public function test_it_discards_records_captured_before_sampling_rate_decided(): void
     {
         DB::table('users')->get();
         $this->core->config['sampling']['requests'] = 0.0;
         $count = null;
-        Route::get('/test', function () use (&$count) {
+        Route::get('/test', function () use (&$count): void {
             $count = $this->core->ingest->buffer->count();
         });
 
@@ -451,7 +451,7 @@ class SamplingTest extends TestCase
         $this->assertSame(0, $count);
     }
 
-    public function test_it_adds_context_for_job_sampling()
+    public function test_it_adds_context_for_job_sampling(): void
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');

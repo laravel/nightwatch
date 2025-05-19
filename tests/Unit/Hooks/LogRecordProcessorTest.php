@@ -11,7 +11,7 @@ use Tests\TestCase;
 
 class LogRecordProcessorTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $record = new class(new DateTimeImmutable, 'single', Level::Debug, 'Hello world') extends LogRecord
         {

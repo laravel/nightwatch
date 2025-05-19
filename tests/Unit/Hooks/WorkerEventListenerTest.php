@@ -15,7 +15,7 @@ use function tap;
 
 class WorkerEventListenerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions_for_job_popping_event()
+    public function test_it_gracefully_handles_exceptions_for_job_popping_event(): void
     {
         $this->core->ingest->buffer = $buffer = new class extends RecordsBuffer
         {
@@ -37,11 +37,11 @@ class WorkerEventListenerTest extends TestCase
         $this->assertSame(1, $this->core->executionState->exceptions);
     }
 
-    public function test_it_gracefully_handles_exceptions_for_job_processing_event()
+    public function test_it_gracefully_handles_exceptions_for_job_processing_event(): void
     {
         $thrownInMicrotimeResolver = false;
-        $this->core->clock = tap(new Clock, function ($clock) use (&$thrownInMicrotimeResolver) {
-            $clock->microtimeResolver = function () use (&$thrownInMicrotimeResolver) {
+        $this->core->clock = tap(new Clock, function ($clock) use (&$thrownInMicrotimeResolver): void {
+            $clock->microtimeResolver = function () use (&$thrownInMicrotimeResolver): void {
                 $thrownInMicrotimeResolver = true;
 
                 throw new RuntimeException('Whoops!');

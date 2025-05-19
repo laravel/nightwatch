@@ -26,7 +26,7 @@ class CliSamplingTest extends TestCase
         parent::setUp();
     }
 
-    public function test_it_samples_job_attempts()
+    public function test_it_samples_job_attempts(): void
     {
         $ingest = $this->fakeIngest();
         Compatibility::addHiddenContext('nightwatch_should_sample', false);
@@ -65,7 +65,7 @@ class CliSamplingTest extends TestCase
         $this->assertCount(0, $this->core->ingest->buffer);
     }
 
-    public function test_it_preparing_for_next_job()
+    public function test_it_preparing_for_next_job(): void
     {
         $this->core->clock->microtimeResolver = fn () => 5.5;
         $this->core->executionState->setId('previous');
@@ -102,7 +102,7 @@ class CliSamplingTest extends TestCase
         $this->assertSame(5.5, $this->core->executionState->timestamp);
     }
 
-    public function test_it_can_configure_command_sampling()
+    public function test_it_can_configure_command_sampling(): void
     {
         $this->core->config['sampling']['commands'] = 0;
         $sampled = 0;
@@ -153,7 +153,7 @@ class CliSamplingTest extends TestCase
         $this->assertSame(1000, $sampled);
     }
 
-    public function test_it_samples_preparing_for_command()
+    public function test_it_samples_preparing_for_command(): void
     {
         $this->core->shouldSample = false;
 
@@ -173,7 +173,7 @@ class CliSamplingTest extends TestCase
         $this->assertSame('current', $this->core->executionState->executionPreview);
     }
 
-    public function test_it_samples_commands()
+    public function test_it_samples_commands(): void
     {
         Artisan::command('app:build', function () {
             return 0;

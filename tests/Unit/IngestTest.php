@@ -40,7 +40,7 @@ class IngestTest extends TestCase
         stream_wrapper_unregister('tcp');
     }
 
-    public function test_it_configures_the_stream()
+    public function test_it_configures_the_stream(): void
     {
         $calls = [];
         $this->core->ingest->streamFactory = function (...$args) use (&$calls) {
@@ -67,10 +67,10 @@ class IngestTest extends TestCase
         ], StreamWrapper::$events->pluck('type')->all());
     }
 
-    public function test_it_throws_an_exception_when_unable_to_set_read_timeout()
+    public function test_it_throws_an_exception_when_unable_to_set_read_timeout(): void
     {
         $exceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
         StreamWrapper::intercept('stream_set_option', fn () => false);
@@ -94,7 +94,7 @@ class IngestTest extends TestCase
         throw $exceptions[0];
     }
 
-    public function test_it_sets_the_read_timeout()
+    public function test_it_sets_the_read_timeout(): void
     {
         $this->core->ingest->write(new FakeRecord);
         $this->core->digest();
@@ -114,7 +114,7 @@ class IngestTest extends TestCase
         ], StreamWrapper::$events->pluck('type')->all());
     }
 
-    public function test_it_can_write_the_payload_in_one_write()
+    public function test_it_can_write_the_payload_in_one_write(): void
     {
         StreamWrapper::intercept('stream_write', fn (string $value) => 32);
 
@@ -136,10 +136,10 @@ class IngestTest extends TestCase
         ], StreamWrapper::$events->pluck('type')->all());
     }
 
-    public function test_it_throws_an_exception_if_initial_write_to_stream_fails()
+    public function test_it_throws_an_exception_if_initial_write_to_stream_fails(): void
     {
         $exceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
         StreamWrapper::intercept('stream_write', fn (string $value) => false);
@@ -163,7 +163,7 @@ class IngestTest extends TestCase
         throw $exceptions[0];
     }
 
-    public function test_it_can_write_the_payload_in_multiple_write()
+    public function test_it_can_write_the_payload_in_multiple_write(): void
     {
         $writes = [3, 7, 3, 5, 14];
         StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
@@ -196,10 +196,10 @@ class IngestTest extends TestCase
         ], StreamWrapper::$events->pluck('type')->all());
     }
 
-    public function test_it_throws_an_exception_if_subsequent_writes_to_stream_fails()
+    public function test_it_throws_an_exception_if_subsequent_writes_to_stream_fails(): void
     {
         $exceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
         $writes = 0;
@@ -232,7 +232,7 @@ class IngestTest extends TestCase
         throw $exceptions[0];
     }
 
-    public function test_it_reads_response_from_stream()
+    public function test_it_reads_response_from_stream(): void
     {
         $this->core->ingest->write(new FakeRecord);
         $this->core->digest();
@@ -252,7 +252,7 @@ class IngestTest extends TestCase
         ], StreamWrapper::$events->pluck('type')->all());
     }
 
-    public function test_it_can_read_multiple_times_from_stream()
+    public function test_it_can_read_multiple_times_from_stream(): void
     {
         $response = ['2', ':', 'O', 'K'];
         StreamWrapper::intercept('stream_read', function () use (&$response) {
@@ -289,10 +289,10 @@ class IngestTest extends TestCase
         ], StreamWrapper::$events->pluck('type')->all());
     }
 
-    public function test_it_throws_an_exception_if_stream_eo_fs_before_getting_the_expected_response()
+    public function test_it_throws_an_exception_if_stream_eo_fs_before_getting_the_expected_response(): void
     {
         $exceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
         $response = ['2', ':', false];
@@ -323,10 +323,10 @@ class IngestTest extends TestCase
         throw $exceptions[0];
     }
 
-    public function test_it_throws_when_an_unexpected_response_is_received()
+    public function test_it_throws_when_an_unexpected_response_is_received(): void
     {
         $exceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
         StreamWrapper::intercept('stream_read', fn () => 'XXXXXXXXXXXXXXXXXXXXXXX');
@@ -350,7 +350,7 @@ class IngestTest extends TestCase
         throw $exceptions[0];
     }
 
-    public function test_it_closes_the_stream()
+    public function test_it_closes_the_stream(): void
     {
         $this->core->ingest->write(new FakeRecord);
         $this->core->digest();
@@ -358,10 +358,10 @@ class IngestTest extends TestCase
         $this->assertSame('stream_close', StreamWrapper::$events->pluck('type')->last());
     }
 
-    public function test_it_does_not_retrieve_meta_of_already_closed_stream()
+    public function test_it_does_not_retrieve_meta_of_already_closed_stream(): void
     {
         $exceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
         $stream = null;
@@ -392,10 +392,10 @@ class IngestTest extends TestCase
         throw $exceptions[0];
     }
 
-    public function test_it_stops_attempting_to_read_once_the_stream_has_reached_eof()
+    public function test_it_stops_attempting_to_read_once_the_stream_has_reached_eof(): void
     {
         $exceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
         $reads = 0;
@@ -441,10 +441,10 @@ class IngestTest extends TestCase
         ], StreamWrapper::$events->pluck('type')->all());
     }
 
-    public function test_it_only_attempts_to_read_from_the_stream_5_times()
+    public function test_it_only_attempts_to_read_from_the_stream_5_times(): void
     {
         $exceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
         $reads = 0;
@@ -494,7 +494,7 @@ class IngestTest extends TestCase
         ], StreamWrapper::$events->pluck('type')->all());
     }
 
-    public function test_it_does_not_trigger_ingest_before_reaching_threshold()
+    public function test_it_does_not_trigger_ingest_before_reaching_threshold(): void
     {
         $writes = [];
         StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
@@ -510,7 +510,7 @@ class IngestTest extends TestCase
         $this->assertCount(0, $writes);
     }
 
-    public function test_it_triggers_ingest_after_exceeding_threshold()
+    public function test_it_triggers_ingest_after_exceeding_threshold(): void
     {
         $writes = [];
         StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
@@ -565,7 +565,7 @@ class StreamWrapper
         return call_user_func_array(static::$on[$name], $arguments);
     }
 
-    public static function intercept(string $method, callable $callback)
+    public static function intercept(string $method, callable $callback): void
     {
         static::$on[$method] = $callback;
     }
@@ -575,7 +575,7 @@ class StreamWrapper
         return static::$events->where('type', $type);
     }
 
-    public static function reset()
+    public static function reset(): void
     {
         static::$events = new Collection;
 

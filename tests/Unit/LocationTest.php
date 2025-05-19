@@ -11,7 +11,7 @@ use function public_path;
 
 class LocationTest extends TestCase
 {
-    public function test_it_can_find_the_file_in_the_trace()
+    public function test_it_can_find_the_file_in_the_trace(): void
     {
         $location = $this->core->sensor->location;
         $e = new Exception;
@@ -30,7 +30,7 @@ class LocationTest extends TestCase
         $this->assertSame(['app/Models/User.php', 5], $file);
     }
 
-    public function test_it_skips_vendor_files_in_trace_when_a_non_vendor_file_exists()
+    public function test_it_skips_vendor_files_in_trace_when_a_non_vendor_file_exists(): void
     {
         $location = $this->core->sensor->location;
         $e = new Exception;
@@ -53,7 +53,7 @@ class LocationTest extends TestCase
         $this->assertSame(['app/Models/User.php', 5], $file);
     }
 
-    public function test_it_skips_artisan_files_when_a_non_vendor_file_exists()
+    public function test_it_skips_artisan_files_when_a_non_vendor_file_exists(): void
     {
         $location = $this->core->sensor->location;
         $e = new Exception;
@@ -76,7 +76,7 @@ class LocationTest extends TestCase
         $this->assertSame(['app/Models/User.php', 5], $file);
     }
 
-    public function test_it_skips_index_php_file_when_a_non_vendor_file_exists()
+    public function test_it_skips_index_php_file_when_a_non_vendor_file_exists(): void
     {
         $location = $this->core->sensor->location;
         $e = new Exception;
@@ -99,7 +99,7 @@ class LocationTest extends TestCase
         $this->assertSame(['app/Models/User.php', 5], $file);
     }
 
-    public function test_it_handles_missing_line_number()
+    public function test_it_handles_missing_line_number(): void
     {
         $location = $this->core->sensor->location;
         $e = new Exception;
@@ -120,7 +120,7 @@ class LocationTest extends TestCase
         $this->assertSame(['app/Models/User.php', null], $file);
     }
 
-    public function test_it_uses_the_path_of_the_exception_when_it_is_non_vendor()
+    public function test_it_uses_the_path_of_the_exception_when_it_is_non_vendor(): void
     {
         $location = $this->core->sensor->location;
         $e = new Exception;
@@ -133,7 +133,7 @@ class LocationTest extends TestCase
         $this->assertSame(['app/Models/User.php', 5], $file);
     }
 
-    public function test_it_falls_back_to_trace_when_exception_is_thrown_in_vendor_frame()
+    public function test_it_falls_back_to_trace_when_exception_is_thrown_in_vendor_frame(): void
     {
         $location = $this->core->sensor->location;
         $e = new Exception;
@@ -156,7 +156,7 @@ class LocationTest extends TestCase
         $this->assertSame(['app/Models/User.php', 5], $file);
     }
 
-    public function test_it_uses_the_thrown_location_when_no_non_vendor_file_is_found()
+    public function test_it_uses_the_thrown_location_when_no_non_vendor_file_is_found(): void
     {
         $location = $this->core->sensor->location;
         $e = new Exception;
@@ -175,7 +175,7 @@ class LocationTest extends TestCase
         $this->assertSame(['vendor/foo/bar/Baz1.php', 5], $file);
     }
 
-    public function test_it_finds_first_non_vendor_frame_from_query_trace()
+    public function test_it_finds_first_non_vendor_frame_from_query_trace(): void
     {
         $location = $this->core->sensor->location;
 
@@ -205,7 +205,7 @@ class LocationTest extends TestCase
         $this->assertSame(['app/Models/User.php', 5], $file);
     }
 
-    public function test_it_ignores_internal_frames_when_there_is_no_non_vendor_frames()
+    public function test_it_ignores_internal_frames_when_there_is_no_non_vendor_frames(): void
     {
         $location = $this->core->sensor->location;
 
@@ -227,7 +227,7 @@ class LocationTest extends TestCase
         $this->assertSame(['vendor/foo/bar/Baz.php', 9], $file);
     }
 
-    public function test_it_uses_first_non_internal_vendor_frames()
+    public function test_it_uses_first_non_internal_vendor_frames(): void
     {
         $location = $this->core->sensor->location;
 

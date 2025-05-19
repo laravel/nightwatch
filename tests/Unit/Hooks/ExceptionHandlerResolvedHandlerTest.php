@@ -11,13 +11,13 @@ use Throwable;
 
 class ExceptionHandlerResolvedHandlerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $exceptionHandler = new class($this->app) extends Handler
         {
             public bool $thrownInReportable = false;
 
-            public function reportable(callable $reportUsing)
+            public function reportable(callable $reportUsing): void
             {
                 $this->thrownInReportable = true;
 
@@ -32,31 +32,31 @@ class ExceptionHandlerResolvedHandlerTest extends TestCase
         $this->assertSame(1, $this->core->executionState->exceptions);
     }
 
-    public function test_it_gracefully_handles_custom_exception_handlers()
+    public function test_it_gracefully_handles_custom_exception_handlers(): void
     {
         $exceptions = [];
-        $this->core->sensor->exceptionSensor = function ($e) use (&$exceptions) {
+        $this->core->sensor->exceptionSensor = function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         };
 
         $exceptionHandler = new class implements ExceptionHandler
         {
-            public function report(Throwable $e)
+            public function report(Throwable $e): void
             {
                 //
             }
 
-            public function shouldReport(Throwable $e)
+            public function shouldReport(Throwable $e): void
             {
                 //
             }
 
-            public function render($request, Throwable $e)
+            public function render($request, Throwable $e): void
             {
                 //
             }
 
-            public function renderForConsole($output, Throwable $e)
+            public function renderForConsole($output, Throwable $e): void
             {
                 //
             }

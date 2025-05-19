@@ -14,10 +14,10 @@ use Tests\TestCase;
 
 class MailListenerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $thrownInMailSensor = false;
-        $this->core->sensor->mailSensor = function () use (&$thrownInMailSensor) {
+        $this->core->sensor->mailSensor = function () use (&$thrownInMailSensor): void {
             $thrownInMailSensor = true;
 
             throw new RuntimeException('Whoops!');

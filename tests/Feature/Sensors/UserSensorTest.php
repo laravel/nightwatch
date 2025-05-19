@@ -21,7 +21,7 @@ class UserSensorTest extends TestCase
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     }
 
-    public function test_it_captures_authenticated_users()
+    public function test_it_captures_authenticated_users(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -45,7 +45,7 @@ class UserSensorTest extends TestCase
         ]]);
     }
 
-    public function test_it_handles_non_eloquent_user_objects_with_no_email_or_username()
+    public function test_it_handles_non_eloquent_user_objects_with_no_email_or_username(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -67,7 +67,7 @@ class UserSensorTest extends TestCase
         ]]);
     }
 
-    public function test_it_does_not_capture_guests()
+    public function test_it_does_not_capture_guests(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -79,7 +79,7 @@ class UserSensorTest extends TestCase
         $ingest->assertLatestWrite('user:*', []);
     }
 
-    public function test_it_can_customize_the_capture_of_user_details()
+    public function test_it_can_customize_the_capture_of_user_details(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -108,7 +108,7 @@ class UserSensorTest extends TestCase
         ]]);
     }
 
-    public function test_it_handles_authenticatable_objects_without_name_or_email_properties()
+    public function test_it_handles_authenticatable_objects_without_name_or_email_properties(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -144,7 +144,7 @@ class UserSensorTest extends TestCase
                 return 'remember-me-token';
             }
 
-            public function setRememberToken($value)
+            public function setRememberToken($value): void
             {
                 //
             }
@@ -169,7 +169,7 @@ class UserSensorTest extends TestCase
         ]]);
     }
 
-    public function test_it_can_only_collect_the_user_id()
+    public function test_it_can_only_collect_the_user_id(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -196,7 +196,7 @@ class UserSensorTest extends TestCase
         ]]);
     }
 
-    public function test_it_it_captures_the_user_id_even_when_excluded_from_the_nightwatch_user_return_array()
+    public function test_it_it_captures_the_user_id_even_when_excluded_from_the_nightwatch_user_return_array(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);

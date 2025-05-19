@@ -11,7 +11,7 @@ use function version_compare;
 
 class ApplicationTest extends TestCase
 {
-    public function test_it_can_cache_the_config()
+    public function test_it_can_cache_the_config(): void
     {
         $this->markTestSkippedWhen(version_compare(Application::VERSION, '11.0.0', '<'), <<<'MESSAGE'
             Due to Laravel 11's new project structure, we only run this on Laravel 11+.

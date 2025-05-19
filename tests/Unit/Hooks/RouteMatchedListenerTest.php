@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 class RouteMatchedListenerTest extends TestCase
 {
-    public function test_it_gracefully_handles_middleware_registered_as_a_string()
+    public function test_it_gracefully_handles_middleware_registered_as_a_string(): void
     {
         $request = Request::create('/users');
         $route = new Route(['GET'], '/users', ['middleware' => 'api']);
@@ -31,7 +31,7 @@ class RouteMatchedListenerTest extends TestCase
         }
     }
 
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $request = Request::create('/users');
         $route = new Route(['GET'], '/users', []);

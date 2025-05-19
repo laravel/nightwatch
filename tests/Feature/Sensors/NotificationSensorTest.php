@@ -31,10 +31,10 @@ class NotificationSensorTest extends TestCase
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     }
 
-    public function test_it_ingests_on_demand_notifications()
+    public function test_it_ingests_on_demand_notifications(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             NotificationFacade::route('broadcast', [new Channel('test-channel')])
                 ->route('mail', 'phillip@laravel.com')
                 ->notify(new MyNotification);
@@ -85,10 +85,10 @@ class NotificationSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_ingests_notifications_for_notifiables()
+    public function test_it_ingests_notifications_for_notifiables(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             NotificationFacade::send([
                 User::factory()->create(),
                 User::factory()->create(),

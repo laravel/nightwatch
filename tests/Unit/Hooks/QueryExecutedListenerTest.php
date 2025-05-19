@@ -10,10 +10,10 @@ use Tests\TestCase;
 
 class QueryExecutedListenerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $thrownInQuerySensor = false;
-        $this->core->sensor->querySensor = function () use (&$thrownInQuerySensor) {
+        $this->core->sensor->querySensor = function () use (&$thrownInQuerySensor): void {
             $thrownInQuerySensor = true;
 
             throw new RuntimeException('Whoops!');

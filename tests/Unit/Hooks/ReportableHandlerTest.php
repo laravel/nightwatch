@@ -9,14 +9,14 @@ use Tests\TestCase;
 
 class ReportableHandlerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $unrecoverableExceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions): void {
             $unrecoverableExceptions[] = $e;
         });
         $thrownInExceptionSensor = false;
-        $this->core->sensor->exceptionSensor = function () use (&$thrownInExceptionSensor) {
+        $this->core->sensor->exceptionSensor = function () use (&$thrownInExceptionSensor): void {
             $thrownInExceptionSensor = true;
 
             throw new RuntimeException('Whoops sensor!');

@@ -10,12 +10,12 @@ use Tests\TestCase;
 
 class CacheEventListenerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $this->markTestSkippedWhen(! Compatibility::$cacheFailuresCapturable, 'Requires a more recent framework version');
 
         $thrownInCacheEventSensor = false;
-        $this->core->sensor->cacheEventSensor = function () use (&$thrownInCacheEventSensor) {
+        $this->core->sensor->cacheEventSensor = function () use (&$thrownInCacheEventSensor): void {
             $thrownInCacheEventSensor = true;
 
             throw new RuntimeException('Whoops!');

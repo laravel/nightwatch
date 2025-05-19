@@ -9,10 +9,10 @@ use Tests\TestCase;
 
 class CoreTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions_thrown_while_ingesting()
+    public function test_it_gracefully_handles_exceptions_thrown_while_ingesting(): void
     {
         $exceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
         $this->fakeIngest(new class extends FakeIngest

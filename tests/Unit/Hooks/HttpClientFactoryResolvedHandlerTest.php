@@ -9,13 +9,13 @@ use Tests\TestCase;
 
 class HttpClientFactoryResolvedHandlerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $factory = new class extends Factory
         {
             public bool $thrownInGlobalMiddleware = false;
 
-            public function globalMiddleware($middleware)
+            public function globalMiddleware($middleware): void
             {
                 $this->thrownInGlobalMiddleware = true;
 

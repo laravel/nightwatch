@@ -13,11 +13,11 @@ use Tests\TestCase;
 
 class CommandFinishedListenerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         Compatibility::$terminatingEventExists = false;
         $thrownInStageSensor = false;
-        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor): void {
             $thrownInStageSensor = true;
 
             throw new RuntimeException('Whoops!');

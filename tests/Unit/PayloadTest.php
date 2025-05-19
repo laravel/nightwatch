@@ -15,7 +15,7 @@ use function substr;
 class PayloadTest extends TestCase
 {
     #[DataProvider('jsonPayloads')]
-    public function test_it_can_determine_if_a_jso_n_payload_is_empty(mixed $value, bool $empty)
+    public function test_it_can_determine_if_a_jso_n_payload_is_empty(mixed $value, bool $empty): void
     {
         $payload = Payload::json(json_encode($value, flags: JSON_THROW_ON_ERROR));
 
@@ -40,7 +40,7 @@ class PayloadTest extends TestCase
     }
 
     #[DataProvider('textPayloads')]
-    public function test_it_can_determine_if_a_tex_t_payload_is_empty(string $value, bool $empty)
+    public function test_it_can_determine_if_a_tex_t_payload_is_empty(string $value, bool $empty): void
     {
         $payload = Payload::text($value);
 
@@ -54,7 +54,7 @@ class PayloadTest extends TestCase
         yield ['a', false];
     }
 
-    public function test_it_can_pull_the_bencoded_signed_value()
+    public function test_it_can_pull_the_bencoded_signed_value(): void
     {
         $payload = Payload::text('abc123');
         $encoded = $payload->pull();
@@ -62,7 +62,7 @@ class PayloadTest extends TestCase
         $this->assertSame('14:'.Payload::SIGNATURE.':abc123', $encoded);
     }
 
-    public function test_it_can_only_pull_the_payload_once()
+    public function test_it_can_only_pull_the_payload_once(): void
     {
         $payload = Payload::text('abc123');
         $payload->pull();
@@ -75,7 +75,7 @@ class PayloadTest extends TestCase
         }
     }
 
-    public function test_it_frees_memory_after_pulling_the_payload()
+    public function test_it_frees_memory_after_pulling_the_payload(): void
     {
         $payload = Payload::text('abc123');
 
@@ -85,7 +85,7 @@ class PayloadTest extends TestCase
         $this->assertSame('', $payload->rawPayload());
     }
 
-    public function test_it_has_up_to_date_signature()
+    public function test_it_has_up_to_date_signature(): void
     {
         $signature = file_get_contents(__DIR__.'/../../agent/build/signature.txt');
 

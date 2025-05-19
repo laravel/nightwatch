@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 class LogoutListenerTest extends TestCase
 {
-    public function test_it_it_gracefully_handles_exceptions()
+    public function test_it_it_gracefully_handles_exceptions(): void
     {
         $event = new Logout('token', 'abc123');
 

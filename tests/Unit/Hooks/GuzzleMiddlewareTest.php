@@ -11,10 +11,10 @@ use Tests\TestCase;
 
 class GuzzleMiddlewareTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions_in_the_before_middleware()
+    public function test_it_gracefully_handles_exceptions_in_the_before_middleware(): void
     {
         $exceptions = [];
-        $this->core->sensor->exceptionSensor = function ($e) use (&$exceptions) {
+        $this->core->sensor->exceptionSensor = function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         };
         $thrownInMicrotimeResolver = false;
@@ -35,10 +35,10 @@ class GuzzleMiddlewareTest extends TestCase
         $this->assertSame('ok', (string) $response->getBody());
     }
 
-    public function test_it_gracefully_handles_exceptions_in_the_after_middleware()
+    public function test_it_gracefully_handles_exceptions_in_the_after_middleware(): void
     {
         $thrownInOutgoingRequestSensor = false;
-        $this->core->sensor->outgoingRequestSensor = function () use (&$thrownInOutgoingRequestSensor) {
+        $this->core->sensor->outgoingRequestSensor = function () use (&$thrownInOutgoingRequestSensor): void {
             $thrownInOutgoingRequestSensor = true;
 
             throw new RuntimeException('Whoops!');

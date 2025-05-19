@@ -12,15 +12,15 @@ use Tests\TestCase;
 
 class ScheduledTaskListenerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $this->fakeIngest();
         $unrecoverableExceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions): void {
             $unrecoverableExceptions[] = $e;
         });
         $thrownInScheduledTaskSensor = false;
-        $this->core->sensor->scheduledTaskSensor = function () use (&$thrownInScheduledTaskSensor) {
+        $this->core->sensor->scheduledTaskSensor = function () use (&$thrownInScheduledTaskSensor): void {
             $thrownInScheduledTaskSensor = true;
 
             throw new RuntimeException('Whoops!');
@@ -40,7 +40,7 @@ class ScheduledTaskListenerTest extends TestCase
         $thrownInScheduledTaskSensor = false;
         $thrownInExceptionSensor = false;
         $this->core->sensor->scheduledTaskSensor = fn () => null;
-        $this->core->sensor->exceptionSensor = function () use (&$thrownInExceptionSensor) {
+        $this->core->sensor->exceptionSensor = function () use (&$thrownInExceptionSensor): void {
             $thrownInExceptionSensor = true;
 
             throw new RuntimeException('Whoops!');

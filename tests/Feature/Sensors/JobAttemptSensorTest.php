@@ -52,7 +52,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_processed_job_attempts($workCommand)
+    public function test_it_ingests_processed_job_attempts($workCommand): void
     {
         $ingest = $this->fakeIngest();
         Str::createUuidsUsingSequence([
@@ -101,7 +101,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_released_job_attempts($workCommand)
+    public function test_it_ingests_released_job_attempts($workCommand): void
     {
         $ingest = $this->fakeIngest();
         Str::createUuidsUsingSequence([
@@ -150,7 +150,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_manually_released_job_attempts($workCommand)
+    public function test_it_ingests_manually_released_job_attempts($workCommand): void
     {
         $ingest = $this->fakeIngest();
         Str::createUuidsUsingSequence([
@@ -199,7 +199,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_job_failed_job_attempts($workCommand)
+    public function test_it_ingests_job_failed_job_attempts($workCommand): void
     {
         $ingest = $this->fakeIngest();
         Str::createUuidsUsingSequence([
@@ -247,7 +247,7 @@ class JobAttemptSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_does_not_ingest_jobs_dispatched_on_the_sync_queue()
+    public function test_it_does_not_ingest_jobs_dispatched_on_the_sync_queue(): void
     {
         $ingest = $this->fakeIngest();
         ProcessedJob::dispatchSync();
@@ -256,7 +256,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_closure_job($workCommand)
+    public function test_it_captures_closure_job($workCommand): void
     {
         $ingest = $this->fakeIngest();
         Str::createUuidsUsingSequence([
@@ -264,7 +264,7 @@ class JobAttemptSensorTest extends TestCase
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
         ]);
         $line = __LINE__ + 1;
-        dispatch(function () {
+        dispatch(function (): void {
             Date::setTestNow(now()->addMicroseconds(2500));
         });
 
@@ -308,7 +308,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_queued_event_listener($workCommand)
+    public function test_it_captures_queued_event_listener($workCommand): void
     {
         $ingest = $this->fakeIngest();
         Str::createUuidsUsingSequence([
@@ -358,7 +358,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_queued_mail($workCommand)
+    public function test_it_captures_queued_mail($workCommand): void
     {
         $ingest = $this->fakeIngest();
         Str::createUuidsUsingSequence([
@@ -432,7 +432,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_multiple_job_attempts($workCommand)
+    public function test_it_captures_multiple_job_attempts($workCommand): void
     {
         $ingest = $this->fakeIngest();
         FailedJob::dispatch();
@@ -447,7 +447,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_manually_reported_exceptions($workCommand)
+    public function test_it_captures_manually_reported_exceptions($workCommand): void
     {
         $ingest = $this->fakeIngest();
         Str::createUuidsUsingSequence([
@@ -455,7 +455,7 @@ class JobAttemptSensorTest extends TestCase
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
         ]);
         $line = __LINE__ + 1;
-        dispatch(function () {
+        dispatch(function (): void {
             Date::setTestNow(now()->addMicroseconds(2500));
 
             report('Whoops!');
@@ -514,7 +514,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_resets_the_state_between_job_attempts($workCommand)
+    public function test_it_resets_the_state_between_job_attempts($workCommand): void
     {
         $ingest = $this->fakeIngest();
 
@@ -529,11 +529,11 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_does_not_ingest_or_build_up_state_while_idle($workCommand)
+    public function test_it_does_not_ingest_or_build_up_state_while_idle($workCommand): void
     {
         $ingest = $this->fakeIngest();
         $loops = 0;
-        Queue::looping(function () use (&$loops) {
+        Queue::looping(function () use (&$loops): void {
             $loops++;
         });
         Artisan::call($workCommand, ['--max-time' => 0.05, '--sleep' => 0]);
@@ -544,14 +544,14 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_all_queue_events_for_a_job($workCommand)
+    public function test_it_captures_all_queue_events_for_a_job($workCommand): void
     {
         $ingest = $this->fakeIngest();
         Str::createUuidsUsingSequence([
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
         ]);
-        $this->prependListener(QueryExecuted::class, function (QueryExecuted $event) {
+        $this->prependListener(QueryExecuted::class, function (QueryExecuted $event): void {
             $event->time = 1;
 
             $this->travelTo(now()->addMicroseconds(1000));
@@ -620,7 +620,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_counts_occuring_outside_job_execution($workCommand)
+    public function test_it_captures_counts_occuring_outside_job_execution($workCommand): void
     {
         $ingest = $this->fakeIngest();
         Str::createUuidsUsingSequence([
@@ -628,7 +628,7 @@ class JobAttemptSensorTest extends TestCase
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
         ]);
         Http::fake(['https://laravel.com' => Http::response()]);
-        Event::listen(function (CacheMissed $event) {
+        Event::listen(function (CacheMissed $event): void {
             if ($event->key !== 'illuminate:queue:restart') {
                 return;
             }
@@ -676,7 +676,7 @@ final class ProcessedJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function handle()
+    public function handle(): void
     {
         Date::setTestNow(now()->addMicroseconds(2500));
     }
@@ -686,7 +686,7 @@ final class ReleasedJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function handle()
+    public function handle(): void
     {
         Date::setTestNow(now()->addMicroseconds(2500));
 
@@ -698,7 +698,7 @@ final class FailedJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function handle()
+    public function handle(): void
     {
         Date::setTestNow(now()->addMicroseconds(2500));
 
@@ -710,7 +710,7 @@ final class ExceptionReportingJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function handle()
+    public function handle(): void
     {
         Date::setTestNow(now()->addMicroseconds(2500));
 
@@ -720,7 +720,7 @@ final class ExceptionReportingJob implements ShouldQueue
 
 final class MyEventListener implements ShouldQueue
 {
-    public function handle()
+    public function handle(): void
     {
         Date::setTestNow(now()->addMicroseconds(2500));
     }

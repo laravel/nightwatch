@@ -20,11 +20,11 @@ class ScheduledTaskStartingListenerTest extends TestCase
         parent::setUp();
     }
 
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $thrownInMicrotimeResolver = false;
-        $this->core->clock = tap(new Clock, function ($clock) use (&$thrownInMicrotimeResolver) {
-            $clock->microtimeResolver = function () use (&$thrownInMicrotimeResolver) {
+        $this->core->clock = tap(new Clock, function ($clock) use (&$thrownInMicrotimeResolver): void {
+            $clock->microtimeResolver = function () use (&$thrownInMicrotimeResolver): void {
                 $thrownInMicrotimeResolver = true;
 
                 throw new RuntimeException('Whoops!');

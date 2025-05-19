@@ -29,7 +29,7 @@ class UserRetrievalTest extends TestCase
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     }
 
-    public function test_it_captures_the_authenticated_user_if_they_login_during_the_request()
+    public function test_it_captures_the_authenticated_user_if_they_login_during_the_request(): void
     {
         $ingest = $this->fakeIngest();
         Route::post('login', function () {
@@ -45,7 +45,7 @@ class UserRetrievalTest extends TestCase
         $ingest->assertLatestWrite('request:0.user', '567');
     }
 
-    public function test_it_captures_the_authenticated_user_if_they_logout_during_the_request()
+    public function test_it_captures_the_authenticated_user_if_they_logout_during_the_request(): void
     {
         $ingest = $this->fakeIngest();
         Route::post('logout', fn () => Auth::logout());
@@ -57,7 +57,7 @@ class UserRetrievalTest extends TestCase
         $ingest->assertLatestWrite('request:0.user', '567');
     }
 
-    public function test_it_does_not_trigger_an_infinite_loop_when_retrieving_the_authenticated_user_from_the_database()
+    public function test_it_does_not_trigger_an_infinite_loop_when_retrieving_the_authenticated_user_from_the_database(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('users', fn () => null);

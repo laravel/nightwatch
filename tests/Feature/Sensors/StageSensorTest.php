@@ -19,13 +19,13 @@ class StageSensorTest extends TestCase
         parent::setUp();
     }
 
-    public function test_it_captures_the_terminating_phase_when_the_terminating_event_does_not_exist()
+    public function test_it_captures_the_terminating_phase_when_the_terminating_event_does_not_exist(): void
     {
         $this->freezeTime();
         Compatibility::$terminatingEventExists = false;
         $ingest = $this->fakeIngest();
         Route::get('/users', function () {
-            $this->app->terminating(function () {
+            $this->app->terminating(function (): void {
                 $this->travelTo(now()->addMicroseconds(123));
             });
 
@@ -39,7 +39,7 @@ class StageSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.terminating', 123);
     }
 
-    public function test_it_captures_the_terminating_phase_when_the_terminating_event_does_exist()
+    public function test_it_captures_the_terminating_phase_when_the_terminating_event_does_exist(): void
     {
         $this->markTestSkippedWhen(! class_exists(Terminating::class), 'Terminating event does not exist');
 
@@ -47,7 +47,7 @@ class StageSensorTest extends TestCase
         Compatibility::$terminatingEventExists = true;
         $ingest = $this->fakeIngest();
         Route::get('/users', function () {
-            $this->app->terminating(function () {
+            $this->app->terminating(function (): void {
                 $this->travelTo(now()->addMicroseconds(123));
             });
 

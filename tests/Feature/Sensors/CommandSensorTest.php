@@ -35,7 +35,7 @@ class CommandSensorTest extends TestCase
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     }
 
-    public function test_it_can_ingest_commands()
+    public function test_it_can_ingest_commands(): void
     {
         $ingest = $this->fakeIngest();
         Artisan::command('app:build {destination} {--force} {--compress}', function () {
@@ -87,7 +87,7 @@ class CommandSensorTest extends TestCase
         $ingest->assertLatestWrite('query:0.execution_preview', 'app:build');
     }
 
-    public function test_it_modifies_status_code_to_value_in_range_of_0_255()
+    public function test_it_modifies_status_code_to_value_in_range_of_0_255(): void
     {
         $ingest = $this->fakeIngest();
         $status = [
@@ -128,7 +128,7 @@ class CommandSensorTest extends TestCase
         $ingest->assertLatestWrite('command:0.exit_code', 255);
     }
 
-    public function test_it_only_captures_the_first_command_that_runs()
+    public function test_it_only_captures_the_first_command_that_runs(): void
     {
         $ingest = $this->fakeIngest();
         Artisan::command('child', function () {
@@ -180,15 +180,15 @@ class CommandSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_child_commands_do_not_progress_the_modify_execution_stage()
+    public function test_it_child_commands_do_not_progress_the_modify_execution_stage(): void
     {
         $ingest = $this->fakeIngest();
-        Artisan::command('parent', function () {
+        Artisan::command('parent', function (): void {
             Artisan::call('child');
 
             Cache::get('foo');
         });
-        Artisan::command('child', function () {
+        Artisan::command('child', function (): void {
             //
         });
 
@@ -205,15 +205,15 @@ class CommandSensorTest extends TestCase
         $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
     }
 
-    public function test_it_child_commands_do_not_progress_the_modify_execution_stage_when_terminating_event_does_not_exist()
+    public function test_it_child_commands_do_not_progress_the_modify_execution_stage_when_terminating_event_does_not_exist(): void
     {
         $ingest = $this->fakeIngest();
-        Artisan::command('parent', function () {
+        Artisan::command('parent', function (): void {
             Artisan::call('child');
 
             Cache::get('foo');
         });
-        Artisan::command('child', function () {
+        Artisan::command('child', function (): void {
             //
         });
         Compatibility::$terminatingEventExists = false;
@@ -236,7 +236,7 @@ class ParentCommand extends Command
 {
     public $name = 'parent';
 
-    public function __invoke()
+    public function __invoke(): void
     {
         Artisan::call('child');
     }

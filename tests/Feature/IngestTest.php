@@ -16,10 +16,10 @@ class IngestTest extends TestCase
         parent::setUp();
     }
 
-    public function test_it_handles_ingesting_zero_records()
+    public function test_it_handles_ingesting_zero_records(): void
     {
         $exceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
         $ingest = $this->fakeIngest();

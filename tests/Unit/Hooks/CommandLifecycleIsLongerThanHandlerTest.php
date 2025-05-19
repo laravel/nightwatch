@@ -12,18 +12,18 @@ use function now;
 
 class CommandLifecycleIsLongerThanHandlerTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $ingest = $this->fakeIngest();
         $thrownInStageSensor = false;
-        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor): void {
             $thrownInStageSensor = true;
 
             throw new RuntimeException('Whoops!');
         };
         $this->core->executionState->stage = ExecutionStage::Bootstrap;
         $thrownInCommandSensor = false;
-        $this->core->sensor->commandSensor = function () use (&$thrownInCommandSensor) {
+        $this->core->sensor->commandSensor = function () use (&$thrownInCommandSensor): void {
             $thrownInCommandSensor = true;
 
             throw new RuntimeException('Whoops!');

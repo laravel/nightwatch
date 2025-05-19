@@ -13,10 +13,10 @@ use function response;
 
 class RouteMiddlewareTest extends TestCase
 {
-    public function test_it_gracefully_handles_exceptions()
+    public function test_it_gracefully_handles_exceptions(): void
     {
         $thrownInStageSensor = false;
-        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor): void {
             $thrownInStageSensor = true;
 
             throw new RuntimeException('Whoops!');
@@ -40,10 +40,10 @@ class RouteMiddlewareTest extends TestCase
         $this->assertSame(1, $this->core->executionState->exceptions);
     }
 
-    public function test_it_handles_response_types_that_laravel_does_not_wrap()
+    public function test_it_handles_response_types_that_laravel_does_not_wrap(): void
     {
         $thrownInStageSensor = false;
-        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor): void {
             $thrownInStageSensor = true;
 
             throw new RuntimeException('Whoops!');
@@ -55,7 +55,7 @@ class RouteMiddlewareTest extends TestCase
         $next = function ($request) use (&$nextCalledWith) {
             $nextCalledWith = $request;
 
-            return response()->streamDownload(function () {
+            return response()->streamDownload(function (): void {
                 echo '...';
             });
         };
