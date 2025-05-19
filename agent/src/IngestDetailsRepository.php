@@ -176,22 +176,26 @@ class IngestDetailsRepository
      */
     private function parseResponseException(ResponseException $e): array
     {
-        $status = $e->getResponse()->getStatusCode();
-        $body = $e->getResponse()->getBody()->getContents();
+        $exception = new RuntimeException($this->parseErrorMessage($e->getResponse()));
+
+        if ($e->getResponse()->getStatusCode() === 401) {
+            return [$exception, 3_600];
+        }
+
+        return $this->hasAuthenticated
+            ? [$exception, $this->slowRetryStrategy()]
+            : [$exception, $this->quickRetryStrategy()];
+    }
+
+    private function parseErrorMessage(ResponseInterface $response): string
+    {
+        $body = $response->getBody();
 
         if (strlen($body) > 255) {
             $body = substr($body, 0, 250).'[...]';
         }
 
-        $e = new RuntimeException("{$status} [{$body}]");
-
-        if ($status === 401) {
-            return [$e, 3_600];
-        }
-
-        return $this->hasAuthenticated
-            ? [$e, $this->slowRetryStrategy()]
-            : [$e, $this->quickRetryStrategy()];
+        return "{$response->getStatusCode()} [{$body}]";
     }
 
     /**
