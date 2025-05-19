@@ -73,13 +73,13 @@ class IngestDetailsRepository
         return $this->ingestDetails ??= $this->refresh();
     }
 
-    public function markOverQuota(int|float $refreshIn): void
+    public function markOverQuota(int|float|null $refreshIn = null): void
     {
         $this->overQuota = true;
 
         $this->loop->cancelTimer($this->refreshTimer); // @phpstan-ignore argument.type
 
-        $this->scheduleRefreshIn($refreshIn);
+        $this->scheduleRefreshIn($refreshIn ?? 60 * 15);
     }
 
     /**
@@ -116,13 +116,13 @@ class IngestDetailsRepository
                 // TODO if the current token has expired we should `null` it.
                 $duration ??= microtime(true) - $start;
 
-                [$e, $interval, $stop] = $this->parseException($e);
+                [$e, $stop, $refreshIn] = $this->parseException($e);
 
                 if ($stop) {
                     $this->ingestDetails = resolve(null);
                 }
 
-                $this->scheduleRefreshIn($interval);
+                $this->scheduleRefreshIn($refreshIn);
 
                 call_user_func($this->onAuthenticationError, $e, $duration);
 
@@ -166,7 +166,7 @@ class IngestDetailsRepository
     }
 
     /**
-     * @return array{0: Throwable, 1: int|float, 2: bool}
+     * @return array{0: Throwable, 1: bool, 2: int|float}
      */
     private function parseException(Throwable $e): array
     {
@@ -176,21 +176,21 @@ class IngestDetailsRepository
     }
 
     /**
-     * @return array{0: Throwable, 1: int|float, 2: bool}
+     * @return array{0: Throwable, 1: bool, 2: int|float}
      */
     private function parseResponseException(ResponseException $e): array
     {
         $message = (string) $e->getResponse()->getBody();
-        $refreshIn = null;
         $stop = false;
+        $refreshIn = null;
 
         try {
             /** @var array{ message?: string, refresh_in?: int|float, stop?: bool } $json */
             $json = json_decode($message, associative: true, flags: JSON_THROW_ON_ERROR);
 
             $message = $json['message'] ?? $message;
-            $refreshIn = $json['refresh_in'] ?? $refreshIn;
             $stop = $json['stop'] ?? $stop;
+            $refreshIn = $json['refresh_in'] ?? $refreshIn;
         } catch (Throwable $exception) {
             //
         }
@@ -205,19 +205,19 @@ class IngestDetailsRepository
 
         return [
             new RuntimeException("{$e->getResponse()->getStatusCode()} [{$message}]"),
-            $refreshIn,
             $stop,
+            $refreshIn,
         ];
     }
 
     /**
-     * @return array{0: Throwable, 1: int|float, 2: bool}
+     * @return array{0: Throwable, 1: bool, 2: int|float}
      */
     private function parseNonResponseException(Throwable $e): array
     {
         return $this->hasAuthenticated
-            ? [$e, $this->slowRetryStrategy(), false]
-            : [$e, $this->quickRetryStrategy(), false];
+            ? [$e, false, $this->slowRetryStrategy()]
+            : [$e, false, $this->quickRetryStrategy()];
     }
 
     private function quickRetryStrategy(): int|float

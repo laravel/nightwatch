@@ -863,11 +863,7 @@ class IngestDetailsRepositoryTest extends TestCase
         $loop = new LoopFake(runForSeconds: 3_612);
         $ingestDetailsBrowser = new BrowserFake([
             Response::jwt(),
-            new Response([
-                'stop' => true,
-                'refresh_in' => 33,
-                'message' => 'Exceeded quota',
-            ], status: 403),
+            new Response(['stop' => true, 'refresh_in' => 33, 'message' => 'Exceeded quota'], status: 403),
         ]);
         $ingestBrowser = new BrowserFake([
             Response::ingested(),

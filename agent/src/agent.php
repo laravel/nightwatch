@@ -146,7 +146,7 @@ $ingest = new Ingest(
     concurrentRequestLimit: 2,
     maxBufferDurationInSeconds: $debug ? 1 : 10,
     onIngestSuccess: static fn (ResponseInterface $response, float $duration) => $info('Ingest successful ['.round($duration, 3).'s]'),
-    onIngestError: static fn (Throwable $e, float $duration) => $info('Ingest failed ['.round($duration, 3).'s]: '.$e->getMessage()),
+    onIngestError: static fn (string $message, float $duration) => $info('Ingest failed ['.round($duration, 3).'s]: '.$message),
     onOverQuota: static fn (string $message, float $duration) => $info('Ingest attempted ['.round($duration, 3).'s]: '.$message),
 );
 

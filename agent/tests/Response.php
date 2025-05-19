@@ -66,6 +66,10 @@ class Response
         return new self($payload, status: 401, duration: $duration, headers: $headers);
     }
 
+    /**
+     * @param  array<mixed>  $body
+     * @param  array<string, string>  $headers
+     */
     public static function ingested(
         string|array $body = '{}',
         ?int $status = 200,
