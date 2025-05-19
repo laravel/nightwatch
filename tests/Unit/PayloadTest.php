@@ -40,7 +40,7 @@ class PayloadTest extends TestCase
     }
 
     #[DataProvider('textPayloads')]
-    public function test_it_can_determine_if_a_tex_t_payload_is_empty(string $value, bool $empty): void
+    public function test_it_can_determine_if_a_text_payload_is_empty(string $value, bool $empty): void
     {
         $payload = Payload::text($value);
 
