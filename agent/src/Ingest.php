@@ -40,7 +40,7 @@ class Ingest
      * @param  Browser  $browser
      * @param  (Closure(ResponseInterface $response, float $duration): mixed)  $onIngestSuccess
      * @param  (Closure(Throwable $e, float $duration): mixed)  $onIngestError
-     * @param  (Closure(float $duration): mixed)  $onOverQuota
+     * @param  (Closure(string $message, float $duration): mixed)  $onOverQuota
      */
     public function __construct(
         private $loop,
@@ -142,14 +142,14 @@ class Ingest
                 body: $payload,
             );
         })->then(function (ResponseInterface $response) use (&$start): null {
-            /** @var array{remaining: int} */
+            /** @var array{stop?: bool, message?: string, refresh_in?: int|float} */
             $content = json_decode($response->getBody()->getContents(), associative: true, flags: JSON_THROW_ON_ERROR);
 
-            if ($content['remaining'] <= 0) {
+            if ($content['stop'] ?? false) {
                 $this->pauseIngestion();
-                $this->ingestDetails->markOverQuota();
+                $this->ingestDetails->markOverQuota($content['refresh_in'] ?? 60 * 15);
 
-                call_user_func($this->onOverQuota, microtime(true) - $start);
+                call_user_func($this->onOverQuota, $content['message'] ?? 'Quota exceeded', microtime(true) - $start);
 
                 return null;
             }

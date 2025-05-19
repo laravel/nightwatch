@@ -870,7 +870,7 @@ class IngestDetailsRepositoryTest extends TestCase
             ], status: 403),
         ]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(),
+            Response::ingested(),
         ]);
         $server = new TcpServerFake;
         $loop->addTimer(1, $server->pendingConnection([['t' => 'request']]));

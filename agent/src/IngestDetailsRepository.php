@@ -73,13 +73,13 @@ class IngestDetailsRepository
         return $this->ingestDetails ??= $this->refresh();
     }
 
-    public function markOverQuota(): void
+    public function markOverQuota(int|float $refreshIn): void
     {
         $this->overQuota = true;
 
         $this->loop->cancelTimer($this->refreshTimer); // @phpstan-ignore argument.type
 
-        $this->scheduleRefreshIn(60 * 15);
+        $this->scheduleRefreshIn($refreshIn);
     }
 
     /**

@@ -27,7 +27,7 @@ class IngestTest extends TestCase
             Response::jwt(),
         ]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(),
+            Response::ingested(),
         ]);
         $records = array_fill(0, 375_001, ['t' => 'request']);
         $loop->addTimer(0, $server->pendingConnection($records));
@@ -251,7 +251,7 @@ class IngestTest extends TestCase
             Response::jwt(duration: $duration),
         ]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(),
+            Response::ingested(),
         ]);
         $records = array_fill(0, 375_001, ['t' => 'request']);
         $loop->addTimer(0, $server->pendingConnection($records));
@@ -272,7 +272,7 @@ class IngestTest extends TestCase
         $ingestBrowser->assertProcessing([]);
         $ingestBrowser->assertPending($duration === 1
             ? []
-            : [Response::ingest()]);
+            : [Response::ingested()]);
         $loop->assertRun([
             new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: $this->functionName()),
             ...($duration === 1
@@ -393,8 +393,8 @@ class IngestTest extends TestCase
             Response::jwt(),
         ]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(duration: 3),
-            Response::ingest(duration: 4),
+            Response::ingested(duration: 3),
+            Response::ingested(duration: 4),
         ]);
         $records = array_fill(0, 375_001, ['t' => 'request']);
         $loop->addTimer(0, $server->pendingConnection($records));
@@ -444,8 +444,8 @@ class IngestTest extends TestCase
             Response::jwt(),
         ]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(duration: 3),
-            Response::ingest(duration: 4),
+            Response::ingested(duration: 3),
+            Response::ingested(duration: 4),
         ]);
         $records = array_fill(0, 375_001, ['t' => 'request']);
         $loop->addTimer(0, $server->pendingConnection($records));
@@ -501,19 +501,19 @@ class IngestTest extends TestCase
             Response::jwt(),
         ]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(duration: 2),
-            Response::ingest(duration: 2),
+            Response::ingested(duration: 2),
+            Response::ingested(duration: 2),
             //
-            Response::ingest(duration: 2),
-            Response::ingest(duration: 2),
+            Response::ingested(duration: 2),
+            Response::ingested(duration: 2),
             //
-            Response::ingest(duration: 2),
-            Response::ingest(duration: 2),
+            Response::ingested(duration: 2),
+            Response::ingested(duration: 2),
             //
-            Response::ingest(duration: 1),
-            Response::ingest(duration: 1),
-            Response::ingest(duration: 1),
-            Response::ingest(duration: 1),
+            Response::ingested(duration: 1),
+            Response::ingested(duration: 1),
+            Response::ingested(duration: 1),
+            Response::ingested(duration: 1),
         ]);
         $records = array_fill(0, 375_001, ['t' => 'request']);
         //
@@ -651,7 +651,7 @@ class IngestTest extends TestCase
             Response::jwt(),
         ]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(),
+            Response::ingested(),
         ]);
         $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
 
@@ -694,7 +694,7 @@ class IngestTest extends TestCase
             Response::jwt(),
         ]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(),
+            Response::ingested(),
         ]);
         $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
         $loop->addTimer(1, $server->pendingConnection([['t' => 'request']]));
@@ -751,7 +751,7 @@ class IngestTest extends TestCase
             Response::jwt(),
         ]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(),
+            Response::ingested(),
         ]);
         $records = array_fill(0, 375_001, ['t' => 'request']);
         $loop->addTimer(0, $server->pendingConnection($records));
@@ -794,8 +794,10 @@ class IngestTest extends TestCase
             Response::jwt(),
         ]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(remaining: 1),
-            Response::ingest(remaining: 0),
+            Response::ingested(),
+            new Response([
+                'stop' => true,
+            ]),
         ]);
         $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
         $loop->addTimer(11, $server->pendingConnection([['t' => 'request']]));
@@ -848,9 +850,9 @@ class IngestTest extends TestCase
             Response::jwt(),
         ]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(remaining: 1),
-            Response::ingest(remaining: 0),
-            Response::ingest(remaining: 0),
+            Response::ingested(),
+            Response::ingested(['stop' => true]),
+            Response::ingested(),
         ]);
         $loop->addTimer(0, $server->pendingConnection([['t' => 'request 1']]));
         $loop->addTimer(11, $server->pendingConnection([['t' => 'request 2']]));
@@ -966,7 +968,7 @@ class IngestTest extends TestCase
         $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(),
+            Response::ingested(),
         ]);
         $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
         $loop->addTimer(1, $server->pendingConnection('12:INVALID:[{}]'));
@@ -1062,7 +1064,7 @@ class IngestTest extends TestCase
             Response::jwt(),
         ]);
         $ingestBrowser = new BrowserFake([
-            Response::ingest(duration: 5),
+            Response::ingested(duration: 5),
         ]);
         $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
         $loop->addTimer(11, $server->pendingConnection('12:INVALID:[{}]'));

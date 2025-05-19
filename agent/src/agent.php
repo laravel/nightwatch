@@ -147,7 +147,7 @@ $ingest = new Ingest(
     maxBufferDurationInSeconds: $debug ? 1 : 10,
     onIngestSuccess: static fn (ResponseInterface $response, float $duration) => $info('Ingest successful ['.round($duration, 3).'s]'),
     onIngestError: static fn (Throwable $e, float $duration) => $info('Ingest failed ['.round($duration, 3).'s]: '.$e->getMessage()),
-    onOverQuota: static fn (float $duration) => $info('Ingest attempted ['.round($duration, 3).'s]: Quota exceeded'),
+    onOverQuota: static fn (string $message, float $duration) => $info('Ingest attempted ['.round($duration, 3).'s]: '.$message),
 );
 
 $server = new Server(
