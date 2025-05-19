@@ -176,19 +176,6 @@ class IngestDetailsRepository
      */
     private function parseResponseException(ResponseException $e): array
     {
-        [$message, $retryIn] = $this->parseInstructions($e->getResponse());
-
-        return [
-            new RuntimeException($message),
-            $retryIn,
-        ];
-    }
-
-    /**
-     * @return array{ 0: string, 1: int }
-     */
-    private function parseInstructions(ResponseInterface $response): array
-    {
         $message = (string) $response->getBody();
         $retryIn = null;
 
@@ -210,7 +197,7 @@ class IngestDetailsRepository
             : $this->quickRetryStrategy());
 
         return [
-            "{$response->getStatusCode()} [{$message}]",
+            new RuntimeException("{$response->getStatusCode()} [{$message}]"),
             $retryIn,
         ];
     }
