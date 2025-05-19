@@ -841,15 +841,15 @@ class IngestDetailsRepositoryTest extends TestCase
         ];
 
         yield 'json string' => [
-            new Response('"hello world"', status: 403), '403 ["hello world"]'
+            new Response('"hello world"', status: 403), '403 ["hello world"]',
         ];
 
         yield 'json missing expected keys' => [
-            new Response('[]', status: 403), "403 [[]]"
+            new Response('[]', status: 403), '403 [[]]',
         ];
 
         yield 'json missing values' => [
-            new Response(['retry_in' => null, 'message' => null], status: 403), '403 [{"retry_in":null,"message":null}]'
+            new Response(['retry_in' => null, 'message' => null], status: 403), '403 [{"retry_in":null,"message":null}]',
         ];
     }
 }
