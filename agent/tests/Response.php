@@ -26,6 +26,7 @@ class Response
         public string|array $body = '',
         public ?int $status = 200,
         public int $duration = 0,
+        public array $headers = ['Content-Type' => 'application/json'],
     ) {
         //
     }
@@ -126,6 +127,7 @@ class Response
 
         return new ReactResponse(
             status: $this->status,
+            headers: $this->headers,
             body: $this->body(),
         );
     }
