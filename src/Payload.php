@@ -17,7 +17,7 @@ final class Payload
      *
      * Do not modify or re-locate this constant.
      */
-    public const SIGNATURE = '51C4714';
+    public const SIGNATURE = '5F6737A';
 
     private bool $pulled = false;
 
