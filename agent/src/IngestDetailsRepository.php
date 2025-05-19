@@ -116,7 +116,11 @@ class IngestDetailsRepository
                 // TODO if the current token has expired we should `null` it.
                 $duration ??= microtime(true) - $start;
 
-                [$e, $interval] = $this->parseException($e);
+                [$e, $interval, $stop] = $this->parseException($e);
+
+                if ($stop) {
+                    $this->ingestDetails = resolve(null);
+                }
 
                 $this->scheduleRefreshIn($interval);
 
@@ -162,7 +166,7 @@ class IngestDetailsRepository
     }
 
     /**
-     * @return array{0: Throwable, 1: int|float}
+     * @return array{0: Throwable, 1: int|float, 2: bool}
      */
     private function parseException(Throwable $e): array
     {
@@ -172,20 +176,24 @@ class IngestDetailsRepository
     }
 
     /**
-     * @return array{0: Throwable, 1: int|float}
+     * @return array{0: Throwable, 1: int|float, 2: bool}
      */
     private function parseResponseException(ResponseException $e): array
     {
         $message = (string) $e->getResponse()->getBody();
-        $retryIn = null;
+        $refreshIn = null;
+        $stop = false;
 
         try {
+            /** @var array $json */
             $json = json_decode($message, associative: true, flags: JSON_THROW_ON_ERROR);
 
             /** @var string $message */
-            $message = $json['message'] ?? $message; // @phpstan-ignore offsetAccess.nonOffsetAccessible
-            /** @var int|float $retryIn */
-            $retryIn = $json['refresh_in'] ?? $retryIn; // @phpstan-ignore offsetAccess.nonOffsetAccessible
+            $message = $json['message'] ?? $message;
+            /** @var int|float $refreshIn */
+            $refreshIn = $json['refresh_in'] ?? $refreshIn;
+            /** @var bool $stop */
+            $stop = $json['stop'] ?? $stop;
         } catch (Throwable $exception) {
             //
         }
@@ -194,24 +202,25 @@ class IngestDetailsRepository
             $message = substr($message, 0, 1000).'[...]';
         }
 
-        $retryIn ??= ($this->hasAuthenticated
+        $refreshIn ??= ($this->hasAuthenticated
             ? $this->slowRetryStrategy()
             : $this->quickRetryStrategy());
 
         return [
             new RuntimeException("{$e->getResponse()->getStatusCode()} [{$message}]"),
-            $retryIn,
+            $refreshIn,
+            $stop,
         ];
     }
 
     /**
-     * @return array{0: Throwable, 1: int|float}
+     * @return array{0: Throwable, 1: int|float, 2: bool}
      */
     private function parseNonResponseException(Throwable $e): array
     {
         return $this->hasAuthenticated
-            ? [$e, $this->slowRetryStrategy()]
-            : [$e, $this->quickRetryStrategy()];
+            ? [$e, $this->slowRetryStrategy(), false]
+            : [$e, $this->quickRetryStrategy(), false];
     }
 
     private function quickRetryStrategy(): int|float

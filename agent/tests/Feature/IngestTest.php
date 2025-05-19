@@ -981,8 +981,8 @@ class IngestTest extends TestCase
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $server->assertHandled([
-            Connection::closed('2:OK'),
-            Connection::closed('2:OK'),
+            Connection::ok(),
+            Connection::ok(),
         ]);
         $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'
@@ -1030,7 +1030,7 @@ class IngestTest extends TestCase
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $server->assertHandled([
-            Connection::closed('2:OK'),
+            Connection::ok(),
         ]);
         $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'
@@ -1077,8 +1077,8 @@ class IngestTest extends TestCase
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $server->assertHandled([
-            Connection::closed('2:OK'),
-            Connection::closed('2:OK'),
+            Connection::ok(),
+            Connection::ok(),
         ]);
         $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'
@@ -1106,10 +1106,5 @@ class IngestTest extends TestCase
             Request::ingest([['t' => 'request']]),
         ]);
         $ingestBrowser->assertPending([]);
-    }
-
-    public function test_it_handles_response_with_non_json_content(): void
-    {
-        $this->markTestIncomplete('TODO');
     }
 }

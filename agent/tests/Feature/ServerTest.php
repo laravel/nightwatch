@@ -32,7 +32,7 @@ class ServerTest extends TestCase
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $server->assertHandled([
-            Connection::closed('2:OK'),
+            Connection::ok(),
         ]);
         $server->assertOpen();
         $this->assertLogMatches(<<<'OUTPUT'
@@ -73,7 +73,7 @@ class ServerTest extends TestCase
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $server->assertHandled([
-            Connection::closed('2:OK'),
+            Connection::ok(),
         ]);
         $server->assertOpen();
         $this->assertLogMatches(<<<'OUTPUT'
@@ -112,7 +112,7 @@ class ServerTest extends TestCase
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $server->assertHandled([
-            Connection::closed('2:OK'),
+            Connection::ok(),
         ]);
         $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'

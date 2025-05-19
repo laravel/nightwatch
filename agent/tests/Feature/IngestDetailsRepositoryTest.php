@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\BrowserFake;
+use Tests\Connection;
 use Tests\LoopFake;
 use Tests\Request;
 use Tests\Response;
+use Tests\TcpServerFake;
 use Tests\TestCase;
 use Tests\Timer;
 
@@ -854,5 +856,68 @@ class IngestDetailsRepositoryTest extends TestCase
         yield 'json missing values' => [
             new Response(['refresh_in' => null, 'message' => null], status: 403), '403 [{"refresh_in":null,"message":null}]',
         ];
+    }
+
+    public function test_it_drops_token_when_app_instructs_to_stop_and_schedules_refresh(): void
+    {
+        $loop = new LoopFake(runForSeconds: 3_612);
+        $ingestDetailsBrowser = new BrowserFake([
+            Response::jwt(),
+            new Response([
+                'stop' => true,
+                'refresh_in' => 33,
+                'message' => 'Exceeded quota',
+            ], status: 403),
+        ]);
+        $ingestBrowser = new BrowserFake([
+            Response::ingest(),
+        ]);
+        $server = new TcpServerFake;
+        $loop->addTimer(1, $server->pendingConnection([['t' => 'request']]));
+        $loop->addTimer(3_601, $server->pendingConnection([['t' => 'request']]));
+
+        [$output, $e] = $this->runAgent(
+            via: 'source',
+            ingestDetailsBrowser: $ingestDetailsBrowser,
+            ingestBrowser: $ingestBrowser,
+            server: $server,
+            loop: $loop,
+        );
+
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $this->assertLogMatches(<<<OUTPUT
+            {date} {info} Authentication successful {duration}
+            {date} {info} Ingest successful {duration}
+            {date} {info} Authentication failed {duration}: 403 \[Exceeded quota\]
+            {date} {info} Ingest failed {duration}: No authentication details
+            OUTPUT, $output);
+
+        $loop
+            ->assertRun([
+                new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
+                new Timer(interval: 10, runAt: 11, scheduledAt: 1, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+                new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+                new Timer(interval: 3_601, runAt: 3_601, scheduledAt: 0, scheduledBy: $this->functionName()),
+                new Timer(interval: 10, runAt: 3_611, scheduledAt: 3_601, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+            ])
+            ->assertPending([
+                new Timer(interval: 33, runAt: 3_633, scheduledAt: 3_600, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+            ])
+            ->assertCanceled([]);
+
+        $ingestDetailsBrowser
+            ->assertSent([
+                Request::json('/api/agent-auth'),
+                Request::json('/api/agent-auth'),
+            ])
+            ->assertProcessing([])
+            ->assertPending([]);
+
+        $server
+            ->assertOpen()
+            ->assertHandled([
+                Connection::ok(),
+                Connection::ok(),
+            ]);
     }
 }
