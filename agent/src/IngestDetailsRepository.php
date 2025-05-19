@@ -176,15 +176,17 @@ class IngestDetailsRepository
      */
     private function parseResponseException(ResponseException $e): array
     {
-        $message = (string) $response->getBody();
+        $message = (string) $e->getResponse()->getBody();
         $retryIn = null;
 
         try {
             $json = json_decode($message, associative: true, flags: JSON_THROW_ON_ERROR);
 
-            $message = $json['message'] ?? $message;
-            $retryIn = $json['refresh_in'] ?? $retryIn;
-        } catch (Throwable $e) {
+            /** @var string $message */
+            $message = $json['message'] ?? $message; // @phpstan-ignore offsetAccess.nonOffsetAccessible
+            /** @var int|float $retryIn */
+            $retryIn = $json['refresh_in'] ?? $retryIn; // @phpstan-ignore offsetAccess.nonOffsetAccessible
+        } catch (Throwable $exception) {
             //
         }
 
@@ -197,7 +199,7 @@ class IngestDetailsRepository
             : $this->quickRetryStrategy());
 
         return [
-            new RuntimeException("{$response->getStatusCode()} [{$message}]"),
+            new RuntimeException("{$e->getResponse()->getStatusCode()} [{$message}]"),
             $retryIn,
         ];
     }

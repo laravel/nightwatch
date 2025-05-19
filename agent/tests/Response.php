@@ -21,6 +21,7 @@ class Response
 {
     /**
      * @param  string|array<mixed>  $body
+     * @param  array<string, string>  $headers
      */
     public function __construct(
         public string|array $body = '',
@@ -31,6 +32,9 @@ class Response
         //
     }
 
+    /**
+     * @param  array<string, string>  $headers
+     */
     public static function jwt(
         string $token = 'NIGHTWATCH_TEST_TOKEN',
         int $expiresIn = 7_200,
@@ -47,6 +51,10 @@ class Response
         ], duration: $duration, headers: $headers);
     }
 
+    /**
+     * @param  array<mixed>  $payload
+     * @param  array<string, string>  $headers
+     */
     public static function unauthenticated(
         array $payload = [
             'message' => 'Invalid environment token',
@@ -58,6 +66,9 @@ class Response
         return new self($payload, status: 401, duration: $duration, headers: $headers);
     }
 
+    /**
+     * @param  array<string, string>  $headers
+     */
     public static function internalServerError(
         string $body = '',
         int $duration = 0,
@@ -77,6 +88,9 @@ class Response
         }
     }
 
+    /**
+     * @param  array<string, string>  $headers
+     */
     public static function ingest(
         int $remaining = 100_000,
         int $duration = 0,

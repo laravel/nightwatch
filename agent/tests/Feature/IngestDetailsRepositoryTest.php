@@ -764,7 +764,7 @@ class IngestDetailsRepositoryTest extends TestCase
             ->assertPending([]);
     }
 
-    public function test_it_handles_expected_json_response_being_non_object()
+    public function test_it_handles_expected_json_response_being_non_object(): void
     {
         $loop = new LoopFake(runForSeconds: 2);
         $ingestDetailsBrowser = new BrowserFake([
@@ -802,7 +802,7 @@ class IngestDetailsRepositoryTest extends TestCase
     }
 
     #[DataProvider('badAuthResponses')]
-    public function test_it_handles_expected_json_response_being_non_json(Response $response, $log)
+    public function test_it_handles_expected_json_response_being_non_json(Response $response, string $log): void
     {
         $loop = new LoopFake(runForSeconds: 2);
         $ingestDetailsBrowser = new BrowserFake([$response]);
@@ -834,6 +834,9 @@ class IngestDetailsRepositoryTest extends TestCase
             ->assertPending([]);
     }
 
+    /**
+     * @return iterable<array{Response, 1: string}>
+     */
     public static function badAuthResponses(): iterable
     {
         yield 'bare string' => [
