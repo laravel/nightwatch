@@ -13,7 +13,7 @@ class TerminatingListenerTest extends TestCase
 {
     public function test_it_gracefully_handles_exceptions()
     {
-        $this->markTestSkippedWhen(Compatibility::$terminatingEventExists, 'Requires a more recent framework version');
+        $this->markTestSkippedWhen(! Compatibility::$terminatingEventExists, 'Requires a more recent framework version');
 
         $thrownInStageSensor = false;
         $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor) {
