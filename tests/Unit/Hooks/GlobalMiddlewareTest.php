@@ -1,93 +1,105 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Tests\TestCase;
 
-it('gracefully handles exceptions when capturing execution preview', function () {
-    $request = new class extends Request
+use function response;
+
+class GlobalMiddlewareTest extends TestCase
+{
+    public function test_it_gracefully_handles_exceptions_when_capturing_execution_preview()
     {
-        public bool $thrownInGetMethod = false;
-
-        public function getMethod(): string
+        $request = new class extends Request
         {
-            $this->thrownInGetMethod = true;
+            public bool $thrownInGetMethod = false;
+
+            public function getMethod(): string
+            {
+                $this->thrownInGetMethod = true;
+
+                throw new RuntimeException('Whoops!');
+            }
+        };
+        $next = fn () => response('response');
+
+        $middleware = new GlobalMiddleware($this->core);
+        $response = $middleware->handle($request, $next);
+
+        $this->assertTrue($request->thrownInGetMethod);
+        $this->assertSame(1, $this->core->executionState->exceptions);
+        $this->assertSame('response', $response->content());
+    }
+
+    public function test_it_gracefully_handles_exceptions_when_the_terminating_event_doesnt_exist()
+    {
+        Compatibility::$terminatingEventExists = false;
+        $thrownInStageSensor = false;
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+            $thrownInStageSensor = true;
 
             throw new RuntimeException('Whoops!');
-        }
-    };
-    $next = fn () => response('response');
+        };
+        $this->core->executionState->stage = ExecutionStage::Bootstrap;
 
-    $middleware = new GlobalMiddleware(nightwatch());
-    $response = $middleware->handle($request, $next);
+        $middleware = new GlobalMiddleware($this->core);
+        $request = Request::create('/test');
+        $nextCalledWith = null;
+        $next = function ($request) use (&$nextCalledWith) {
+            $nextCalledWith = $request;
 
-    $this->assertTrue($request->thrownInGetMethod);
-    $this->assertSame(1, nightwatch()->executionState->exceptions);
-    $this->assertSame('response', $response->content());
-});
+            return response('response');
+        };
 
-it('gracefully handles exceptions when the terminating event doesn\'t exist', function () {
-    Compatibility::$terminatingEventExists = false;
-    $thrownInStageSensor = false;
-    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
-        $thrownInStageSensor = true;
+        $response = $middleware->handle($request, $next);
 
-        throw new RuntimeException('Whoops!');
-    };
-    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
+        $this->assertFalse($thrownInStageSensor);
+        $this->assertSame('response', $response->content());
+        $this->assertSame($request, $nextCalledWith);
 
-    $middleware = new GlobalMiddleware(nightwatch());
-    $request = Request::create('/test');
-    $nextCalledWith = null;
-    $next = function ($request) use (&$nextCalledWith) {
-        $nextCalledWith = $request;
+        $middleware->terminate($request, $response);
 
-        return response('response');
-    };
+        $this->assertTrue($thrownInStageSensor);
+        $this->assertSame(1, $this->core->executionState->exceptions);
+    }
 
-    $response = $middleware->handle($request, $next);
+    public function test_it_handles_response_types_that_laravel_does_not_wrap()
+    {
+        Compatibility::$terminatingEventExists = false;
+        $thrownInStageSensor = false;
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor) {
+            $thrownInStageSensor = true;
 
-    $this->assertFalse($thrownInStageSensor);
-    $this->assertSame('response', $response->content());
-    $this->assertSame($request, $nextCalledWith);
+            throw new RuntimeException('Whoops!');
+        };
+        $this->core->executionState->stage = ExecutionStage::Bootstrap;
 
-    $middleware->terminate($request, $response);
+        $middleware = new GlobalMiddleware($this->core);
+        $request = Request::create('/test');
+        $nextCalledWith = null;
+        $next = function ($request) use (&$nextCalledWith) {
+            $nextCalledWith = $request;
 
-    $this->assertTrue($thrownInStageSensor);
-    $this->assertSame(1, nightwatch()->executionState->exceptions);
-});
+            return response()->streamDownload(function () {
+                echo '...';
+            });
+        };
 
-it('handles response types that laravel does not wrap', function () {
-    Compatibility::$terminatingEventExists = false;
-    $thrownInStageSensor = false;
-    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
-        $thrownInStageSensor = true;
+        $response = $middleware->handle($request, $next);
 
-        throw new RuntimeException('Whoops!');
-    };
-    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
+        $this->assertFalse($thrownInStageSensor);
+        $this->assertInstanceOf(StreamedResponse::class, $response);
+        $this->assertSame($request, $nextCalledWith);
 
-    $middleware = new GlobalMiddleware(nightwatch());
-    $request = Request::create('/test');
-    $nextCalledWith = null;
-    $next = function ($request) use (&$nextCalledWith) {
-        $nextCalledWith = $request;
+        $middleware->terminate($request, $response);
 
-        return response()->streamDownload(function () {
-            echo '...';
-        });
-    };
-
-    $response = $middleware->handle($request, $next);
-
-    $this->assertFalse($thrownInStageSensor);
-    $this->assertInstanceOf(StreamedResponse::class, $response);
-    $this->assertSame($request, $nextCalledWith);
-
-    $middleware->terminate($request, $response);
-
-    $this->assertTrue($thrownInStageSensor);
-    $this->assertSame(1, nightwatch()->executionState->exceptions);
-});
+        $this->assertTrue($thrownInStageSensor);
+        $this->assertSame(1, $this->core->executionState->exceptions);
+    }
+}

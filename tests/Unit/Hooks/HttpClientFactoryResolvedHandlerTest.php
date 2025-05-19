@@ -1,24 +1,32 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
 use Illuminate\Http\Client\Factory;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
+use RuntimeException;
+use Tests\TestCase;
 
-it('gracefully handles exceptions', function () {
-    $factory = new class extends Factory
+class HttpClientFactoryResolvedHandlerTest extends TestCase
+{
+    public function test_it_gracefully_handles_exceptions()
     {
-        public bool $thrownInGlobalMiddleware = false;
-
-        public function globalMiddleware($middleware)
+        $factory = new class extends Factory
         {
-            $this->thrownInGlobalMiddleware = true;
+            public bool $thrownInGlobalMiddleware = false;
 
-            throw new RuntimeException('Whoops!');
-        }
-    };
+            public function globalMiddleware($middleware)
+            {
+                $this->thrownInGlobalMiddleware = true;
 
-    $handler = new HttpClientFactoryResolvedHandler(nightwatch());
-    $handler($factory);
+                throw new RuntimeException('Whoops!');
+            }
+        };
 
-    $this->assertTrue($factory->thrownInGlobalMiddleware);
-    $this->assertSame(1, nightwatch()->executionState->exceptions);
-});
+        $handler = new HttpClientFactoryResolvedHandler($this->core);
+        $handler($factory);
+
+        $this->assertTrue($factory->thrownInGlobalMiddleware);
+        $this->assertSame(1, $this->core->executionState->exceptions);
+    }
+}

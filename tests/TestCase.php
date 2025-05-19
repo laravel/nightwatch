@@ -26,6 +26,7 @@ use function collect;
 use function env;
 use function Illuminate\Filesystem\join_paths;
 use function now;
+use function realpath;
 use function sprintf;
 use function touch;
 
@@ -37,6 +38,8 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function setUp(): void
     {
+        $_ENV['APP_BASE_PATH'] = realpath(__DIR__.'/../workbench/').'/';
+
         parent::setUp();
 
         Http::preventStrayRequests();

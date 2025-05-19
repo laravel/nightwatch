@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
 use Illuminate\Http\Request;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Routing\Route;
@@ -7,32 +9,38 @@ use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMatchedListener;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
+use Tests\TestCase;
 
-it('gracefully handles middleware registered as a string', function () {
-    $request = Request::create('/users');
-    $route = new Route(['GET'], '/users', ['middleware' => 'api']);
-    $event = new RouteMatched($route, $request);
+class RouteMatchedListenerTest extends TestCase
+{
+    public function test_it_gracefully_handles_middleware_registered_as_a_string()
+    {
+        $request = Request::create('/users');
+        $route = new Route(['GET'], '/users', ['middleware' => 'api']);
+        $event = new RouteMatched($route, $request);
 
-    $this->assertSame('api', $route->action['middleware']);
+        $this->assertSame('api', $route->action['middleware']);
 
-    $handler = new RouteMatchedListener(nightwatch());
-    $handler($event);
+        $handler = new RouteMatchedListener($this->core);
+        $handler($event);
 
-    if (Compatibility::$terminatingEventExists) {
-        $this->assertSame(['api', RouteMiddleware::class], $route->action['middleware']);
-    } else {
-        $this->assertSame([GlobalMiddleware::class, 'api', RouteMiddleware::class], $route->action['middleware']);
+        if (Compatibility::$terminatingEventExists) {
+            $this->assertSame(['api', RouteMiddleware::class], $route->action['middleware']);
+        } else {
+            $this->assertSame([GlobalMiddleware::class, 'api', RouteMiddleware::class], $route->action['middleware']);
+        }
     }
-});
 
-it('gracefully handles exceptions', function () {
-    $request = Request::create('/users');
-    $route = new Route(['GET'], '/users', []);
-    $route->action = 5;
-    $event = new RouteMatched($route, $request);
+    public function test_it_gracefully_handles_exceptions()
+    {
+        $request = Request::create('/users');
+        $route = new Route(['GET'], '/users', []);
+        $route->action = 5;
+        $event = new RouteMatched($route, $request);
 
-    $handler = new RouteMatchedListener(nightwatch());
-    $handler($event);
+        $handler = new RouteMatchedListener($this->core);
+        $handler($event);
 
-    $this->assertSame(1, nightwatch()->executionState->exceptions);
-});
+        $this->assertSame(1, $this->core->executionState->exceptions);
+    }
+}
