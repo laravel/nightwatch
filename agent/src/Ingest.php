@@ -142,40 +142,41 @@ class Ingest
                 body: $payload,
             );
         })->then(function (ResponseInterface $response) use (&$start): null {
+            $duration = microtime(true) - $start;
+
             [$message, $stop, $refreshIn] = $this->parseResponse($response);
 
             if ($stop) {
-                $this->pauseIngestion();
-
-                $this->ingestDetails->markOverQuota($refreshIn);
-
-                call_user_func($this->onOverQuota, $message, microtime(true) - $start);
-
-                return null;
+                $this->stop($this->onOverQuota, $duration, $message, $refreshIn);
+            } else {
+                call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
             }
-
-            call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
 
             return null;
         })->catch(function (Throwable $e) use (&$start): null {
+            $duration = microtime(true) - $start;
+
             [$message, $stop, $refreshIn] = $this->parseException($e);
 
             if ($stop) {
-                $this->pauseIngestion();
-
-                $this->ingestDetails->markOverQuota($refreshIn);
-
-                call_user_func($this->onIngestError, $message, microtime(true) - $start);
-
-                return null;
+                $this->stop($this->onIngestError, $duration, $message, $refreshIn);
+            } else {
+                call_user_func($this->onIngestError, $message, $duration);
             }
-
-            call_user_func($this->onIngestError, $message, microtime(true) - $start);
 
             return null;
         }))->finally(function () use ($currentRequestKey): void {
             unset($this->concurrentRequests[$currentRequestKey]);
         });
+    }
+
+    private function stop(callable $errorHandler, float $duration, string $message, float|int|null $refreshIn = null): void
+    {
+        $this->pauseIngestion();
+
+        $this->ingestDetails->markOverQuota($refreshIn);
+
+        call_user_func($errorHandler, $message, $duration);
     }
 
     /**
