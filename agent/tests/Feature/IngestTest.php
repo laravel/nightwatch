@@ -841,7 +841,7 @@ class IngestTest extends TestCase
 
     public function test_it_stops_ingesting_data_when_already_exceeded_quota(): void
     {
-        $loop = new LoopFake(runForSeconds: 60);
+        $loop = new LoopFake(runForSeconds: 23);
         $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([
             Response::jwt(),
@@ -863,33 +863,42 @@ class IngestTest extends TestCase
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
+
         $this->assertLogMatches(<<<'OUTPUT'
-        {date} {info} Authentication successful {duration}
-        {date} {info} Ingest successful {duration}
-        {date} {info} Ingest failed {duration}: 403 \[Quota exceeded\]
-        OUTPUT, $output);
-        $ingestBrowser->assertSent([
-            Request::ingest([['t' => 'request']]),
-            Request::ingest([['t' => 'request']]),
-        ]);
-        $ingestBrowser->assertPending([]);
-        $loop->assertRun([
-            new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: $this->functionName()),
-            new Timer(interval: 10, runAt: 10, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
-            new Timer(interval: 11, runAt: 11, scheduledAt: 0, scheduledBy: $this->functionName()),
-            new Timer(interval: 10, runAt: 21, scheduledAt: 11, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
-            new Timer(interval: 22, runAt: 22, scheduledAt: 0, scheduledBy: $this->functionName()),
-        ]);
-        $loop->assertCanceled([
-            new Timer(interval: 3_600, canceledAt: 21, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
-        ]);
-        $loop->assertPending([
-            new Timer(interval: 900, runAt: 921, scheduledAt: 21, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
-        ]);
-        $ingestDetailsBrowser->assertSent([
-            Request::json('/api/agent-auth'),
-        ]);
-        $ingestDetailsBrowser->assertPending([]);
+            {date} {info} Authentication successful {duration}
+            {date} {info} Ingest successful {duration}
+            {date} {info} Ingest failed {duration}: 403 \[Quota exceeded\]
+            OUTPUT, $output);
+
+        $ingestBrowser
+            ->assertPending([])
+            ->assertSent([
+                Request::ingest([['t' => 'request']]),
+                Request::ingest([['t' => 'request']]),
+            ])
+            ->assertPending([]);
+
+        $loop
+            ->assertPending([
+                new Timer(interval: 900, runAt: 921, scheduledAt: 21, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+            ])
+            ->assertRun([
+                new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: $this->functionName()),
+                new Timer(interval: 10, runAt: 10, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+                new Timer(interval: 11, runAt: 11, scheduledAt: 0, scheduledBy: $this->functionName()),
+                new Timer(interval: 10, runAt: 21, scheduledAt: 11, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+                new Timer(interval: 22, runAt: 22, scheduledAt: 0, scheduledBy: $this->functionName()),
+            ])
+            ->assertCanceled([
+                new Timer(interval: 3_600, canceledAt: 21, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+            ]);
+
+        $ingestDetailsBrowser
+            ->assertPending([])
+            ->assertSent([
+                Request::json('/api/agent-auth'),
+            ])
+            ->assertProcessing([]);
     }
 
     public function test_it_starts_ingesting_data_after_a_subsequent_successful_authentication(): void
