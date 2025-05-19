@@ -1,85 +1,104 @@
 <?php
 
+namespace Tests\Unit;
+
 use Laravel\NightwatchAgent\StreamBuffer;
+use Tests\TestCase;
 
-it('can pull an empty buffer', function () {
-    $buffer = new StreamBuffer(100);
+use function str_repeat;
 
-    expect($buffer->pull())->toBe('{"records":[]}');
-});
+class StreamBufferTest extends TestCase
+{
+    public function test_it_can_pull_an_empty_buffer(): void
+    {
+        $buffer = new StreamBuffer(100);
 
-it('can write and pull a single record', function () {
-    $buffer = new StreamBuffer(100);
+        $this->assertSame('{"records":[]}', $buffer->pull());
+    }
 
-    $buffer->write('[{"id":1}]');
+    public function test_it_can_write_and_pull_a_single_record(): void
+    {
+        $buffer = new StreamBuffer(100);
 
-    expect($buffer->pull())->toBe('{"records":[{"id":1}]}');
-});
+        $buffer->write('[{"id":1}]');
 
-it('can write and pull two records', function () {
-    $buffer = new StreamBuffer(100);
+        $this->assertSame('{"records":[{"id":1}]}', $buffer->pull());
+    }
 
-    $buffer->write('[{"id":1}]');
-    $buffer->write('[{"id":2}]');
+    public function test_it_can_write_and_pull_two_records(): void
+    {
+        $buffer = new StreamBuffer(100);
 
-    expect($buffer->pull())->toBe('{"records":[{"id":1},{"id":2}]}');
-});
+        $buffer->write('[{"id":1}]');
+        $buffer->write('[{"id":2}]');
 
-it('can write and pull many records', function () {
-    $buffer = new StreamBuffer(100);
+        $this->assertSame('{"records":[{"id":1},{"id":2}]}', $buffer->pull());
+    }
 
-    $buffer->write('[{"id":1}]');
-    $buffer->write('[{"id":2}]');
-    $buffer->write('[{"id":3}]');
-    $buffer->write('[{"id":4}]');
+    public function test_it_can_write_and_pull_many_records(): void
+    {
+        $buffer = new StreamBuffer(100);
 
-    expect($buffer->pull())->toBe('{"records":[{"id":1},{"id":2},{"id":3},{"id":4}]}');
-});
+        $buffer->write('[{"id":1}]');
+        $buffer->write('[{"id":2}]');
+        $buffer->write('[{"id":3}]');
+        $buffer->write('[{"id":4}]');
 
-it('has not reached threshold without writing', function () {
-    $buffer = new StreamBuffer(100);
+        $this->assertSame('{"records":[{"id":1},{"id":2},{"id":3},{"id":4}]}', $buffer->pull());
+    }
 
-    expect($buffer->reachedThreshold())->toBeFalse();
-});
+    public function test_it_has_not_reached_threshold_when_empty(): void
+    {
+        $buffer = new StreamBuffer(100);
 
-it('has not reached threshold when under length', function () {
-    $buffer = new StreamBuffer(100);
+        $this->assertFalse($buffer->reachedThreshold());
+    }
 
-    $buffer->write(str_repeat('a', 99));
+    public function test_it_has_not_reached_threshold_when_under_threshold(): void
+    {
+        $buffer = new StreamBuffer(100);
 
-    expect($buffer->reachedThreshold())->toBeFalse();
-});
+        $buffer->write(str_repeat('a', 99));
 
-it('has reached threshold when at length', function () {
-    $buffer = new StreamBuffer(100);
+        $this->assertFalse($buffer->reachedThreshold());
+    }
 
-    $buffer->write('['.str_repeat('a', 100).']');
+    public function test_it_has_reached_threshold_when_length_matches_threshold(): void
+    {
+        $buffer = new StreamBuffer(100);
 
-    expect($buffer->reachedThreshold())->toBeTrue();
-});
+        $buffer->write('['.str_repeat('a', 100).']');
 
-it('has reached threshold when over length', function () {
-    $buffer = new StreamBuffer(100);
+        $this->assertTrue($buffer->reachedThreshold());
+    }
 
-    $buffer->write('['.str_repeat('a', 101).']');
+    public function test_it_has_reached_threshold_when_length_is_over_threshold(): void
+    {
+        $buffer = new StreamBuffer(100);
 
-    expect($buffer->reachedThreshold())->toBeTrue();
-});
+        $buffer->write('['.str_repeat('a', 101).']');
 
-it('has not reached threshold after pull', function () {
-    $buffer = new StreamBuffer(100);
+        $this->assertTrue($buffer->reachedThreshold());
+    }
 
-    $buffer->write('['.str_repeat('a', 101).']');
-    $buffer->pull();
+    public function test_it_pulling_resets_reached_threshold_state(): void
+    {
+        $buffer = new StreamBuffer(100);
 
-    expect($buffer->reachedThreshold())->toBeFalse();
-});
+        $buffer->write('['.str_repeat('a', 101).']');
+        $this->assertTrue($buffer->reachedThreshold());
+        $buffer->pull();
 
-it('empties the buffer while pulling', function () {
-    $buffer = new StreamBuffer(100);
+        $this->assertFalse($buffer->reachedThreshold());
+    }
 
-    $buffer->write('[{"id":1}]');
+    public function test_it_empties_the_buffer_while_pulling(): void
+    {
+        $buffer = new StreamBuffer(100);
 
-    expect($buffer->pull())->toBe('{"records":[{"id":1}]}');
-    expect($buffer->pull())->toBe('{"records":[]}');
-});
+        $buffer->write('[{"id":1}]');
+
+        $this->assertSame('{"records":[{"id":1}]}', $buffer->pull());
+        $this->assertSame('{"records":[]}', $buffer->pull());
+    }
+}

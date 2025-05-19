@@ -6,13 +6,11 @@ use Closure;
 use Illuminate\Foundation\Application;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\LazyValue;
-use Laravel\Nightwatch\RecordsBuffer;
 use Laravel\Nightwatch\Types\Str;
 use Laravel\Nightwatch\UserProvider;
 
 use function call_user_func;
 use function memory_get_peak_usage;
-use function memory_reset_peak_usage;
 
 /**
  * @internal
@@ -65,7 +63,6 @@ final class RequestState
         public int $filesWritten = 0,
         public int $cacheEvents = 0,
         public int $hydratedModels = 0,
-        public RecordsBuffer $records = new RecordsBuffer,
         public string $phpVersion = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION.'.'.PHP_RELEASE_VERSION,
         public string $laravelVersion = Application::VERSION,
         public string $executionPreview = '',
@@ -105,7 +102,7 @@ final class RequestState
         return memory_get_peak_usage(true);
     }
 
-    public function reset(): void
+    public function flush(): void
     {
         $this->exceptions = 0;
         $this->logs = 0;
@@ -119,8 +116,6 @@ final class RequestState
         $this->filesWritten = 0;
         $this->cacheEvents = 0;
         $this->hydratedModels = 0;
-        $this->records->flush();
-
-        memory_reset_peak_usage();
+        $this->exceptionPreview = '';
     }
 }

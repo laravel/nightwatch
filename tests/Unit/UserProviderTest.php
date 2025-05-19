@@ -1,36 +1,48 @@
 <?php
 
+namespace Tests\Unit;
+
 use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\UserProvider;
+use Tests\TestCase;
 
-it('limits the length of the user identifier', function () {
-    Auth::login(new GenericUser([
-        'id' => str_repeat('x', 1000),
-    ]));
-    $provider = new UserProvider(app('auth'), fn () => []);
+use function str_repeat;
+use function strlen;
 
-    expect(Auth::id())->toHaveLength(1000);
-    expect($provider->id())->toEqual(str_repeat('x', 255));
-});
+class UserProviderTest extends TestCase
+{
+    public function test_it_limits_the_length_of_the_user_identifier(): void
+    {
+        Auth::login(new GenericUser([
+            'id' => str_repeat('x', 1000),
+        ]));
+        $provider = new UserProvider($this->app['auth'], fn () => []);
 
-it('can lazily retrieve the user', function () {
-    $provider = new UserProvider(app('auth'), fn () => []);
+        $this->assertSame(1000, strlen(Auth::id()));
+        $this->assertSame($provider->id(), str_repeat('x', 255));
+    }
 
-    $id = $provider->id();
+    public function test_it_can_lazily_retrieve_the_user(): void
+    {
+        $provider = new UserProvider($this->app['auth'], fn () => []);
 
-    Auth::login(new GenericUser([
-        'id' => str_repeat('x', 1000),
-    ]));
+        $id = $provider->id();
 
-    expect($id->jsonSerialize())->toEqual(str_repeat('x', 255));
-});
+        Auth::login(new GenericUser([
+            'id' => str_repeat('x', 1000),
+        ]));
 
-it('can remember an authenticated user and limits the length of their identifier', function () {
-    $provider = new UserProvider(app('auth'), fn () => []);
-    $provider->remember($user = new GenericUser([
-        'id' => str_repeat('x', 1000),
-    ]));
+        $this->assertSame(str_repeat('x', 255), $id->jsonSerialize());
+    }
 
-    expect($provider->id()->jsonSerialize())->toEqual(str_repeat('x', 255));
-});
+    public function test_it_can_remember_an_authenticated_user_and_limits_the_length_of_their_identifier(): void
+    {
+        $provider = new UserProvider($this->app['auth'], fn () => []);
+        $provider->remember($user = new GenericUser([
+            'id' => str_repeat('x', 1000),
+        ]));
+
+        $this->assertSame(str_repeat('x', 255), $provider->id()->jsonSerialize());
+    }
+}

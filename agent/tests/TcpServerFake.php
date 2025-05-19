@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Evenement\EventEmitter;
+use PHPUnit\Framework\Assert;
 use React\Socket\ServerInterface;
 use RuntimeException;
 
@@ -17,17 +18,20 @@ class TcpServerFake extends EventEmitter implements ServerInterface
      */
     public array $connections = [];
 
+    public bool $closed = false;
+
     /**
      * @param  string|list<array<string, mixed>>  $records
      */
-    public function pendingConnection(array|string $records): PendingConnection
+    public function pendingConnection(array|string $records, ?string $signature = null): PendingConnection
     {
         if (is_string($records)) {
             return new PendingConnection($this, $records);
         }
 
         $records = json_encode($records, flags: JSON_THROW_ON_ERROR);
-        $records = strlen($records).':'.$records;
+
+        $records = (strlen($records) + 8).':'.TestCase::agentSignature().':'.$records;
 
         return new PendingConnection($this, $records);
     }
@@ -49,6 +53,30 @@ class TcpServerFake extends EventEmitter implements ServerInterface
 
     public function close()
     {
-        throw new RuntimeException(__FUNCTION__);
+        $this->closed = true;
+    }
+
+    /**
+     * @param  list<Connection>  $connections
+     */
+    public function assertHandled(array $connections): self
+    {
+        Assert::assertEquals($connections, $this->connections);
+
+        return $this;
+    }
+
+    public function assertOpen(): self
+    {
+        Assert::assertFalse($this->closed);
+
+        return $this;
+    }
+
+    public function assertClosed(): self
+    {
+        Assert::assertTrue($this->closed);
+
+        return $this;
     }
 }

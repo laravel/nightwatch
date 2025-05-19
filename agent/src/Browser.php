@@ -24,7 +24,7 @@ class Browser implements BrowserContract
     public function post(string $url, array $headers = [], string $body = ''): PromiseInterface
     {
         return $this->browser->post($url, [
-            $this->headers(),
+            ...$this->headers(),
             ...$headers,
         ], $body);
     }

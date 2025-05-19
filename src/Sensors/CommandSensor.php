@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\State\CommandState;
@@ -18,17 +19,18 @@ use function hash;
 final class CommandSensor
 {
     public function __construct(
-        private CommandState $executionState,
+        private Ingest $ingest,
+        private CommandState $commandState,
     ) {
         //
     }
 
     public function __invoke(InputInterface $input, int $exitCode): void
     {
-        $class = $this->executionState->artisan->get($this->executionState->name)::class; // @phpstan-ignore method.nonObject
+        $class = $this->commandState->artisan->get($this->commandState->name)::class; // @phpstan-ignore method.nonObject
 
         /** @var string */
-        $name = $this->executionState->name;
+        $name = $this->commandState->name;
 
         if ($exitCode < 0 || $exitCode > 255) {
             $exitCode = 255;
@@ -39,34 +41,34 @@ final class CommandSensor
             default => (string) $input,
         };
 
-        $this->executionState->records->write(new Command(
-            timestamp: $this->executionState->timestamp,
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
+        $this->ingest->write(new Command(
+            timestamp: $this->commandState->timestamp,
+            deploy: $this->commandState->deploy,
+            server: $this->commandState->server,
             _group: hash('xxh128', $name),
-            trace_id: $this->executionState->trace,
+            trace_id: $this->commandState->trace,
             class: $class,
             name: $name,
             command: $command,
             exit_code: $exitCode,
-            duration: array_sum($this->executionState->stageDurations),
-            bootstrap: $this->executionState->stageDurations[ExecutionStage::Bootstrap->value],
-            action: $this->executionState->stageDurations[ExecutionStage::Action->value],
-            terminating: $this->executionState->stageDurations[ExecutionStage::Terminating->value],
-            exceptions: $this->executionState->exceptions,
-            logs: $this->executionState->logs,
-            queries: $this->executionState->queries,
-            lazy_loads: $this->executionState->lazyLoads,
-            jobs_queued: $this->executionState->jobsQueued,
-            mail: $this->executionState->mail,
-            notifications: $this->executionState->notifications,
-            outgoing_requests: $this->executionState->outgoingRequests,
-            files_read: $this->executionState->filesRead,
-            files_written: $this->executionState->filesWritten,
-            cache_events: $this->executionState->cacheEvents,
-            hydrated_models: $this->executionState->hydratedModels,
-            peak_memory_usage: $this->executionState->peakMemory(),
-            exception_preview: $this->executionState->exceptionPreview,
+            duration: array_sum($this->commandState->stageDurations),
+            bootstrap: $this->commandState->stageDurations[ExecutionStage::Bootstrap->value],
+            action: $this->commandState->stageDurations[ExecutionStage::Action->value],
+            terminating: $this->commandState->stageDurations[ExecutionStage::Terminating->value],
+            exceptions: $this->commandState->exceptions,
+            logs: $this->commandState->logs,
+            queries: $this->commandState->queries,
+            lazy_loads: $this->commandState->lazyLoads,
+            jobs_queued: $this->commandState->jobsQueued,
+            mail: $this->commandState->mail,
+            notifications: $this->commandState->notifications,
+            outgoing_requests: $this->commandState->outgoingRequests,
+            files_read: $this->commandState->filesRead,
+            files_written: $this->commandState->filesWritten,
+            cache_events: $this->commandState->cacheEvents,
+            hydrated_models: $this->commandState->hydratedModels,
+            peak_memory_usage: $this->commandState->peakMemory(),
+            exception_preview: $this->commandState->exceptionPreview,
         ));
     }
 }

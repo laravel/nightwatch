@@ -11,10 +11,13 @@ use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use Illuminate\Queue\Events\JobAttempted;
-use Illuminate\Queue\Events\JobExceptionOccurred;
+use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobPopping;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Queue\Events\JobReleasedAfterException;
+use Illuminate\Queue\Events\Looping;
+use Illuminate\Queue\Events\WorkerStopping;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\State\CommandState;
@@ -62,26 +65,27 @@ final class CommandStartingListener
         $this->nightwatch->configureForJobs();
 
         /**
-         * @see \Laravel\Nightwatch\State\CommandState::reset()
-         */
-        $this->events->listen(JobPopping::class, (new JobPoppingListener($this->nightwatch))(...));
-
-        /**
+         * @see \Laravel\Nightwatch\Core::digest()
+         * @see \Laravel\Nightwatch\State\CommandState::flush()
          * @see \Laravel\Nightwatch\State\CommandState::$timestamp
          * @see \Laravel\Nightwatch\State\CommandState::$id
          */
-        $this->events->listen(JobProcessing::class, (new JobProcessingListener($this->nightwatch))(...));
-
-        /**
-         * @see \Laravel\Nightwatch\Records\Exception
-         */
-        $this->events->listen(JobExceptionOccurred::class, (new JobExceptionOccurredListener($this->nightwatch))(...));
+        $this->events->listen([
+            Looping::class,
+            JobPopping::class,
+            JobProcessing::class,
+            WorkerStopping::class,
+        ], (new WorkerEventListener($this->nightwatch))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
-         * @see \Laravel\Nightwatch\Core::ingest()
+         * @see \Laravel\Nightwatch\Core::digest()
          */
-        $this->events->listen(JobAttempted::class, (new JobAttemptedListener($this->nightwatch))(...));
+        $this->events->listen([
+            JobProcessed::class,
+            JobReleasedAfterException::class,
+            JobFailed::class,
+        ], (new JobAttemptListener($this->nightwatch))(...));
     }
 
     private function registerScheduledTaskHooks(): void
@@ -91,7 +95,7 @@ final class CommandStartingListener
         $this->events->listen(ScheduledTaskStarting::class, (new ScheduledTaskStartingListener($this->nightwatch))(...));
 
         /**
-         * @see \Laravel\Nightwatch\Core::ingest()
+         * @see \Laravel\Nightwatch\Core::digest()
          */
         $this->events->listen([
             ScheduledTaskFinished::class,
@@ -124,7 +128,7 @@ final class CommandStartingListener
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Records\Command
-         * @see \Laravel\Nightwatch\Core::ingest()
+         * @see \Laravel\Nightwatch\Core::digest()
          *
          * TODO Check this isn't a memory leak in Octane.
          * TODO Check if we can cache this handler between requests on Octane. Same goes for other

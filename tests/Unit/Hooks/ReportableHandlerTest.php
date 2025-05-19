@@ -1,26 +1,34 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\ReportableHandler;
+use RuntimeException;
+use Tests\TestCase;
 
-it('gracefully handles exceptions', function () {
-    $unrecoverableExceptions = [];
-    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions) {
-        $unrecoverableExceptions[] = $e;
-    });
-    $thrownInExceptionSensor = false;
-    nightwatch()->sensor->exceptionSensor = function () use (&$thrownInExceptionSensor) {
-        $thrownInExceptionSensor = true;
+class ReportableHandlerTest extends TestCase
+{
+    public function test_it_gracefully_handles_exceptions(): void
+    {
+        $unrecoverableExceptions = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions): void {
+            $unrecoverableExceptions[] = $e;
+        });
+        $thrownInExceptionSensor = false;
+        $this->core->sensor->exceptionSensor = function () use (&$thrownInExceptionSensor): void {
+            $thrownInExceptionSensor = true;
 
-        throw new RuntimeException('Whoops sensor!');
-    };
+            throw new RuntimeException('Whoops sensor!');
+        };
 
-    $exception = new RuntimeException('Whoops app!');
+        $exception = new RuntimeException('Whoops app!');
 
-    $handler = new ReportableHandler(nightwatch());
-    $handler($exception);
+        $handler = new ReportableHandler($this->core);
+        $handler($exception);
 
-    expect($thrownInExceptionSensor)->toBeTrue();
-    expect($unrecoverableExceptions)->toHaveCount(1);
-    expect($unrecoverableExceptions[0]->getMessage())->toBe('Whoops sensor!');
-});
+        $this->assertTrue($thrownInExceptionSensor);
+        $this->assertCount(1, $unrecoverableExceptions);
+        $this->assertSame('Whoops sensor!', $unrecoverableExceptions[0]->getMessage());
+    }
+}

@@ -9,7 +9,7 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class QueuedJob
+final class QueuedJob extends Record
 {
     public int $v = 1;
 

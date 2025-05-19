@@ -1,67 +1,44 @@
 <?php
 
-use Laravel\Nightwatch\Contracts\LocalIngest;
+namespace Tests\Feature\Console;
 
-use function Pest\Laravel\artisan;
+use RuntimeException;
+use Tests\FakeIngest;
+use Tests\TestCase;
 
-it('fails when nightwatch is disabled', function () {
-    nightwatch()->enabled = false;
-
-    artisan('nightwatch:status')
-        ->expectsOutputToContain('Nightwatch is disabled')
-        ->assertExitCode(1);
-});
-
-it('fails when ingest is unable to ping', function () {
-    nightwatch()->ingest = new class implements LocalIngest
+class StatusCommandTest extends TestCase
+{
+    public function test_it_fails_when_nightwatch_is_disabled(): void
     {
-        public function write(string $payload): void
-        {
-            //
-        }
+        $this->core->config['enabled'] = false;
 
-        public function ping(): bool
-        {
-            return false;
-        }
-    };
-    artisan('nightwatch:status')
-        ->expectsOutputToContain('Failed to check the status of the Nightwatch agent')
-        ->assertExitCode(1);
-});
+        $this->artisan('nightwatch:status')
+            ->expectsOutputToContain('Nightwatch is disabled')
+            ->assertExitCode(1)
+            ->run();
+    }
 
-it('fails when ingest throws an exception while pinging', function () {
-    nightwatch()->ingest = new class implements LocalIngest
+    public function test_it_fails_when_ingest_throws_an_exception_while_pinging(): void
     {
-        public function write(string $payload): void
+        $this->fakeIngest(new class extends FakeIngest
         {
-            //
-        }
+            public function ping(): void
+            {
+                throw new RuntimeException('Whoops!');
+            }
+        });
 
-        public function ping(): bool
-        {
-            return throw new RuntimeException('Whoops!');
-        }
-    };
-    artisan('nightwatch:status')
-        ->expectsOutputToContain('Whoops!')
-        ->assertExitCode(1);
-});
+        $this->artisan('nightwatch:status')
+            ->expectsOutputToContain('Whoops!')
+            ->assertExitCode(1);
+    }
 
-it('can ping', function () {
-    nightwatch()->ingest = new class implements LocalIngest
+    public function test_it_can_ping(): void
     {
-        public function write(string $payload): void
-        {
-            //
-        }
+        $this->fakeIngest();
 
-        public function ping(): bool
-        {
-            return true;
-        }
-    };
-    artisan('nightwatch:status')
-        ->expectsOutputToContain('The Nightwatch agent is running and accepting connections')
-        ->assertExitCode(0);
-});
+        $this->artisan('nightwatch:status')
+            ->expectsOutputToContain('The Nightwatch agent is running and accepting connections')
+            ->assertExitCode(0);
+    }
+}

@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
@@ -27,6 +28,7 @@ use function strlen;
 final class RequestSensor
 {
     public function __construct(
+        private Ingest $ingest,
         private RequestState $requestState,
     ) {
         //
@@ -58,7 +60,7 @@ final class RequestSensor
             //
         }
 
-        $this->requestState->records->write(new RequestRecord(
+        $this->ingest->write(new RequestRecord(
             timestamp: $this->requestState->timestamp,
             deploy: $this->requestState->deploy,
             server: $this->requestState->server,

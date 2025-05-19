@@ -9,7 +9,7 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class CacheEvent
+final class CacheEvent extends Record
 {
     public int $v = 1;
 

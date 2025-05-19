@@ -1,33 +1,36 @@
 <?php
 
-use Laravel\Nightwatch\Contracts\LocalIngest;
+namespace Tests\Unit;
+
 use Laravel\Nightwatch\Facades\Nightwatch;
+use RuntimeException;
+use Tests\FakeIngest;
+use Tests\TestCase;
 
-it('gracefully handles exceptions thrown while ingesting', function () {
-    $exceptions = [];
-    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
-        $exceptions[] = $e;
-    });
-    nightwatch()->ingest = new class implements LocalIngest
+class CoreTest extends TestCase
+{
+    public function test_it_gracefully_handles_exceptions_thrown_while_ingesting(): void
     {
-        public bool $thrownInWrite = false;
-
-        public function write(string $payload): void
+        $exceptions = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
+            $exceptions[] = $e;
+        });
+        $this->fakeIngest(new class extends FakeIngest
         {
-            $this->thrownInWrite = true;
+            public bool $thrownInDigest = false;
 
-            throw new RuntimeException('Whoops!');
-        }
+            public function digest(): void
+            {
+                $this->thrownInDigest = true;
 
-        public function ping(): bool
-        {
-            return true;
-        }
-    };
+                throw new RuntimeException('Whoops!');
+            }
+        });
 
-    nightwatch()->ingest();
+        $this->core->digest();
 
-    expect(nightwatch()->ingest->thrownInWrite)->toBeTrue();
-    expect($exceptions)->toHaveCount(1);
-    expect($exceptions[0]->getMessage())->toBe('Whoops!');
-});
+        $this->assertTrue($this->core->ingest->thrownInDigest);
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Whoops!', $exceptions[0]->getMessage());
+    }
+}

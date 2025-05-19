@@ -21,8 +21,7 @@ final class AgentCommand extends Command
         {--auth-timeout=}
         {--ingest-connection-timeout=}
         {--ingest-timeout=}
-        {--server=}
-        {--base-url=}';
+        {--server=}';
 
     /**
      * @var string
@@ -39,8 +38,6 @@ final class AgentCommand extends Command
     public function handle(): void
     {
         $refreshToken = $this->token;
-
-        $baseUrl = $this->option('base-url');
 
         $listenOn = $this->option('listen-on');
 

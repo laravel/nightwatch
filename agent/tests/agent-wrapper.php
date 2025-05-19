@@ -49,6 +49,19 @@ if ($viaPhar === false) {
     pcntl_async_signals(true);
     pcntl_signal(SIGTERM, function () use ($payloadFile, $ingestDetailsBrowser, $ingestBrowser, $loop, $server) {
         $server?->removeAllListeners();
+        foreach ($server->connections ?? [] as $connection) {
+            $connection->removeAllListeners();
+        }
+        if ($loop?->stopped) {
+            foreach ($loop->pendingTimers as &$timer) {
+                $timer = [
+                    ...$timer,
+                    'callback' => null,
+                    'instance' => null,
+                    'runAt' => null,
+                ];
+            }
+        }
 
         file_put_contents($payloadFile, serialize([
             'ingestDetailsBrowser' => $ingestDetailsBrowser,
@@ -95,11 +108,25 @@ if ($viaPhar) {
     });
 } else {
     call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop) {  // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
+        $basePath = __DIR__.'/../build';
         require __DIR__.'/../src/agent.php';
     });
 }
 
 $server?->removeAllListeners();
+foreach ($server->connections ?? [] as $connection) {
+    $connection->removeAllListeners();
+}
+if ($loop?->stopped) {
+    foreach ($loop->pendingTimers as &$timer) {
+        $timer = [
+            ...$timer,
+            'callback' => null,
+            'instance' => null,
+            'runAt' => null,
+        ];
+    }
+}
 
 file_put_contents($payloadFile, serialize([
     'ingestDetailsBrowser' => $ingestDetailsBrowser,

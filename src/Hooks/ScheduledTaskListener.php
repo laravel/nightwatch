@@ -37,6 +37,6 @@ final class ScheduledTaskListener
             $this->nightwatch->report($e);
         }
 
-        $this->nightwatch->ingest();
+        $this->nightwatch->digest();
     }
 }

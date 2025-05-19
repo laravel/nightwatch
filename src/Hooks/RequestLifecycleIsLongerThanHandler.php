@@ -10,6 +10,8 @@ use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
+use function memory_reset_peak_usage;
+
 /**
  * @internal
  */
@@ -44,6 +46,10 @@ final class RequestLifecycleIsLongerThanHandler
             $this->nightwatch->report($e);
         }
 
-        $this->nightwatch->ingest();
+        $this->nightwatch->digest();
+
+        // TODO: Move this to an Octane-only hook.
+        $this->nightwatch->flush();
+        // memory_reset_peak_usage();
     }
 }

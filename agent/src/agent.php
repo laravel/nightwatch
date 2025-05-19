@@ -10,14 +10,15 @@ use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
-use Throwable;
 
 use function date;
+use function file_get_contents;
 use function gethostname;
 use function in_array;
 use function round;
 use function rtrim;
 use function str_replace;
+use function substr;
 
 require __DIR__.'/../vendor/react/promise/src/functions_include.php';
 require __DIR__.'/../vendor/autoload.php';
@@ -57,13 +58,6 @@ $ingestTimeout ??= 10;
 $server ??= (string) gethostname();
 
 /*
- * Internal state...
- */
-
-$debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
-$basePath = str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
-
-/*
  * Logging helpers...
  */
 
@@ -73,6 +67,23 @@ $info = static function (string $message): void {
 $error = static function (string $message): void {
     echo date('Y-m-d H:i:s').' [ERROR] '.$message.PHP_EOL;
 };
+
+/*
+ * Internal state...
+ */
+
+$debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
+/** @var ?string $basePath */
+$basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
+$signature = file_get_contents($basePath.'/signature.txt');
+
+if ($signature === false) {
+    $error("Unable to read the agent's signature");
+
+    return;
+} else {
+    $signature = substr($signature, 0, 7);
+}
 
 /*
  * Initialize services...
@@ -107,7 +118,7 @@ $ingestDetails = new IngestDetailsRepository(
     loop: $loop,
     browser: $ingestDetailsBrowser,
     onAuthenticationSuccess: static fn (IngestDetails $ingestDetails, float $duration) => $info('Authentication successful ['.round($duration, 3).'s]'),
-    onAuthenticationError: static fn (Throwable $e, float $duration) => $info('Authentication failed ['.round($duration, 3).'s]: '.$e->getMessage()),
+    onAuthenticationError: static fn (string $message, float $duration) => $info('Authentication failed ['.round($duration, 3).'s]: '.$message),
     onUnderQuota: static function () use (&$ingest) {
         /** @var Ingest $ingest */
         $ingest->resumeIngestion();
@@ -134,16 +145,26 @@ $ingest = new Ingest(
     concurrentRequestLimit: 2,
     maxBufferDurationInSeconds: $debug ? 1 : 10,
     onIngestSuccess: static fn (ResponseInterface $response, float $duration) => $info('Ingest successful ['.round($duration, 3).'s]'),
-    onIngestError: static fn (Throwable $e, float $duration) => $info('Ingest failed ['.round($duration, 3).'s]: '.$e->getMessage()),
-    onOverQuota: static fn (float $duration) => $info('Ingest attempted ['.round($duration, 3).'s]: Quota exceeded'),
+    onIngestError: static fn (string $message, float $duration) => $info('Ingest failed ['.round($duration, 3).'s]: '.$message),
+    onOverQuota: static fn (string $message, float $duration) => $info('Ingest attempted ['.round($duration, 3).'s]: '.$message),
 );
 
 $server = new Server(
     serverResolver: $serverResolver ?? static fn (): ServerInterface => new TcpServer($listenOn),
+    signature: $signature,
     onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]"),
-    onServerError: static fn (Throwable $e) => $error("Server error: {$e->getMessage()}"),
-    onConnectionError: static fn (Throwable $e) => $error("Connection error: {$e->getMessage()}"),
+    onServerError: static fn (string $message) => $error("Server error: {$message}"),
+    onConnectionError: static fn (string $message) => $error("Connection error: {$message}"),
     onPayloadReceived: $ingest->write(...),
+    onInvalidSignature: static function () use ($info, $loop, $ingest) {
+        $info('Incoming signature has changed');
+
+        $ingest->forceDigest()->finally(static function () use ($info, $loop) {
+            $loop->stop();
+
+            $info('Shutting down');
+        });
+    },
 );
 
 /*

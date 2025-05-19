@@ -9,7 +9,7 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class Query
+final class Query extends Record
 {
     public int $v = 1;
 

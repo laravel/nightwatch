@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -23,6 +24,7 @@ final class NotificationSensor
     private ?float $startTime = null;
 
     public function __construct(
+        private Ingest $ingest,
         private RequestState|CommandState $executionState,
         private Clock $clock,
     ) {
@@ -51,7 +53,7 @@ final class NotificationSensor
 
         $this->executionState->notifications++;
 
-        $this->executionState->records->write(new Notification(
+        $this->ingest->write(new Notification(
             timestamp: $now,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

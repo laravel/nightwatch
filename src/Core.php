@@ -3,7 +3,7 @@
 namespace Laravel\Nightwatch;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Laravel\Nightwatch\Contracts\LocalIngest;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
 use Laravel\Nightwatch\State\CommandState;
@@ -26,16 +26,15 @@ final class Core
     public $userDetailsResolver = null;
 
     /**
-     * @param  TState  $state
-     * @param  array{ requests: float, commands: float }  $sampling
+     * @param  TState  $executionState
+     * @param  array{ enabled: bool, sampling: array{ requests: float, commands: float }}  $config
      */
     public function __construct(
-        public LocalIngest $ingest,
+        public Ingest $ingest,
         public SensorManager $sensor,
-        public RequestState|CommandState $state,
+        public RequestState|CommandState $executionState,
         public Clock $clock,
-        public bool $enabled,
-        public array $sampling,
+        public array $config,
     ) {
         $this->routesWithMiddlewareRegistered = new WeakMap;
     }
@@ -58,17 +57,29 @@ final class Core
 
     /**
      * @internal
+     *
+     * @return $this
      */
-    public function ingest(): void
+    public function digest(): self
     {
-        if (! $this->shouldSample) {
-            return;
+        if (! $this->shouldSample || $this->waitingForJob) {
+            return $this;
         }
 
         try {
-            $this->ingest->write($this->state->records->pull());
+            $this->ingest->digest();
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }
+
+        return $this;
+    }
+
+    /**
+     * @internal
+     */
+    public function enabled(): bool
+    {
+        return $this->config['enabled'];
     }
 }

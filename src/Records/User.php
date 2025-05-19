@@ -7,7 +7,7 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class User
+final class User extends Record
 {
     public int $v = 1;
 

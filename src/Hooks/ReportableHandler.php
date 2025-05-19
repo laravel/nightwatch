@@ -7,8 +7,6 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
-use function in_array;
-
 /**
  * @internal
  */
@@ -25,7 +23,7 @@ final class ReportableHandler
 
     public function __invoke(Throwable $e): void
     {
-        if (in_array($this->nightwatch->state->source, ['job', 'schedule'], true)) {
+        if ($this->nightwatch->executionState->source === 'schedule') {
             return;
         }
 

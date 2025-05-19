@@ -9,7 +9,7 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class OutgoingRequest
+final class OutgoingRequest extends Record
 {
     public int $v = 1;
 

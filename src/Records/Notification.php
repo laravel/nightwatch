@@ -9,7 +9,7 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class Notification
+final class Notification extends Record
 {
     public int $v = 1;
 

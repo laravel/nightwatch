@@ -12,16 +12,22 @@ use React\Promise\PromiseInterface;
 use RuntimeException;
 use Throwable;
 
+use function array_key_last;
 use function call_user_func;
+use function count;
 use function gzencode;
 use function json_decode;
 use function microtime;
+use function React\Promise\all;
 use function strlen;
 use function substr;
 
 class Ingest
 {
-    private int $concurrentRequests = 0;
+    /**
+     * @var array<int<0, max>, PromiseInterface<null>>
+     */
+    private array $concurrentRequests = [];
 
     private ?TimerInterface $sendBufferAfterDelayTimer = null;
 
@@ -33,8 +39,8 @@ class Ingest
      * @param  LoopInterface  $loop
      * @param  Browser  $browser
      * @param  (Closure(ResponseInterface $response, float $duration): mixed)  $onIngestSuccess
-     * @param  (Closure(Throwable $e, float $duration): mixed)  $onIngestError
-     * @param  (Closure(float $duration): mixed)  $onOverQuota
+     * @param  (Closure(string $message, float $duration): mixed)  $onIngestError
+     * @param  (Closure(string $message, float $duration): mixed)  $onOverQuota
      */
     public function __construct(
         private $loop,
@@ -55,29 +61,42 @@ class Ingest
         $this->buffer->write($payload);
 
         if ($this->buffer->reachedThreshold()) {
-            $records = $this->buffer->pull();
-
             if ($this->sendBufferAfterDelayTimer !== null) {
                 $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
 
                 $this->sendBufferAfterDelayTimer = null;
             }
 
-            $this->ingest($records);
+            $this->digest();
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->sendBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, function (): void {
-                $records = $this->buffer->pull();
-
+            $this->sendBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, function () {
                 $this->sendBufferAfterDelayTimer = null;
 
-                $this->ingest($records);
+                $this->digest();
             });
         }
+    }
+
+    /**
+     * @return PromiseInterface<null>
+     */
+    public function forceDigest(): PromiseInterface
+    {
+        if ($this->sendBufferAfterDelayTimer !== null) {
+            $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
+        }
+
+        if ($this->buffer->isNotEmpty()) {
+            $this->digest();
+        }
+
+        return all($this->concurrentRequests)->then(static fn () => null);
     }
 
     public function pauseIngestion(): void
     {
         $this->buffer = new NullBuffer;
+
         $this->streamBufferBackup->flush();
     }
 
@@ -86,10 +105,12 @@ class Ingest
         $this->buffer = $this->streamBufferBackup;
     }
 
-    private function ingest(string $payload): void
+    private function digest(): void
     {
-        if ($this->concurrentRequests >= $this->concurrentRequestLimit) {
-            call_user_func($this->onIngestError, new RuntimeException("Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing"), 0.0);
+        $payload = $this->buffer->pull();
+
+        if (count($this->concurrentRequests) >= $this->concurrentRequestLimit) {
+            call_user_func($this->onIngestError, "Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing", 0.0);
 
             return;
         }
@@ -98,15 +119,15 @@ class Ingest
         $payload = gzencode($payload);
 
         if ($payload === false) {
-            call_user_func($this->onIngestError, new RuntimeException('Unable to compress payload.'), 0.0);
+            call_user_func($this->onIngestError, 'Unable to compress payload.', 0.0);
 
             return;
         }
 
-        $this->concurrentRequests++;
         $start = microtime(true);
+        $currentRequestKey = (array_key_last($this->concurrentRequests) ?? -1) + 1;
 
-        $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails) use ($payload, &$start): PromiseInterface {
+        ($this->concurrentRequests[$currentRequestKey] = $this->ingestDetails->get()->then(function (?IngestDetails $ingestDetails) use ($payload, &$start): PromiseInterface {
             $start = microtime(true);
 
             if ($ingestDetails === null) {
@@ -120,42 +141,82 @@ class Ingest
                 ],
                 body: $payload,
             );
-        })->then(function (ResponseInterface $response) use (&$start): void {
-            /** @var array{remaining: int} */
-            $content = json_decode($response->getBody()->getContents(), associative: true, flags: JSON_THROW_ON_ERROR);
+        })->then(function (ResponseInterface $response) use (&$start): null {
+            $duration = microtime(true) - $start;
 
-            if ($content['remaining'] <= 0) {
-                $this->pauseIngestion();
-                $this->ingestDetails->markOverQuota();
+            [$message, $stop, $refreshIn] = $this->parseResponse($response);
 
-                call_user_func($this->onOverQuota, microtime(true) - $start);
-
-                return;
+            if ($stop) {
+                $this->stop($this->onOverQuota, $duration, $message, $refreshIn);
+            } else {
+                call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
             }
 
-            call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
-        })->catch(function (Throwable $e) use (&$start): void {
-            call_user_func($this->onIngestError, $this->parseException($e), microtime(true) - $start);
-        })->finally(function (): void {
-            $this->concurrentRequests--;
+            return null;
+        })->catch(function (Throwable $e) use (&$start): null {
+            $duration = microtime(true) - $start;
+
+            [$message, $stop, $refreshIn] = $this->parseException($e);
+
+            if ($stop) {
+                $this->stop($this->onIngestError, $duration, $message, $refreshIn);
+            } else {
+                call_user_func($this->onIngestError, $message, $duration);
+            }
+
+            return null;
+        }))->finally(function () use ($currentRequestKey): void {
+            unset($this->concurrentRequests[$currentRequestKey]);
         });
     }
 
-    private function parseException(Throwable $e): Throwable
+    private function stop(callable $errorHandler, float $duration, string $message, float|int|null $refreshIn = null): void
     {
-        return $e instanceof ResponseException
-            ? $this->parseResponseException($e)
-            : $e;
+        $this->pauseIngestion();
+
+        $this->ingestDetails->markOverQuota($refreshIn);
+
+        call_user_func($errorHandler, $message, $duration);
     }
 
-    private function parseResponseException(ResponseException $e): Throwable
+    /**
+     * @return array{0: string, 1: bool, 2: null|int|float}
+     */
+    private function parseException(Throwable $e): array
     {
-        $body = $e->getResponse()->getBody()->getContents();
+        return $e instanceof ResponseException
+            ? $this->parseResponse($e->getResponse())
+            : [$e->getMessage(), false, null];
+    }
 
-        if (strlen($body) > 255) {
-            $body = substr($body, 0, 250).'[...]';
+    /**
+     * @return array{0: string, 1: bool, 2: null|int|float}
+     */
+    private function parseResponse(ResponseInterface $response): array
+    {
+        $message = (string) $response->getBody();
+        $stop = false;
+        $refreshIn = null;
+
+        try {
+            /** @var array{ message?: string, refresh_in?: int|float, stop?: bool } $json */
+            $json = json_decode($message, associative: true, flags: JSON_THROW_ON_ERROR);
+
+            $message = $json['message'] ?? $message;
+            $stop = $json['stop'] ?? $stop;
+            $refreshIn = $json['refresh_in'] ?? $refreshIn;
+        } catch (Throwable $exception) {
+            //
         }
 
-        return new RuntimeException("{$e->getResponse()->getStatusCode()} [{$body}]");
+        if (strlen($message) > 1005) {
+            $message = substr($message, 0, 1000).'[...]';
+        }
+
+        return [
+            "{$response->getStatusCode()} [{$message}]",
+            $stop,
+            $refreshIn,
+        ];
     }
 }

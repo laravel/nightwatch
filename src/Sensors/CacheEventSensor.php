@@ -16,6 +16,7 @@ use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -41,8 +42,9 @@ final class CacheEventSensor
     ];
 
     public function __construct(
-        private Clock $clock,
+        private Ingest $ingest,
         private RequestState|CommandState $executionState,
+        private Clock $clock,
     ) {
         //
     }
@@ -86,7 +88,7 @@ final class CacheEventSensor
             default => throw new RuntimeException('Unexpected event type ['.$event::class.']'),
         };
 
-        $this->executionState->records->write(new CacheEventRecord(
+        $this->ingest->write(new CacheEventRecord(
             timestamp: $startTime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

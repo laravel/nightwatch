@@ -1,28 +1,37 @@
 <?php
 
+namespace Tests\Feature;
+
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use RuntimeException;
+use Tests\TestCase;
 
-use function Pest\Laravel\get;
+class IngestTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        $this->forceRequestExecutionState();
 
-beforeAll(function () {
-    forceRequestExecutionState();
-});
+        parent::setUp();
+    }
 
-it('handles ingesting zero records', function () {
-    $exceptions = [];
-    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
-        $exceptions[] = $e;
-    });
-    $ingest = fakeIngest();
-    nightwatch()->sensor->requestSensor = fn () => throw new RuntimeException('Whoops request!');
-    nightwatch()->sensor->exceptionSensor = fn () => throw new RuntimeException('Whoops exception!');
-    Route::get('/users', fn () => []);
+    public function test_it_handles_ingesting_zero_records(): void
+    {
+        $exceptions = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
+            $exceptions[] = $e;
+        });
+        $ingest = $this->fakeIngest();
+        $this->core->sensor->requestSensor = fn () => throw new RuntimeException('Whoops request!');
+        $this->core->sensor->exceptionSensor = fn () => throw new RuntimeException('Whoops exception!');
+        Route::get('/users', fn () => []);
 
-    $response = get('/users');
+        $response = $this->get('/users');
 
-    $response->assertOk();
-    expect($exceptions)->toHaveCount(1);
-    expect($exceptions[0]->getMessage())->toBe('Whoops exception!');
-    expect($ingest->latestWriteAsString())->toBe('[]');
-});
+        $response->assertOk();
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Whoops exception!', $exceptions[0]->getMessage());
+        $this->assertSame('[]', $ingest->latestWriteAsString());
+    }
+}

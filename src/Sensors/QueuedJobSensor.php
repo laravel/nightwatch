@@ -8,6 +8,7 @@ use Illuminate\Queue\Events\JobQueueing;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -34,6 +35,7 @@ final class QueuedJobSensor
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
      */
     public function __construct(
+        private Ingest $ingest,
         private RequestState|CommandState $executionState,
         private Clock $clock,
         private array $connectionConfig,
@@ -63,7 +65,7 @@ final class QueuedJobSensor
 
         $this->executionState->jobsQueued++;
 
-        $this->executionState->records->write(new QueuedJob(
+        $this->ingest->write(new QueuedJob(
             timestamp: $now,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

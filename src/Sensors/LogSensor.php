@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\Log;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -15,6 +16,7 @@ use function json_encode;
 final class LogSensor
 {
     public function __construct(
+        private Ingest $ingest,
         private RequestState|CommandState $executionState,
     ) {
         //
@@ -24,7 +26,7 @@ final class LogSensor
     {
         $this->executionState->logs++;
 
-        $this->executionState->records->write(new Log(
+        $this->ingest->write(new Log(
             timestamp: (float) $record->datetime->format('U.u'),
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,

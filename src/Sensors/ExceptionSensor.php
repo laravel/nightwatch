@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\State\CommandState;
@@ -30,8 +31,9 @@ use function json_encode;
 final class ExceptionSensor
 {
     public function __construct(
-        private Clock $clock,
+        private Ingest $ingest,
         private RequestState|CommandState $executionState,
+        private Clock $clock,
         private Location $location,
     ) {
         //
@@ -57,7 +59,7 @@ final class ExceptionSensor
             $this->executionState->exceptionPreview = $normalizedException->getMessage();
         }
 
-        $this->executionState->records->write(new Exception(
+        $this->ingest->write(new Exception(
             timestamp: $nowMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
