@@ -174,7 +174,7 @@ class IngestTest extends TestCase
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<'OUTPUT'
-        {date} {info} Authentication failed {duration}: 401 \[{"message":"Invalid environment token"}\]
+        {date} {info} Authentication failed {duration}: 401 \[Invalid environment token\]
         {date} {info} Ingest failed {duration}: No authentication details
         OUTPUT, $output);
         $ingestBrowser->assertSent([]);

@@ -176,26 +176,43 @@ class IngestDetailsRepository
      */
     private function parseResponseException(ResponseException $e): array
     {
-        $exception = new RuntimeException($this->parseErrorMessage($e->getResponse()));
+        [$message, $retryIn] = $this->parseInstructions($e->getResponse());
 
-        if ($e->getResponse()->getStatusCode() === 401) {
-            return [$exception, 3_600];
-        }
-
-        return $this->hasAuthenticated
-            ? [$exception, $this->slowRetryStrategy()]
-            : [$exception, $this->quickRetryStrategy()];
+        return [
+            new RuntimeException($message),
+            $retryIn,
+        ];
     }
 
-    private function parseErrorMessage(ResponseInterface $response): string
+    /**
+     * @return array{ 0: string, 1: int }
+     */
+    private function parseInstructions(ResponseInterface $response): array
     {
-        $body = $response->getBody();
+        $message = (string) $response->getBody();
+        $retryIn = null;
 
-        if (strlen($body) > 255) {
-            $body = substr($body, 0, 250).'[...]';
+        try {
+            $json = json_decode($message, associative: true, flags: JSON_THROW_ON_ERROR);
+
+            $message = $json['message'] ?? $message;
+            $retryIn = $json['retry_in'] ?? $retryIn;
+        } catch (Throwable $e) {
+            //
         }
 
-        return "{$response->getStatusCode()} [{$body}]";
+        if (strlen($message) > 1005) {
+            $message = substr($message, 0, 1000).'[...]';
+        }
+
+        $retryIn ??= ($this->hasAuthenticated
+            ? $this->slowRetryStrategy()
+            : $this->quickRetryStrategy());
+
+        return [
+            "{$response->getStatusCode()} [{$message}]",
+            $retryIn,
+        ];
     }
 
     /**
