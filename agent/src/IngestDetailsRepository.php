@@ -47,7 +47,7 @@ class IngestDetailsRepository
      * @param  LoopInterface  $loop
      * @param  Browser  $browser
      * @param  (Closure(IngestDetails $ingestDetails, float $duration): mixed)  $onAuthenticationSuccess
-     * @param  (Closure(Throwable $e, float $duration): mixed)  $onAuthenticationError
+     * @param  (Closure(string $message, float $duration): mixed)  $onAuthenticationError
      * @param  (Closure(): mixed)  $onUnderQuota
      */
     public function __construct(
@@ -116,7 +116,7 @@ class IngestDetailsRepository
                 // TODO if the current token has expired we should `null` it.
                 $duration ??= microtime(true) - $start;
 
-                [$e, $stop, $refreshIn] = $this->parseException($e);
+                [$message, $stop, $refreshIn] = $this->parseException($e);
 
                 if ($stop) {
                     $this->ingestDetails = resolve(null);
@@ -124,7 +124,7 @@ class IngestDetailsRepository
 
                 $this->scheduleRefreshIn($refreshIn);
 
-                call_user_func($this->onAuthenticationError, $e, $duration);
+                call_user_func($this->onAuthenticationError, $message, $duration);
 
                 return null;
             });
@@ -166,7 +166,7 @@ class IngestDetailsRepository
     }
 
     /**
-     * @return array{0: Throwable, 1: bool, 2: int|float}
+     * @return array{0: string, 1: bool, 2: int|float}
      */
     private function parseException(Throwable $e): array
     {
@@ -176,7 +176,7 @@ class IngestDetailsRepository
     }
 
     /**
-     * @return array{0: Throwable, 1: bool, 2: int|float}
+     * @return array{0: string, 1: bool, 2: int|float}
      */
     private function parseResponseException(ResponseException $e): array
     {
@@ -204,20 +204,20 @@ class IngestDetailsRepository
             : $this->quickRetryStrategy());
 
         return [
-            new RuntimeException("{$e->getResponse()->getStatusCode()} [{$message}]"),
+            "{$e->getResponse()->getStatusCode()} [{$message}]",
             $stop,
             $refreshIn,
         ];
     }
 
     /**
-     * @return array{0: Throwable, 1: bool, 2: int|float}
+     * @return array{0: string, 1: bool, 2: int|float}
      */
     private function parseNonResponseException(Throwable $e): array
     {
         return $this->hasAuthenticated
-            ? [$e, false, $this->slowRetryStrategy()]
-            : [$e, false, $this->quickRetryStrategy()];
+            ? [$e->getMessage(), false, $this->slowRetryStrategy()]
+            : [$e->getMessage(), false, $this->quickRetryStrategy()];
     }
 
     private function quickRetryStrategy(): int|float
