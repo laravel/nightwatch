@@ -185,14 +185,11 @@ class IngestDetailsRepository
         $stop = false;
 
         try {
-            /** @var array $json */
+            /** @var array{ message?: string, refresh_in?: int|float, stop?: bool } $json */
             $json = json_decode($message, associative: true, flags: JSON_THROW_ON_ERROR);
 
-            /** @var string $message */
             $message = $json['message'] ?? $message;
-            /** @var int|float $refreshIn */
             $refreshIn = $json['refresh_in'] ?? $refreshIn;
-            /** @var bool $stop */
             $stop = $json['stop'] ?? $stop;
         } catch (Throwable $exception) {
             //
