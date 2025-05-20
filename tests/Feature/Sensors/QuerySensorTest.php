@@ -18,9 +18,11 @@ use MongoDB\Laravel\Connection as MongoDbConnection;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
+use function base64_encode;
 use function class_exists;
 use function dirname;
 use function hash;
+use function hex2bin;
 use function in_array;
 use function now;
 
@@ -278,5 +280,43 @@ class QuerySensorTest extends TestCase
             hash('xxh128', 'foo,insert some mongo query values (?, ?), (?, ?)'),
             new MongoDbConnection(['name' => 'foo', 'driver' => 'mongodb', 'host' => 'localhost', 'database' => 'test']),
         ];
+    }
+
+    public function test_it_can_capture_queries_containing_binary(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function (): void {
+            DB::select('select * from users where name = "'.hex2bin('abc123').'"');
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.sql', function ($sql) {
+            $this->assertSame(
+                base64_encode($sql),
+                base64_encode('select * from users where name = "��#"')
+            );
+
+            return true;
+        });
+    }
+
+    public function test_it_can_capture_queries_with_unicode_characters()
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function (): void {
+            DB::select('select * from users where name = "😎"');
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $this->assertStringContainsString(
+            '😎',
+            $ingest->latestWriteAsString(),
+        );
     }
 }

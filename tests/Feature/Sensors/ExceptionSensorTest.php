@@ -19,12 +19,14 @@ use Tests\TestCase;
 use Throwable;
 
 use function array_map;
+use function base64_encode;
 use function base_path;
 use function dirname;
 use function fclose;
 use function fopen;
 use function gettype;
 use function hash;
+use function hex2bin;
 use function implode;
 use function ini_set;
 use function json_encode;
@@ -626,6 +628,27 @@ class ExceptionSensorTest extends TestCase
         $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('exception:0.code', 'HY000');
+    }
+
+    public function test_it_can_capture_exception_messages_containing_binary(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function (): void {
+            DB::table('unknown-table')->where('foo', hex2bin('abc123'))->get();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.message', function ($message) {
+            $this->assertSame(
+                base64_encode($message),
+                base64_encode('SQLSTATE[HY000]: General error: 1 no such table: unknown-table (Connection: sqlite, SQL: select * from "unknown-table" where "foo" = ��#)')
+            );
+
+            return true;
+        });
     }
 }
 

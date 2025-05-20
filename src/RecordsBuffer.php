@@ -34,7 +34,7 @@ class RecordsBuffer implements Countable
             return Payload::json('[]');
         }
 
-        $records = json_encode($this->records, flags: JSON_THROW_ON_ERROR);
+        $records = json_encode($this->records, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
 
         $this->records = [];
 
