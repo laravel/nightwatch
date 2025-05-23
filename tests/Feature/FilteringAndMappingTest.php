@@ -76,6 +76,35 @@ class FilteringAndMappingTest extends TestCase
         $stream->assertWritten('33:'.Payload::SIGNATURE.':[{"t":"accepted-record"}]');
     }
 
+    public function test_it_rejects_records_when_exception_occurs()
+    {
+        $streamsResolver = $this->fakeTcpStreams();
+        Nightwatch::filter(function (Record $record) use (&$filterResult): mixed {
+            if ($record->t % 2) {
+                throw new RuntimeException("Whoops {$record->t}");
+            }
+
+            return true;
+        });
+
+        $this->core->ingest->write(new FakeRecord('1')); // throw
+        $this->core->ingest->write(new FakeRecord('2'));
+        $this->core->ingest->write(new FakeRecord('3')); // throw
+        $this->core->ingest->write(new FakeRecord('4'));
+        $this->core->digest();
+
+        [$stream] = $streamsResolver();
+        $stream->assertWritten(function ($payload) {
+            $this->assertStringContainsString('Whoops 1', $payload);
+            $this->assertStringContainsString('[{"t":"2"}', $payload);
+            $this->assertStringContainsString('Whoops 3', $payload);
+            $this->assertStringContainsString('[{"t":"4"}', $payload);
+            $this->assertStringContainsString(',"exceptions":1,', $payload);
+
+            return true;
+        });
+    }
+
     public function test_it_has_already_resolved_lazy_values()
     {
         $this->markTestIncomplete('TODO');

@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
+use Laravel\Nightwatch\Records\Record;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
@@ -52,7 +53,13 @@ final class Core
      */
     public function filter(callable $callback): void
     {
-        $this->ingest->filter($callback);
+        $this->ingest->filter(function (Record $record) use ($callback) {
+            try {
+                return $callback($record);
+            } catch (Throwable $e) {
+                $this->report($e);
+            }
+        });
     }
 
     /**
