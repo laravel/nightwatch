@@ -1,37 +1,47 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\CommandLifecycleIsLongerThanHandler;
+use RuntimeException;
 use Symfony\Component\Console\Input\StringInput;
+use Tests\TestCase;
 
-it('gracefully handles exceptions', function () {
-    $ingest = fakeIngest();
-    $thrownInStageSensor = false;
-    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
-        $thrownInStageSensor = true;
+use function now;
 
-        throw new RuntimeException('Whoops!');
-    };
-    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
-    $thrownInCommandSensor = false;
-    nightwatch()->sensor->commandSensor = function () use (&$thrownInCommandSensor) {
-        $thrownInCommandSensor = true;
+class CommandLifecycleIsLongerThanHandlerTest extends TestCase
+{
+    public function test_it_gracefully_handles_exceptions(): void
+    {
+        $ingest = $this->fakeIngest();
+        $thrownInStageSensor = false;
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor): void {
+            $thrownInStageSensor = true;
 
-        throw new RuntimeException('Whoops!');
-    };
+            throw new RuntimeException('Whoops!');
+        };
+        $this->core->executionState->stage = ExecutionStage::Bootstrap;
+        $thrownInCommandSensor = false;
+        $this->core->sensor->commandSensor = function () use (&$thrownInCommandSensor): void {
+            $thrownInCommandSensor = true;
 
-    $handler = new CommandLifecycleIsLongerThanHandler(nightwatch());
-    $handler(now(), new StringInput('app:build'), 3);
+            throw new RuntimeException('Whoops!');
+        };
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect($thrownInCommandSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(2);
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite(function ($records) {
-        expect($records)->toHaveCount(2);
-        expect($records[0]['t'])->toBe('exception');
-        expect($records[1]['t'])->toBe('exception');
+        $handler = new CommandLifecycleIsLongerThanHandler($this->core);
+        $handler(now(), new StringInput('app:build'), 3);
 
-        return true;
-    });
-});
+        $this->assertTrue($thrownInStageSensor);
+        $this->assertTrue($thrownInCommandSensor);
+        $this->assertSame(2, $this->core->executionState->exceptions);
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+            $this->assertSame('exception', $records[0]['t']);
+            $this->assertSame('exception', $records[1]['t']);
+
+            return true;
+        });
+    }
+}

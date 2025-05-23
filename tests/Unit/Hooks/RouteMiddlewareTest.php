@@ -1,60 +1,71 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Tests\TestCase;
 
-it('gracefully handles exceptions', function () {
-    $thrownInStageSensor = false;
-    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
-        $thrownInStageSensor = true;
+use function response;
 
-        throw new RuntimeException('Whoops!');
-    };
-    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
+class RouteMiddlewareTest extends TestCase
+{
+    public function test_it_gracefully_handles_exceptions(): void
+    {
+        $thrownInStageSensor = false;
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor): void {
+            $thrownInStageSensor = true;
 
-    $request = Request::create('/test');
-    $nextCalledWith = null;
-    $next = function ($request) use (&$nextCalledWith) {
-        $nextCalledWith = $request;
+            throw new RuntimeException('Whoops!');
+        };
+        $this->core->executionState->stage = ExecutionStage::Bootstrap;
 
-        return 'response';
-    };
+        $request = Request::create('/test');
+        $nextCalledWith = null;
+        $next = function ($request) use (&$nextCalledWith) {
+            $nextCalledWith = $request;
 
-    $middleware = new RouteMiddleware(nightwatch());
-    $response = $middleware->handle($request, $next);
+            return 'response';
+        };
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect($response)->toBe('response');
-    expect($nextCalledWith)->toBe($request);
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
-});
+        $middleware = new RouteMiddleware($this->core);
+        $response = $middleware->handle($request, $next);
 
-it('handles response types that laravel does not wrap', function () {
-    $thrownInStageSensor = false;
-    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
-        $thrownInStageSensor = true;
+        $this->assertTrue($thrownInStageSensor);
+        $this->assertSame('response', $response);
+        $this->assertSame($request, $nextCalledWith);
+        $this->assertSame(1, $this->core->executionState->exceptions);
+    }
 
-        throw new RuntimeException('Whoops!');
-    };
-    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
+    public function test_it_handles_response_types_that_laravel_does_not_wrap(): void
+    {
+        $thrownInStageSensor = false;
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor): void {
+            $thrownInStageSensor = true;
 
-    $request = Request::create('/test');
-    $nextCalledWith = null;
-    $next = function ($request) use (&$nextCalledWith) {
-        $nextCalledWith = $request;
+            throw new RuntimeException('Whoops!');
+        };
+        $this->core->executionState->stage = ExecutionStage::Bootstrap;
 
-        return response()->streamDownload(function () {
-            echo '...';
-        });
-    };
+        $request = Request::create('/test');
+        $nextCalledWith = null;
+        $next = function ($request) use (&$nextCalledWith) {
+            $nextCalledWith = $request;
 
-    $middleware = new RouteMiddleware(nightwatch());
-    $response = $middleware->handle($request, $next);
+            return response()->streamDownload(function (): void {
+                echo '...';
+            });
+        };
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect($response)->toBeInstanceOf(StreamedResponse::class);
-    expect($nextCalledWith)->toBe($request);
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
-});
+        $middleware = new RouteMiddleware($this->core);
+        $response = $middleware->handle($request, $next);
+
+        $this->assertTrue($thrownInStageSensor);
+        $this->assertInstanceOf(StreamedResponse::class, $response);
+        $this->assertSame($request, $nextCalledWith);
+        $this->assertSame(1, $this->core->executionState->exceptions);
+    }
+}

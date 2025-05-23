@@ -14,7 +14,6 @@ use Symfony\Component\Console\Input\StringInput;
 use Tests\TestCase;
 
 use function array_shift;
-use function expect;
 use function hash;
 use function now;
 
@@ -36,7 +35,7 @@ class CommandSensorTest extends TestCase
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     }
 
-    public function test_it_can_ingest_commands()
+    public function test_it_can_ingest_commands(): void
     {
         $ingest = $this->fakeIngest();
         Artisan::command('app:build {destination} {--force} {--compress}', function () {
@@ -50,7 +49,7 @@ class CommandSensorTest extends TestCase
         $status = Artisan::handle($input = new StringInput('app:build path/to/output --force'));
         Artisan::terminate($input, $status);
 
-        expect($status)->toBe(3);
+        $this->assertSame(3, $status);
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('command:*', [
             [
@@ -88,7 +87,7 @@ class CommandSensorTest extends TestCase
         $ingest->assertLatestWrite('query:0.execution_preview', 'app:build');
     }
 
-    public function test_it_modifies_status_code_to_value_in_range_of_0_255()
+    public function test_it_modifies_status_code_to_value_in_range_of_0_255(): void
     {
         $ingest = $this->fakeIngest();
         $status = [
@@ -110,26 +109,26 @@ class CommandSensorTest extends TestCase
             return $status;
         };
 
-        expect($run())->toBe(-1);
+        $this->assertSame(-1, $run());
         $ingest->assertLatestWrite('command:0.exit_code', 255);
 
-        expect($run())->toBe(0);
+        $this->assertSame(0, $run());
         $ingest->assertLatestWrite('command:0.exit_code', 0);
 
-        expect($run())->toBe(1);
+        $this->assertSame(1, $run());
         $ingest->assertLatestWrite('command:0.exit_code', 1);
 
-        expect($run())->toBe(254);
+        $this->assertSame(254, $run());
         $ingest->assertLatestWrite('command:0.exit_code', 254);
 
-        expect($run())->toBe(255);
+        $this->assertSame(255, $run());
         $ingest->assertLatestWrite('command:0.exit_code', 255);
 
-        expect($run())->toBe(256);
+        $this->assertSame(256, $run());
         $ingest->assertLatestWrite('command:0.exit_code', 255);
     }
 
-    public function test_it_only_captures_the_first_command_that_runs()
+    public function test_it_only_captures_the_first_command_that_runs(): void
     {
         $ingest = $this->fakeIngest();
         Artisan::command('child', function () {
@@ -145,7 +144,7 @@ class CommandSensorTest extends TestCase
             return $status;
         };
 
-        expect($run())->toBe(0);
+        $this->assertSame(0, $run());
         $ingest->assertLatestWrite('command:*', [
             [
                 'v' => 1,
@@ -181,15 +180,15 @@ class CommandSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_child_commands_do_not_progress_the_modify_execution_stage()
+    public function test_it_child_commands_do_not_progress_the_modify_execution_stage(): void
     {
         $ingest = $this->fakeIngest();
-        Artisan::command('parent', function () {
+        Artisan::command('parent', function (): void {
             Artisan::call('child');
 
             Cache::get('foo');
         });
-        Artisan::command('child', function () {
+        Artisan::command('child', function (): void {
             //
         });
 
@@ -201,20 +200,20 @@ class CommandSensorTest extends TestCase
             return $status;
         };
 
-        expect($run())->toBe(0);
+        $this->assertSame(0, $run());
         $ingest->assertLatestWrite('command:0.cache_events', 1);
         $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
     }
 
-    public function test_it_child_commands_do_not_progress_the_modify_execution_stage_when_terminating_event_does_not_exist()
+    public function test_it_child_commands_do_not_progress_the_modify_execution_stage_when_terminating_event_does_not_exist(): void
     {
         $ingest = $this->fakeIngest();
-        Artisan::command('parent', function () {
+        Artisan::command('parent', function (): void {
             Artisan::call('child');
 
             Cache::get('foo');
         });
-        Artisan::command('child', function () {
+        Artisan::command('child', function (): void {
             //
         });
         Compatibility::$terminatingEventExists = false;
@@ -227,7 +226,7 @@ class CommandSensorTest extends TestCase
             return $status;
         };
 
-        expect($run())->toBe(0);
+        $this->assertSame(0, $run());
         $ingest->assertLatestWrite('command:0.cache_events', 1);
         $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
     }
@@ -237,7 +236,7 @@ class ParentCommand extends Command
 {
     public $name = 'parent';
 
-    public function __invoke()
+    public function __invoke(): void
     {
         Artisan::call('child');
     }

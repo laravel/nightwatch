@@ -1,24 +1,34 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
 use Illuminate\Foundation\Events\Terminating;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
+use RuntimeException;
+use Tests\TestCase;
 
-it('gracefully handles exceptions', function () {
-    $thrownInStageSensor = false;
-    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
-        $thrownInStageSensor = true;
+class TerminatingListenerTest extends TestCase
+{
+    public function test_it_gracefully_handles_exceptions(): void
+    {
+        $this->markTestSkippedWhen(! Compatibility::$terminatingEventExists, 'Requires a more recent framework version');
 
-        throw new RuntimeException('Whoops!');
-    };
-    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
+        $thrownInStageSensor = false;
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor): void {
+            $thrownInStageSensor = true;
 
-    $event = new Terminating;
+            throw new RuntimeException('Whoops!');
+        };
+        $this->core->executionState->stage = ExecutionStage::Bootstrap;
 
-    $listener = new TerminatingListener(nightwatch());
-    $listener($event);
+        $event = new Terminating;
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
-})->skip(fn () => ! Compatibility::$terminatingEventExists, 'Requires a more recent framework version');
+        $listener = new TerminatingListener($this->core);
+        $listener($event);
+
+        $this->assertTrue($thrownInStageSensor);
+        $this->assertSame(1, $this->core->executionState->exceptions);
+    }
+}

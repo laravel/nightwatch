@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 class StatusCommandTest extends TestCase
 {
-    public function test_it_fails_when_nightwatch_is_disabled()
+    public function test_it_fails_when_nightwatch_is_disabled(): void
     {
         $this->core->config['enabled'] = false;
 
@@ -18,7 +18,7 @@ class StatusCommandTest extends TestCase
             ->run();
     }
 
-    public function test_it_fails_when_ingest_throws_an_exception_while_pinging()
+    public function test_it_fails_when_ingest_throws_an_exception_while_pinging(): void
     {
         $this->fakeIngest(new class extends FakeIngest
         {
@@ -33,7 +33,7 @@ class StatusCommandTest extends TestCase
             ->assertExitCode(1);
     }
 
-    public function test_it_can_ping()
+    public function test_it_can_ping(): void
     {
         $this->fakeIngest();
 

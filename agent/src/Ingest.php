@@ -39,8 +39,8 @@ class Ingest
      * @param  LoopInterface  $loop
      * @param  Browser  $browser
      * @param  (Closure(ResponseInterface $response, float $duration): mixed)  $onIngestSuccess
-     * @param  (Closure(Throwable $e, float $duration): mixed)  $onIngestError
-     * @param  (Closure(float $duration): mixed)  $onOverQuota
+     * @param  (Closure(string $message, float $duration): mixed)  $onIngestError
+     * @param  (Closure(string $message, float $duration): mixed)  $onOverQuota
      */
     public function __construct(
         private $loop,
@@ -110,7 +110,7 @@ class Ingest
         $payload = $this->buffer->pull();
 
         if (count($this->concurrentRequests) >= $this->concurrentRequestLimit) {
-            call_user_func($this->onIngestError, new RuntimeException("Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing"), 0.0);
+            call_user_func($this->onIngestError, "Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing", 0.0);
 
             return;
         }
@@ -119,7 +119,7 @@ class Ingest
         $payload = gzencode($payload);
 
         if ($payload === false) {
-            call_user_func($this->onIngestError, new RuntimeException('Unable to compress payload.'), 0.0);
+            call_user_func($this->onIngestError, 'Unable to compress payload.', 0.0);
 
             return;
         }
@@ -142,23 +142,27 @@ class Ingest
                 body: $payload,
             );
         })->then(function (ResponseInterface $response) use (&$start): null {
-            /** @var array{remaining: int} */
-            $content = json_decode($response->getBody()->getContents(), associative: true, flags: JSON_THROW_ON_ERROR);
+            $duration = microtime(true) - $start;
 
-            if ($content['remaining'] <= 0) {
-                $this->pauseIngestion();
-                $this->ingestDetails->markOverQuota();
+            [$message, $stop, $refreshIn] = $this->parseResponse($response);
 
-                call_user_func($this->onOverQuota, microtime(true) - $start);
-
-                return null;
+            if ($stop) {
+                $this->stop($this->onOverQuota, $duration, $message, $refreshIn);
+            } else {
+                call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
             }
-
-            call_user_func($this->onIngestSuccess, $response, microtime(true) - $start);
 
             return null;
         })->catch(function (Throwable $e) use (&$start): null {
-            call_user_func($this->onIngestError, $this->parseException($e), microtime(true) - $start);
+            $duration = microtime(true) - $start;
+
+            [$message, $stop, $refreshIn] = $this->parseException($e);
+
+            if ($stop) {
+                $this->stop($this->onIngestError, $duration, $message, $refreshIn);
+            } else {
+                call_user_func($this->onIngestError, $message, $duration);
+            }
 
             return null;
         }))->finally(function () use ($currentRequestKey): void {
@@ -166,21 +170,53 @@ class Ingest
         });
     }
 
-    private function parseException(Throwable $e): Throwable
+    private function stop(callable $errorHandler, float $duration, string $message, float|int|null $refreshIn = null): void
     {
-        return $e instanceof ResponseException
-            ? $this->parseResponseException($e)
-            : $e;
+        $this->pauseIngestion();
+
+        $this->ingestDetails->markOverQuota($refreshIn);
+
+        call_user_func($errorHandler, $message, $duration);
     }
 
-    private function parseResponseException(ResponseException $e): Throwable
+    /**
+     * @return array{0: string, 1: bool, 2: null|int|float}
+     */
+    private function parseException(Throwable $e): array
     {
-        $body = $e->getResponse()->getBody()->getContents();
+        return $e instanceof ResponseException
+            ? $this->parseResponse($e->getResponse())
+            : [$e->getMessage(), false, null];
+    }
 
-        if (strlen($body) > 255) {
-            $body = substr($body, 0, 250).'[...]';
+    /**
+     * @return array{0: string, 1: bool, 2: null|int|float}
+     */
+    private function parseResponse(ResponseInterface $response): array
+    {
+        $message = (string) $response->getBody();
+        $stop = false;
+        $refreshIn = null;
+
+        try {
+            /** @var array{ message?: string, refresh_in?: int|float, stop?: bool } $json */
+            $json = json_decode($message, associative: true, flags: JSON_THROW_ON_ERROR);
+
+            $message = $json['message'] ?? $message;
+            $stop = $json['stop'] ?? $stop;
+            $refreshIn = $json['refresh_in'] ?? $refreshIn;
+        } catch (Throwable $exception) {
+            //
         }
 
-        return new RuntimeException("{$e->getResponse()->getStatusCode()} [{$body}]");
+        if (strlen($message) > 1005) {
+            $message = substr($message, 0, 1000).'[...]';
+        }
+
+        return [
+            "{$response->getStatusCode()} [{$message}]",
+            $stop,
+            $refreshIn,
+        ];
     }
 }

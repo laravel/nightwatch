@@ -18,7 +18,6 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Tests\TestCase;
 
-use function expect;
 use function fseek;
 use function fwrite;
 use function hash;
@@ -46,7 +45,7 @@ class RequestSensorTest extends TestCase
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     }
 
-    public function test_it_can_ingest_requests()
+    public function test_it_can_ingest_requests(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -102,7 +101,7 @@ class RequestSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_captures_the_response_size()
+    public function test_it_captures_the_response_size(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => '[{"name":"Tim"}]');
@@ -114,7 +113,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.response_size', 16);
     }
 
-    public function test_it_captures_the_response_size_of_a_streamed_file()
+    public function test_it_captures_the_response_size_of_a_streamed_file(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('users', fn () => response()->file($this->fixturePath('empty-array.json')));
@@ -124,7 +123,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.response_size', 17);
     }
 
-    public function test_it_gracefully_handles_response_size_for_a_streamed_file_that_is_deleted_after_sending_the_response()
+    public function test_it_gracefully_handles_response_size_for_a_streamed_file_that_is_deleted_after_sending_the_response(): void
     {
         // Testing this normally is hard. Laravel does not call `send` for
         // responses so we need to handle is pretty manually in this test.
@@ -145,10 +144,10 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.response_size', 0);
     }
 
-    public function test_it_gracefully_handles_response_size_for_streamed_responses()
+    public function test_it_gracefully_handles_response_size_for_streamed_responses(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('users', fn () => response()->stream(function () {
+        Route::get('users', fn () => response()->stream(function (): void {
             echo '[]';
         }));
 
@@ -157,10 +156,10 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.response_size', 0);
     }
 
-    public function test_it_captures_the_content_length_when_present_on_a_streamed_response_of_unknown_size()
+    public function test_it_captures_the_content_length_when_present_on_a_streamed_response_of_unknown_size(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('users', fn () => response()->stream(function () {
+        Route::get('users', fn () => response()->stream(function (): void {
             echo '[]';
         }, headers: ['Content-length' => 2]));
 
@@ -169,7 +168,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.response_size', 2);
     }
 
-    public function test_it_uses_the_content_length_header_as_the_response_size_when_present_on_a_streamed_file_response_where_the_file_is_deleted_after_sending()
+    public function test_it_uses_the_content_length_header_as_the_response_size_when_present_on_a_streamed_file_response_where_the_file_is_deleted_after_sending(): void
     {
         $ingest = $this->fakeIngest();
         /** @var SensorManager */
@@ -189,7 +188,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.response_size', 17);
     }
 
-    public function test_it_captures_the_request_size()
+    public function test_it_captures_the_request_size(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -201,7 +200,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.request_size', 3);
     }
 
-    public function test_it_captures_the_authenticated_user()
+    public function test_it_captures_the_authenticated_user(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -214,7 +213,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.user', 'abc-123');
     }
 
-    public function test_it_captures_query_parameters()
+    public function test_it_captures_query_parameters(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -226,7 +225,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users?key_1=value&key_2[sub_field]=value&key_3[]=value&key_4[9]=value&key_5[][][foo][9]=bar&flag_value');
     }
 
-    public function test_it_captures_the_route_name()
+    public function test_it_captures_the_route_name(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => [])->name('users.index');
@@ -238,7 +237,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_name', 'users.index');
     }
 
-    public function test_it_captures_the_route_methods()
+    public function test_it_captures_the_route_methods(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -250,7 +249,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_methods', ['GET', 'HEAD']);
     }
 
-    public function test_it_captures_route_actions_for_closures()
+    public function test_it_captures_route_actions_for_closures(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -262,7 +261,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_action', 'Closure');
     }
 
-    public function test_it_captures_route_actions_for_controller_classes()
+    public function test_it_captures_route_actions_for_controller_classes(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', [UserController::class, 'index']);
@@ -274,7 +273,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_action', 'App\Http\UserController@index');
     }
 
-    public function test_it_captures_real_path_and_route_path()
+    public function test_it_captures_real_path_and_route_path(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users/{user}', fn () => ['name' => 'Tim']);
@@ -287,7 +286,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_path', '/users/{user}');
     }
 
-    public function test_it_captures_subdomain_and_route_domain()
+    public function test_it_captures_subdomain_and_route_domain(): void
     {
         $ingest = $this->fakeIngest();
         Route::domain('{product}.laravel.com')->get('/users/{user}', fn () => ['name' => 'Tim']);
@@ -300,7 +299,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_domain', '{product}.laravel.com');
     }
 
-    public function test_it_doesnt_capture_the_request_ur_l_user()
+    public function test_it_doesnt_capture_the_request_ur_l_user(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -310,11 +309,11 @@ class RequestSensorTest extends TestCase
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
-        expect($ingest->latestWriteAsString())->not->toContain('ryuta');
-        expect($ingest->latestWriteAsString())->not->toContain('secret');
+        $this->assertStringNotContainsString('ryuta', $ingest->latestWriteAsString());
+        $this->assertStringNotContainsString('secret', $ingest->latestWriteAsString());
     }
 
-    public function test_it_captures_the_duration_in_microseconds()
+    public function test_it_captures_the_duration_in_microseconds(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', function () {
@@ -330,10 +329,10 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_exceptions()
+    public function test_it_captures_exceptions(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function () {
+        Route::get('/users', function (): void {
             report(new Exception('Handled error'));
 
             throw new Exception('Unhandled error');
@@ -347,7 +346,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.exception_preview', 'Unhandled error');
     }
 
-    public function test_it_doesnt_capture_the_exception_preview_for_handled_exceptions()
+    public function test_it_doesnt_capture_the_exception_preview_for_handled_exceptions(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', function () {
@@ -364,7 +363,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.exception_preview', '');
     }
 
-    public function test_it_consistently_sorts_the_route_methods()
+    public function test_it_consistently_sorts_the_route_methods(): void
     {
         $ingest = $this->fakeIngest();
         Route::match(['GET', 'POST', 'PATCH'], '/users', fn () => []);
@@ -381,7 +380,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_methods', ['GET', 'HEAD', 'PATCH', 'POST']);
     }
 
-    public function test_it_handles_hea_d_requests()
+    public function test_it_handles_hea_d_requests(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -393,7 +392,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.response_size', 0);
     }
 
-    public function test_it_handles_204_no_content_requests()
+    public function test_it_handles_204_no_content_requests(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => response('foo', 204));
@@ -405,7 +404,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.response_size', 0);
     }
 
-    public function test_it_captures_the_route_group()
+    public function test_it_captures_the_route_group(): void
     {
         $ingest = $this->fakeIngest();
         Route::domain('{product}.laravel.com')->get('/users/{user}', fn () => []);
@@ -417,7 +416,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0._group', hash('xxh128', 'GET|HEAD,{product}.laravel.com,/users/{user}'));
     }
 
-    public function test_it_handles_the_root_path()
+    public function test_it_handles_the_root_path(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/', fn () => 'Welcome');
@@ -430,10 +429,10 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/');
     }
 
-    public function test_it_gracefully_handles_non_string_query_string()
+    public function test_it_gracefully_handles_non_string_query_string(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function (Request $request) {
+        Route::get('/users', function (Request $request): void {
             $request->server->set('QUERY_STRING', []);
         });
 
@@ -444,7 +443,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
     }
 
-    public function test_it_captures_bootstrap_execution_stage()
+    public function test_it_captures_bootstrap_execution_stage(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -460,7 +459,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_global_before_middleware_duration()
+    public function test_it_captures_global_before_middleware_duration(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -479,7 +478,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_route_before_middleware_duration()
+    public function test_it_captures_route_before_middleware_duration(): void
     {
         $ingest = $this->fakeIngest();
         App::instance('travel-before', function ($request, $next) {
@@ -497,7 +496,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_action_duration()
+    public function test_it_captures_action_duration(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', function () {
@@ -514,7 +513,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_render_duration()
+    public function test_it_captures_render_duration(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => new class implements Arrayable
@@ -535,11 +534,11 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_route_after_middleware_duration()
+    public function test_it_captures_route_after_middleware_duration(): void
     {
         $ingest = $this->fakeIngest();
         App::instance('travel-after', function ($request, $next) {
-            return tap($next($request), function () {
+            return tap($next($request), function (): void {
                 $this->travelTo(now()->addMicroseconds(5));
             });
         });
@@ -553,12 +552,12 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_global_after_middleware_duration()
+    public function test_it_captures_global_after_middleware_duration(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
         App::instance('travel-after', function ($request, $next) {
-            return tap($next($request), function () {
+            return tap($next($request), function (): void {
                 $this->travelTo(now()->addMicroseconds(5));
             });
         });
@@ -572,14 +571,14 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_sending_duration()
+    public function test_it_captures_sending_duration(): void
     {
         $ingest = $this->fakeIngest();
         // When running tests, Laravel does not call the `send` method.  We will
         // call it here to simulate a real request as we want to make sure we
         // measure how long the request takes to send.
         Event::listen(fn (RequestHandled $event) => $event->response->send(true));
-        Route::get('/users', fn () => response()->stream(function () {
+        Route::get('/users', fn () => response()->stream(function (): void {
             $this->travelTo(now()->addMicroseconds(5));
 
             // ...
@@ -593,7 +592,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_global_middleware_terminating_duration()
+    public function test_it_captures_global_middleware_terminating_duration(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
@@ -604,7 +603,7 @@ class RequestSensorTest extends TestCase
                 return $next($request);
             }
 
-            public function terminate()
+            public function terminate(): void
             {
                 Date::setTestNow(now()->addMicroseconds(5));
             }
@@ -619,7 +618,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_route_middleware_terminating_duration()
+    public function test_it_captures_route_middleware_terminating_duration(): void
     {
         $ingest = $this->fakeIngest();
         App::instance('terminable', new class
@@ -629,7 +628,7 @@ class RequestSensorTest extends TestCase
                 return $next($request);
             }
 
-            public function terminate()
+            public function terminate(): void
             {
                 Date::setTestNow(now()->addMicroseconds(5));
             }
@@ -645,11 +644,11 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_terminating_callback_duration()
+    public function test_it_captures_terminating_callback_duration(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
-        App::terminating(function () {
+        App::terminating(function (): void {
             $this->travelTo(now()->addMicroseconds(5));
         });
 
@@ -661,11 +660,11 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_terminating_duration_for_unknown_routes()
+    public function test_it_captures_terminating_duration_for_unknown_routes(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', fn () => []);
-        App::terminating(function () {
+        App::terminating(function (): void {
             $this->travelTo(now()->addMicroseconds(5));
         });
 
@@ -677,13 +676,13 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_captures_middleware_duration_for_unknown_routes_and_collapses_after_middleware_into_before()
+    public function test_it_captures_middleware_duration_for_unknown_routes_and_collapses_after_middleware_into_before(): void
     {
         $ingest = $this->fakeIngest();
         App::instance('global-middleware', function ($request, $next) {
             $this->travelTo(now()->addMicroseconds(1));
 
-            return tap($next($request), function () {
+            return tap($next($request), function (): void {
                 $this->travelTo(now()->addMicroseconds(2));
             });
         });
@@ -698,7 +697,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 3);
     }
 
-    public function test_it_captures_middleware_durations_for_global_middleware_that_return_a_response_and_it_collapses_after_middleware_into_before()
+    public function test_it_captures_middleware_durations_for_global_middleware_that_return_a_response_and_it_collapses_after_middleware_into_before(): void
     {
         $ingest = $this->fakeIngest();
         App::instance('global-middleware-change-response', function ($request, $next) {
@@ -709,7 +708,7 @@ class RequestSensorTest extends TestCase
         App::instance('global-middleware-progress-time', function ($request, $next) {
             $this->travelTo(now()->addMicroseconds(2));
 
-            return tap($next($request), function () {
+            return tap($next($request), function (): void {
                 $this->travelTo(now()->addMicroseconds(3));
             });
         });
@@ -726,7 +725,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 6);
     }
 
-    public function test_it_captures_the_render_duration_for_responses_returned_from_a_middleware_as_part_of_the_middleware_stage()
+    public function test_it_captures_the_render_duration_for_responses_returned_from_a_middleware_as_part_of_the_middleware_stage(): void
     {
         $ingest = $this->fakeIngest();
         App::instance('renderable-response-middleware', fn ($request, $next) => new class implements Arrayable
@@ -748,7 +747,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.duration', 5);
     }
 
-    public function test_it_supports_custom_request_methods()
+    public function test_it_supports_custom_request_methods(): void
     {
         $ingest = $this->fakeIngest();
         Route::match('blah', '/', fn () => 'Welcome!');
@@ -762,7 +761,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_methods', ['BLAH']);
     }
 
-    public function test_it_resets_the_state_between_requests()
+    public function test_it_resets_the_state_between_requests(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/unhappy', fn () => throw new Exception('Unhappy!'));

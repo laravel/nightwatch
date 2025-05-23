@@ -1,105 +1,117 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Routing\Router;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
+use RuntimeException;
+use Tests\TestCase;
 
-it('gracefully handles custom exception handlers', function () {
-    $kernel = new class implements HttpKernel
+class HttpKernelResolvedHandlerTest extends TestCase
+{
+    public function test_it_gracefully_handles_custom_exception_handlers(): void
     {
-        public function bootstrap()
+        $kernel = new class implements HttpKernel
         {
-            //
-        }
+            public function bootstrap(): void
+            {
+                //
+            }
 
-        public function handle($request)
-        {
-            //
-        }
+            public function handle($request): void
+            {
+                //
+            }
 
-        public function terminate($request, $response)
-        {
-            //
-        }
+            public function terminate($request, $response): void
+            {
+                //
+            }
 
-        public function getApplication()
-        {
-            //
-        }
-    };
+            public function getApplication(): void
+            {
+                //
+            }
+        };
 
-    $handler = new HttpKernelResolvedHandler(nightwatch());
-    $handler($kernel, app());
+        $handler = new HttpKernelResolvedHandler($this->core);
+        $handler($kernel, $this->app);
 
-    expect(true)->toBe(true);
-});
+        // This test passes if an exception is not thrown...
+        $this->assertTrue(true);
+    }
 
-it('gracefully handles exceptions when registering lifecycle handler', function () {
-    $unrecoverableExceptions = [];
-    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions) {
-        $unrecoverableExceptions[] = $e;
-    });
-
-    $kernel = new class(app(), app(Router::class)) extends Kernel
+    public function test_it_gracefully_handles_exceptions_when_registering_lifecycle_handler(): void
     {
-        public bool $thrownInWhenRequestLifecycleIsLongerThan = false;
+        $unrecoverableExceptions = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions): void {
+            $unrecoverableExceptions[] = $e;
+        });
 
-        public function whenRequestLifecycleIsLongerThan($threshold, $handler)
+        $kernel = new class($this->app, $this->app[Router::class]) extends Kernel
         {
-            $this->thrownInWhenRequestLifecycleIsLongerThan = true;
+            public bool $thrownInWhenRequestLifecycleIsLongerThan = false;
 
-            throw new RuntimeException('Whoops!');
-        }
-    };
+            public function whenRequestLifecycleIsLongerThan($threshold, $handler): void
+            {
+                $this->thrownInWhenRequestLifecycleIsLongerThan = true;
 
-    $handler = new HttpKernelResolvedHandler(nightwatch());
-    $handler($kernel, app());
+                throw new RuntimeException('Whoops!');
+            }
+        };
 
-    expect($kernel->thrownInWhenRequestLifecycleIsLongerThan)->toBeTrue();
-    expect($unrecoverableExceptions)->toHaveCount(1);
-});
+        $handler = new HttpKernelResolvedHandler($this->core);
+        $handler($kernel, $this->app);
 
-it('gracefully handles exceptions when prepending middleware', function () {
-    $unrecoverableExceptions = [];
-    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions) {
-        $unrecoverableExceptions[] = $e;
-    });
+        $this->assertTrue($kernel->thrownInWhenRequestLifecycleIsLongerThan);
+        $this->assertCount(1, $unrecoverableExceptions);
+    }
 
-    $kernel = new class(app(), app(Router::class)) extends Kernel
+    public function test_it_gracefully_handles_exceptions_when_prepending_middleware(): void
     {
-        public bool $thrownInPrependMiddleware = false;
+        $unrecoverableExceptions = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions): void {
+            $unrecoverableExceptions[] = $e;
+        });
 
-        public function prependMiddleware($middleware)
+        $kernel = new class($this->app, $this->app[Router::class]) extends Kernel
         {
-            $this->thrownInPrependMiddleware = true;
+            public bool $thrownInPrependMiddleware = false;
 
-            throw new RuntimeException('Whoops!');
-        }
-    };
+            public function prependMiddleware($middleware): void
+            {
+                $this->thrownInPrependMiddleware = true;
 
-    $handler = new HttpKernelResolvedHandler(nightwatch());
-    $handler($kernel, app());
+                throw new RuntimeException('Whoops!');
+            }
+        };
 
-    expect($kernel->thrownInPrependMiddleware)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
-});
+        $handler = new HttpKernelResolvedHandler($this->core);
+        $handler($kernel, $this->app);
 
-it('gracefully handles exceptions when determining whether to sample the request', function () {
-    nightwatch()->config['sampling'] = [];
-    $exceptions = [];
-    Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions) {
-        $exceptions[] = $e;
-    });
-    $kernel = app(HttpKernel::class);
+        $this->assertTrue($kernel->thrownInPrependMiddleware);
+        $this->assertSame(1, $this->core->executionState->exceptions);
+    }
 
-    expect(nightwatch()->shouldSample)->toBeTrue();
+    public function test_it_gracefully_handles_exceptions_when_determining_whether_to_sample_the_request(): void
+    {
+        $this->core->config['sampling'] = [];
+        $exceptions = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
+            $exceptions[] = $e;
+        });
+        $kernel = $this->app[HttpKernel::class];
 
-    $handler = new HttpKernelResolvedHandler(nightwatch());
-    $handler($kernel, app());
+        $this->assertTrue($this->core->shouldSample);
 
-    expect(nightwatch()->shouldSample)->toBeFalse();
-    expect($exceptions)->toHaveCount(1);
-    expect($exceptions[0]->getMessage())->toBe('Undefined array key "requests"');
-});
+        $handler = new HttpKernelResolvedHandler($this->core);
+        $handler($kernel, $this->app);
+
+        $this->assertFalse($this->core->shouldSample);
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Undefined array key "requests"', $exceptions[0]->getMessage());
+    }
+}

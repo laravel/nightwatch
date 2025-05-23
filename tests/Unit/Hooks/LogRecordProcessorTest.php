@@ -1,25 +1,34 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
+use DateTimeImmutable;
 use Laravel\Nightwatch\Hooks\LogRecordProcessor;
 use Monolog\Level;
 use Monolog\LogRecord;
+use RuntimeException;
+use Tests\TestCase;
 
-it('gracefully handles exceptions', function () {
-    $record = new class(new DateTimeImmutable, 'single', Level::Debug, 'Hello world') extends LogRecord
+class LogRecordProcessorTest extends TestCase
+{
+    public function test_it_gracefully_handles_exceptions(): void
     {
-        public bool $thrownInWith = false;
-
-        public function with(mixed ...$args): self
+        $record = new class(new DateTimeImmutable, 'single', Level::Debug, 'Hello world') extends LogRecord
         {
-            $this->thrownInWith = true;
+            public bool $thrownInWith = false;
 
-            throw new RuntimeException('Whoops!');
-        }
-    };
+            public function with(mixed ...$args): self
+            {
+                $this->thrownInWith = true;
 
-    $processor = new LogRecordProcessor(nightwatch(), 'Y-m-d H:i:s');
-    $processor($record);
+                throw new RuntimeException('Whoops!');
+            }
+        };
 
-    expect($record->thrownInWith)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
-});
+        $processor = new LogRecordProcessor($this->core, 'Y-m-d H:i:s');
+        $processor($record);
+
+        $this->assertTrue($record->thrownInWith);
+        $this->assertSame(1, $this->core->executionState->exceptions);
+    }
+}

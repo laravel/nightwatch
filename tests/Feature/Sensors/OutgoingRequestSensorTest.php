@@ -14,7 +14,6 @@ use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Tests\TestCase;
 
-use function expect;
 use function hash;
 use function now;
 use function str_repeat;
@@ -35,10 +34,10 @@ class OutgoingRequestSensorTest extends TestCase
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     }
 
-    public function test_it_ingests_outgoing_requests()
+    public function test_it_ingests_outgoing_requests(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             $this->travelTo(now()->addMicroseconds(2500));
 
             Http::withBody(str_repeat('b', 2000))->post('https://laravel.com');
@@ -81,10 +80,10 @@ class OutgoingRequestSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_captures_the_request_response_size_bytes_from_the_content_length_header()
+    public function test_it_captures_the_request_response_size_bytes_from_the_content_length_header(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Http::withBody(new NoReadStream(null))->withHeader('Content-Length', 9876)->post('https://laravel.com');
         });
         Http::fake([
@@ -101,10 +100,10 @@ class OutgoingRequestSensorTest extends TestCase
         $ingest->assertLatestWrite('outgoing-request:0.response_size', 5432);
     }
 
-    public function test_it_captures_the_response_size_bytes_from_the_stream_if_not_present_in_the_content_length_header()
+    public function test_it_captures_the_response_size_bytes_from_the_stream_if_not_present_in_the_content_length_header(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Http::withBody(new NoReadStream(9876))->post('https://laravel.com');
         });
 
@@ -122,10 +121,10 @@ class OutgoingRequestSensorTest extends TestCase
         $ingest->assertLatestWrite('outgoing-request:0.response_size', 5432);
     }
 
-    public function test_it_does_not_read_the_stream_into_memory_to_determine_the_size_of_the_response()
+    public function test_it_does_not_read_the_stream_into_memory_to_determine_the_size_of_the_response(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Http::withBody(new NoReadStream(null))->post('https://laravel.com');
         });
 
@@ -143,10 +142,10 @@ class OutgoingRequestSensorTest extends TestCase
         $ingest->assertLatestWrite('outgoing-request:0.response_size', 0);
     }
 
-    public function test_it_captures_the_port_when_specified()
+    public function test_it_captures_the_port_when_specified(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Http::post('https://laravel.com:4321');
         });
         Http::fake([
@@ -162,10 +161,10 @@ class OutgoingRequestSensorTest extends TestCase
         $ingest->assertLatestWrite('outgoing-request:0.url', 'https://laravel.com:4321');
     }
 
-    public function test_it_gracefully_handles_request_response_sizes_that_are_streams()
+    public function test_it_gracefully_handles_request_response_sizes_that_are_streams(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Http::withBody(new NoReadStream(null))->post('https://laravel.com');
         });
         Http::fake([
@@ -182,10 +181,10 @@ class OutgoingRequestSensorTest extends TestCase
         $ingest->assertLatestWrite('outgoing-request:0.response_size', 0);
     }
 
-    public function test_it_doesnt_capture_the_outgoing_request_ur_l_authentication_details()
+    public function test_it_doesnt_capture_the_outgoing_request_ur_l_authentication_details(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Http::withBasicAuth('ryuta', 'secret')->get('https://laravel.com');
             Http::withDigestAuth('ryuta', 'secret')->get('https://laravel.com');
             Http::get('https://ryuta:secret@laravel.com');
@@ -203,14 +202,14 @@ class OutgoingRequestSensorTest extends TestCase
         $ingest->assertLatestWrite('outgoing-request:0.url', 'https://laravel.com');
         $ingest->assertLatestWrite('outgoing-request:1.url', 'https://laravel.com');
         $ingest->assertLatestWrite('outgoing-request:2.url', 'https://laravel.com');
-        expect($ingest->latestWriteAsString())->not->toContain('ryuta');
-        expect($ingest->latestWriteAsString())->not->toContain('secret');
+        $this->assertStringNotContainsString('ryuta', $ingest->latestWriteAsString());
+        $this->assertStringNotContainsString('secret', $ingest->latestWriteAsString());
     }
 
-    public function test_it_can_use_guzzle_directly()
+    public function test_it_can_use_guzzle_directly(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             $stack = new HandlerStack;
             $stack->setHandler(new CurlHandler);
             $stack->push(Nightwatch::guzzleMiddleware());
@@ -252,7 +251,7 @@ final class NoReadStream implements StreamInterface
         throw new RuntimeException('This stream should not be read!');
     }
 
-    public function detach()
+    public function detach(): void
     {
         throw new RuntimeException('This stream should not be read!');
     }

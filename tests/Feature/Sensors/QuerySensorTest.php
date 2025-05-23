@@ -20,8 +20,8 @@ use Tests\TestCase;
 
 use function class_exists;
 use function dirname;
-use function expect;
 use function hash;
+use function in_array;
 use function now;
 
 class QuerySensorTest extends TestCase
@@ -44,10 +44,10 @@ class QuerySensorTest extends TestCase
         $this->core->sensor->location->setPublicPath($base.'/public');
     }
 
-    public function test_it_can_ingest_queries()
+    public function test_it_can_ingest_queries(): void
     {
         $ingest = $this->fakeIngest();
-        $this->prependListener(QueryExecuted::class, function ($event) {
+        $this->prependListener(QueryExecuted::class, function ($event): void {
             $event->time = 4.321;
 
             $this->travelTo(now()->addMicroseconds(4321));
@@ -65,7 +65,7 @@ class QuerySensorTest extends TestCase
         // Workbench replaces `testing` with `sqlite`. Will capture it dynamically
         // so that the tests pass whether workbench has configured its own database
         // or not.
-        expect($connection = Config::get('database.default'))->toBeIn(['testing', 'sqlite']);
+        $this->assertTrue(in_array($connection = Config::get('database.default'), ['testing', 'sqlite'], true));
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
@@ -92,7 +92,7 @@ class QuerySensorTest extends TestCase
         ]);
     }
 
-    public function test_it_can_captures_the_line_and_file()
+    public function test_it_can_captures_the_line_and_file(): void
     {
         $ingest = $this->fakeIngest();
 
@@ -111,10 +111,10 @@ class QuerySensorTest extends TestCase
         $ingest->assertLatestWrite('query:0.line', $line);
     }
 
-    public function test_it_captures_aggregate_query_data_on_the_request()
+    public function test_it_captures_aggregate_query_data_on_the_request(): void
     {
         $ingest = $this->fakeIngest();
-        $this->prependListener(QueryExecuted::class, function (QueryExecuted $event) {
+        $this->prependListener(QueryExecuted::class, function (QueryExecuted $event): void {
             $event->time = 4.321;
 
             $this->travelTo(now()->addMicroseconds(4321));
@@ -133,10 +133,10 @@ class QuerySensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.queries', 2);
     }
 
-    public function test_it_always_uses_current_time_minus_execution_time_for_the_timestamp()
+    public function test_it_always_uses_current_time_minus_execution_time_for_the_timestamp(): void
     {
         $ingest = $this->fakeIngest();
-        $this->prependListener(QueryExecuted::class, function (QueryExecuted $event) {
+        $this->prependListener(QueryExecuted::class, function (QueryExecuted $event): void {
             $event->time = 4.321;
 
             $this->travelTo(now()->addMicroseconds(4321));
@@ -155,10 +155,10 @@ class QuerySensorTest extends TestCase
     }
 
     #[DataProvider('whereInQueries')]
-    public function test_group_hash_collapses_variadic_where_in_binding_placeholders_and_raw_integer_values(string $sql, string $expected, Connection $connection)
+    public function test_group_hash_collapses_variadic_where_in_binding_placeholders_and_raw_integer_values(string $sql, string $expected, Connection $connection): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function () use ($sql, $connection) {
+        Route::get('/users', function () use ($sql, $connection): void {
             Event::dispatch(new QueryExecuted($sql, [], 1, $connection));
         });
 
@@ -212,10 +212,10 @@ class QuerySensorTest extends TestCase
     }
 
     #[DataProvider('insertQueries')]
-    public function test_group_hash_collapses_insert_rows(string $sql, string $expected, Connection $connection)
+    public function test_group_hash_collapses_insert_rows(string $sql, string $expected, Connection $connection): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function () use ($sql, $connection) {
+        Route::get('/users', function () use ($sql, $connection): void {
             Event::dispatch(new QueryExecuted($sql, [], 1, $connection));
         });
 

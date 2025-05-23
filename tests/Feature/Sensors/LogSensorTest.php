@@ -10,7 +10,6 @@ use Monolog\LogRecord;
 use RuntimeException;
 use Tests\TestCase;
 
-use function expect;
 use function microtime;
 use function now;
 
@@ -30,10 +29,10 @@ class LogSensorTest extends TestCase
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     }
 
-    public function test_it_ingests_logs()
+    public function test_it_ingests_logs(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function () {
+        Route::get('/users', function (): void {
             Log::channel('nightwatch')->info('hello world');
         });
 
@@ -43,11 +42,11 @@ class LogSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.logs', 1);
         $ingest->assertLatestWrite('log:*', function (array $records) {
-            expect($records)->toHaveCount(1);
-            expect($records[0])->toHaveKey('timestamp');
-            expect($records[0]['timestamp'])->toBeFloat();
-            expect($records[0]['timestamp'])->toEqualWithDelta(microtime(true), 0.1);
-            expect(Arr::except($records[0], 'timestamp'))->toBe([
+            $this->assertCount(1, $records);
+            $this->assertArrayHasKey('timestamp', $records[0]);
+            $this->assertIsFloat($records[0]['timestamp']);
+            $this->assertEqualsWithDelta($records[0]['timestamp'], microtime(true), 0.1);
+            $this->assertSame([
                 'v' => 1,
                 't' => 'log',
                 'deploy' => 'v1.2.3',
@@ -62,16 +61,16 @@ class LogSensorTest extends TestCase
                 'message' => 'hello world',
                 'context' => '{}',
                 'extra' => '{}',
-            ]);
+            ], Arr::except($records[0], 'timestamp'));
 
             return true;
         });
     }
 
-    public function test_it_formats_messages_with_replacements()
+    public function test_it_formats_messages_with_replacements(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function () {
+        Route::get('/users', function (): void {
             Log::channel('nightwatch')->info('hello {location}', [
                 'location' => 'world',
             ]);
@@ -84,10 +83,10 @@ class LogSensorTest extends TestCase
         $ingest->assertLatestWrite('log:0.message', 'hello world');
     }
 
-    public function test_it_formats_messages_with_replacement_dates_using_configured_format()
+    public function test_it_formats_messages_with_replacement_dates_using_configured_format(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function () {
+        Route::get('/users', function (): void {
             Log::channel('nightwatch')->info('{datetime} - {datetimeimmutable} - {carbon} - {carbonimmutable}', [
                 'datetime' => now()->toDateTime(),
                 'datetimeimmutable' => now()->toDateTimeImmutable(),
@@ -103,10 +102,10 @@ class LogSensorTest extends TestCase
         $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00');
     }
 
-    public function test_it_always_logs_ut_c_time()
+    public function test_it_always_logs_ut_c_time(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function () {
+        Route::get('/users', function (): void {
             Log::channel('nightwatch')->info('{datetime} - {datetimeimmutable} - {carbon} - {carbonimmutable}', [
                 'datetime' => now('Australia/Melbourne')->toDateTime(),
                 'datetimeimmutable' => now('Australia/Melbourne')->toDateTimeImmutable(),
@@ -122,14 +121,14 @@ class LogSensorTest extends TestCase
         $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00');
     }
 
-    public function test_it_does_not_mutate_the_date_objects()
+    public function test_it_does_not_mutate_the_date_objects(): void
     {
         $ingest = $this->fakeIngest();
         $datetime = now('Australia/Melbourne')->toDateTime();
         $datetimeImmutable = now('Australia/Melbourne')->toDateTimeImmutable();
         $carbon = now('Australia/Melbourne')->toMutable();
         $carbonImmutable = now('Australia/Melbourne')->toImmutable();
-        Route::get('/users', function () use ($datetime, $datetimeImmutable, $carbon, $carbonImmutable) {
+        Route::get('/users', function () use ($datetime, $datetimeImmutable, $carbon, $carbonImmutable): void {
             Log::channel('nightwatch')->info('{datetime} - {datetimeimmutable} - {carbon} - {carbonimmutable}', [
                 'datetime' => $datetime,
                 'carbon' => $carbon,
@@ -143,16 +142,16 @@ class LogSensorTest extends TestCase
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('log:0.message', '2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00 - 2000-01-01 01:02:03.456789+00:00');
-        expect($datetime->getTimezone()->getName())->toBe('Australia/Melbourne');
-        expect($carbon->getTimezone()->getName())->toBe('Australia/Melbourne');
-        expect($datetimeImmutable->getTimezone()->getName())->toBe('Australia/Melbourne');
-        expect($carbonImmutable->getTimezone()->getName())->toBe('Australia/Melbourne');
+        $this->assertSame('Australia/Melbourne', $datetime->getTimezone()->getName());
+        $this->assertSame('Australia/Melbourne', $carbon->getTimezone()->getName());
+        $this->assertSame('Australia/Melbourne', $datetimeImmutable->getTimezone()->getName());
+        $this->assertSame('Australia/Melbourne', $carbonImmutable->getTimezone()->getName());
     }
 
-    public function test_it_captures_log_context()
+    public function test_it_captures_log_context(): void
     {
         $ingest = $this->fakeIngest();
-        Route::get('/users', function () {
+        Route::get('/users', function (): void {
             Log::channel('nightwatch')->info('Hello world!', [
                 'context' => 'value',
                 'date' => now(),
@@ -167,13 +166,13 @@ class LogSensorTest extends TestCase
         $ingest->assertLatestWrite('log:0.extra', '{}');
     }
 
-    public function test_it_captures_shared_log_context()
+    public function test_it_captures_shared_log_context(): void
     {
         $ingest = $this->fakeIngest();
         Log::shareContext([
             'shared' => 'context',
         ]);
-        Route::get('/users', function () {
+        Route::get('/users', function (): void {
             Log::channel('nightwatch')->info('Hello world!');
         });
 
@@ -185,13 +184,13 @@ class LogSensorTest extends TestCase
         $ingest->assertLatestWrite('log:0.extra', '{}');
     }
 
-    public function test_it_captures_extra()
+    public function test_it_captures_extra(): void
     {
         $ingest = $this->fakeIngest();
         Log::channel('nightwatch')->pushProcessor(fn (LogRecord $record) => $record->with(extra: [
             'extra' => 'context',
         ]));
-        Route::get('/users', function () {
+        Route::get('/users', function (): void {
             Log::channel('nightwatch')->info('Hello world!');
         });
 
@@ -203,11 +202,11 @@ class LogSensorTest extends TestCase
         $ingest->assertLatestWrite('log:0.context', '{}');
     }
 
-    public function test_it_normalizes_context()
+    public function test_it_normalizes_context(): void
     {
         $ingest = $this->fakeIngest();
         $e = new RuntimeException('Whoops!');
-        Route::get('/', function () {
+        Route::get('/', function (): void {
             Log::channel('nightwatch')->info('Whoops!', [
                 'o' => (object) [
                     'hello' => 'world',
@@ -222,7 +221,7 @@ class LogSensorTest extends TestCase
         $ingest->assertLatestWrite('log:0.context', '{"o":{"stdClass":{"hello":"world"}}}');
     }
 
-    public function test_it_normalize_sextra()
+    public function test_it_normalize_sextra(): void
     {
         $ingest = $this->fakeIngest();
         $e = new RuntimeException('Whoops!');
@@ -231,7 +230,7 @@ class LogSensorTest extends TestCase
                 'hello' => 'world',
             ],
         ]));
-        Route::get('/', function () {
+        Route::get('/', function (): void {
             Log::channel('nightwatch')->info('Whoops!');
         });
 

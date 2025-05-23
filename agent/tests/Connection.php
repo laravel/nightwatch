@@ -16,6 +16,11 @@ class Connection extends EventEmitter implements ConnectionInterface
         //
     }
 
+    public static function ok(): self
+    {
+        return new self('2:OK', closed: true);
+    }
+
     public static function closed(
         string $payload = '',
     ): self {

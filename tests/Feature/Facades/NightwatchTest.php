@@ -11,69 +11,67 @@ use RuntimeException;
 use Tests\TestCase;
 use Throwable;
 
-use function expect;
-
 class NightwatchTest extends TestCase
 {
-    public function test_it_resolves_to_bound_singleton_instance_of_the_core_class()
+    public function test_it_resolves_to_bound_singleton_instance_of_the_core_class(): void
     {
-        expect(Nightwatch::getFacadeRoot())->toBeInstanceOf(Core::class);
+        $this->assertInstanceOf(Core::class, Nightwatch::getFacadeRoot());
 
-        expect(Nightwatch::getFacadeRoot())->toBe($this->app[Core::class]);
+        $this->assertSame($this->app[Core::class], Nightwatch::getFacadeRoot());
 
         Facade::clearResolvedInstances();
-        expect(Nightwatch::getFacadeRoot())->toBe($this->app[Core::class]);
+        $this->assertSame($this->app[Core::class], Nightwatch::getFacadeRoot());
     }
 
-    public function test_it_silently_discards_unrecoverable_exceptions_by_default()
+    public function test_it_silently_discards_unrecoverable_exceptions_by_default(): void
     {
         (new ReflectionClass(Nightwatch::class))->getProperty('handleUnrecoverableExceptionsUsing')->setValue(null);
         $calls = 0;
-        Log::listen(function () use (&$calls) {
+        Log::listen(function () use (&$calls): void {
             $calls++;
         });
 
         Nightwatch::unrecoverableExceptionOccurred(new RuntimeException('Whoops!'));
 
-        expect($calls)->toBe(0);
+        $this->assertSame(0, $calls);
     }
 
-    public function test_it_can_register_a_callback_to_handle_unrecoverable_exceptions()
+    public function test_it_can_register_a_callback_to_handle_unrecoverable_exceptions(): void
     {
         $handled = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function (Throwable $e) use (&$handled) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function (Throwable $e) use (&$handled): void {
             $handled[] = $e;
         });
 
         Nightwatch::unrecoverableExceptionOccurred($first = new RuntimeException('Whoops!'));
         Nightwatch::unrecoverableExceptionOccurred($second = new RuntimeException('Whoops!'));
 
-        expect($handled)->toBe([
+        $this->assertSame([
             $first,
             $second,
-        ]);
+        ], $handled);
     }
 
-    public function test_it_handles_unrecoverable_exceptions_statelessly()
+    public function test_it_handles_unrecoverable_exceptions_statelessly(): void
     {
         $this->app->forgetInstance(Core::class);
         $resolved = false;
-        Nightwatch::resolved(function () use (&$resolved) {
+        Nightwatch::resolved(function () use (&$resolved): void {
             $resolved = true;
         });
 
         $handled = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function (Throwable $e) use (&$handled) {
+        Nightwatch::handleUnrecoverableExceptionsUsing(function (Throwable $e) use (&$handled): void {
             $handled[] = $e;
         });
         Nightwatch::unrecoverableExceptionOccurred($first = new RuntimeException('Whoops!'));
 
-        expect($resolved)->toBeFalse();
-        expect($handled)->toHaveCount(1);
-        expect($this->app->resolved(Core::class))->toBeFalse();
+        $this->assertFalse($resolved);
+        $this->assertCount(1, $handled);
+        $this->assertFalse($this->app->resolved(Core::class));
     }
 
-    public function test_it_silences_exceptions_thrown_while_handling_exceptions()
+    public function test_it_silences_exceptions_thrown_while_handling_exceptions(): void
     {
         Nightwatch::handleUnrecoverableExceptionsUsing(function (): object {
             // Should return an object. Returning an int to cause an exception.

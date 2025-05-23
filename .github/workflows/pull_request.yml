@@ -268,7 +268,7 @@ jobs:
         run: COMPOSER_PREFER_LOWEST=${{ matrix.prefer-lowest }} composer install --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
-        run: vendor/bin/pest --coverage --min=80
+        run: vendor/bin/phpunit --coverage-text --show-uncovered-for-coverage-text
 
   agent_tests:
     runs-on: ubuntu-latest

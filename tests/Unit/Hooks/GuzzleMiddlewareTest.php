@@ -1,47 +1,56 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
+use RuntimeException;
+use Tests\TestCase;
 
-it('gracefully handles exceptions in the before middleware', function () {
-    $exceptions = [];
-    nightwatch()->sensor->exceptionSensor = function ($e) use (&$exceptions) {
-        $exceptions[] = $e;
-    };
-    $thrownInMicrotimeResolver = false;
-    nightwatch()->clock->microtimeResolver = function () use (&$thrownInMicrotimeResolver): float {
-        $thrownInMicrotimeResolver = true;
+class GuzzleMiddlewareTest extends TestCase
+{
+    public function test_it_gracefully_handles_exceptions_in_the_before_middleware(): void
+    {
+        $exceptions = [];
+        $this->core->sensor->exceptionSensor = function ($e) use (&$exceptions): void {
+            $exceptions[] = $e;
+        };
+        $thrownInMicrotimeResolver = false;
+        $this->core->clock->microtimeResolver = function () use (&$thrownInMicrotimeResolver): float {
+            $thrownInMicrotimeResolver = true;
 
-        throw new RuntimeException('Whoops!');
-    };
+            throw new RuntimeException('Whoops!');
+        };
 
-    $middleware = new GuzzleMiddleware(nightwatch());
+        $middleware = new GuzzleMiddleware($this->core);
 
-    $stack = $middleware(fn () => new FulfilledPromise(new Response(body: 'ok')));
-    $response = $stack(new Request('GET', '/test'), [])->wait();
+        $stack = $middleware(fn () => new FulfilledPromise(new Response(body: 'ok')));
+        $response = $stack(new Request('GET', '/test'), [])->wait();
 
-    expect($thrownInMicrotimeResolver)->toBeTrue();
-    expect($exceptions)->toHaveCount(1);
-    expect($exceptions[0]->getMessage())->toBe('Whoops!');
-    expect((string) $response->getBody())->toBe('ok');
-});
+        $this->assertTrue($thrownInMicrotimeResolver);
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Whoops!', $exceptions[0]->getMessage());
+        $this->assertSame('ok', (string) $response->getBody());
+    }
 
-it('gracefully handles exceptions in the after middleware', function () {
-    $thrownInOutgoingRequestSensor = false;
-    nightwatch()->sensor->outgoingRequestSensor = function () use (&$thrownInOutgoingRequestSensor) {
-        $thrownInOutgoingRequestSensor = true;
+    public function test_it_gracefully_handles_exceptions_in_the_after_middleware(): void
+    {
+        $thrownInOutgoingRequestSensor = false;
+        $this->core->sensor->outgoingRequestSensor = function () use (&$thrownInOutgoingRequestSensor): void {
+            $thrownInOutgoingRequestSensor = true;
 
-        throw new RuntimeException('Whoops!');
-    };
+            throw new RuntimeException('Whoops!');
+        };
 
-    $middleware = new GuzzleMiddleware(nightwatch());
-    $stack = $middleware(fn () => new FulfilledPromise(new Response(body: 'ok')));
+        $middleware = new GuzzleMiddleware($this->core);
+        $stack = $middleware(fn () => new FulfilledPromise(new Response(body: 'ok')));
 
-    $response = $stack(new Request('GET', '/test'), [])->wait();
+        $response = $stack(new Request('GET', '/test'), [])->wait();
 
-    expect($thrownInOutgoingRequestSensor)->toBeTrue();
-    expect((string) $response->getBody())->toBe('ok');
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
-});
+        $this->assertTrue($thrownInOutgoingRequestSensor);
+        $this->assertSame('ok', (string) $response->getBody());
+        $this->assertSame(1, $this->core->executionState->exceptions);
+    }
+}

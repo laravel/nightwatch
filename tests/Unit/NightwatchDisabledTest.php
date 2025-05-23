@@ -1,42 +1,57 @@
 <?php
 
+namespace Tests\Unit;
+
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Orchestra\Testbench\Foundation\Env;
+use RuntimeException;
+use Tests\TestCase;
 
-use function Pest\Laravel\get;
+class NightwatchDisabledTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        Env::getRepository()->set('NIGHTWATCH_ENABLED', '0');
 
-beforeAll(function () {
-    Env::getRepository()->set('NIGHTWATCH_ENABLED', '0');
-});
+        parent::setUp();
+    }
 
-afterAll(function () {
-    Env::getRepository()->clear('NIGHTWATCH_ENABLED');
-});
+    protected function tearDown(): void
+    {
+        parent::tearDown();
 
-it('can disable Nightwatch via the environment', function () {
-    expect(nightwatch()->enabled())->toBe(false);
-});
+        Env::getRepository()->clear('NIGHTWATCH_ENABLED');
+    }
 
-it('gracefully ignores reported exceptions when nightwatch is disabled', function () {
-    $ingest = fakeIngest();
-    Route::get('/users', fn () => Nightwatch::report(new RuntimeException));
+    public function test_it_can_disable_nightwatch_via_the_environment(): void
+    {
+        $this->assertFalse($this->core->enabled());
+    }
 
-    $response = get('/users');
+    public function test_it_gracefully_ignores_reported_exceptions_when_nightwatch_is_disabled(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', fn () => Nightwatch::report(new RuntimeException));
 
-    $response->assertOk();
-    $ingest->assertWrittenTimes(0);
-    expect(nightwatch()->executionState->exceptions)->toBe(0);
-});
+        $response = $this->get('/users');
 
-it('gracefully ignores logs when nightwatch is disabled', function () {
-    $ingest = fakeIngest();
-    Route::get('/users', fn () => Log::channel('nightwatch')->info('Hello world'));
+        $response->assertOk();
+        $ingest->assertWrittenTimes(0);
+        $this->assertSame(0, $this->core->executionState->exceptions);
+    }
 
-    $response = get('/users');
+    public function test_it_gracefully_ignores_logs_when_nightwatch_is_disabled(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', fn () => Log::channel('nightwatch')->info('Hello world'));
 
-    $response->assertOk();
-    $ingest->assertWrittenTimes(0);
-    expect(nightwatch()->executionState->logs)->toBe(0);
-    expect(nightwatch()->executionState->exceptions)->toBe(0);
-});
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(0);
+        $this->assertSame(0, $this->core->executionState->logs);
+        $this->assertSame(0, $this->core->executionState->exceptions);
+    }
+}

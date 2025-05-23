@@ -1,24 +1,34 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
 use Illuminate\Http\Request;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\ResponsePreparedListener;
+use RuntimeException;
+use Tests\TestCase;
 
-it('gracefully handles exceptions', function () {
-    $thrownInStageSensor = false;
-    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
-        $thrownInStageSensor = true;
+use function response;
 
-        throw new RuntimeException('Whoops!');
-    };
-    nightwatch()->executionState->stage = ExecutionStage::Render;
+class ResponsePreparedListenerTest extends TestCase
+{
+    public function test_it_gracefully_handles_exceptions(): void
+    {
+        $thrownInStageSensor = false;
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor): void {
+            $thrownInStageSensor = true;
 
-    $event = new ResponsePrepared(Request::create('/tests'), response(''));
+            throw new RuntimeException('Whoops!');
+        };
+        $this->core->executionState->stage = ExecutionStage::Render;
 
-    $listener = new ResponsePreparedListener(nightwatch());
-    $listener($event);
+        $event = new ResponsePrepared(Request::create('/tests'), response(''));
 
-    expect($thrownInStageSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
-});
+        $listener = new ResponsePreparedListener($this->core);
+        $listener($event);
+
+        $this->assertTrue($thrownInStageSensor);
+        $this->assertSame(1, $this->core->executionState->exceptions);
+    }
+}

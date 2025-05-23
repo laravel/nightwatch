@@ -1,36 +1,44 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
 use Carbon\CarbonImmutable;
 use Laravel\Nightwatch\Hooks\LogHandler;
 use Monolog\Level;
 use Monolog\LogRecord;
+use RuntimeException;
+use Tests\TestCase;
 
-it('gracefully handles exceptions', function () {
-    $thrownInLogSensor = false;
-    nightwatch()->sensor->logSensor = function () use (&$thrownInLogSensor) {
-        $thrownInLogSensor = true;
+class LogHandlerTest extends TestCase
+{
+    public function test_it_gracefully_handles_exceptions(): void
+    {
+        $thrownInLogSensor = false;
+        $this->core->sensor->logSensor = function () use (&$thrownInLogSensor): void {
+            $thrownInLogSensor = true;
 
-        throw new RuntimeException('Whoops!');
-    };
-    $record = new LogRecord(CarbonImmutable::now(), 'nightwatch', Level::Debug, 'hello world');
+            throw new RuntimeException('Whoops!');
+        };
+        $record = new LogRecord(CarbonImmutable::now(), 'nightwatch', Level::Debug, 'hello world');
 
-    $handler = new LogHandler(nightwatch());
-    $handler->handle($record);
+        $handler = new LogHandler($this->core);
+        $handler->handle($record);
 
-    expect($thrownInLogSensor)->toBeTrue();
-    expect(nightwatch()->executionState->exceptions)->toBe(1);
+        $this->assertTrue($thrownInLogSensor);
+        $this->assertSame(1, $this->core->executionState->exceptions);
 
-    $thrownInLogSensor = false;
-    $handler->handleBatch([null]);
+        $thrownInLogSensor = false;
+        $handler->handleBatch([null]);
 
-    expect($thrownInLogSensor)->toBeFalse();
-    expect(nightwatch()->executionState->exceptions)->toBe(2);
+        $this->assertFalse($thrownInLogSensor);
+        $this->assertSame(2, $this->core->executionState->exceptions);
 
-    expect($handler->close())->toBeNull();
-    expect($thrownInLogSensor)->toBeFalse();
-    expect(nightwatch()->executionState->exceptions)->toBe(2);
+        $this->assertNull($handler->close());
+        $this->assertFalse($thrownInLogSensor);
+        $this->assertSame(2, $this->core->executionState->exceptions);
 
-    expect($handler->isHandling($record))->toBeTrue();
-    expect($thrownInLogSensor)->toBeFalse();
-    expect(nightwatch()->executionState->exceptions)->toBe(2);
-});
+        $this->assertTrue($handler->isHandling($record));
+        $this->assertFalse($thrownInLogSensor);
+        $this->assertSame(2, $this->core->executionState->exceptions);
+    }
+}

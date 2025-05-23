@@ -2,9 +2,11 @@
 
 namespace Tests;
 
+use BadMethodCallException;
 use Carbon\CarbonImmutable;
 use Closure;
 use DateTimeInterface;
+use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Http;
@@ -17,12 +19,17 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use PHPUnit\Framework\ExpectationFailedException;
 
+use function array_combine;
+use function array_intersect_key;
 use function collect;
 use function env;
 use function fopen;
 use function Illuminate\Filesystem\join_paths;
 use function now;
+use function realpath;
+use function sprintf;
 use function stream_wrapper_register;
 use function stream_wrapper_unregister;
 use function touch;
@@ -35,6 +42,8 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function setUp(): void
     {
+        $_ENV['APP_BASE_PATH'] = realpath(__DIR__.'/../workbench/').'/';
+
         parent::setUp();
 
         Http::preventStrayRequests();
@@ -160,5 +169,39 @@ abstract class TestCase extends OrchestraTestCase
     protected function setLaravelVersion(string $version): void
     {
         $this->core->executionState->laravelVersion = $version;
+    }
+
+    public function __call(string $method, array $arguments): mixed
+    {
+        if ($method === 'assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys') {
+            $this->backfilledAssertArrayIsIdenticalToArrayOnlyConsideringListOfKeys(...$arguments);
+
+            return null;
+        }
+
+        throw new BadMethodCallException(sprintf(
+            'Call to undefined method %s::%s()', static::class, $method
+        ));
+    }
+
+    /**
+     * Asserts that two arrays are identical while only considering a list of keys.
+     *
+     * NOTE Backfilled to support lower versions of PHPUnit.
+     *
+     * @param  array<mixed>  $expected
+     * @param  array<mixed>  $actual
+     * @param  non-empty-list<array-key>  $keysToBeConsidered
+     *
+     * @throws Exception
+     * @throws ExpectationFailedException
+     */
+    public static function backfilledAssertArrayIsIdenticalToArrayOnlyConsideringListOfKeys(array $expected, array $actual, array $keysToBeConsidered, string $message = ''): void
+    {
+        $keysToBeConsidered = array_combine($keysToBeConsidered, $keysToBeConsidered);
+        $expected = array_intersect_key($expected, $keysToBeConsidered);
+        $actual = array_intersect_key($actual, $keysToBeConsidered);
+
+        self::assertSame($expected, $actual, $message);
     }
 }

@@ -21,42 +21,73 @@ class Response
 {
     /**
      * @param  string|array<mixed>  $body
+     * @param  array<string, string>  $headers
      */
     public function __construct(
         public string|array $body = '',
         public ?int $status = 200,
         public int $duration = 0,
+        public array $headers = [],
     ) {
         //
     }
 
+    /**
+     * @param  array<string, string>  $headers
+     */
     public static function jwt(
         string $token = 'NIGHTWATCH_TEST_TOKEN',
         int $expiresIn = 7_200,
         int $refreshIn = 3_600,
         string $ingestUrl = 'https://ingest.nightwatch.laravel.com',
         int $duration = 0,
+        array $headers = ['Content-Type' => 'application/json'],
     ): self {
         return new self([
             'token' => $token,
             'expires_in' => $expiresIn,
             'ingest_url' => $ingestUrl,
             'refresh_in' => $refreshIn,
-        ], duration: $duration);
+        ], duration: $duration, headers: $headers);
     }
 
+    /**
+     * @param  array<mixed>  $payload
+     * @param  array<string, string>  $headers
+     */
     public static function unauthenticated(
-        string $message = 'Invalid environment token',
-        int $duration = 0
+        array $payload = [
+            'message' => 'Invalid environment token',
+            'refresh_in' => 3_600,
+        ],
+        int $duration = 0,
+        array $headers = ['Content-Type' => 'application/json'],
     ): self {
-        return new self(['message' => $message], status: 401, duration: $duration);
+        return new self($payload, status: 401, duration: $duration, headers: $headers);
     }
 
+    /**
+     * @param  array<mixed>  $body
+     * @param  array<string, string>  $headers
+     */
+    public static function ingested(
+        string|array $body = '{}',
+        ?int $status = 200,
+        int $duration = 0,
+        array $headers = [],
+    ): self {
+        return new self($body, $status, $duration, $headers);
+    }
+
+    /**
+     * @param  array<string, string>  $headers
+     */
     public static function internalServerError(
         string $body = '',
         int $duration = 0,
+        array $headers = [],
     ): self {
-        return new self($body, status: 500, duration: $duration);
+        return new self($body, status: 500, duration: $duration, headers: $headers);
     }
 
     public static function throwWhileProcessing(
@@ -70,11 +101,15 @@ class Response
         }
     }
 
+    /**
+     * @param  array<string, string>  $headers
+     */
     public static function ingest(
         int $remaining = 100_000,
         int $duration = 0,
+        array $headers = ['Content-Type' => 'application/json'],
     ): self {
-        return new self(['remaining' => $remaining], duration: $duration);
+        return new self(['remaining' => $remaining], duration: $duration, headers: $headers);
     }
 
     /**
@@ -126,6 +161,7 @@ class Response
 
         return new ReactResponse(
             status: $this->status,
+            headers: $this->headers,
             body: $this->body(),
         );
     }

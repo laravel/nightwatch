@@ -1,90 +1,106 @@
 <?php
 
+namespace Tests\Unit\Hooks;
+
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Hooks\RequestLifecycleIsLongerThanHandler;
+use RuntimeException;
+use Tests\TestCase;
 
-beforeAll(function () {
-    forceRequestExecutionState();
-});
+use function now;
 
-it('gracefully handles exceptions while capturing stage', function () {
-    $ingest = fakeIngest();
-    $thrownInStageSensor = false;
-    nightwatch()->sensor->stageSensor = function () use (&$thrownInStageSensor) {
-        $thrownInStageSensor = true;
+class RequestLifecycleIsLongerThanHandlerTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        $this->forceRequestExecutionState();
 
-        throw new RuntimeException('Whoops!');
-    };
-    nightwatch()->executionState->stage = ExecutionStage::Bootstrap;
+        parent::setUp();
+    }
 
-    $startedAt = now();
-    $request = Request::create('/test');
-    $response = new Response;
+    public function test_it_gracefully_handles_exceptions_while_capturing_stage(): void
+    {
+        $ingest = $this->fakeIngest();
+        $thrownInStageSensor = false;
+        $this->core->sensor->stageSensor = function () use (&$thrownInStageSensor): void {
+            $thrownInStageSensor = true;
 
-    $handler = new RequestLifecycleIsLongerThanHandler(nightwatch());
-    $handler($startedAt, $request, $response);
+            throw new RuntimeException('Whoops!');
+        };
+        $this->core->executionState->stage = ExecutionStage::Bootstrap;
 
-    expect($thrownInStageSensor)->toBeTrue();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite(function ($records) {
-        expect($records)->toHaveCount(2);
-        expect($records[0]['t'])->toBe('exception');
-        expect($records[1]['t'])->toBe('request');
+        $startedAt = now();
+        $request = Request::create('/test');
+        $response = new Response;
 
-        return true;
-    });
-});
+        $handler = new RequestLifecycleIsLongerThanHandler($this->core);
+        $handler($startedAt, $request, $response);
 
-it('gracefully handles exceptions while capturing user', function () {
-    $ingest = fakeIngest();
-    $thrownInUserSensor = false;
-    nightwatch()->sensor->userSensor = function () use (&$thrownInUserSensor) {
-        $thrownInUserSensor = true;
+        $this->assertTrue($thrownInStageSensor);
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+            $this->assertSame('exception', $records[0]['t']);
+            $this->assertSame('request', $records[1]['t']);
 
-        throw new RuntimeException('Whoops!');
-    };
+            return true;
+        });
+    }
 
-    $startedAt = now();
-    $request = Request::create('/test');
-    $response = new Response;
+    public function test_it_gracefully_handles_exceptions_while_capturing_user(): void
+    {
+        $ingest = $this->fakeIngest();
+        $thrownInUserSensor = false;
+        $this->core->sensor->userSensor = function () use (&$thrownInUserSensor): void {
+            $thrownInUserSensor = true;
 
-    $handler = new RequestLifecycleIsLongerThanHandler(nightwatch());
-    $handler($startedAt, $request, $response);
+            throw new RuntimeException('Whoops!');
+        };
 
-    expect($thrownInUserSensor)->toBeTrue();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite(function ($records) {
-        expect($records)->toHaveCount(2);
-        expect($records[0]['t'])->toBe('exception');
-        expect($records[1]['t'])->toBe('request');
+        $startedAt = now();
+        $request = Request::create('/test');
+        $response = new Response;
 
-        return true;
-    });
-});
+        $handler = new RequestLifecycleIsLongerThanHandler($this->core);
+        $handler($startedAt, $request, $response);
 
-it('gracefully handles exceptions while capturing request', function () {
-    $ingest = fakeIngest();
-    $thrownInRequestSensor = false;
-    nightwatch()->sensor->requestSensor = function () use (&$thrownInRequestSensor) {
-        $thrownInRequestSensor = true;
+        $this->assertTrue($thrownInUserSensor);
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+            $this->assertSame('exception', $records[0]['t']);
+            $this->assertSame('request', $records[1]['t']);
 
-        throw new RuntimeException('Whoops!');
-    };
+            return true;
+        });
+    }
 
-    $startedAt = now();
-    $request = Request::create('/test');
-    $response = new Response;
+    public function test_it_gracefully_handles_exceptions_while_capturing_request(): void
+    {
+        $ingest = $this->fakeIngest();
+        $thrownInRequestSensor = false;
+        $this->core->sensor->requestSensor = function () use (&$thrownInRequestSensor): void {
+            $thrownInRequestSensor = true;
 
-    $handler = new RequestLifecycleIsLongerThanHandler(nightwatch());
-    $handler($startedAt, $request, $response);
+            throw new RuntimeException('Whoops!');
+        };
 
-    expect($thrownInRequestSensor)->toBeTrue();
-    $ingest->assertWrittenTimes(1);
-    $ingest->assertLatestWrite(function ($records) {
-        expect($records)->toHaveCount(1);
-        expect($records[0]['t'])->toBe('exception');
+        $startedAt = now();
+        $request = Request::create('/test');
+        $response = new Response;
 
-        return true;
-    });
-});
+        $handler = new RequestLifecycleIsLongerThanHandler($this->core);
+        $handler($startedAt, $request, $response);
+
+        $this->assertTrue($thrownInRequestSensor);
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+            $this->assertSame('exception', $records[0]['t']);
+
+            return true;
+        });
+    }
+}

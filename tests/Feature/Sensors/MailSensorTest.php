@@ -34,10 +34,10 @@ class MailSensorTest extends TestCase
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     }
 
-    public function test_it_ingests_mails()
+    public function test_it_ingests_mails(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Mail::to([
                 'ryuta@laravel.com',
                 'jess@laravel.com',
@@ -50,7 +50,7 @@ class MailSensorTest extends TestCase
             ])->send((new MyTestMail)->html('')->subject('Welcome!')->attachData('hunter2', 'password.txt'));
         });
 
-        Event::listen(MessageSending::class, function ($event) {
+        Event::listen(MessageSending::class, function ($event): void {
             $this->travelTo(now()->addMicroseconds(2500));
         });
 
@@ -86,10 +86,10 @@ class MailSensorTest extends TestCase
         ]);
     }
 
-    public function test_it_ingests_markdown_mailables()
+    public function test_it_ingests_markdown_mailables(): void
     {
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             Mail::to('phillip@laravel.com')->send(new MyTestMarkdownMail);
         });
 
@@ -126,11 +126,11 @@ class MailSensorTest extends TestCase
 
     }
 
-    public function test_it_ignores_notifications_sent_as_mail_messages()
+    public function test_it_ignores_notifications_sent_as_mail_messages(): void
     {
         // If this test fails, try clearing `workbench/storage/framework/views/*`
         $ingest = $this->fakeIngest();
-        Route::post('/users', function () {
+        Route::post('/users', function (): void {
             NotificationFacade::send([
                 User::factory()->create(),
             ], new class extends MyTestNotification
