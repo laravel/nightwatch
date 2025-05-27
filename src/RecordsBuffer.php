@@ -39,8 +39,21 @@ class RecordsBuffer implements Countable
         }
 
         $records = [];
+        $capturedRecords = $this->records;
+        $this->records = [];
 
-        while ($record = array_shift($this->records)) {
+        while ($record = array_shift($capturedRecords)) {
+            foreach ($filters as $filter) {
+                if ($filter($record)) {
+                    $records[] = $record;
+                }
+            }
+        }
+
+        $capturedRecords = $this->records;
+        $this->records = [];
+
+        while ($record = array_shift($capturedRecords)) {
             foreach ($filters as $filter) {
                 if ($filter($record)) {
                     $records[] = $record;

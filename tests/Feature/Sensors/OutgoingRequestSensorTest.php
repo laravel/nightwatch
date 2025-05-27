@@ -214,7 +214,10 @@ class OutgoingRequestSensorTest extends TestCase
             $stack->setHandler(new CurlHandler);
             $stack->push(Nightwatch::guzzleMiddleware());
             $client = new Client(['handler' => $stack]);
-            $client->get('https://laravel.com');
+            $client->get('https://laravel.com', [
+                'connection_timeout' => 1,
+                'timeout' => 1,
+            ]);
         });
 
         $response = $this->post('/users');
