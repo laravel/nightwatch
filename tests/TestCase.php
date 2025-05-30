@@ -48,8 +48,6 @@ abstract class TestCase extends OrchestraTestCase
 
         Http::preventStrayRequests();
         Str::createUuidsNormally();
-        FakeTcpStream::flush();
-        @stream_wrapper_unregister('tcp');
 
         Nightwatch::handleUnrecoverableExceptionsUsing(dd(...));
         Compatibility::$context = [];
@@ -77,8 +75,12 @@ abstract class TestCase extends OrchestraTestCase
     protected function fakeTcpStreams(): Collection
     {
         stream_wrapper_register('tcp', FakeTcpStream::class);
-
         $this->core->ingest->streamFactory = fn ($address, $timeout) => fopen($address, 'r+');
+
+        $this->beforeApplicationDestroyed(function () {
+            stream_wrapper_unregister('tcp');
+            FakeTcpStream::flush();
+        });
 
         return FakeTcpStream::instances();
     }
