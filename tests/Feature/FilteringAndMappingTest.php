@@ -82,8 +82,7 @@ class FilteringAndMappingTest extends TestCase
     public function test_it_rejects_records_when_exceptions_occurs()
     {
         $streams = $this->fakeTcpStreams();
-        $exceptions = collect();
-        Nightwatch::handleUnrecoverableExceptionsUsing($exceptions->push(...));
+        Nightwatch::handleUnrecoverableExceptionsUsing(($exceptions = collect())->push(...));
 
         Nightwatch::filter(function (Record $record): mixed {
             if (is_numeric($record->t) && ($record->t % 2)) {

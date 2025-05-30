@@ -40,10 +40,15 @@ class RecordsBuffer implements Countable
 
         $records = [];
 
-        while ($record = array_shift($this->records)) {
-            foreach ($filters as $filter) {
-                if ($filter($record)) {
-                    $records[] = $record;
+        if ($filters === []) {
+            $records = $this->records;
+            $this->records = [];
+        } else {
+            while ($record = array_shift($this->records)) {
+                foreach ($filters as $filter) {
+                    if ($filter($record)) {
+                        $records[] = $record;
+                    }
                 }
             }
         }
