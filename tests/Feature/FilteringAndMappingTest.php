@@ -20,7 +20,7 @@ class FilteringAndMappingTest extends TestCase
 {
     public function test_it_can_filter_records()
     {
-        $streamsResolver = $this->fakeTcpStreams();
+        $streams = $this->fakeTcpStreams();
 
         Nightwatch::filter(function (Record $record): bool {
             if ($record instanceof Query) {
@@ -35,8 +35,7 @@ class FilteringAndMappingTest extends TestCase
         DB::select('select * from users where name = "Laravel 3"');
         $this->core->digest();
 
-        [$stream] = $streamsResolver();
-        $stream->assertWritten(function ($value) {
+        $streams->first()->assertWritten(function ($value) {
             $this->assertStringContainsString('Laravel 1', $value);
             $this->assertStringContainsString('Laravel 2', $value);
             $this->assertStringNotContainsString('Laravel 3', $value);
@@ -47,7 +46,7 @@ class FilteringAndMappingTest extends TestCase
 
     public function test_filtered_payloads_are_always_an_array(): void
     {
-        $streamsResolver = $this->fakeTcpStreams();
+        $streams = $this->fakeTcpStreams();
         $filterResult = [false, true];
 
         Nightwatch::filter(function (Record $record) use (&$filterResult): bool {
@@ -58,13 +57,12 @@ class FilteringAndMappingTest extends TestCase
         $this->core->ingest->write(new FakeRecord);
         $this->core->digest();
 
-        [$stream] = $streamsResolver();
-        $stream->assertWritten('29:'.Payload::SIGNATURE.':[{"t":"fake-record"}]');
+        $streams->first()->assertWritten('29:'.Payload::SIGNATURE.':[{"t":"fake-record"}]');
     }
 
     public function test_it_filters_falsey_values()
     {
-        $streamsResolver = $this->fakeTcpStreams();
+        $streams = $this->fakeTcpStreams();
         $filterResult = [null, false, '', 0, true];
 
         Nightwatch::filter(function (Record $record) use (&$filterResult): mixed {
@@ -78,13 +76,12 @@ class FilteringAndMappingTest extends TestCase
         $this->core->ingest->write(new FakeRecord('accepted-record'));
         $this->core->digest();
 
-        [$stream] = $streamsResolver();
-        $stream->assertWritten('33:'.Payload::SIGNATURE.':[{"t":"accepted-record"}]');
+        $streams->first()->assertWritten('33:'.Payload::SIGNATURE.':[{"t":"accepted-record"}]');
     }
 
     public function test_it_rejects_records_when_exceptions_occurs()
     {
-        $streamsResolver = $this->fakeTcpStreams();
+        $streams = $this->fakeTcpStreams();
         $exceptions = collect();
         Nightwatch::handleUnrecoverableExceptionsUsing($exceptions->push(...));
 
@@ -102,8 +99,7 @@ class FilteringAndMappingTest extends TestCase
         $this->core->ingest->write(new FakeRecord('4'));
         $this->core->digest();
 
-        [$stream] = $streamsResolver();
-        $stream->assertWritten('29:'.Payload::SIGNATURE.':[{"t":"2"},{"t":"4"}]');
+        $streams->first()->assertWritten('29:'.Payload::SIGNATURE.':[{"t":"2"},{"t":"4"}]');
         $this->assertCount(2, $exceptions);
         $this->assertSame('Whoops 1', $exceptions[0]->getMessage());
         $this->assertSame('Whoops 3', $exceptions[1]->getMessage());
@@ -116,7 +112,7 @@ class FilteringAndMappingTest extends TestCase
 
     public function test_it_can_modify_records()
     {
-        $streamsResolver = $this->fakeTcpStreams();
+        $streams = $this->fakeTcpStreams();
 
         Nightwatch::filter(function (Record $record): bool {
             if ($record instanceof Query) {
@@ -129,8 +125,7 @@ class FilteringAndMappingTest extends TestCase
         DB::select('select * from users');
         $this->core->digest();
 
-        [$stream] = $streamsResolver();
-        $stream->assertWritten(function ($value) {
+        $streams->first()->assertWritten(function ($value) {
             $this->assertStringContainsString('"sql":"sleep 10"', $value);
             $this->assertStringNotContainsString('select * from users', $value);
 
