@@ -66,6 +66,6 @@ class FakeTcpStream
 
     public static function flush(): void
     {
-        self::$instances = new Collection;
+        self::$instances = null;
     }
 }
