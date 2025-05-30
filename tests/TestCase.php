@@ -47,7 +47,6 @@ abstract class TestCase extends OrchestraTestCase
         parent::setUp();
 
         Http::preventStrayRequests();
-        Str::createUuidsNormally();
 
         Nightwatch::handleUnrecoverableExceptionsUsing(dd(...));
         Compatibility::$context = [];
@@ -59,6 +58,8 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function tearDown(): void
     {
+        Str::createUuidsNormally();
+
         unset($this->core);
 
         parent::tearDown();
