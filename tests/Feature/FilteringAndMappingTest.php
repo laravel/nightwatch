@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Payload;
 use Laravel\Nightwatch\Records\Query;
@@ -13,6 +12,7 @@ use Tests\FakeRecord;
 use Tests\TestCase;
 
 use function array_shift;
+use function collect;
 use function is_numeric;
 use function str_contains;
 
@@ -29,6 +29,7 @@ class FilteringAndMappingTest extends TestCase
 
             return true;
         });
+
         DB::select('select * from users where name = "Laravel 1"');
         DB::select('select * from users where name = "Laravel 2"');
         DB::select('select * from users where name = "Laravel 3"');
@@ -52,6 +53,7 @@ class FilteringAndMappingTest extends TestCase
         Nightwatch::filter(function (Record $record) use (&$filterResult): bool {
             return array_shift($filterResult);
         });
+
         $this->core->ingest->write(new FakeRecord);
         $this->core->ingest->write(new FakeRecord);
         $this->core->digest();
@@ -68,6 +70,7 @@ class FilteringAndMappingTest extends TestCase
         Nightwatch::filter(function (Record $record) use (&$filterResult): mixed {
             return array_shift($filterResult);
         });
+
         $this->core->ingest->write(new FakeRecord);
         $this->core->ingest->write(new FakeRecord);
         $this->core->ingest->write(new FakeRecord);
@@ -82,6 +85,9 @@ class FilteringAndMappingTest extends TestCase
     public function test_it_rejects_records_when_exceptions_occurs()
     {
         $streamsResolver = $this->fakeTcpStreams();
+        $exceptions = collect();
+        Nightwatch::handleUnrecoverableExceptionsUsing($exceptions->push(...));
+
         Nightwatch::filter(function (Record $record): mixed {
             if (is_numeric($record->t) && ($record->t % 2)) {
                 throw new RuntimeException("Whoops {$record->t}");
@@ -97,52 +103,10 @@ class FilteringAndMappingTest extends TestCase
         $this->core->digest();
 
         [$stream] = $streamsResolver();
-        $stream->assertWritten(function ($payload) {
-            $this->assertStringContainsString('Whoops 1', $payload);
-            $this->assertStringContainsString('{"t":"2"}', $payload);
-            $this->assertStringContainsString('Whoops 3', $payload);
-            $this->assertStringContainsString('{"t":"4"}', $payload);
-
-            return true;
-        });
-    }
-
-    public function test_if_exception_occurs_while_filtering_that_we_can_capture_it_on_requests_exceptions_count()
-    {
-        $streamsResolver = $this->fakeTcpStreams();
-        Nightwatch::filter(function (Record $record) {
-            if ($record->t === 'query') {
-
-            }
-            if ($record->t === 'request') {
-                return true;
-            }
-
-
-        });
-        Route::get('/test', fn () => DB::table('users')->get());
-
-        [$stream] = $streamsResolver();
-
-        $stream->assertWritten(function ($payload) {
-            $this->assertStringContainsString(',"exceptions":2,', $payload);
-
-            return true;
-        })
-    }
-
-    public function test_it_cannot_enter_infinte_loop_while_filtering(): void
-    {
-        $streamsResolver = $this->fakeTcpStreams();
-        Nightwatch::filter(function (Record $record): mixed {
-            throw new RuntimeException('Whoops!');
-        });
-
-        $this->core->ingest->write(new FakeRecord('fake-record'));
-        $this->core->digest();
-
-        // This test passes if it finished.
-        $this->assertSame([], $streamsResolver());
+        $stream->assertWritten('29:'.Payload::SIGNATURE.':[{"t":"2"},{"t":"4"}]');
+        $this->assertCount(2, $exceptions);
+        $this->assertSame('Whoops 1', $exceptions[0]->getMessage());
+        $this->assertSame('Whoops 3', $exceptions[1]->getMessage());
     }
 
     public function test_it_has_already_resolved_lazy_values()
@@ -152,7 +116,25 @@ class FilteringAndMappingTest extends TestCase
 
     public function test_it_can_modify_records()
     {
-        // e.g., mask a password
-        $this->markTestIncomplete('TODO');
+        $streamsResolver = $this->fakeTcpStreams();
+
+        Nightwatch::filter(function (Record $record): bool {
+            if ($record instanceof Query) {
+                $record->sql = 'sleep 10';
+            }
+
+            return true;
+        });
+
+        DB::select('select * from users');
+        $this->core->digest();
+
+        [$stream] = $streamsResolver();
+        $stream->assertWritten(function ($value) {
+            $this->assertStringContainsString('"sql":"sleep 10"', $value);
+            $this->assertStringNotContainsString('select * from users', $value);
+
+            return true;
+        });
     }
 }

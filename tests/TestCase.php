@@ -51,7 +51,7 @@ abstract class TestCase extends OrchestraTestCase
         FakeTcpStream::flush();
         @stream_wrapper_unregister('tcp');
 
-        Nightwatch::handleUnrecoverableExceptionsUsing(fn ($e) => throw $e);
+        Nightwatch::handleUnrecoverableExceptionsUsing(dd(...));
         Compatibility::$context = [];
 
         $this->core = $this->app->make(Core::class);

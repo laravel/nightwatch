@@ -50,6 +50,8 @@ final class Core
 
     /**
      * @api
+     *
+     * @param  (callable(Record): bool)  $callback
      */
     public function filter(callable $callback): void
     {
@@ -57,7 +59,9 @@ final class Core
             try {
                 return $callback($record);
             } catch (Throwable $e) {
-                $this->report($e);
+                Nightwatch::unrecoverableExceptionOccurred($e);
+
+                return false;
             }
         });
     }
