@@ -38,12 +38,12 @@ class RecordsBuffer implements Countable
             return Payload::json('[]');
         }
 
-        $records = [];
-
         if ($filters === []) {
             $records = $this->records;
             $this->records = [];
         } else {
+            $records = [];
+
             while ($record = array_shift($this->records)) {
                 foreach ($filters as $filter) {
                     if ($filter($record)) {

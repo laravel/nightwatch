@@ -14,7 +14,7 @@ interface Ingest
     public function ping(): void; // todo remove
 
     /**
-     * @param  (callable(Record) bool)  $filter
+     * @param  (callable(Record): bool)  $filter
      */
     public function filter(callable $filter): void;
 
