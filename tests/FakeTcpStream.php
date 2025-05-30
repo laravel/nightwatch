@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Support\Collection;
 use PHPUnit\Framework\Assert;
 use RuntimeException;
 
@@ -11,15 +12,20 @@ use function strlen;
 
 class FakeTcpStream
 {
-    public $context;
+    private static ?Collection $instances = null;
 
-    public static $instances = [];
+    public $context;
 
     public string $value = '';
 
     public function __construct()
     {
-        self::$instances[] = $this;
+        self::instances()->push($this);
+    }
+
+    public static function instances(): Collection
+    {
+        return self::$instances ??= new Collection;
     }
 
     /**
@@ -60,6 +66,6 @@ class FakeTcpStream
 
     public static function flush(): void
     {
-        self::$instances = [];
+        self::$instances = new Collection;
     }
 }

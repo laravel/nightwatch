@@ -4,10 +4,10 @@ namespace Tests;
 
 use BadMethodCallException;
 use Carbon\CarbonImmutable;
-use Closure;
 use DateTimeInterface;
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -72,15 +72,15 @@ abstract class TestCase extends OrchestraTestCase
     }
 
     /**
-     * @return (Closure(): list<FakeTcpStream>)
+     * @return Collection<FakeTcpStream>
      */
-    protected function fakeTcpStreams(): Closure
+    protected function fakeTcpStreams(): Collection
     {
         stream_wrapper_register('tcp', FakeTcpStream::class);
 
         $this->core->ingest->streamFactory = fn ($address, $timeout) => fopen($address, 'r+');
 
-        return fn () => FakeTcpStream::$instances;
+        return FakeTcpStream::instances();
     }
 
     protected function prependListener(string $event, callable $listener): void
