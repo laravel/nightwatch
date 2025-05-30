@@ -24,6 +24,9 @@ class FakeIngest implements Ingest
      */
     public array $writes = [];
 
+    /**
+     * @var list<(callable(Record): bool)>
+     */
     public array $filters = [];
 
     public function __construct(
@@ -37,6 +40,9 @@ class FakeIngest implements Ingest
         $this->buffer->write($record);
     }
 
+    /**
+     * @param  (callable(Record): bool)  $filter
+     */
     public function filter(callable $filter): void
     {
         $this->filters[] = $filter;
