@@ -56,7 +56,7 @@ final class Ingest implements IngestContract
     }
 
     /**
-     * @param  (callable(Record): bool)  $callback
+     *src/Records/Request.php @param  (callable(Record): bool)  $callback
      */
     public function filter(callable $callback): void
     {

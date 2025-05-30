@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -87,20 +86,20 @@ final class RequestSensor
             after_middleware: $this->requestState->stageDurations[ExecutionStage::AfterMiddleware->value],
             sending: $this->requestState->stageDurations[ExecutionStage::Sending->value],
             terminating: $this->requestState->stageDurations[ExecutionStage::Terminating->value],
-            exceptions: new LazyValue(fn () => $this->requestState->exceptions),
-            logs: new LazyValue(fn () => $this->requestState->logs),
-            queries: new LazyValue(fn () => $this->requestState->queries),
-            lazy_loads: new LazyValue(fn () => $this->requestState->lazyLoads),
-            jobs_queued: new LazyValue(fn () => $this->requestState->jobsQueued),
-            mail: new LazyValue(fn () => $this->requestState->mail),
-            notifications: new LazyValue(fn () => $this->requestState->notifications),
-            outgoing_requests: new LazyValue(fn () => $this->requestState->outgoingRequests),
-            files_read: new LazyValue(fn () => $this->requestState->filesRead),
-            files_written: new LazyValue(fn () => $this->requestState->filesWritten),
-            cache_events: new LazyValue(fn () => $this->requestState->cacheEvents),
-            hydrated_models: new LazyValue(fn () => $this->requestState->hydratedModels),
-            peak_memory_usage: new LazyValue(fn () => $this->requestState->peakMemory()),
-            exception_preview: new LazyValue(fn () => $this->requestState->exceptionPreview),
+            exceptions: $this->requestState->exceptions,
+            logs: $this->requestState->logs,
+            queries: $this->requestState->queries,
+            lazy_loads: $this->requestState->lazyLoads,
+            jobs_queued: $this->requestState->jobsQueued,
+            mail: $this->requestState->mail,
+            notifications: $this->requestState->notifications,
+            outgoing_requests: $this->requestState->outgoingRequests,
+            files_read: $this->requestState->filesRead,
+            files_written: $this->requestState->filesWritten,
+            cache_events: $this->requestState->cacheEvents,
+            hydrated_models: $this->requestState->hydratedModels,
+            peak_memory_usage: $this->requestState->peakMemory(),
+            exception_preview: $this->requestState->exceptionPreview,
         ));
     }
 
