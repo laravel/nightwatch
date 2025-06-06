@@ -61,7 +61,7 @@ final class QuerySensor
 
     private function hash(QueryExecuted $event): string
     {
-        if (! in_array($event->connection->getDriverName(), ['mariadb', 'mysql', 'pgsql', 'sqlite', 'sqlsrv'], true)) {
+        if (! in_array($event->connection->getDriverName(), ['mariadb', 'mysql', 'pgsql', 'sqlite', 'sqlsrv', 'singlestore'], true)) {
             return hash('xxh128', "{$event->connectionName},{$event->sql}");
         }
 
