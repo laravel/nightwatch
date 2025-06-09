@@ -541,13 +541,13 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
         $response->assertServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => ! str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
+        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => ! str_contains($trace, '(Illuminate\\\\Http\\\\Request)'));
 
         ini_set('zend.exception_ignore_args', '0');
         $response = $this->get('/users');
         $response->assertServerError();
         $ingest->assertWrittenTimes(2);
-        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
+        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '(Illuminate\\\\Http\\\\Request)'));
     }
 
     public function test_it_strips_base_path_from_trace_files(): void
