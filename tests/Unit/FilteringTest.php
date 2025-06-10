@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
-use Laravel\Nightwatch\Records\User;
 use Tests\TestCase;
 
 use function report;
@@ -160,9 +159,4 @@ class FilteringTest extends TestCase
 
         $this->assertSame(10, $this->core->executionState->outgoingRequests);
     }
-
-    // stage
-    // user
-    // requests
-    // logs
 }

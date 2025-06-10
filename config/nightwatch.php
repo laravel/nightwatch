@@ -12,13 +12,13 @@ return [
     ],
 
     'filtering' => [
-        'ignore_cache_events' => env('NIGHTWATCH_IGNORE_CACHE_EVENTS'),
-        'ignore_exceptions' => env('NIGHTWATCH_IGNORE_EXCEPTIONS'),
-        'ignore_mail' => env('NIGHTWATCH_IGNORE_MAIL'),
-        'ignore_notitications' => env('NIGHTWATCH_IGNORE_NOTITICATIONS'),
-        'ignore_outgoing_requests' => env('NIGHTWATCH_IGNORE_OUTGOING_REQUESTS'),
-        'ignore_queries' => env('NIGHTWATCH_IGNORE_QUERIES'),
-        'ignore_queued_jobs' => env('NIGHTWATCH_IGNORE_QUEUED_JOBS'),
+        'ignore_cache_events' => env('NIGHTWATCH_IGNORE_CACHE_EVENTS', false),
+        'ignore_exceptions' => env('NIGHTWATCH_IGNORE_EXCEPTIONS', false),
+        'ignore_mail' => env('NIGHTWATCH_IGNORE_MAIL', false),
+        'ignore_notitications' => env('NIGHTWATCH_IGNORE_NOTITICATIONS', false),
+        'ignore_outgoing_requests' => env('NIGHTWATCH_IGNORE_OUTGOING_REQUESTS', false),
+        'ignore_queries' => env('NIGHTWATCH_IGNORE_QUERIES', false),
+        'ignore_queued_jobs' => env('NIGHTWATCH_IGNORE_QUEUED_JOBS', false),
     ],
 
     'ingest' => [
