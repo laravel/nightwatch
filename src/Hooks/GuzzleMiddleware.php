@@ -33,6 +33,10 @@ final class GuzzleMiddleware
             return $handler;
         }
 
+        if ($this->nightwatch->config['filtering']['ignore_outgoing_requests']) {
+            return $handler;
+        }
+
         return function (RequestInterface $request, array $options) use ($handler): PromiseInterface {
             try {
                 $startMicrotime = $this->nightwatch->clock->microtime();

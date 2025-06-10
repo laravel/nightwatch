@@ -1,0 +1,2 @@
+- Logs: via the log config.
+- Not requests, commands, scheduled tasks, or job attempts.

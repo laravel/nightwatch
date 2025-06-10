@@ -85,6 +85,10 @@ trait CapturesState
             return;
         }
 
+        if ($this->config['filtering']['ignore_exceptions']) {
+            return;
+        }
+
         try {
             $this->sensor->exception($e);
         } catch (Throwable $e) {
@@ -117,6 +121,10 @@ trait CapturesState
             return;
         }
 
+        if ($this->config['filtering']['ignore_queries']) {
+            return;
+        }
+
         $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 21);
         array_shift($trace);
 
@@ -132,6 +140,10 @@ trait CapturesState
             return;
         }
 
+        if ($this->config['filtering']['ignore_queued_jobs']) {
+            return;
+        }
+
         $this->sensor->queuedJob($event);
     }
 
@@ -141,6 +153,10 @@ trait CapturesState
     public function notification(NotificationSending|NotificationSent $event): void
     {
         if (! $this->shouldSample) {
+            return;
+        }
+
+        if ($this->config['filtering']['ignore_notitications']) {
             return;
         }
 
@@ -156,6 +172,10 @@ trait CapturesState
             return;
         }
 
+        if ($this->config['filtering']['ignore_mail']) {
+            return;
+        }
+
         $this->sensor->mail($event);
     }
 
@@ -165,6 +185,10 @@ trait CapturesState
     public function cacheEvent(CacheEvent $event): void
     {
         if (! $this->shouldSample) {
+            return;
+        }
+
+        if ($this->config['filtering']['ignore_cache_events']) {
             return;
         }
 

@@ -92,6 +92,15 @@ final class NightwatchServiceProvider extends ServiceProvider
      *        requests: float,
      *        commands: float,
      *     },
+     *     filtering?: array{
+     *         ignore_cache_events?: bool,
+     *         ignore_exceptions?: bool,
+     *         ignore_mail?: bool,
+     *         ignore_notifications?: bool,
+     *         ignore_outgoing_requests?: bool,
+     *         ignore_queries?: bool,
+     *         ignore_queued_jobs?: bool,
+     *     },
      *     token?: string,
      *     deployment?: string,
      *     server?: string,
@@ -227,6 +236,16 @@ final class NightwatchServiceProvider extends ServiceProvider
                 'sampling' => [
                     'requests' => $this->configuredSampleRate('requests'),
                     'commands' => $this->configuredSampleRate('commands'),
+                ],
+                'filtering' => [
+                    'ignore_cache_events' => $this->nightwatchConfig['filtering']['ignore_cache_events'] ?? false,
+                    'ignore_exceptions' => $this->nightwatchConfig['filtering']['ignore_exceptions'] ?? false,
+                    'ignore_mail' => $this->nightwatchConfig['filtering']['ignore_mail'] ?? false,
+                    'ignore_notifications' => $this->nightwatchConfig['filtering']['ignore_notifications'] ?? false,
+                    'ignore_notitications' => $this->nightwatchConfig['filtering']['ignore_notitications'] ?? false,
+                    'ignore_outgoing_requests' => $this->nightwatchConfig['filtering']['ignore_outgoing_requests'] ?? false,
+                    'ignore_queries' => $this->nightwatchConfig['filtering']['ignore_queries'] ?? false,
+                    'ignore_queued_jobs' => $this->nightwatchConfig['filtering']['ignore_queued_jobs'] ?? false,
                 ],
             ],
         ));

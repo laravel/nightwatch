@@ -27,7 +27,22 @@ final class Core
 
     /**
      * @param  TState  $executionState
-     * @param  array{ enabled: bool, sampling: array{ requests: float, commands: float }}  $config
+     * @param  array{
+     *     enabled: bool,
+     *     sampling: array{
+     *         requests: float,
+     *         commands: float,
+     *     },
+     *     filtering: array{
+     *         ignore_cache_events: bool,
+     *         ignore_exceptions: bool,
+     *         ignore_mail: bool,
+     *         ignore_notitications: bool,
+     *         ignore_outgoing_requests: bool,
+     *         ignore_queries: bool,
+     *         ignore_queued_jobs: bool,
+     *     },
+     * }  $config
      */
     public function __construct(
         public Ingest $ingest,
