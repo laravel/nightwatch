@@ -2,7 +2,6 @@
 
 namespace Tests\Unit;
 
-use App\Jobs\MyJob;
 use App\Mail\MyMail;
 use App\Notifications\MyNotification;
 use Illuminate\Support\Facades\Cache;
@@ -11,8 +10,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
-
-use function report;
 
 class FilteringTest extends TestCase
 {
@@ -97,44 +94,6 @@ class FilteringTest extends TestCase
         }
 
         $this->assertSame(10, $this->core->executionState->cacheEvents);
-    }
-
-    public function test_it_can_ignore_exceptions(): void
-    {
-        $this->core->config['filtering']['ignore_exceptions'] = true;
-
-        for ($i = 0; $i < 10; $i++) {
-            report('Whoops!');
-        }
-
-        $this->assertSame(0, $this->core->executionState->exceptions);
-
-        $this->core->config['filtering']['ignore_exceptions'] = false;
-
-        for ($i = 0; $i < 10; $i++) {
-            report('Whoops!');
-        }
-
-        $this->assertSame(10, $this->core->executionState->exceptions);
-    }
-
-    public function test_it_can_ignore_queued_jobs(): void
-    {
-        $this->core->config['filtering']['ignore_queued_jobs'] = true;
-
-        for ($i = 0; $i < 10; $i++) {
-            MyJob::dispatch();
-        }
-
-        $this->assertSame(0, $this->core->executionState->jobsQueued);
-
-        $this->core->config['filtering']['ignore_queued_jobs'] = false;
-
-        for ($i = 0; $i < 10; $i++) {
-            MyJob::dispatch();
-        }
-
-        $this->assertSame(10, $this->core->executionState->jobsQueued);
     }
 
     public function test_it_can_ignore_outgoing_requests(): void

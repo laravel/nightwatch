@@ -35,12 +35,10 @@ final class Core
      *     },
      *     filtering: array{
      *         ignore_cache_events: bool,
-     *         ignore_exceptions: bool,
      *         ignore_mail: bool,
      *         ignore_notifications: bool,
      *         ignore_outgoing_requests: bool,
      *         ignore_queries: bool,
-     *         ignore_queued_jobs: bool,
      *     },
      * }  $config
      */

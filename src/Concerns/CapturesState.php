@@ -85,10 +85,6 @@ trait CapturesState
             return;
         }
 
-        if ($this->config['filtering']['ignore_exceptions']) {
-            return;
-        }
-
         try {
             $this->sensor->exception($e);
         } catch (Throwable $e) {
@@ -137,10 +133,6 @@ trait CapturesState
     public function queuedJob(JobQueueing|JobQueued $event): void
     {
         if (! $this->shouldSample) {
-            return;
-        }
-
-        if ($this->config['filtering']['ignore_queued_jobs']) {
             return;
         }
 
