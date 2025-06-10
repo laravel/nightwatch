@@ -34,6 +34,7 @@ use function report;
 use function response;
 use function str_contains;
 use function tap;
+use function version_compare;
 
 class ExceptionSensorTest extends TestCase
 {
@@ -533,6 +534,8 @@ class ExceptionSensorTest extends TestCase
     public function test_it_handles_ini_setting_disabling_args_in_exceptions(): void
     {
         $ingest = $this->fakeIngest();
+        $function = __FUNCTION__;
+        $line = __LINE__ + 1;
         Route::get('/users', function (Request $request): void {
             throw new RuntimeException;
         });
@@ -541,13 +544,21 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
         $response->assertServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => ! str_contains($trace, '(Illuminate\\\\Http\\\\Request)'));
+        if (version_compare(PHP_VERSION, '8.4', '<')) {
+            $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => ! str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
+        } else {
+            $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => ! str_contains($trace, Str::unwrap(json_encode('{closure:'.static::class.'::'.$function.'():'.$line.'}(Illuminate\\Http\\Request)'), '"')));
+        }
 
         ini_set('zend.exception_ignore_args', '0');
         $response = $this->get('/users');
         $response->assertServerError();
         $ingest->assertWrittenTimes(2);
-        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '(Illuminate\\\\Http\\\\Request)'));
+        if (version_compare(PHP_VERSION, '8.4', '<')) {
+            $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
+        } else {
+            $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, Str::unwrap(json_encode('{closure:'.static::class.'::'.$function.'():'.$line.'}(Illuminate\\Http\\Request)'), '"')));
+        }
     }
 
     public function test_it_strips_base_path_from_trace_files(): void
