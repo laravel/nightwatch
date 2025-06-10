@@ -156,7 +156,7 @@ trait CapturesState
             return;
         }
 
-        if ($this->config['filtering']['ignore_notitications']) {
+        if ($this->config['filtering']['ignore_notifications']) {
             return;
         }
 

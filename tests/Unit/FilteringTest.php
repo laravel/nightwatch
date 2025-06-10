@@ -44,7 +44,7 @@ class FilteringTest extends TestCase
 
     public function test_it_can_ignore_notifications(): void
     {
-        $this->core->config['filtering']['ignore_notitications'] = true;
+        $this->core->config['filtering']['ignore_notifications'] = true;
 
         for ($i = 0; $i < 10; $i++) {
             Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
@@ -52,7 +52,7 @@ class FilteringTest extends TestCase
 
         $this->assertSame(0, $this->core->executionState->notifications);
 
-        $this->core->config['filtering']['ignore_notitications'] = false;
+        $this->core->config['filtering']['ignore_notifications'] = false;
 
         for ($i = 0; $i < 10; $i++) {
             Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);

@@ -15,7 +15,7 @@ return [
         'ignore_cache_events' => env('NIGHTWATCH_IGNORE_CACHE_EVENTS', false),
         'ignore_exceptions' => env('NIGHTWATCH_IGNORE_EXCEPTIONS', false),
         'ignore_mail' => env('NIGHTWATCH_IGNORE_MAIL', false),
-        'ignore_notitications' => env('NIGHTWATCH_IGNORE_NOTITICATIONS', false),
+        'ignore_notifications' => env('NIGHTWATCH_IGNORE_NOTIFICATIONS', false),
         'ignore_outgoing_requests' => env('NIGHTWATCH_IGNORE_OUTGOING_REQUESTS', false),
         'ignore_queries' => env('NIGHTWATCH_IGNORE_QUERIES', false),
         'ignore_queued_jobs' => env('NIGHTWATCH_IGNORE_QUEUED_JOBS', false),
