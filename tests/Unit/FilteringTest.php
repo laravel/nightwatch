@@ -23,7 +23,7 @@ class FilteringTest extends TestCase
         parent::setUp();
     }
 
-    public function test_it_can_filter_queries(): void
+    public function test_it_can_ignore_queries(): void
     {
         $this->core->config['filtering']['ignore_queries'] = true;
 
@@ -42,7 +42,7 @@ class FilteringTest extends TestCase
         $this->assertSame(10, $this->core->executionState->queries);
     }
 
-    public function test_it_can_filter_notifications(): void
+    public function test_it_can_ignore_notifications(): void
     {
         $this->core->config['filtering']['ignore_notitications'] = true;
 
@@ -61,7 +61,7 @@ class FilteringTest extends TestCase
         $this->assertSame(10, $this->core->executionState->notifications);
     }
 
-    public function test_it_can_filter_mail(): void
+    public function test_it_can_ignore_mail(): void
     {
         $this->core->config['filtering']['ignore_mail'] = true;
 
@@ -80,7 +80,7 @@ class FilteringTest extends TestCase
         $this->assertSame(10, $this->core->executionState->mail);
     }
 
-    public function test_it_can_filter_cache_events(): void
+    public function test_it_can_ignore_cache_events(): void
     {
         $this->core->config['filtering']['ignore_cache_events'] = true;
 
@@ -99,7 +99,7 @@ class FilteringTest extends TestCase
         $this->assertSame(10, $this->core->executionState->cacheEvents);
     }
 
-    public function test_it_can_filter_exceptions(): void
+    public function test_it_can_ignore_exceptions(): void
     {
         $this->core->config['filtering']['ignore_exceptions'] = true;
 
@@ -118,7 +118,7 @@ class FilteringTest extends TestCase
         $this->assertSame(10, $this->core->executionState->exceptions);
     }
 
-    public function test_it_can_filter_queued_jobs(): void
+    public function test_it_can_ignore_queued_jobs(): void
     {
         $this->core->config['filtering']['ignore_queued_jobs'] = true;
 
@@ -137,7 +137,7 @@ class FilteringTest extends TestCase
         $this->assertSame(10, $this->core->executionState->jobsQueued);
     }
 
-    public function test_it_can_filter_outgoing_requests(): void
+    public function test_it_can_ignore_outgoing_requests(): void
     {
         Http::fake([
             'https://nightwatch.laravel.com' => Http::response(status: 200),
