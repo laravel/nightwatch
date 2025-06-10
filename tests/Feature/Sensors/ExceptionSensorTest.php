@@ -28,6 +28,7 @@ use function gettype;
 use function hash;
 use function hex2bin;
 use function implode;
+use function ini_get;
 use function ini_set;
 use function json_encode;
 use function report;
@@ -38,6 +39,8 @@ use function version_compare;
 
 class ExceptionSensorTest extends TestCase
 {
+    private array $iniSettingsToRestore = [];
+
     protected function setUp(): void
     {
         $this->forceRequestExecutionState();
@@ -57,7 +60,18 @@ class ExceptionSensorTest extends TestCase
         $this->core->sensor->location->setBasePath($base);
         $this->core->sensor->location->setPublicPath($base.'/public');
         Config::set('app.debug', false);
+
+        $this->iniSettingsToRestore['zend.exception_ignore_args'] = ini_get('zend.exception_ignore_args');
         ini_set('zend.exception_ignore_args', '0');
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        foreach ($this->iniSettingsToRestore as $key => $value) {
+            ini_set($key, $value);
+        }
     }
 
     public function test_it_can_ingest_thrown_exceptions(): void

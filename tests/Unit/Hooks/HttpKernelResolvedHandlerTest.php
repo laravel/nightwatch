@@ -12,6 +12,13 @@ use Tests\TestCase;
 
 class HttpKernelResolvedHandlerTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        $this->forceRequestExecutionState();
+
+        parent::setUp();
+    }
+
     public function test_it_gracefully_handles_custom_exception_handlers(): void
     {
         $kernel = new class implements HttpKernel
@@ -103,12 +110,9 @@ class HttpKernelResolvedHandlerTest extends TestCase
         Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
-        $kernel = $this->app[HttpKernel::class];
 
         $this->assertTrue($this->core->shouldSample);
-
-        $handler = new HttpKernelResolvedHandler($this->core);
-        $handler($kernel, $this->app);
+        $this->app[HttpKernel::class];
 
         $this->assertFalse($this->core->shouldSample);
         $this->assertCount(1, $exceptions);
