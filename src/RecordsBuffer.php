@@ -18,9 +18,18 @@ class RecordsBuffer implements Countable
      */
     private array $records = [];
 
+    public bool $full = false;
+
+    public function __construct(private int $length)
+    {
+        //
+    }
+
     public function write(Record $record): void
     {
         $this->records[] = $record;
+
+        $this->full = $this->count() >= $this->length;
     }
 
     public function count(): int

@@ -213,9 +213,10 @@ final class NightwatchServiceProvider extends ServiceProvider
                 transmitTo: $this->nightwatchConfig['ingest']['uri'] ?? '127.0.0.1:2407',
                 connectionTimeout: $this->nightwatchConfig['ingest']['connection_timeout'] ?? 0.5,
                 timeout: $this->nightwatchConfig['ingest']['timeout'] ?? 0.5,
-                eventBuffer: $this->nightwatchConfig['ingest']['event_buffer'] ?? 500,
                 streamFactory: new SocketStreamFactory,
-                buffer: new RecordsBuffer,
+                buffer: new RecordsBuffer(
+                    length: $this->nightwatchConfig['ingest']['event_buffer'] ?? 500,
+                ),
             ),
             sensor: new SensorManager(
                 ingest: $ingest,

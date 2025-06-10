@@ -25,7 +25,7 @@ class FakeIngest implements Ingest
     public array $writes = [];
 
     public function __construct(
-        public RecordsBuffer $buffer = new RecordsBuffer,
+        public RecordsBuffer $buffer = new RecordsBuffer(500),
     ) {
         //
     }

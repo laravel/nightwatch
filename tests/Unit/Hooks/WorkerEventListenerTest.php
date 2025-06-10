@@ -17,7 +17,7 @@ class WorkerEventListenerTest extends TestCase
 {
     public function test_it_gracefully_handles_exceptions_for_job_popping_event(): void
     {
-        $this->core->ingest->buffer = $buffer = new class extends RecordsBuffer
+        $this->core->ingest->buffer = $buffer = new class(500) extends RecordsBuffer
         {
             public bool $thrownInFlush = false;
 

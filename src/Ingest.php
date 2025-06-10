@@ -38,7 +38,6 @@ final class Ingest implements IngestContract
         string $transmitTo,
         private float $connectionTimeout,
         float $timeout,
-        private int $eventBuffer,
         public $streamFactory,
         public RecordsBuffer $buffer,
     ) {
@@ -54,7 +53,7 @@ final class Ingest implements IngestContract
     {
         $this->buffer->write($record);
 
-        if ($this->buffer->count() >= $this->eventBuffer) {
+        if ($this->buffer->full) {
             $this->digest();
         }
     }
