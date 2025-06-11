@@ -31,6 +31,8 @@ final class Compatibility
 
     public static bool $queueNameCapturable = false;
 
+    public static bool $firesFinishedAndFailedEventsForScheduledConsoleCommands = false;
+
     public static bool $contextExists = false;
 
     /**
@@ -73,6 +75,15 @@ final class Compatibility
          * @see https://github.com/laravel/framework/releases/tag/v11.27.0
          */
         self::$mailableClassNameCapturable = version_compare($version, '11.27.0', '>=');
+
+        /**
+         * @see https://github.com/laravel/framework/pull/55572
+         * @see https://github.com/laravel/framework/releases/tag/v12.11.0
+         * @see https://github.com/laravel/framework/releases/tag/v12.11.1
+         * @see https://github.com/laravel/framework/pull/55624
+         * @see https://github.com/laravel/framework/releases/tag/v12.18.0
+         */
+        self::$firesFinishedAndFailedEventsForScheduledConsoleCommands = version_compare($version, '12.11.0', '=') || version_compare($version, '12.18.0', '>=');
 
         if (! self::$contextExists) {
             Queue::createPayloadUsing(static fn ($c, $q, array $payload) => [
