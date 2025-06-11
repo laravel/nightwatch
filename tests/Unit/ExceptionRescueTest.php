@@ -440,4 +440,21 @@ class ExceptionRescueTest extends TestCase
         $ingest->assertWrite(2, 'query:0.sql', 'select * from "users"');
         $ingest->assertWrite(2, 'request:0.url', 'http://localhost/users');
     }
+
+    public function test_captured_requests_gets_exception_preview_after_exception_when_not_sampling(): void
+    {
+        $this->markTestIncomplete('TODO');
+    }
+
+    public function test_it_flushes_ingest_after_request_when_not_sampling(): void
+    {
+        $this->markTestIncomplete('TODO');
+    }
+
+    public function test_dispatched_job_executions_are_not_sampled_if_dispatched_after_exception_when_not_sampling(): void
+    {
+        $this->markTestIncomplete('TODO');
+    }
+
+    // TODO add CLI specific test
 }
