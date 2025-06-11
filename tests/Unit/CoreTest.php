@@ -15,7 +15,7 @@ class CoreTest extends TestCase
         Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
         });
-        $this->fakeIngest(new class extends FakeIngest
+        $this->fakeIngest(fn ($ingest, $streams) => new class($ingest, $streams) extends FakeIngest
         {
             public bool $thrownInDigest = false;
 

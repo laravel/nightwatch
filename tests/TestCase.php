@@ -4,9 +4,11 @@ namespace Tests;
 
 use BadMethodCallException;
 use Carbon\CarbonImmutable;
+use Closure;
 use DateTimeInterface;
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -14,6 +16,7 @@ use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Laravel\Nightwatch\Ingest;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -24,10 +27,13 @@ use function array_combine;
 use function array_intersect_key;
 use function collect;
 use function env;
+use function fopen;
 use function Illuminate\Filesystem\join_paths;
 use function now;
 use function realpath;
 use function sprintf;
+use function stream_wrapper_register;
+use function stream_wrapper_unregister;
 use function touch;
 
 abstract class TestCase extends OrchestraTestCase
@@ -92,11 +98,33 @@ abstract class TestCase extends OrchestraTestCase
         Env::getRepository()->clear('NIGHTWATCH_FORCE_REQUEST');
     }
 
-    protected function fakeIngest(?FakeIngest $fake = null): FakeIngest
+    /**
+     * @param  (callable(Ingest, Collection): FakeIngest)  $callback
+     */
+    protected function fakeIngest(?Closure $callback = null): FakeIngest
     {
         $this->core->sensor->flush();
 
-        return $this->core->ingest = $this->core->sensor->ingest = $fake ?? new FakeIngest;
+        $callback ??= fn ($ingest, $streams) => new FakeIngest($ingest, $streams);
+        $streams = $this->fakeTcpStreams();
+
+        return $this->core->ingest = $callback($this->core->ingest, $streams);
+    }
+
+    /**
+     * @return Collection<FakeTcpStream>
+     */
+    protected function fakeTcpStreams(): Collection
+    {
+        stream_wrapper_register('tcp', FakeTcpStream::class);
+        $this->core->ingest->streamFactory = fn ($address, $timeout) => fopen($address, 'r+');
+
+        $this->beforeApplicationDestroyed(function () {
+            stream_wrapper_unregister('tcp');
+            FakeTcpStream::flush();
+        });
+
+        return FakeTcpStream::instances();
     }
 
     protected function setDeploy(string $deploy): void

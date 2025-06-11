@@ -20,7 +20,7 @@ class StatusCommandTest extends TestCase
 
     public function test_it_fails_when_ingest_throws_an_exception_while_pinging(): void
     {
-        $this->fakeIngest(new class extends FakeIngest
+        $this->fakeIngest(fn ($ingest, $streams) => new class($ingest, $streams) extends FakeIngest
         {
             public function ping(): void
             {
