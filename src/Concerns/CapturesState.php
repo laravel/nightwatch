@@ -152,7 +152,7 @@ trait CapturesState
      */
     public function notification(NotificationSending|NotificationSent $event): void
     {
-        if (! $this->shouldSample) {
+        if (! $this->shouldSample && ! $this->config['sampling']['always_exceptions']) {
             return;
         }
 
