@@ -3,9 +3,11 @@
 namespace Tests\Unit;
 
 use App\Jobs\MyJob;
+use App\Mail\MyMail;
 use App\Models\User;
 use App\Notifications\MyNotification;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 use RuntimeException;
@@ -76,6 +78,31 @@ class ExceptionRescueTest extends TestCase
             return true;
         });
         $ingest->assertLatestWrite('notification:0.class', MyNotification::class);
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    }
+
+    public function test_it_can_capture_mail_after_exception_occurs_when_not_sampling(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            Mail::to('tim@laravel.com')->send(new MyMail);
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('mail:0.class', MyMail::class);
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
     }

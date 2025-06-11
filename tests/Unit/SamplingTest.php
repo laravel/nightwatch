@@ -138,6 +138,7 @@ class SamplingTest extends TestCase
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
+        $this->core->config['sampling']['always_exceptions'] = false;
 
         for ($i = 0; $i < 10; $i++) {
             Mail::to('tim@laravel.com')->send(new MyMail);
