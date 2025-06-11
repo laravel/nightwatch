@@ -395,11 +395,12 @@ class SamplingTest extends TestCase
         yield [false, [GlobalMiddleware::class, RouteMiddleware::class]];
     }
 
-    public function test_it_samples_capuring_request_preview(): void
+    public function test_it_samples_capturing_request_preview(): void
     {
         $this->fakeIngest();
         $this->core->config['sampling']['requests'] = 0.0;
         $this->core->configureSampling('requests');
+        $this->core->config['sampling']['always_exceptions'] = false;
         Route::get('/test', function (): void {
             //
         });
