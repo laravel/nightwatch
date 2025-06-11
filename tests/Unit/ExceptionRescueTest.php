@@ -9,6 +9,7 @@ use App\Notifications\MyNotification;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -342,6 +343,23 @@ class ExceptionRescueTest extends TestCase
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('exception:0.execution_preview', 'GET /users');
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    }
+
+    public function test_it_captures_records_captured_before_sampling_rate_decided_after_exception_occurs_when_not_sampling(): void
+    {
+        DB::table('users')->get();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+        $count = null;
+        Route::get('/test', function () use (&$count): void {
+            $count = $this->core->ingest->buffer->count();
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('test');
+
+        $this->assertSame(1, $count);
     }
 
     public function test_it_will_discard_records_over_the_buffer_threshold(): void

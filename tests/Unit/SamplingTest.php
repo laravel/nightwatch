@@ -453,6 +453,7 @@ class SamplingTest extends TestCase
     {
         DB::table('users')->get();
         $this->core->config['sampling']['requests'] = 0.0;
+        $this->core->config['sampling']['always_exceptions'] = false;
         $count = null;
         Route::get('/test', function () use (&$count): void {
             $count = $this->core->ingest->buffer->count();

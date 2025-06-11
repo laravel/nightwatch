@@ -71,7 +71,7 @@ trait CapturesState
 
         Compatibility::addHiddenContext('nightwatch_should_sample', $this->shouldSample);
 
-        if (! $this->shouldSample) {
+        if (! $this->shouldSample && ! $this->config['sampling']['always_exceptions']) {
             $this->flush();
         }
     }
