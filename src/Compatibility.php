@@ -79,6 +79,9 @@ final class Compatibility
         /**
          * @see https://github.com/laravel/framework/pull/55572
          * @see https://github.com/laravel/framework/releases/tag/v12.11.0
+         * @see https://github.com/laravel/framework/releases/tag/v12.11.1
+         * @see https://github.com/laravel/framework/pull/55624
+         * @see https://github.com/laravel/framework/releases/tag/v12.18.0
          */
         self::$firesFinishedAndFailedEventsForScheduledConsoleCommands = version_compare($version, '12.11.0', '=') || version_compare($version, '12.18.0', '>=');
 
