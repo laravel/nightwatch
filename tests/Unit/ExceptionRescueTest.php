@@ -188,6 +188,32 @@ class ExceptionRescueTest extends TestCase
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
     }
 
+    public function test_it_can_capture_stages_after_exception_occurs_when_not_sampling(): void
+    {
+        $this->freezeTime();
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            $this->travel(9)->seconds();
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+        $ingest->assertLatestWrite('request:0.action', 9_000_000);
+    }
+
     public function test_it_can_capture_logs_after_exception_occurs_when_not_sampling(): void
     {
         $ingest = $this->fakeIngest();

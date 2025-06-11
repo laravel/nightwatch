@@ -251,6 +251,7 @@ class SamplingTest extends TestCase
     public function test_it_samples_stage(): void
     {
         $this->core->stage(ExecutionStage::Bootstrap);
+        $this->core->config['sampling']['always_exceptions'] = false;
 
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
@@ -365,6 +366,7 @@ class SamplingTest extends TestCase
         $this->fakeIngest();
         $this->core->config['sampling']['requests'] = 0.0;
         $this->core->configureSampling('requests');
+        $this->core->config['sampling']['always_exceptions'] = false;
         $middleware = [];
         Route::get('/test', function () use (&$middleware): void {
             $middleware = request()->route()->middleware();
