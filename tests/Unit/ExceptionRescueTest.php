@@ -6,6 +6,8 @@ use App\Jobs\MyJob;
 use App\Mail\MyMail;
 use App\Models\User;
 use App\Notifications\MyNotification;
+use Illuminate\Auth\GenericUser;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -212,6 +214,33 @@ class ExceptionRescueTest extends TestCase
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
         $ingest->assertLatestWrite('request:0.action', 9_000_000);
+    }
+
+    public function test_it_can_capture_user_after_exception_occurs_when_not_sampling(): void
+    {
+        $this->freezeTime();
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+        $user = new GenericUser(['id' => 123, 'remember_token' => '']);
+
+        Route::get('/logout', function () {
+            Auth::logout();
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->actingAs($user)->get('/logout');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('user:0.id', '123');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/logout');
     }
 
     public function test_it_can_capture_logs_after_exception_occurs_when_not_sampling(): void

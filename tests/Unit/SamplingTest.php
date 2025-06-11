@@ -272,6 +272,7 @@ class SamplingTest extends TestCase
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
+        $this->core->config['sampling']['always_exceptions'] = false;
         $user = new GenericUser(['id' => 123, 'remember_token' => '']);
 
         Auth::login($user);
