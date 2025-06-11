@@ -421,7 +421,15 @@ trait CapturesState
      */
     public function shouldCaptureLogs(): bool
     {
-        return $this->shouldSample && $this->enabled();
+        if (! $this->enabled()) {
+            return false;
+        }
+
+        if ($this->shouldSample) {
+            return true;
+        }
+
+        return $this->config['sampling']['always_exceptions'];
     }
 
     /**
