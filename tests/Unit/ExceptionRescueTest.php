@@ -7,6 +7,7 @@ use App\Mail\MyMail;
 use App\Models\User;
 use App\Notifications\MyNotification;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
@@ -155,6 +156,34 @@ class ExceptionRescueTest extends TestCase
         });
         $ingest->assertLatestWrite('query:0.sql', 'insert into "jobs" ("queue", "attempts", "reserved_at", "available_at", "created_at", "payload") values (?, ?, ?, ?, ?, ?)');
         $ingest->assertLatestWrite('queued-job:0.name', MyJob::class);
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    }
+
+    public function test_it_can_capture_outgoing_requests_after_exception_occurs_when_not_sampling(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+        Http::fake([
+            'https://nightwatch.laravel.com' => Http::response(status: 200),
+        ]);
+
+        Route::get('/users', function () {
+            Http::get('https://nightwatch.laravel.com');
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('outgoing-request:0.url', 'https://nightwatch.laravel.com');
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
     }

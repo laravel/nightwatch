@@ -29,7 +29,7 @@ final class GuzzleMiddleware
      */
     public function __invoke(callable $handler): callable
     {
-        if (! $this->nightwatch->shouldSample) {
+        if (! $this->nightwatch->shouldSample && ! $this->nightwatch->config['sampling']['always_exceptions']) {
             return $handler;
         }
 

@@ -226,6 +226,7 @@ class SamplingTest extends TestCase
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
+        $this->core->config['sampling']['always_exceptions'] = false;
 
         Http::fake([
             'https://nightwatch.laravel.com' => Http::response(status: 200),
