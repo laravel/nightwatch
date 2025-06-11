@@ -18,6 +18,7 @@ use RuntimeException;
 use Tests\TestCase;
 
 use function app;
+use function defer;
 
 class ExceptionRescueTest extends TestCase
 {
@@ -290,6 +291,28 @@ class ExceptionRescueTest extends TestCase
             return true;
         });
         $ingest->assertLatestWrite('log:0.message', 'Hello world');
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    }
+
+    public function test_it_can_capture_requests_after_exception_occurs_when_not_sampling(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            defer(fn () => throw new RuntimeException('Whoops!'));
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+
+            return true;
+        });
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
     }
