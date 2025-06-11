@@ -61,8 +61,7 @@ class FakeIngest implements IngestContract
     {
         Assert::assertGreaterThan($index, $found = $this->streams->count(), 'Expected to have '.($index + 1).' writes. '.$found.' found.');
 
-        $json = explode(':', $this->streams[$index]->value, 3)[2];
-        $write = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+        $write = json_decode($this->writes()[$index], true, flags: JSON_THROW_ON_ERROR);
 
         if ($key instanceof Closure) {
             [$key, $expected] = ['*', $key];
@@ -114,5 +113,19 @@ class FakeIngest implements IngestContract
     public function __get(string $name): mixed
     {
         return $this->ingest->{$name};
+    }
+
+    public function writes(): Collection
+    {
+        return $this->streams->map(function ($stream) {
+            return explode(':', $stream->value, 3)[2];
+        });
+    }
+
+    public function decodedWrites(): Collection
+    {
+        return $this->writes()->map(function ($write) {
+            return json_decode($write, true, flags: JSON_THROW_ON_ERROR);
+        });
     }
 }
