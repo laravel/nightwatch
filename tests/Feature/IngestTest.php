@@ -32,6 +32,6 @@ class IngestTest extends TestCase
         $response->assertOk();
         $this->assertCount(1, $exceptions);
         $this->assertSame('Whoops exception!', $exceptions[0]->getMessage());
-        $this->assertSame('[]', $ingest->latestWriteAsString());
+        $ingest->assertWrittenTimes(0);
     }
 }

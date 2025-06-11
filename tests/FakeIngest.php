@@ -4,64 +4,65 @@ namespace Tests;
 
 use Closure;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\Contracts\Ingest;
+use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
+use Laravel\Nightwatch\Ingest;
 use Laravel\Nightwatch\Records\Record;
-use Laravel\Nightwatch\RecordsBuffer;
 use PHPUnit\Framework\Assert;
 
 use function collect;
-use function count;
+use function explode;
 use function is_array;
 use function json_decode;
 use function str_contains;
 use function value;
 
-class FakeIngest implements Ingest
+class FakeIngest implements IngestContract
 {
     /**
-     * @var list<string>
+     * @param  Collection<FakeTcpStream>  $streams
      */
-    public array $writes = [];
-
     public function __construct(
-        public RecordsBuffer $buffer = new RecordsBuffer(500),
+        private Ingest $ingest,
+        private Collection $streams
     ) {
         //
     }
 
     public function write(Record $record): void
     {
-        $this->buffer->write($record);
+        $this->ingest->write($record);
     }
 
     public function digest(): void
     {
-        $this->writes[] = $this->buffer->pull()->rawPayload();
+        $this->ingest->digest();
     }
 
     public function ping(): void
     {
-        //
+        $this->ingest->ping();
     }
 
     public function flush(): void
     {
-        $this->buffer->flush();
+        $this->ingest->flush();
     }
 
     public function assertWrittenTimes(int $expected): self
     {
-        Assert::assertSame($expected, $actual = count($this->writes), "Expected to have written [{$expected}]. Instead, was written [{$actual}].");
+        Assert::assertSame($expected, $actual = $this->streams->count(), "Expected to have written [{$expected}]. Instead, was written [{$actual}].");
 
         return $this;
     }
 
     public function assertWrite(int $index, string|array|Closure $key, mixed $expected = null): self
     {
-        Assert::assertGreaterThan($index, count($this->writes), 'Expected to have '.($index + 1).' writes. '.count($this->writes).' found.');
+        Assert::assertGreaterThan($index, $found = $this->streams->count(), 'Expected to have '.($index + 1).' writes. '.$found.' found.');
 
-        $write = $this->decodedWrite($index);
+        $json = explode(':', $this->streams[$index]->value, 3)[2];
+        $write = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
 
         if ($key instanceof Closure) {
             [$key, $expected] = ['*', $key];
@@ -102,16 +103,16 @@ class FakeIngest implements Ingest
 
     public function assertLatestWrite(string|array|Closure $key, mixed $expected = null): self
     {
-        return $this->assertWrite(count($this->writes) - 1, $key, $expected);
+        return $this->assertWrite($this->streams->count() - 1, $key, $expected);
     }
 
     public function latestWriteAsString(): ?string
     {
-        return Arr::last($this->writes);
+        return $this->streams->last()?->value;
     }
 
-    private function decodedWrite(int $index): mixed
+    public function __get(string $name): mixed
     {
-        return json_decode($this->writes[$index], true, flags: JSON_THROW_ON_ERROR);
+        return $this->ingest->{$name};
     }
 }
