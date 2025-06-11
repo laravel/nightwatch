@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Jobs\MyJob;
 use App\Mail\MyMail;
+use App\Models\User as UserModel;
 use App\Notifications\MyNotification;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Http\Request;
@@ -22,9 +23,12 @@ use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Records\User;
 use PHPUnit\Framework\Attributes\DataProvider;
+use RuntimeException;
 use Tests\TestCase;
 
+use function app;
 use function collect;
+use function defer;
 use function json_decode;
 use function microtime;
 use function report;
@@ -112,6 +116,76 @@ class SamplingTest extends TestCase
         $this->assertSame(10, $this->core->executionState->queries);
     }
 
+    public function test_it_can_capture_queries_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            UserModel::all();
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('query:0.sql', 'select * from "users"');
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    }
+
+    public function test_it_captures_events_following_an_exception_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            app()->terminating(function () {
+                for ($i = 0; $i < 1_000; $i++) {
+                    UserModel::all();
+                }
+            });
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(3);
+        $ingest->assertWrite(0, function ($records) {
+            $this->assertCount(500, $records);
+
+            return true;
+        });
+        $ingest->assertWrite(0, 'exception:0.message', 'Whoops!');
+        for ($i = 0; $i < 499; $i++) {
+            $ingest->assertWrite(0, "query:{$i}.sql", 'select * from "users"');
+        }
+        $ingest->assertWrite(1, function ($records) {
+            $this->assertCount(500, $records);
+
+            return true;
+        });
+        for ($i = 0; $i < 500; $i++) {
+            $ingest->assertWrite(1, "query:{$i}.sql", 'select * from "users"');
+        }
+        $ingest->assertWrite(2, function ($records) {
+            $this->assertCount(2, $records);
+
+            return true;
+        });
+        $ingest->assertWrite(2, 'query:0.sql', 'select * from "users"');
+        $ingest->assertWrite(2, 'request:0.url', 'http://localhost/users');
+    }
+
     public function test_it_samples_notifications(): void
     {
         $this->core->config['sampling']['requests'] = 0;
@@ -132,6 +206,31 @@ class SamplingTest extends TestCase
         }
 
         $this->assertSame(10, $this->core->executionState->notifications);
+    }
+
+    public function test_it_can_capture_notifications_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('notification:0.class', MyNotification::class);
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
     }
 
     public function test_it_samples_mail(): void
@@ -156,6 +255,31 @@ class SamplingTest extends TestCase
         $this->assertSame(10, $this->core->executionState->mail);
     }
 
+    public function test_it_can_capture_mail_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            Mail::to('tim@laravel.com')->send(new MyMail);
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('mail:0.class', MyMail::class);
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    }
+
     public function test_it_samples_cache(): void
     {
         $this->core->config['sampling']['requests'] = 0;
@@ -176,6 +300,31 @@ class SamplingTest extends TestCase
         }
 
         $this->assertSame(10, $this->core->executionState->cacheEvents);
+    }
+
+    public function test_it_can_capture_cache_events_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            Cache::get('foo');
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', 'foo');
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
     }
 
     public function test_it_samples_exceptions(): void
@@ -222,6 +371,32 @@ class SamplingTest extends TestCase
         $this->assertSame(10, $this->core->executionState->jobsQueued);
     }
 
+    public function test_it_can_capture_queued_jobs_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            MyJob::dispatch();
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(4, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('query:0.sql', 'insert into "jobs" ("queue", "attempts", "reserved_at", "available_at", "created_at", "payload") values (?, ?, ?, ?, ?, ?)');
+        $ingest->assertLatestWrite('queued-job:0.name', MyJob::class);
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    }
+
     public function test_it_samples_outgoing_requests(): void
     {
         $this->core->config['sampling']['requests'] = 0;
@@ -248,6 +423,34 @@ class SamplingTest extends TestCase
         $this->assertSame(10, $this->core->executionState->outgoingRequests);
     }
 
+    public function test_it_can_capture_outgoing_requests_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+        Http::fake([
+            'https://nightwatch.laravel.com' => Http::response(status: 200),
+        ]);
+
+        Route::get('/users', function () {
+            Http::get('https://nightwatch.laravel.com');
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('outgoing-request:0.url', 'https://nightwatch.laravel.com');
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    }
+
     public function test_it_samples_stage(): void
     {
         $this->core->stage(ExecutionStage::Bootstrap);
@@ -266,6 +469,32 @@ class SamplingTest extends TestCase
         $this->core->stage(ExecutionStage::Render);
 
         $this->assertSame(ExecutionStage::Render, $this->core->executionState->stage);
+    }
+
+    public function test_it_can_capture_stages_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $this->freezeTime();
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            $this->travel(9)->seconds();
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+        $ingest->assertLatestWrite('request:0.action', 9_000_000);
     }
 
     public function test_it_samples_remembering_user(): void
@@ -287,6 +516,59 @@ class SamplingTest extends TestCase
         Auth::logout();
 
         $this->assertSame('123', $this->core->executionState->user->id()->jsonSerialize());
+    }
+
+    public function test_it_can_capture_logged_out_user_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $this->freezeTime();
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+        $user = new GenericUser(['id' => 123, 'remember_token' => '']);
+
+        Route::get('/logout', function () {
+            Auth::logout();
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->actingAs($user)->get('/logout');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('user:0.id', '123');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/logout');
+    }
+
+    public function test_it_can_capture_logged_in_user_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $this->freezeTime();
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/logout', function () {
+            Auth::login(new GenericUser(['id' => 123, 'remember_token' => '']));
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/logout');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('user:0.id', '123');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/logout');
     }
 
     public function test_it_samples_user(): void
@@ -338,6 +620,28 @@ class SamplingTest extends TestCase
         $this->assertTrue($requests->pluck('url')->every(fn ($url) => $url === 'https://laravel.com/'));
     }
 
+    public function test_it_can_capture_requests_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            defer(fn () => throw new RuntimeException('Whoops!'));
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    }
+
     public function test_it_samples_logs(): void
     {
         $this->core->config['sampling']['requests'] = 0;
@@ -358,6 +662,31 @@ class SamplingTest extends TestCase
         }
 
         $this->assertSame(10, $this->core->executionState->logs);
+    }
+
+    public function test_it_can_capture_logs_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            Log::channel('nightwatch')->info('Hello world');
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('log:0.message', 'Hello world');
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
     }
 
     #[DataProvider('routeMiddleware')]
@@ -418,6 +747,33 @@ class SamplingTest extends TestCase
         $this->assertSame('GET /test', $this->core->executionState->executionPreview);
     }
 
+    public function test_it_can_capture_execution_preview_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            UserModel::all();
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('query:0.sql', 'select * from "users"');
+        $ingest->assertLatestWrite('query:0.execution_preview', 'GET /users');
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('exception:0.execution_preview', 'GET /users');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    }
+
     public function test_it_samples_ingest(): void
     {
         $ingest = $this->fakeIngest();
@@ -449,6 +805,11 @@ class SamplingTest extends TestCase
         $ingest->assertWrittenTimes(1);
     }
 
+    public function test_it_flushes_ingest_after_request_when_not_sampling_unless_exception_occurs(): void
+    {
+        $this->markTestIncomplete('TODO');
+    }
+
     public function test_it_discards_records_captured_before_sampling_rate_decided(): void
     {
         DB::table('users')->get();
@@ -462,6 +823,57 @@ class SamplingTest extends TestCase
         $this->get('test')->assertOk();
 
         $this->assertSame(0, $count);
+    }
+
+    public function test_it_captures_records_captured_before_sampling_rate_decided_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        DB::table('users')->get();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+        $count = null;
+        Route::get('/test', function () use (&$count): void {
+            $count = $this->core->ingest->buffer->count();
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('test');
+
+        $this->assertSame(1, $count);
+    }
+
+    public function test_it_discards_records_over_the_buffer_threshold_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            for ($i = 0; $i < 1_000; $i++) {
+                UserModel::all();
+            }
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, function ($records) {
+            $this->assertCount(500, $records);
+
+            return true;
+        });
+        for ($i = 0; $i < 499; $i++) {
+            $ingest->assertWrite(0, "query:{$i}.sql", 'select * from "users"');
+        }
+        $ingest->assertWrite(0, 'exception:0.message', 'Whoops!');
+        $ingest->assertWrite(1, function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertWrite(1, 'request:0.url', 'http://localhost/users');
     }
 
     public function test_it_adds_context_for_job_sampling(): void
@@ -480,4 +892,16 @@ class SamplingTest extends TestCase
 
         $this->assertTrue($shouldSample);
     }
+
+    public function test_dispatched_job_executions_are_not_sampled_if_dispatched_after_exception_when_not_sampling(): void
+    {
+        $this->markTestIncomplete('TODO');
+    }
+
+    public function test_captured_requests_gets_exception_preview_after_exception_when_not_sampling(): void
+    {
+        $this->markTestIncomplete('TODO');
+    }
+    //
+    // TODO add CLI specific test
 }
