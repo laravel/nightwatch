@@ -29,6 +29,7 @@ class CliSamplingTest extends TestCase
     public function test_it_samples_job_attempts(): void
     {
         $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = false;
         Compatibility::addHiddenContext('nightwatch_should_sample', false);
 
         for ($i = 0; $i < 10; $i++) {

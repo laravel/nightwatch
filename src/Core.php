@@ -32,6 +32,7 @@ final class Core
      *     sampling: array{
      *         requests: float,
      *         commands: float,
+     *         always_exceptions: bool,
      *     },
      *     filtering: array{
      *         ignore_cache_events: bool,

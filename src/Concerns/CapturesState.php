@@ -67,7 +67,7 @@ trait CapturesState
      */
     public function configureSampling(string $by): void
     {
-        $this->shouldSample = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $this->config['sampling'][$by];
+        $this->shouldSample = $this->ingest->shouldDigest = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $this->config['sampling'][$by];
 
         Compatibility::addHiddenContext('nightwatch_should_sample', $this->shouldSample);
 
@@ -81,7 +81,15 @@ trait CapturesState
      */
     public function report(Throwable $e): void
     {
-        if (! $this->shouldSample || ! $this->enabled()) {
+        if (! $this->enabled()) {
+            return;
+        }
+
+        if ($this->config['sampling']['always_exceptions']) {
+            $this->shouldSample = $this->ingest->shouldDigest = true;
+        }
+
+        if (! $this->shouldSample) {
             return;
         }
 
@@ -113,7 +121,7 @@ trait CapturesState
      */
     public function query(QueryExecuted $event): void
     {
-        if (! $this->shouldSample) {
+        if (! $this->shouldSample && ! $this->config['sampling']['always_exceptions']) {
             return;
         }
 

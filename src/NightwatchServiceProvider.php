@@ -235,6 +235,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 'sampling' => [
                     'requests' => $this->configuredSampleRate('requests'),
                     'commands' => $this->configuredSampleRate('commands'),
+                    'always_exceptions' => true,
                 ],
                 'filtering' => [
                     'ignore_cache_events' => (bool) ($this->nightwatchConfig['filtering']['ignore_cache_events'] ?? false),

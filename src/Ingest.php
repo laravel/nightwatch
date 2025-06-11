@@ -31,6 +31,8 @@ final class Ingest implements IngestContract
      */
     private array $timeout;
 
+    public bool $shouldDigest = true;
+
     /**
      * @param  (callable(string $address, float $timeout): resource)  $streamFactory
      */
@@ -53,7 +55,7 @@ final class Ingest implements IngestContract
     {
         $this->buffer->write($record);
 
-        if ($this->buffer->full) {
+        if ($this->shouldDigest && $this->buffer->full) {
             $this->digest();
         }
     }
@@ -70,7 +72,11 @@ final class Ingest implements IngestContract
 
     public function digest(): void
     {
-        $this->transmit($this->buffer->pull());
+        if ($this->shouldDigest) {
+            $this->transmit($this->buffer->pull());
+        } else {
+            $this->buffer->flush();
+        }
     }
 
     private function transmit(Payload $payload): void
