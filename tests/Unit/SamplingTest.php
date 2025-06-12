@@ -34,6 +34,7 @@ use function json_decode;
 use function microtime;
 use function report;
 use function request;
+use function response;
 
 class SamplingTest extends TestCase
 {
