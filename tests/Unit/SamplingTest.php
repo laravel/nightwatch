@@ -952,13 +952,66 @@ class SamplingTest extends TestCase
 
     public function test_dispatched_job_executions_are_not_sampled_if_dispatched_after_exception_when_not_sampling(): void
     {
-        $this->markTestIncomplete('TODO');
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            MyJob::dispatch();
+
+            $this->assertFalse(Compatibility::getHiddenContext('nightwatch_should_sample'));
+
+            app()->terminating(fn () => MyJob::dispatch());
+
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+        $jobs = DB::table('jobs')->get();
+
+        $response->assertServerError();
+        $this->assertFalse(Compatibility::getHiddenContext('nightwatch_should_sample'));
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(6, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('query:0.sql', 'insert into "jobs" ("queue", "attempts", "reserved_at", "available_at", "created_at", "payload") values (?, ?, ?, ?, ?, ?)');
+        $ingest->assertLatestWrite('query:1.sql', 'insert into "jobs" ("queue", "attempts", "reserved_at", "available_at", "created_at", "payload") values (?, ?, ?, ?, ?, ?)');
+        $ingest->assertLatestWrite('queued-job:0.name', MyJob::class);
+        $ingest->assertLatestWrite('queued-job:1.name', MyJob::class);
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.exception_preview', 'Whoops!');
+        $this->assertCount(2, $jobs);
+        $this->assertStringContainsString('"nightwatch_should_sample":"b:0;"', $jobs[0]->payload,);
+        $this->assertStringContainsString('"nightwatch_should_sample":"b:0;"', $jobs[1]->payload,);
+        $this->assertStringNotContainsString('"nightwatch_should_sample":"b:1;"', $jobs[0]->payload,);
+        $this->assertStringNotContainsString('"nightwatch_should_sample":"b:1;"', $jobs[1]->payload,);
     }
 
-    public function test_captured_requests_gets_exception_preview_after_exception_when_not_sampling(): void
+    public function test_captured_request_gets_exception_preview_after_exception_when_not_sampling(): void
     {
-        $this->markTestIncomplete('TODO');
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            throw new RuntimeException('Whoops!');
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.exception_preview', 'Whoops!');
     }
-    //
+
     // TODO add CLI specific test
 }
