@@ -793,6 +793,7 @@ class SamplingTest extends TestCase
 
         $this->core->config['sampling']['requests'] = 0;
         $this->core->configureSampling('requests');
+        $this->core->config['sampling']['always_exceptions'] = false;
         $this->core->ingest->write(new User(
             timestamp: microtime(true),
             id: '123',
@@ -820,7 +821,22 @@ class SamplingTest extends TestCase
 
     public function test_it_flushes_ingest_after_request_when_not_sampling_unless_exception_occurs(): void
     {
-        $this->markTestIncomplete('TODO');
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            UserModel::all();
+
+            return $this->core->ingest->buffer->count();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk()
+            ->assertContent('1');
+        $ingest->assertWrittenTimes(0);
+        $this->assertCount(0, $this->core->ingest->buffer);
     }
 
     public function test_it_discards_records_captured_before_sampling_rate_decided(): void

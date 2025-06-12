@@ -76,7 +76,11 @@ final class Core
      */
     public function digest(): self
     {
-        if (! $this->shouldSample || $this->waitingForJob) {
+        if ($this->waitingForJob) {
+            return $this;
+        }
+
+        if (! $this->shouldSample && ! $this->config['sampling']['always_exceptions']) {
             return $this;
         }
 
