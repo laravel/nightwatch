@@ -188,6 +188,32 @@ class SamplingTest extends TestCase
         $ingest->assertWrite(2, 'request:0.url', 'http://localhost/users');
     }
 
+    public function test_it_captures_events_after_an_exception_is_reported_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['requests'] = 0;
+
+        Route::get('/users', function () {
+            UserModel::get();
+
+            report(new RuntimeException('Whoops!'));
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('query:0.sql', 'select * from "users"');
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    }
+
     public function test_it_samples_notifications(): void
     {
         $this->core->config['sampling']['requests'] = 0;
