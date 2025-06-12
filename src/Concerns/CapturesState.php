@@ -72,13 +72,13 @@ trait CapturesState
      */
     public function configureSampling(string $by): void
     {
-        $comparator = random_int(0, PHP_INT_MAX) / PHP_INT_MAX;
+        $sampleFloat = random_int(0, PHP_INT_MAX) / PHP_INT_MAX;
 
         $this->ingest->shouldDigest(
-            $this->shouldSample = $comparator <= $this->config['sampling'][$by]
+            $this->shouldSample = $sampleFloat <= $this->config['sampling'][$by]
         );
 
-        $this->shouldSampleOnException = $comparator <= $this->config['sampling']['exceptions'];
+        $this->shouldSampleOnException = $sampleFloat <= $this->config['sampling']['exceptions'];
 
         Compatibility::addHiddenContext('nightwatch_should_sample', $this->shouldSample);
 
