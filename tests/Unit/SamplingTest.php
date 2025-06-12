@@ -69,7 +69,7 @@ class SamplingTest extends TestCase
             }
         }
 
-        $this->assertEqualsWithDelta($sampled, 250, 50);
+        $this->assertEqualsWithDelta(250, $sampled, 50);
 
         $this->core->config['sampling']['requests'] = 0.5;
         $sampled = 0;
@@ -81,7 +81,7 @@ class SamplingTest extends TestCase
             }
         }
 
-        $this->assertEqualsWithDelta($sampled, 500, 50);
+        $this->assertEqualsWithDelta(500, $sampled, 50);
 
         $this->core->config['sampling']['requests'] = 1.0;
         $sampled = 0;
@@ -142,6 +142,77 @@ class SamplingTest extends TestCase
         $ingest->assertLatestWrite('query:0.sql', 'select * from "users"');
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
+    }
+    
+    public function test_it_can_set_sample_rate_to_capture_events_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['requests'] = 0;
+
+        $this->core->config['sampling']['exceptions'] = 0;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->configureSampling('requests');
+
+            if ($this->core->shouldSampleAfterException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertSame(0, $sampled);
+
+        $this->core->config['sampling']['exceptions'] = 0.25;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->configureSampling('requests');
+
+            if ($this->core->shouldSampleAfterException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertEqualsWithDelta(250, $sampled, 50);
+
+        $this->core->config['sampling']['exceptions'] = 0.5;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->configureSampling('requests');
+
+            if ($this->core->shouldSampleAfterException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertEqualsWithDelta(500, $sampled, 50);
+
+        $this->core->config['sampling']['exceptions'] = 0.75;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->configureSampling('requests');
+
+            if ($this->core->shouldSampleAfterException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertEqualsWithDelta(750, $sampled, 50);
+
+        $this->core->config['sampling']['exceptions'] = 1.0;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->configureSampling('requests');
+
+            if ($this->core->shouldSampleAfterException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertSame(1000, $sampled);
     }
 
     public function test_it_captures_events_following_an_exception_when_not_sampling_unless_exception_occurs(): void
