@@ -13,6 +13,8 @@ interface Ingest
 
     public function ping(): void;
 
+    public function shouldDigest(bool $bool): void;
+
     public function digest(): void;
 
     public function flush(): void;

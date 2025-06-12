@@ -34,7 +34,7 @@ class CliSamplingTest extends TestCase
     public function test_it_samples_job_attempts(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_exceptions'] = false;
+        $this->core->config['sampling']['always_after_exception'] = false;
         Compatibility::addHiddenContext('nightwatch_should_sample', false);
 
         for ($i = 0; $i < 10; $i++) {
@@ -74,7 +74,7 @@ class CliSamplingTest extends TestCase
     public function test_it_can_captures_job_attempts_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['always_after_exception'] = true;
         Compatibility::addHiddenContext('nightwatch_should_sample', false);
 
         $line = __LINE__ + 1;
@@ -109,7 +109,7 @@ class CliSamplingTest extends TestCase
         $this->core->executionState->setId('previous');
         $this->core->executionState->executionPreview = 'previous';
         $this->core->executionState->timestamp = 0.0;
-        $this->core->config['sampling']['always_exceptions'] = false;
+        $this->core->config['sampling']['always_after_exception'] = false;
 
         Compatibility::addHiddenContext('nightwatch_should_sample', false);
         $this->core->prepareForJob(new class extends FakeJob
@@ -147,7 +147,7 @@ class CliSamplingTest extends TestCase
         $this->core->executionState->setId('previous');
         $this->core->executionState->executionPreview = 'previous';
         $this->core->executionState->timestamp = 0.0;
-        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['always_after_exception'] = true;
 
         Compatibility::addHiddenContext('nightwatch_should_sample', false);
         Str::createUuidsUsingSequence([
@@ -220,7 +220,7 @@ class CliSamplingTest extends TestCase
     public function test_it_samples_preparing_for_command(): void
     {
         $this->core->shouldSample = false;
-        $this->core->config['sampling']['always_exceptions'] = false;
+        $this->core->config['sampling']['always_after_exception'] = false;
 
         $this->core->executionState->name = 'previous';
         $this->core->executionState->executionPreview = 'previous';
@@ -241,7 +241,7 @@ class CliSamplingTest extends TestCase
     public function test_it_prepares_for_command_when_not_sampling_unless_exception_occurs(): void
     {
         $this->core->shouldSample = false;
-        $this->core->config['sampling']['always_exceptions'] = true;
+        $this->core->config['sampling']['always_after_exception'] = true;
 
         $this->core->executionState->name = 'previous';
         $this->core->executionState->executionPreview = 'previous';

@@ -31,7 +31,7 @@ final class Ingest implements IngestContract
      */
     private array $timeout;
 
-    public bool $shouldDigest = true;
+    private bool $shouldDigest = true;
 
     /**
      * @param  (callable(string $address, float $timeout): resource)  $streamFactory
@@ -68,6 +68,11 @@ final class Ingest implements IngestContract
     public function ping(): void
     {
         $this->transmit(Payload::text('PING'));
+    }
+
+    public function shouldDigest(bool $bool): void
+    {
+        $this->shouldDigest = $bool;
     }
 
     public function digest(): void

@@ -35,6 +35,11 @@ class FakeIngest implements IngestContract
         $this->ingest->write($record);
     }
 
+    public function shouldDigest(bool $bool): void
+    {
+        $this->ingest->shouldDigest($bool);
+    }
+
     public function digest(): void
     {
         $this->ingest->digest();

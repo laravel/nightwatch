@@ -32,7 +32,7 @@ final class Core
      *     sampling: array{
      *         requests: float,
      *         commands: float,
-     *         always_exceptions: bool,
+     *         always_after_exception: bool,
      *     },
      *     filtering: array{
      *         ignore_cache_events: bool,
@@ -80,12 +80,16 @@ final class Core
             return $this;
         }
 
-        if (! $this->shouldSample && ! $this->config['sampling']['always_exceptions']) {
+        if (! $this->shouldSample && ! $this->config['sampling']['always_after_exception']) {
             return $this;
         }
 
         try {
-            $this->ingest->digest();
+            if ($this->shouldSample) {
+                $this->ingest->digest();
+            } else {
+                $this->ingest->flush();
+            }
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }
