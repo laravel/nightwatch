@@ -139,6 +139,31 @@ class CliSamplingTest extends TestCase
         $this->assertSame(5.5, $this->core->executionState->timestamp);
     }
 
+    public function test_it_prepares_for_next_job_when_not_sampling_unless_exception_occurs(): void
+    {
+        $this->core->clock->microtimeResolver = fn () => 5.5;
+        $this->core->executionState->setId('previous');
+        $this->core->executionState->executionPreview = 'previous';
+        $this->core->executionState->timestamp = 0.0;
+        $this->core->config['sampling']['always_exceptions'] = true;
+
+        Compatibility::addHiddenContext('nightwatch_should_sample', false);
+        Str::createUuidsUsingSequence([
+            '1CF1F203-73A5-4E9D-8662-12E1C712F130',
+        ]);
+        $this->core->prepareForJob(new class extends FakeJob
+        {
+            public function resolveName()
+            {
+                return 'current';
+            }
+        });
+
+        $this->assertSame('"1CF1F203-73A5-4E9D-8662-12E1C712F130"', json_encode($this->core->executionState->id()));
+        $this->assertSame('current', $this->core->executionState->executionPreview);
+        $this->assertSame(5.5, $this->core->executionState->timestamp);
+    }
+
     public function test_it_can_configure_command_sampling(): void
     {
         $this->core->config['sampling']['commands'] = 0;
