@@ -101,7 +101,7 @@ class CliSamplingTest extends TestCase
         $ingest->assertLatestWrite('query:4.sql', 'insert into "failed_jobs" ("uuid", "connection", "queue", "payload", "exception", "failed_at") values (?, ?, ?, ?, ?, ?)');
     }
 
-    public function test_it_preparing_for_next_job(): void
+    public function test_it_prepares_for_next_job(): void
     {
         $this->core->clock->microtimeResolver = fn () => 5.5;
         $this->core->executionState->setId('previous');
