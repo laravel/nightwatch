@@ -220,7 +220,7 @@ class CliSamplingTest extends TestCase
     public function test_it_samples_preparing_for_command(): void
     {
         $this->core->shouldSample = false;
-        $this->core->shouldSampleAfterException = false;
+        $this->core->shouldSampleOnException = false;
 
         $this->core->executionState->name = 'previous';
         $this->core->executionState->executionPreview = 'previous';

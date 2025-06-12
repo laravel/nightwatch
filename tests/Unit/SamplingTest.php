@@ -155,7 +155,7 @@ class SamplingTest extends TestCase
         for ($i = 0; $i < 1000; $i++) {
             $this->core->configureSampling('requests');
 
-            if ($this->core->shouldSampleAfterException) {
+            if ($this->core->shouldSampleOnException) {
                 $sampled++;
             }
         }
@@ -168,7 +168,7 @@ class SamplingTest extends TestCase
         for ($i = 0; $i < 1000; $i++) {
             $this->core->configureSampling('requests');
 
-            if ($this->core->shouldSampleAfterException) {
+            if ($this->core->shouldSampleOnException) {
                 $sampled++;
             }
         }
@@ -181,7 +181,7 @@ class SamplingTest extends TestCase
         for ($i = 0; $i < 1000; $i++) {
             $this->core->configureSampling('requests');
 
-            if ($this->core->shouldSampleAfterException) {
+            if ($this->core->shouldSampleOnException) {
                 $sampled++;
             }
         }
@@ -194,7 +194,7 @@ class SamplingTest extends TestCase
         for ($i = 0; $i < 1000; $i++) {
             $this->core->configureSampling('requests');
 
-            if ($this->core->shouldSampleAfterException) {
+            if ($this->core->shouldSampleOnException) {
                 $sampled++;
             }
         }
@@ -207,7 +207,7 @@ class SamplingTest extends TestCase
         for ($i = 0; $i < 1000; $i++) {
             $this->core->configureSampling('requests');
 
-            if ($this->core->shouldSampleAfterException) {
+            if ($this->core->shouldSampleOnException) {
                 $sampled++;
             }
         }
