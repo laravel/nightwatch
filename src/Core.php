@@ -85,11 +85,7 @@ final class Core
         }
 
         try {
-            if ($this->shouldSample) {
-                $this->ingest->digest();
-            } else {
-                $this->ingest->flush();
-            }
+            $this->ingest->digest();
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }
