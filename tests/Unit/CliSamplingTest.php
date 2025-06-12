@@ -4,12 +4,12 @@ namespace Tests\Unit;
 
 use App\Jobs\MyJob;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Compatibility;
 use RuntimeException;
 use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Tests\FakeJob;
 use Tests\TestCase;
 
@@ -288,15 +288,20 @@ class CliSamplingTest extends TestCase
         $ingest = $this->fakeIngest();
         $this->core->config['sampling']['commands'] = 0;
         $this->core->configureSampling('commands');
+        $this->core->config['sampling']['always_after_exception'] = true;
         Artisan::command('app:build', function () {
             report(new RuntimeException('Whoops!'));
 
             return 8;
         });
 
-        $code = App::handleCommand(new StringInput('app:build'));
+        $status = Artisan::handle(
+            $input = new StringInput('app:build'),
+            new ConsoleOutput
+        );
+        Artisan::terminate($input, $status);
 
-        $this->assertSame(8, $code);
+        $this->assertSame(8, $status);
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(2, $records);
