@@ -666,12 +666,12 @@ class SamplingTest extends TestCase
 
         Route::get('/users', function () {
             if (function_exists('defer')) {
-                defer(fn () => throw new RuntimeException('Whoops!'));
+                defer(fn () => throw new RuntimeException('Whoops!'), always: true);
             } else {
                 throw new RuntimeException('Whoops!');
             }
 
-            return response('', 500);
+            return response(status: 500);
         });
 
         $response = $this->get('/users');
