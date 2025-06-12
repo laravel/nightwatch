@@ -362,7 +362,7 @@ trait CapturesState
     public function prepareForCommand(string $name): void
     {
         /** @var Core<CommandState> $this */
-        if (! $this->shouldSample) {
+        if (! $this->shouldSample && ! $this->config['sampling']['always_exceptions']) {
             return;
         }
 

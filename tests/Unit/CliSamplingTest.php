@@ -218,6 +218,7 @@ class CliSamplingTest extends TestCase
     public function test_it_samples_preparing_for_command(): void
     {
         $this->core->shouldSample = false;
+        $this->core->config['sampling']['always_exceptions'] = false;
 
         $this->core->executionState->name = 'previous';
         $this->core->executionState->executionPreview = 'previous';
@@ -228,6 +229,20 @@ class CliSamplingTest extends TestCase
         $this->assertSame('previous', $this->core->executionState->executionPreview);
 
         $this->core->shouldSample = true;
+
+        $this->core->prepareForCommand('current');
+
+        $this->assertSame('current', $this->core->executionState->name);
+        $this->assertSame('current', $this->core->executionState->executionPreview);
+    }
+
+    public function test_it_prepares_for_command_when_not_sampling_unless_exception_occurs(): void
+    {
+        $this->core->shouldSample = false;
+        $this->core->config['sampling']['always_exceptions'] = true;
+
+        $this->core->executionState->name = 'previous';
+        $this->core->executionState->executionPreview = 'previous';
 
         $this->core->prepareForCommand('current');
 
