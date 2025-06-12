@@ -29,6 +29,7 @@ use Tests\TestCase;
 use function app;
 use function collect;
 use function defer;
+use function function_exists;
 use function json_decode;
 use function microtime;
 use function report;
