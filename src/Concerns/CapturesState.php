@@ -249,7 +249,7 @@ trait CapturesState
      */
     public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
-        if (! $this->shouldSample) {
+        if (! $this->shouldSample && ! $this->config['sampling']['always_exceptions']) {
             return;
         }
 
@@ -337,7 +337,7 @@ trait CapturesState
         $this->shouldSample = $this->ingest->shouldDigest = (bool) Compatibility::getHiddenContext('nightwatch_should_sample', true);
         //
 
-        if (! $this->shouldSample) {
+        if (! $this->shouldSample && ! $this->config['sampling']['always_exceptions']) {
             return;
         }
 

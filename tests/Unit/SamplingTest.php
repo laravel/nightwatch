@@ -1012,6 +1012,4 @@ class SamplingTest extends TestCase
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('request:0.exception_preview', 'Whoops!');
     }
-
-    // TODO add CLI specific test
 }

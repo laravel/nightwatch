@@ -7,11 +7,14 @@ use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Compatibility;
+use RuntimeException;
 use Symfony\Component\Console\Input\StringInput;
 use Tests\FakeJob;
 use Tests\TestCase;
 
+use function basename;
 use function collect;
+use function dispatch;
 use function json_decode;
 use function json_encode;
 
@@ -66,12 +69,45 @@ class CliSamplingTest extends TestCase
         $this->assertCount(0, $this->core->ingest->buffer);
     }
 
+    public function test_it_can_capture_job_attempts_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['always_exceptions'] = true;
+        Compatibility::addHiddenContext('nightwatch_should_sample', false);
+
+        $line = __LINE__ + 1;
+        dispatch(function () {
+            throw new RuntimeException('Whoops!');
+        });
+        Artisan::call('queue:work', [
+            '--max-jobs' => 1,
+            '--sleep' => 0,
+            '--stop-when-empty' => true,
+            '--tries' => 1,
+        ]);
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(8, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('query:0.sql', 'select * from "jobs" where "queue" = ? and (("reserved_at" is null and "available_at" <= ?) or ("reserved_at" <= ?)) order by "id" asc limit 1');
+        $ingest->assertLatestWrite('query:1.sql', 'update "jobs" set "reserved_at" = ?, "attempts" = ? where "id" = ?');
+        $ingest->assertLatestWrite('query:2.sql', 'select * from "jobs" where "id" = ? limit 1');
+        $ingest->assertLatestWrite('job-attempt:0.name', 'Closure ('.basename(__FILE__).':'.$line.')');
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('query:3.sql', 'delete from "jobs" where "id" = ?');
+        $ingest->assertLatestWrite('query:4.sql', 'insert into "failed_jobs" ("uuid", "connection", "queue", "payload", "exception", "failed_at") values (?, ?, ?, ?, ?, ?)');
+    }
+
     public function test_it_preparing_for_next_job(): void
     {
         $this->core->clock->microtimeResolver = fn () => 5.5;
         $this->core->executionState->setId('previous');
         $this->core->executionState->executionPreview = 'previous';
         $this->core->executionState->timestamp = 0.0;
+        $this->core->config['sampling']['always_exceptions'] = false;
 
         Compatibility::addHiddenContext('nightwatch_should_sample', false);
         $this->core->prepareForJob(new class extends FakeJob
