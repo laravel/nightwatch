@@ -995,10 +995,10 @@ class SamplingTest extends TestCase
             $this->assertStringNotContainsString('"nightwatch_should_sample":"b:1;"', $jobs[0]->payload);
             $this->assertStringNotContainsString('"nightwatch_should_sample":"b:1;"', $jobs[1]->payload);
         } else {
-            $this->assertStringContainsString('"nightwatch_should_sample":"false"', $jobs[0]->payload);
-            $this->assertStringContainsString('"nightwatch_should_sample":"false"', $jobs[1]->payload);
-            $this->assertStringNotContainsString('"nightwatch_should_sample":"true"', $jobs[0]->payload);
-            $this->assertStringNotContainsString('"nightwatch_should_sample":"true"', $jobs[1]->payload);
+            $this->assertStringContainsString('"nightwatch_should_sample":false', $jobs[0]->payload);
+            $this->assertStringContainsString('"nightwatch_should_sample":false', $jobs[1]->payload);
+            $this->assertStringNotContainsString('"nightwatch_should_sample":true', $jobs[0]->payload);
+            $this->assertStringNotContainsString('"nightwatch_should_sample":true', $jobs[1]->payload);
         }
     }
 
