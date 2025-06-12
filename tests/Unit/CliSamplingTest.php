@@ -217,6 +217,146 @@ class CliSamplingTest extends TestCase
         $this->assertSame(1000, $sampled);
     }
 
+    public function test_it_can_set_sample_rate_for_commands_to_capture_events_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['commands'] = 0;
+
+        $this->core->config['sampling']['exceptions'] = 0;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->configureSampling('commands');
+
+            if ($this->core->shouldSampleOnException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertSame(0, $sampled);
+
+        $this->core->config['sampling']['exceptions'] = 0.25;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->configureSampling('commands');
+
+            if ($this->core->shouldSampleOnException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertEqualsWithDelta(250, $sampled, 50);
+
+        $this->core->config['sampling']['exceptions'] = 0.5;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->configureSampling('commands');
+
+            if ($this->core->shouldSampleOnException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertEqualsWithDelta(500, $sampled, 50);
+
+        $this->core->config['sampling']['exceptions'] = 0.75;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->configureSampling('commands');
+
+            if ($this->core->shouldSampleOnException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertEqualsWithDelta(750, $sampled, 50);
+
+        $this->core->config['sampling']['exceptions'] = 1.0;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->configureSampling('commands');
+
+            if ($this->core->shouldSampleOnException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertSame(1000, $sampled);
+    }
+
+    public function test_it_can_set_sample_rate_for_jobs_to_capture_events_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['exceptions'] = 0;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->prepareForJob(new FakeJob);
+
+            if ($this->core->shouldSampleOnException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertSame(0, $sampled);
+
+        $this->core->config['sampling']['exceptions'] = 0.25;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->prepareForJob(new FakeJob);
+
+            if ($this->core->shouldSampleOnException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertEqualsWithDelta(250, $sampled, 50);
+
+        $this->core->config['sampling']['exceptions'] = 0.5;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->prepareForJob(new FakeJob);
+
+            if ($this->core->shouldSampleOnException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertEqualsWithDelta(500, $sampled, 50);
+
+        $this->core->config['sampling']['exceptions'] = 0.75;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->prepareForJob(new FakeJob);
+
+            if ($this->core->shouldSampleOnException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertEqualsWithDelta(750, $sampled, 50);
+
+        $this->core->config['sampling']['exceptions'] = 1.0;
+        $sampled = 0;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $this->core->prepareForJob(new FakeJob);
+
+            if ($this->core->shouldSampleOnException) {
+                $sampled++;
+            }
+        }
+
+        $this->assertSame(1000, $sampled);
+    }
+
     public function test_it_samples_preparing_for_command(): void
     {
         $this->core->shouldSample = false;

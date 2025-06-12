@@ -27,7 +27,7 @@ class FakeJob extends Job implements JobContract
      */
     public function getRawBody()
     {
-        return '';
+        return '{"job":""}';
     }
 
     /**
