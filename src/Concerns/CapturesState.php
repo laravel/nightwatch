@@ -205,7 +205,6 @@ trait CapturesState
     public function stage(ExecutionStage $stage): void
     {
         if (! $this->shouldSample && ! $this->config['sampling']['always_after_exception']) {
-
             return;
         }
 
