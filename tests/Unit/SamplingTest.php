@@ -305,7 +305,7 @@ class SamplingTest extends TestCase
 
             return true;
         });
-        $ingest->assertLatestWrite('mail:0.class', MyMail::class);
+        $ingest->assertLatestWrite('mail:0.subject', 'Welcome');
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
     }
@@ -663,7 +663,11 @@ class SamplingTest extends TestCase
         $this->core->config['sampling']['requests'] = 0;
 
         Route::get('/users', function () {
-            defer(fn () => throw new RuntimeException('Whoops!'));
+            if (function_exists('defer')) {
+                defer(fn () => throw new RuntimeException('Whoops!'));
+            } else {
+                throw new RuntimeException('Whoops!');
+            }
         });
 
         $response = $this->get('/users');
@@ -984,10 +988,17 @@ class SamplingTest extends TestCase
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('request:0.exception_preview', 'Whoops!');
         $this->assertCount(2, $jobs);
-        $this->assertStringContainsString('"nightwatch_should_sample":"b:0;"', $jobs[0]->payload);
-        $this->assertStringContainsString('"nightwatch_should_sample":"b:0;"', $jobs[1]->payload);
-        $this->assertStringNotContainsString('"nightwatch_should_sample":"b:1;"', $jobs[0]->payload);
-        $this->assertStringNotContainsString('"nightwatch_should_sample":"b:1;"', $jobs[1]->payload);
+        if (Compatibility::$contextExists) {
+            $this->assertStringContainsString('"nightwatch_should_sample":"b:0;"', $jobs[0]->payload);
+            $this->assertStringContainsString('"nightwatch_should_sample":"b:0;"', $jobs[1]->payload);
+            $this->assertStringNotContainsString('"nightwatch_should_sample":"b:1;"', $jobs[0]->payload);
+            $this->assertStringNotContainsString('"nightwatch_should_sample":"b:1;"', $jobs[1]->payload);
+        } else {
+            $this->assertStringContainsString('"nightwatch_should_sample":"false"', $jobs[0]->payload);
+            $this->assertStringContainsString('"nightwatch_should_sample":"false"', $jobs[1]->payload);
+            $this->assertStringNotContainsString('"nightwatch_should_sample":"true"', $jobs[0]->payload);
+            $this->assertStringNotContainsString('"nightwatch_should_sample":"true"', $jobs[1]->payload);
+        }
     }
 
     public function test_captured_request_gets_exception_preview_after_exception_when_not_sampling(): void
