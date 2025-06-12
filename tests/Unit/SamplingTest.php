@@ -130,6 +130,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/users');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(3, $records);
@@ -159,6 +160,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/users');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(3);
         $ingest->assertWrite(0, function ($records) {
             $this->assertCount(500, $records);
@@ -222,6 +224,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/users');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(3, $records);
@@ -269,6 +272,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/users');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(3, $records);
@@ -316,6 +320,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/users');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(3, $records);
@@ -385,6 +390,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/users');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(4, $records);
@@ -440,6 +446,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/users');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(3, $records);
@@ -486,6 +493,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/users');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(2, $records);
@@ -534,6 +542,7 @@ class SamplingTest extends TestCase
 
         $response = $this->actingAs($user)->get('/logout');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(3, $records);
@@ -560,6 +569,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/logout');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(3, $records);
@@ -632,6 +642,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/users');
 
+        $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(2, $records);
@@ -678,6 +689,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/users');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(3, $records);
@@ -761,6 +773,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/users');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(3, $records);
@@ -839,6 +852,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('test');
 
+        $response->assertServerError();
         $this->assertSame(1, $count);
     }
 
@@ -858,6 +872,7 @@ class SamplingTest extends TestCase
 
         $response = $this->get('/users');
 
+        $response->assertServerError();
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, function ($records) {
             $this->assertCount(500, $records);
