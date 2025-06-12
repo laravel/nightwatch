@@ -143,7 +143,7 @@ class SamplingTest extends TestCase
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/users');
     }
-    
+
     public function test_it_can_set_sample_rate_to_capture_events_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
