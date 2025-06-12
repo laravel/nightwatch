@@ -669,11 +669,13 @@ class SamplingTest extends TestCase
             } else {
                 throw new RuntimeException('Whoops!');
             }
+
+            return response('', 500);
         });
 
         $response = $this->get('/users');
 
-        $response->assertOk();
+        $response->assertServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
             $this->assertCount(2, $records);
