@@ -88,9 +88,10 @@ final class NightwatchServiceProvider extends ServiceProvider
     /**
      * @var array{
      *     enabled?: bool,
-     *     sampling: array{
-     *        requests: float,
-     *        commands: float,
+     *     sampling?: array{
+     *        requests?: float,
+     *        commands?: float,
+     *        always_after_exception?: bool,
      *     },
      *     filtering?: array{
      *         ignore_cache_events?: bool,
@@ -235,7 +236,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 'sampling' => [
                     'requests' => $this->configuredSampleRate('requests'),
                     'commands' => $this->configuredSampleRate('commands'),
-                    'always_after_exception' => true,
+                    'always_after_exception' => $this->nightwatchConfig['sampling']['always_after_exception'] ?? true,
                 ],
                 'filtering' => [
                     'ignore_cache_events' => (bool) ($this->nightwatchConfig['filtering']['ignore_cache_events'] ?? false),
