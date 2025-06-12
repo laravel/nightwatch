@@ -9,6 +9,7 @@ return [
     'sampling' => [
         'requests' => env('NIGHTWATCH_REQUEST_SAMPLE_RATE', 1.0),
         'commands' => env('NIGHTWATCH_COMMAND_SAMPLE_RATE', 1.0),
+        'always_after_exception' => env('NIGHTWATCH_ALWAYS_SAMPLE_AFTER_EXCEPTION', true),
     ],
 
     'filtering' => [
