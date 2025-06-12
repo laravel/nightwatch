@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Jobs\MyJob;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Compatibility;
@@ -17,6 +18,7 @@ use function collect;
 use function dispatch;
 use function json_decode;
 use function json_encode;
+use function report;
 
 class CliSamplingTest extends TestCase
 {
@@ -69,7 +71,7 @@ class CliSamplingTest extends TestCase
         $this->assertCount(0, $this->core->ingest->buffer);
     }
 
-    public function test_it_can_capture_job_attempts_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    public function test_it_can_captures_job_attempts_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
         $this->core->config['sampling']['always_exceptions'] = true;
@@ -279,5 +281,29 @@ class CliSamplingTest extends TestCase
         $commands = collect(json_decode($this->core->ingest->buffer->pull()->rawPayload()));
         $this->assertCount(10, $commands);
         $this->assertTrue($commands->pluck('name')->every(fn ($name) => $name === 'app:build'));
+    }
+
+    public function test_it_can_captures_commands_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['commands'] = 0;
+        $this->core->configureSampling('commands');
+        Artisan::command('app:build', function () {
+            report(new RuntimeException('Whoops!'));
+
+            return 8;
+        });
+
+        $code = App::handleCommand(new StringInput('app:build'));
+
+        $this->assertSame(8, $code);
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('command:0.name', 'app:build');
     }
 }
