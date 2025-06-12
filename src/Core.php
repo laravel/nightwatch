@@ -32,7 +32,7 @@ final class Core
      *     sampling: array{
      *         requests: float,
      *         commands: float,
-     *         always_after_exception: bool,
+     *         exceptions: float,
      *     },
      *     filtering: array{
      *         ignore_cache_events: bool,
@@ -80,7 +80,7 @@ final class Core
             return $this;
         }
 
-        if (! $this->shouldSample && ! $this->config['sampling']['always_after_exception']) {
+        if (! $this->shouldSample && ! $this->shouldSampleAfterException) {
             return $this;
         }
 

@@ -99,8 +99,8 @@ class SamplingTest extends TestCase
     public function test_it_samples_queries(): void
     {
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
-        $this->core->config['sampling']['always_after_exception'] = false;
 
         for ($i = 0; $i < 10; $i++) {
             DB::table('users')->get();
@@ -121,8 +121,8 @@ class SamplingTest extends TestCase
     public function test_it_can_capture_queries_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             UserModel::all();
@@ -147,8 +147,8 @@ class SamplingTest extends TestCase
     public function test_it_captures_events_following_an_exception_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             app()->terminating(function () {
@@ -193,8 +193,8 @@ class SamplingTest extends TestCase
     public function test_it_captures_events_after_an_exception_is_reported_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             UserModel::get();
@@ -219,8 +219,8 @@ class SamplingTest extends TestCase
     public function test_it_samples_notifications(): void
     {
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
-        $this->core->config['sampling']['always_after_exception'] = false;
 
         for ($i = 0; $i < 10; $i++) {
             Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
@@ -241,8 +241,8 @@ class SamplingTest extends TestCase
     public function test_it_can_capture_notifications_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
@@ -267,8 +267,8 @@ class SamplingTest extends TestCase
     public function test_it_samples_mail(): void
     {
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
-        $this->core->config['sampling']['always_after_exception'] = false;
 
         for ($i = 0; $i < 10; $i++) {
             Mail::to('tim@laravel.com')->send(new MyMail);
@@ -289,8 +289,8 @@ class SamplingTest extends TestCase
     public function test_it_can_capture_mail_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             Mail::to('tim@laravel.com')->send(new MyMail);
@@ -315,8 +315,8 @@ class SamplingTest extends TestCase
     public function test_it_samples_cache(): void
     {
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
-        $this->core->config['sampling']['always_after_exception'] = false;
 
         for ($i = 0; $i < 10; $i++) {
             Cache::get('foo');
@@ -337,8 +337,8 @@ class SamplingTest extends TestCase
     public function test_it_can_capture_cache_events_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             Cache::get('foo');
@@ -363,8 +363,8 @@ class SamplingTest extends TestCase
     public function test_it_samples_exceptions(): void
     {
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
-        $this->core->config['sampling']['always_after_exception'] = false;
 
         for ($i = 0; $i < 10; $i++) {
             report('Whoops!');
@@ -385,8 +385,8 @@ class SamplingTest extends TestCase
     public function test_it_samples_queued_jobs(): void
     {
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
-        $this->core->config['sampling']['always_after_exception'] = false;
 
         for ($i = 0; $i < 10; $i++) {
             MyJob::dispatch();
@@ -407,8 +407,8 @@ class SamplingTest extends TestCase
     public function test_it_can_capture_queued_jobs_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             MyJob::dispatch();
@@ -434,8 +434,8 @@ class SamplingTest extends TestCase
     public function test_it_samples_outgoing_requests(): void
     {
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
-        $this->core->config['sampling']['always_after_exception'] = false;
 
         Http::fake([
             'https://nightwatch.laravel.com' => Http::response(status: 200),
@@ -460,8 +460,8 @@ class SamplingTest extends TestCase
     public function test_it_can_capture_outgoing_requests_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
         Http::fake([
             'https://nightwatch.laravel.com' => Http::response(status: 200),
         ]);
@@ -489,9 +489,8 @@ class SamplingTest extends TestCase
     public function test_it_samples_stage(): void
     {
         $this->core->stage(ExecutionStage::Bootstrap);
-        $this->core->config['sampling']['always_after_exception'] = false;
-
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
 
         $this->core->stage(ExecutionStage::Render);
@@ -510,8 +509,8 @@ class SamplingTest extends TestCase
     {
         $this->freezeTime();
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             $this->travel(9)->seconds();
@@ -536,8 +535,8 @@ class SamplingTest extends TestCase
     public function test_it_samples_remembering_user(): void
     {
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
-        $this->core->config['sampling']['always_after_exception'] = false;
         $user = new GenericUser(['id' => 123, 'remember_token' => '']);
 
         Auth::login($user);
@@ -558,8 +557,8 @@ class SamplingTest extends TestCase
     {
         $this->freezeTime();
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
         $user = new GenericUser(['id' => 123, 'remember_token' => '']);
 
         Route::get('/logout', function () {
@@ -586,8 +585,8 @@ class SamplingTest extends TestCase
     {
         $this->freezeTime();
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/logout', function () {
             Auth::login(new GenericUser(['id' => 123, 'remember_token' => '']));
@@ -661,8 +660,8 @@ class SamplingTest extends TestCase
     public function test_it_can_capture_requests_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             if (function_exists('defer')) {
@@ -690,8 +689,8 @@ class SamplingTest extends TestCase
     public function test_it_samples_logs(): void
     {
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
-        $this->core->config['sampling']['always_after_exception'] = false;
 
         for ($i = 0; $i < 10; $i++) {
             Log::channel('nightwatch')->info('Hello world');
@@ -712,8 +711,8 @@ class SamplingTest extends TestCase
     public function test_it_can_capture_logs_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             Log::channel('nightwatch')->info('Hello world');
@@ -741,8 +740,8 @@ class SamplingTest extends TestCase
         Compatibility::$terminatingEventExists = $terminatingEventExists;
         $this->fakeIngest();
         $this->core->config['sampling']['requests'] = 0.0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
-        $this->core->config['sampling']['always_after_exception'] = false;
         $middleware = [];
         Route::get('/test', function () use (&$middleware): void {
             $middleware = request()->route()->middleware();
@@ -774,8 +773,8 @@ class SamplingTest extends TestCase
     {
         $this->fakeIngest();
         $this->core->config['sampling']['requests'] = 0.0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
-        $this->core->config['sampling']['always_after_exception'] = false;
         Route::get('/test', function (): void {
             //
         });
@@ -796,8 +795,8 @@ class SamplingTest extends TestCase
     public function test_it_can_capture_execution_preview_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             UserModel::all();
@@ -826,8 +825,8 @@ class SamplingTest extends TestCase
         $ingest = $this->fakeIngest();
 
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $this->core->configureSampling('requests');
-        $this->core->config['sampling']['always_after_exception'] = false;
         $this->core->ingest->write(new User(
             timestamp: microtime(true),
             id: '123',
@@ -856,8 +855,8 @@ class SamplingTest extends TestCase
     public function test_it_flushes_ingest_after_request_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             UserModel::all();
@@ -877,7 +876,7 @@ class SamplingTest extends TestCase
     {
         DB::table('users')->get();
         $this->core->config['sampling']['requests'] = 0.0;
-        $this->core->config['sampling']['always_after_exception'] = false;
+        $this->core->config['sampling']['exceptions'] = 0.0;
         $count = null;
         Route::get('/test', function () use (&$count): void {
             $count = $this->core->ingest->buffer->count();
@@ -891,8 +890,8 @@ class SamplingTest extends TestCase
     public function test_it_captures_records_captured_before_sampling_rate_decided_after_exception_occurs_when_not_sampling_unless_exception_occurs(): void
     {
         DB::table('users')->get();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
         $count = null;
         Route::get('/test', function () use (&$count): void {
             $count = $this->core->ingest->buffer->count();
@@ -909,8 +908,8 @@ class SamplingTest extends TestCase
     public function test_it_discards_records_over_the_buffer_threshold_when_not_sampling_unless_exception_occurs(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             for ($i = 0; $i < 1_000; $i++) {
@@ -961,8 +960,8 @@ class SamplingTest extends TestCase
     public function test_dispatched_job_executions_are_not_sampled_if_dispatched_after_exception_when_not_sampling(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             MyJob::dispatch();
@@ -1008,8 +1007,8 @@ class SamplingTest extends TestCase
     public function test_captured_request_gets_exception_preview_after_exception_when_not_sampling(): void
     {
         $ingest = $this->fakeIngest();
-        $this->core->config['sampling']['always_after_exception'] = true;
         $this->core->config['sampling']['requests'] = 0;
+        $this->core->config['sampling']['exceptions'] = 1.0;
 
         Route::get('/users', function () {
             throw new RuntimeException('Whoops!');
