@@ -80,7 +80,7 @@ final class Core
             return $this;
         }
 
-        if (! $this->shouldSample && ! $this->shouldSampleOnException) {
+        if (! $this->potentiallySampling()) {
             return $this;
         }
 

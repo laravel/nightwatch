@@ -12,7 +12,7 @@ use Throwable;
 /**
  * @internal
  */
-#[AsCommand(name: 'nightwatch:status')]
+#[AsCommand(name: 'nightwatch:status', description: 'Get the current status of the Nightwatch agent.')]
 final class StatusCommand extends Command
 {
     /**
