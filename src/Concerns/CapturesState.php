@@ -223,6 +223,14 @@ trait CapturesState
     /**
      * @internal
      */
+    public function executionStageIs(ExecutionStage $stage): bool
+    {
+        return $this->executionState->stage === $stage;
+    }
+
+    /**
+     * @internal
+     */
     public function remember(Authenticatable $user): void
     {
         if (! $this->shouldSample && ! $this->shouldSampleOnException) {

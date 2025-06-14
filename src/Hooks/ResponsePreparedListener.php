@@ -25,7 +25,7 @@ final class ResponsePreparedListener
     public function __invoke(ResponsePrepared $event): void
     {
         try {
-            if ($this->nightwatch->executionState->stage === ExecutionStage::Render) {
+            if ($this->nightwatch->executionStageIs(ExecutionStage::Render)) {
                 $this->nightwatch->stage(ExecutionStage::AfterMiddleware);
             }
         } catch (Throwable $e) {
