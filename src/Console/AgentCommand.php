@@ -31,6 +31,7 @@ final class AgentCommand extends Command
     public function __construct(
         #[SensitiveParameter] private ?string $token,
         private ?string $server,
+        private ?string $ingestUri,
     ) {
         parent::__construct();
     }
@@ -39,7 +40,7 @@ final class AgentCommand extends Command
     {
         $refreshToken = $this->token;
 
-        $listenOn = $this->option('listen-on');
+        $listenOn = $this->option('listen-on') ?? $this->ingestUri;
 
         $authenticationConnectionTimeout = $this->option('auth-connection-timeout');
 
