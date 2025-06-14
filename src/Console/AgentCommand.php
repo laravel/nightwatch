@@ -9,7 +9,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 /**
  * @internal
  */
-#[AsCommand(name: 'nightwatch:agent')]
+#[AsCommand(name: 'nightwatch:agent', description: 'Run the Nightwatch agent.')]
 final class AgentCommand extends Command
 {
     /**
