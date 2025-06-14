@@ -401,6 +401,14 @@ trait CapturesState
     /**
      * @internal
      */
+    public function capturingCommandNamed(string $name): bool
+    {
+        return $this->executionState->name === $name;
+    }
+
+    /**
+     * @internal
+     */
     public function command(InputInterface $input, int $status): void
     {
         if (! $this->shouldSample) {

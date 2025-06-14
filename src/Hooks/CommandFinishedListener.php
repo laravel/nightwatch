@@ -26,7 +26,7 @@ final class CommandFinishedListener
     public function __invoke(CommandFinished $event): void
     {
         try {
-            if ($event->command === $this->nightwatch->executionState->name && ! Compatibility::$terminatingEventExists) {
+            if ($this->nightwatch->capturingCommandNamed($event->command) && ! Compatibility::$terminatingEventExists) {
                 $this->nightwatch->stage(ExecutionStage::Terminating);
             }
         } catch (Throwable $e) {
