@@ -403,6 +403,7 @@ trait CapturesState
      */
     public function capturingCommandNamed(string $name): bool
     {
+        /** @var Core<CommandState> $this */
         return $this->executionState->name === $name;
     }
 
