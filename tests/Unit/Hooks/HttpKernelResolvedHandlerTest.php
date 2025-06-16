@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Hooks;
 
+use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Routing\Router;
@@ -101,5 +102,24 @@ class HttpKernelResolvedHandlerTest extends TestCase
 
         $this->assertTrue($kernel->thrownInPrependMiddleware);
         $this->assertSame(1, $this->core->executionState->exceptions);
+    }
+
+    public function test_it_gracefully_handles_exceptions_when_determining_whether_to_sample_the_request(): void
+    {
+        $this->core->config['sampling'] = [];
+        $exceptions = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
+            $exceptions[] = $e;
+        });
+        $handler = new HttpKernelResolvedHandler($this->core);
+        $kernel = $this->app[ConsoleKernel::class];
+
+        $this->assertTrue($this->core->sample);
+
+        $handler($kernel, $this->app);
+
+        $this->assertFalse($this->core->sample);
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Undefined array key "requests"', $exceptions[0]->getMessage());
     }
 }

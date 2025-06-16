@@ -80,10 +80,6 @@ final class Core
             return $this;
         }
 
-        if (! $this->potentiallySampling()) {
-            return $this;
-        }
-
         try {
             $this->ingest->digest();
         } catch (Throwable $e) {

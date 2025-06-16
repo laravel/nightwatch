@@ -80,7 +80,7 @@ final class Ingest implements IngestContract
         if ($this->shouldDigest) {
             $this->transmit($this->buffer->pull());
         } else {
-            $this->buffer->flush();
+            $this->flush();
         }
     }
 

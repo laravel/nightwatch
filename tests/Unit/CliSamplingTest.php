@@ -172,8 +172,8 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureCommandSampling();
-            if ($this->core->shouldSample) {
+            $this->core->configureSampling('commands');
+            if ($this->core->sample) {
                 $sampled++;
             }
         }
@@ -184,8 +184,8 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureCommandSampling();
-            if ($this->core->shouldSample) {
+            $this->core->configureSampling('commands');
+            if ($this->core->sample) {
                 $sampled++;
             }
         }
@@ -196,8 +196,8 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureCommandSampling();
-            if ($this->core->shouldSample) {
+            $this->core->configureSampling('commands');
+            if ($this->core->sample) {
                 $sampled++;
             }
         }
@@ -208,8 +208,8 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureCommandSampling();
-            if ($this->core->shouldSample) {
+            $this->core->configureSampling('commands');
+            if ($this->core->sample) {
                 $sampled++;
             }
         }
@@ -226,7 +226,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureCommandSampling();
+            $this->core->configureSampling('commands');
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -239,7 +239,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureCommandSampling();
+            $this->core->configureSampling('commands');
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -252,7 +252,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureCommandSampling();
+            $this->core->configureSampling('commands');
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -265,7 +265,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureCommandSampling();
+            $this->core->configureSampling('commands');
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -278,7 +278,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureCommandSampling();
+            $this->core->configureSampling('commands');
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -359,7 +359,7 @@ class CliSamplingTest extends TestCase
 
     public function test_it_samples_preparing_for_command(): void
     {
-        $this->core->shouldSample = false;
+        $this->core->sample = false;
         $this->core->shouldSampleOnException = false;
 
         $this->core->executionState->name = 'previous';
@@ -370,7 +370,7 @@ class CliSamplingTest extends TestCase
         $this->assertSame('previous', $this->core->executionState->name);
         $this->assertSame('previous', $this->core->executionState->executionPreview);
 
-        $this->core->shouldSample = true;
+        $this->core->sample = true;
 
         $this->core->prepareForCommand('current');
 
@@ -380,7 +380,7 @@ class CliSamplingTest extends TestCase
 
     public function test_it_prepares_for_command_when_not_sampling_unless_exception_occurs(): void
     {
-        $this->core->shouldSample = false;
+        $this->core->sample = false;
         $this->core->config['sampling']['exceptions'] = 1.0;
 
         $this->core->executionState->name = 'previous';
@@ -398,7 +398,7 @@ class CliSamplingTest extends TestCase
             return 0;
         });
         $this->core->config['sampling']['commands'] = 0;
-        $this->core->configureCommandSampling();
+        $this->core->configureSampling('commands');
 
         // bootstrap the test to ensure everything needed is in place, such as artisan
         Artisan::handle($input = new StringInput('app:build'));
@@ -411,7 +411,7 @@ class CliSamplingTest extends TestCase
         $this->assertSame('[]', $this->core->ingest->buffer->pull()->rawPayload());
 
         $this->core->config['sampling']['commands'] = 1.0;
-        $this->core->configureCommandSampling();
+        $this->core->configureSampling('commands');
 
         for ($i = 0; $i < 10; $i++) {
             $this->core->prepareForCommand('app:build');
@@ -427,7 +427,7 @@ class CliSamplingTest extends TestCase
     {
         $ingest = $this->fakeIngest();
         $this->core->config['sampling']['commands'] = 0;
-        $this->core->configureCommandSampling();
+        $this->core->configureSampling('commands');
         $this->core->config['sampling']['exceptions'] = 1.0;
         Artisan::command('app:build', function () {
             report(new RuntimeException('Whoops!'));

@@ -122,10 +122,10 @@ class GlobalMiddlewareTest extends TestCase
             });
         };
 
-        $this->assertTrue($this->core->shouldSample);
+        $this->assertTrue($this->core->sample);
         $response = $middleware->handle($request, $next);
 
-        $this->assertFalse($this->core->shouldSample);
+        $this->assertFalse($this->core->sample);
         $this->assertCount(1, $exceptions);
         $this->assertSame('Undefined array key "requests"', $exceptions[0]->getMessage());
     }
