@@ -42,6 +42,7 @@ use function array_shift;
 use function array_unshift;
 use function debug_backtrace;
 use function memory_reset_peak_usage;
+use function preg_match;
 use function random_int;
 
 /**
@@ -59,6 +60,13 @@ trait CapturesState
      */
     public bool $shouldSampleOnException = true;
 
+    /**
+     * @internal
+     *
+     * @var array<string, string>
+     */
+    public array $urlBasedSampleRates = [];
+
     private bool $waitingForJob = false;
 
     /**
@@ -68,15 +76,39 @@ trait CapturesState
 
     /**
      * @internal
-     *
-     * @param  'requests'|'commands'  $by
      */
-    public function configureSampling(string $by): void
+    public function configureRequestSampling(Request $request): void
+    {
+        // TODO should this use the full URL or just the path? Pulse uses the host + path only.
+        $url = $request->fullUrl();
+
+        foreach ($this->urlBasedSampleRates as $pattern => $rate) {
+            if (preg_match($pattern, $url, $matches) !== 1) {
+                continue;
+            }
+
+            $this->configureSampling($rate);
+
+            return;
+        }
+
+        $this->configureSampling($this->config['sampling']['requests']);
+    }
+
+    /**
+     * @internal
+     */
+    public function configureCommandSampling(): void
+    {
+        $this->configureSampling($this->config['sampling']['commands']);
+    }
+
+    private function configureSampling(float $rate): void
     {
         $sampleFloat = random_int(0, PHP_INT_MAX) / PHP_INT_MAX;
 
         $this->ingest->shouldDigest(
-            $this->shouldSample = $sampleFloat <= $this->config['sampling'][$by]
+            $this->shouldSample = $sampleFloat <= ($rate ?? $this->config['sampling'][$by])
         );
 
         $this->shouldSampleOnException = $sampleFloat <= $this->config['sampling']['exceptions'];

@@ -51,7 +51,7 @@ class SamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('requests');
+            $this->core->configureRequestSampling(request());
             if ($this->core->shouldSample) {
                 $sampled++;
             }
@@ -63,7 +63,7 @@ class SamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('requests');
+            $this->core->configureRequestSampling(request());
             if ($this->core->shouldSample) {
                 $sampled++;
             }
@@ -75,7 +75,7 @@ class SamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('requests');
+            $this->core->configureRequestSampling(request());
             if ($this->core->shouldSample) {
                 $sampled++;
             }
@@ -87,7 +87,7 @@ class SamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('requests');
+            $this->core->configureRequestSampling(request());
             if ($this->core->shouldSample) {
                 $sampled++;
             }
@@ -100,7 +100,7 @@ class SamplingTest extends TestCase
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             DB::table('users')->get();
@@ -109,7 +109,7 @@ class SamplingTest extends TestCase
         $this->assertSame(0, $this->core->executionState->queries);
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             DB::table('users')->get();
@@ -153,7 +153,7 @@ class SamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('requests');
+            $this->core->configureRequestSampling(request());
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -166,7 +166,7 @@ class SamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('requests');
+            $this->core->configureRequestSampling(request());
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -179,7 +179,7 @@ class SamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('requests');
+            $this->core->configureRequestSampling(request());
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -192,7 +192,7 @@ class SamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('requests');
+            $this->core->configureRequestSampling(request());
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -205,7 +205,7 @@ class SamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('requests');
+            $this->core->configureRequestSampling(request());
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -291,7 +291,7 @@ class SamplingTest extends TestCase
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
@@ -300,7 +300,7 @@ class SamplingTest extends TestCase
         $this->assertSame(0, $this->core->executionState->notifications);
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
@@ -339,7 +339,7 @@ class SamplingTest extends TestCase
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             Mail::to('tim@laravel.com')->send(new MyMail);
@@ -348,7 +348,7 @@ class SamplingTest extends TestCase
         $this->assertSame(0, $this->core->executionState->mail);
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             Mail::to('tim@laravel.com')->send(new MyMail);
@@ -387,7 +387,7 @@ class SamplingTest extends TestCase
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             Cache::get('foo');
@@ -396,7 +396,7 @@ class SamplingTest extends TestCase
         $this->assertSame(0, $this->core->executionState->cacheEvents);
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             Cache::get('foo');
@@ -435,7 +435,7 @@ class SamplingTest extends TestCase
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             report('Whoops!');
@@ -444,7 +444,7 @@ class SamplingTest extends TestCase
         $this->assertSame(0, $this->core->executionState->exceptions);
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             report('Whoops!');
@@ -457,7 +457,7 @@ class SamplingTest extends TestCase
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             MyJob::dispatch();
@@ -466,7 +466,7 @@ class SamplingTest extends TestCase
         $this->assertSame(0, $this->core->executionState->jobsQueued);
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             MyJob::dispatch();
@@ -506,7 +506,7 @@ class SamplingTest extends TestCase
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         Http::fake([
             'https://nightwatch.laravel.com' => Http::response(status: 200),
@@ -519,7 +519,7 @@ class SamplingTest extends TestCase
         $this->assertSame(0, $this->core->executionState->outgoingRequests);
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             Http::get('https://nightwatch.laravel.com');
@@ -562,14 +562,14 @@ class SamplingTest extends TestCase
         $this->core->stage(ExecutionStage::Bootstrap);
         $this->core->config['sampling']['requests'] = 0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         $this->core->stage(ExecutionStage::Render);
 
         $this->assertSame(ExecutionStage::Bootstrap, $this->core->executionState->stage);
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         $this->core->stage(ExecutionStage::Render);
 
@@ -607,7 +607,7 @@ class SamplingTest extends TestCase
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
         $user = new GenericUser(['id' => 123, 'remember_token' => '']);
 
         Auth::login($user);
@@ -616,7 +616,7 @@ class SamplingTest extends TestCase
         $this->assertSame('', $this->core->executionState->user->id()->jsonSerialize());
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         Auth::login($user);
         Auth::logout();
@@ -682,7 +682,7 @@ class SamplingTest extends TestCase
     public function test_it_samples_user(): void
     {
         $this->core->config['sampling']['requests'] = 0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
         Auth::login(new GenericUser(['id' => 123, 'remember_token' => '']));
 
         for ($i = 0; $i < 10; $i++) {
@@ -692,7 +692,7 @@ class SamplingTest extends TestCase
         $this->assertSame('[]', $this->core->ingest->buffer->pull()->rawPayload());
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             $this->core->captureUser();
@@ -706,7 +706,7 @@ class SamplingTest extends TestCase
     public function test_it_samples_requests(): void
     {
         $this->core->config['sampling']['requests'] = 0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
         $request = Request::create('https://laravel.com');
         $response = new Response;
 
@@ -717,7 +717,7 @@ class SamplingTest extends TestCase
         $this->assertSame('[]', $this->core->ingest->buffer->pull()->rawPayload());
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             $this->core->request($request, $response);
@@ -761,7 +761,7 @@ class SamplingTest extends TestCase
     {
         $this->core->config['sampling']['requests'] = 0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             Log::channel('nightwatch')->info('Hello world');
@@ -770,7 +770,7 @@ class SamplingTest extends TestCase
         $this->assertSame(0, $this->core->executionState->logs);
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             Log::channel('nightwatch')->info('Hello world');
@@ -812,7 +812,7 @@ class SamplingTest extends TestCase
         $this->fakeIngest();
         $this->core->config['sampling']['requests'] = 0.0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
         $middleware = [];
         Route::get('/test', function () use (&$middleware): void {
             $middleware = request()->route()->middleware();
@@ -825,7 +825,7 @@ class SamplingTest extends TestCase
         }
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         for ($i = 0; $i < 10; $i++) {
             $this->get('test')->assertOk();
@@ -845,7 +845,7 @@ class SamplingTest extends TestCase
         $this->fakeIngest();
         $this->core->config['sampling']['requests'] = 0.0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
         Route::get('/test', function (): void {
             //
         });
@@ -855,7 +855,7 @@ class SamplingTest extends TestCase
         $this->assertSame('', $this->core->executionState->executionPreview);
 
         $this->core->config['sampling']['requests'] = 1.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
         $this->app->forgetScopedInstances();
 
         $this->get('test')->assertOk();
@@ -897,7 +897,7 @@ class SamplingTest extends TestCase
 
         $this->core->config['sampling']['requests'] = 0;
         $this->core->config['sampling']['exceptions'] = 0.0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
         $this->core->ingest->write(new User(
             timestamp: microtime(true),
             id: '123',
@@ -910,7 +910,7 @@ class SamplingTest extends TestCase
         $ingest->assertWrittenTimes(0);
 
         $this->core->config['sampling']['requests'] = 1;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
         $this->core->ingest->write(new User(
             timestamp: microtime(true),
             id: '123',
@@ -1014,14 +1014,14 @@ class SamplingTest extends TestCase
     public function test_it_adds_context_for_job_sampling(): void
     {
         $this->core->config['sampling']['requests'] = 0;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         $shouldSample = Compatibility::getHiddenContext('nightwatch_should_sample');
 
         $this->assertFalse($shouldSample);
 
         $this->core->config['sampling']['requests'] = 1;
-        $this->core->configureSampling('requests');
+        $this->core->configureRequestSampling(request());
 
         $shouldSample = Compatibility::getHiddenContext('nightwatch_should_sample');
 
@@ -1096,5 +1096,28 @@ class SamplingTest extends TestCase
         });
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('request:0.exception_preview', 'Whoops!');
+    }
+
+    public function test_it_can_sample_routes(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', fn () => 'ok');
+        Route::get('/users/{user}', fn () => 'ok');
+        $this->core->urlBasedSampleRates = [
+            '#/users/1#' => 0.0,
+            '#/users#' => 1.0,
+        ];
+
+        $response = $this->get('/users/1');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(0);
+
+        $this->app->forgetScopedInstances();
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
     }
 }

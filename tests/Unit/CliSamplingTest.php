@@ -172,7 +172,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('commands');
+            $this->core->configureCommandSampling();
             if ($this->core->shouldSample) {
                 $sampled++;
             }
@@ -184,7 +184,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('commands');
+            $this->core->configureCommandSampling();
             if ($this->core->shouldSample) {
                 $sampled++;
             }
@@ -196,7 +196,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('commands');
+            $this->core->configureCommandSampling();
             if ($this->core->shouldSample) {
                 $sampled++;
             }
@@ -208,7 +208,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('commands');
+            $this->core->configureCommandSampling();
             if ($this->core->shouldSample) {
                 $sampled++;
             }
@@ -226,7 +226,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('commands');
+            $this->core->configureCommandSampling();
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -239,7 +239,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('commands');
+            $this->core->configureCommandSampling();
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -252,7 +252,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('commands');
+            $this->core->configureCommandSampling();
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -265,7 +265,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('commands');
+            $this->core->configureCommandSampling();
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -278,7 +278,7 @@ class CliSamplingTest extends TestCase
         $sampled = 0;
 
         for ($i = 0; $i < 1000; $i++) {
-            $this->core->configureSampling('commands');
+            $this->core->configureCommandSampling();
 
             if ($this->core->shouldSampleOnException) {
                 $sampled++;
@@ -398,7 +398,7 @@ class CliSamplingTest extends TestCase
             return 0;
         });
         $this->core->config['sampling']['commands'] = 0;
-        $this->core->configureSampling('commands');
+        $this->core->configureCommandSampling();
 
         // bootstrap the test to ensure everything needed is in place, such as artisan
         Artisan::handle($input = new StringInput('app:build'));
@@ -411,7 +411,7 @@ class CliSamplingTest extends TestCase
         $this->assertSame('[]', $this->core->ingest->buffer->pull()->rawPayload());
 
         $this->core->config['sampling']['commands'] = 1.0;
-        $this->core->configureSampling('commands');
+        $this->core->configureCommandSampling();
 
         for ($i = 0; $i < 10; $i++) {
             $this->core->prepareForCommand('app:build');
@@ -427,7 +427,7 @@ class CliSamplingTest extends TestCase
     {
         $ingest = $this->fakeIngest();
         $this->core->config['sampling']['commands'] = 0;
-        $this->core->configureSampling('commands');
+        $this->core->configureCommandSampling();
         $this->core->config['sampling']['exceptions'] = 1.0;
         Artisan::command('app:build', function () {
             report(new RuntimeException('Whoops!'));

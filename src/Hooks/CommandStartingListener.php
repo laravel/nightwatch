@@ -111,7 +111,7 @@ final class CommandStartingListener
         }
 
         try {
-            $this->nightwatch->configureSampling('commands');
+            $this->nightwatch->configureCommandSampling();
         } catch (Throwable $e) {
             $this->nightwatch->shouldSample = false;
 
