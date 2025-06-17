@@ -29,7 +29,7 @@ final class PreparingResponseListener
                 $this->nightwatch->stage(ExecutionStage::Render);
             }
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

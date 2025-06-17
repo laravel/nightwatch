@@ -28,7 +28,7 @@ final class JobAttemptListener
         try {
             $this->nightwatch->jobAttempt($event);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

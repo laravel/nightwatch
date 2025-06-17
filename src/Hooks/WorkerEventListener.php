@@ -33,7 +33,7 @@ final class WorkerEventListener
                 JobProcessing::class => $this->nightwatch->prepareForJob($event->job),
             };
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -674,6 +675,20 @@ class ExceptionSensorTest extends TestCase
 
             return true;
         });
+    }
+
+    public function test_it_reports_internally_reported_exceptions_as_handled()
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {
+            Cache::get(null);
+        });
+
+        $response = $this->get('/test');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.handled', true);
     }
 }
 

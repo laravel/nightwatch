@@ -41,7 +41,7 @@ final class GuzzleMiddleware
             try {
                 $startMicrotime = $this->nightwatch->clock->microtime();
             } catch (Throwable $e) {
-                $this->nightwatch->report($e);
+                $this->nightwatch->report($e, handled: true);
 
                 return $handler($request, $options);
             }
@@ -55,7 +55,7 @@ final class GuzzleMiddleware
                         $request, $response,
                     );
                 } catch (Throwable $e) {
-                    $this->nightwatch->report($e);
+                    $this->nightwatch->report($e, handled: true);
                 }
 
                 return $response;

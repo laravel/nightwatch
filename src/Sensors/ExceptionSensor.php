@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\Ingest;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\State\CommandState;
@@ -39,7 +40,7 @@ final class ExceptionSensor
         //
     }
 
-    public function __invoke(Throwable $e): void
+    public function __invoke(Throwable $e, ?bool $handled): void
     {
         $nowMicrotime = $this->clock->microtime();
         [$file, $line] = $this->location->forException($e);
@@ -52,7 +53,7 @@ final class ExceptionSensor
             },
         };
 
-        $handled = $this->wasManuallyReported($normalizedException);
+        $handled ??= $this->wasManuallyReported($normalizedException);
 
         $this->executionState->exceptions++;
         if (! $handled) {

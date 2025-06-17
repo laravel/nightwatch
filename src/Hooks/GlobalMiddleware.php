@@ -40,7 +40,7 @@ final class GlobalMiddleware
         try {
             $this->nightwatch->captureRequestPreview($request);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
 
         return $next($request);
@@ -57,7 +57,7 @@ final class GlobalMiddleware
         try {
             $this->nightwatch->stage(ExecutionStage::Terminating);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

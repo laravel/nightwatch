@@ -31,19 +31,19 @@ final class RequestLifecycleIsLongerThanHandler
         try {
             $this->nightwatch->stage(ExecutionStage::End);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
 
         try {
             $this->nightwatch->captureUser();
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
 
         try {
             $this->nightwatch->request($request, $response);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
 
         $this->nightwatch->digest();

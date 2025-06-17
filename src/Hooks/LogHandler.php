@@ -39,7 +39,7 @@ final class LogHandler implements HandlerInterface
 
             return true;
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
 
             return false;
         }
@@ -55,7 +55,7 @@ final class LogHandler implements HandlerInterface
                 $this->handle($record);
             }
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 

@@ -32,7 +32,7 @@ final class HttpClientFactoryResolvedHandler
              */
             $factory->globalMiddleware($this->nightwatch->guzzleMiddleware());
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

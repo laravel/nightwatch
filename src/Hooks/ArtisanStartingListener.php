@@ -26,7 +26,7 @@ final class ArtisanStartingListener
         try {
             $this->nightwatch->captureArtisan($event->artisan);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }
