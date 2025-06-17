@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\State\RequestState;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;

@@ -114,11 +114,11 @@ class HttpKernelResolvedHandlerTest extends TestCase
         $handler = new HttpKernelResolvedHandler($this->core);
         $kernel = $this->app[ConsoleKernel::class];
 
-        $this->assertTrue($this->core->sample);
+        $this->assertTrue($this->core->sampling());
 
         $handler($kernel, $this->app);
 
-        $this->assertFalse($this->core->sample);
+        $this->assertFalse($this->core->sampling());
         $this->assertCount(1, $exceptions);
         $this->assertSame('Undefined array key "requests"', $exceptions[0]->getMessage());
     }

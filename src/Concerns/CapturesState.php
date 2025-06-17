@@ -49,7 +49,7 @@ use function random_int;
  */
 trait CapturesState
 {
-    public bool $sample = true;
+    private bool $sampling = true;
 
     private bool $waitingForJob = false;
 
@@ -61,13 +61,15 @@ trait CapturesState
     /**
      * @api
      */
-    public function sample($bool = true): void
+    public function sample(float $rate = 1.0): void
     {
-        $this->sample = $bool;
+        $sample = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $rate;
 
-        $this->ingest->shouldDigest($bool);
+        $this->sampling = $sample;
 
-        Compatibility::addHiddenContext('nightwatch_should_sample', $bool);
+        $this->ingest->shouldDigest($sample);
+
+        Compatibility::addHiddenContext('nightwatch_should_sample', $sample);
     }
 
     /**
@@ -75,7 +77,15 @@ trait CapturesState
      */
     public function dontSample(): void
     {
-        $this->sample(false);
+        $this->sample(rate: 0);
+    }
+
+    /**
+     * @api
+     */
+    public function sampling(): bool
+    {
+        return $this->sampling;
     }
 
     /**
@@ -85,9 +95,7 @@ trait CapturesState
      */
     public function configureSampling(string $by): void
     {
-        $this->sample(
-            (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $this->config['sampling'][$by]
-        );
+        $this->sample($this->config['sampling'][$by]);
     }
 
     /**
@@ -99,12 +107,9 @@ trait CapturesState
             return;
         }
 
-        // ??
-        // if ($this->shouldSampleOnException) {
-        //     $this->ingest->shouldDigest(
-        //         $this->sample = true
-        //     );
-        // }
+        if (! $this->sampling) {
+            $this->sample($this->config['sampling']['exceptions']);
+        }
 
         try {
             $this->sensor->exception($e);

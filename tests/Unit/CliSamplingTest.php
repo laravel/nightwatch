@@ -173,7 +173,7 @@ class CliSamplingTest extends TestCase
 
         for ($i = 0; $i < 1000; $i++) {
             $this->core->configureSampling('commands');
-            if ($this->core->sample) {
+            if ($this->core->sampling()) {
                 $sampled++;
             }
         }
@@ -185,7 +185,7 @@ class CliSamplingTest extends TestCase
 
         for ($i = 0; $i < 1000; $i++) {
             $this->core->configureSampling('commands');
-            if ($this->core->sample) {
+            if ($this->core->sampling()) {
                 $sampled++;
             }
         }
@@ -197,7 +197,7 @@ class CliSamplingTest extends TestCase
 
         for ($i = 0; $i < 1000; $i++) {
             $this->core->configureSampling('commands');
-            if ($this->core->sample) {
+            if ($this->core->sampling()) {
                 $sampled++;
             }
         }
@@ -209,7 +209,7 @@ class CliSamplingTest extends TestCase
 
         for ($i = 0; $i < 1000; $i++) {
             $this->core->configureSampling('commands');
-            if ($this->core->sample) {
+            if ($this->core->sampling()) {
                 $sampled++;
             }
         }
@@ -359,7 +359,7 @@ class CliSamplingTest extends TestCase
 
     public function test_it_samples_preparing_for_command(): void
     {
-        $this->core->sample = false;
+        $this->core->sampling(false);
         $this->core->shouldSampleOnException = false;
 
         $this->core->executionState->name = 'previous';
@@ -370,7 +370,7 @@ class CliSamplingTest extends TestCase
         $this->assertSame('previous', $this->core->executionState->name);
         $this->assertSame('previous', $this->core->executionState->executionPreview);
 
-        $this->core->sample = true;
+        $this->core->sampling(true);
 
         $this->core->prepareForCommand('current');
 
@@ -380,7 +380,7 @@ class CliSamplingTest extends TestCase
 
     public function test_it_prepares_for_command_when_not_sampling_unless_exception_occurs(): void
     {
-        $this->core->sample = false;
+        $this->core->sampling(false);
         $this->core->config['sampling']['exceptions'] = 1.0;
 
         $this->core->executionState->name = 'previous';
