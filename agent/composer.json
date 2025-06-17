@@ -18,7 +18,7 @@
         }
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^8.1",
         "ext-zlib": "*",
         "psr/http-message": "^1.1",
         "react/event-loop": "^1.5",
