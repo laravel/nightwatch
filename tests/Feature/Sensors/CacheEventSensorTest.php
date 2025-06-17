@@ -534,4 +534,24 @@ class CacheEventSensorTest extends TestCase
             ],
         ]);
     }
+
+    public function test_it_can_capture_null_cache_keys(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/tests', function () {
+            Cache::get(null);
+        });
+
+        $response = $this->get('/tests');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($write) {
+            $this->assertCount(2, $write);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', '');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/tests');
+    }
 }
