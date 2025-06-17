@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use MongoDB\Laravel\Connection as MongoDbConnection;
+use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -318,5 +319,17 @@ class QuerySensorTest extends TestCase
             '😎',
             $ingest->latestWriteAsString(),
         );
+    }
+
+    public function test_it_can_capture_null_connection_name()
+    {
+        $ingest = $this->fakeIngest();
+        $connection = new Connection(new PDO('sqlite::memory:'), 'database', 'prefix', []);
+
+        Event::dispatch(new QueryExecuted('select * from users', [], 1, $connection));
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.connection', '');
     }
 }
