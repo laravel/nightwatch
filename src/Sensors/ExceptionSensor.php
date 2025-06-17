@@ -5,7 +5,6 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Contracts\Ingest;
-use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\State\CommandState;
