@@ -55,7 +55,7 @@ final class SensorManager
     public $cacheEventSensor;
 
     /**
-     * @var (callable(Throwable): void)|null
+     * @var (callable(Throwable, null|bool): void)|null
      */
     public $exceptionSensor;
 
