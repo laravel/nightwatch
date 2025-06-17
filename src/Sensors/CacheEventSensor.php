@@ -100,7 +100,7 @@ final class CacheEventSensor
             execution_stage: $this->executionState->stage,
             user: $this->executionState->user->id(),
             store: $storeName,
-            key: $event->key,
+            key: $event->key ?? '', // @phpstan-ignore nullCoalesce.property
             type: $type,
             duration: $duration,
             ttl: in_array($event::class, [KeyWritten::class, KeyWriteFailed::class], true) ? ($event->seconds ?? 0) : 0,
