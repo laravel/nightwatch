@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Tests\Fakes\DummyJob;
 use Tests\TestCase;
 
 class FilteringTest extends TestCase
@@ -117,5 +118,24 @@ class FilteringTest extends TestCase
         }
 
         $this->assertSame(10, $this->core->executionState->outgoingRequests);
+    }
+
+    public function test_it_can_ignore_queued_job(): void
+    {
+        $this->core->config['filtering']['ignore_queued_jobs'] = true;
+
+        for ($i = 0; $i < 10; $i++) {
+            DummyJob::dispatch();
+        }
+
+        $this->assertSame(0, $this->core->executionState->queuedJobs ?? 0);
+
+        $this->core->config['filtering']['ignore_queued_jobs'] = false;
+
+        for ($i = 0; $i < 10; $i++) {
+            DummyJob::dispatch();
+        }
+
+        $this->assertSame(10, $this->core->executionState->queuedJobs ?? 10);
     }
 }

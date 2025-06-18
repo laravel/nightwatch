@@ -158,6 +158,10 @@ trait CapturesState
             return;
         }
 
+        if ($this->config['filtering']['ignore_queued_jobs']) {
+            return;
+        }
+
         $this->sensor->queuedJob($event);
     }
 

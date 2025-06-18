@@ -99,6 +99,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      *         ignore_notifications?: bool,
      *         ignore_outgoing_requests?: bool,
      *         ignore_queries?: bool,
+     *         ignore_queued_jobs?: bool,
      *     },
      *     token?: string,
      *     deployment?: string,
@@ -245,6 +246,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                     'ignore_notifications' => (bool) ($this->nightwatchConfig['filtering']['ignore_notifications'] ?? false),
                     'ignore_outgoing_requests' => (bool) ($this->nightwatchConfig['filtering']['ignore_outgoing_requests'] ?? false),
                     'ignore_queries' => (bool) ($this->nightwatchConfig['filtering']['ignore_queries'] ?? false),
+                    'ignore_queued_jobs' => (bool) ($this->nightwatchConfig['filtering']['ignore_queued_jobs'] ?? false),
                 ],
             ],
         ));
