@@ -39,6 +39,25 @@ class FilteringTest extends TestCase
         $this->assertSame(10, $this->core->executionState->queries);
     }
 
+    public function test_it_can_ignore_jobs(): void
+    {
+        $this->core->config['filtering']['ignore_jobs'] = true;
+
+        for ($i = 0; $i < 10; $i++) {
+            DB::table('users')->get();
+        }
+
+        $this->assertSame(0, $this->core->executionState->jobsQueued);;
+
+        $this->core->config['filtering']['ignore_jobs'] = false;
+
+        for ($i = 0; $i < 10; $i++) {
+            DB::table('users')->get();
+        }
+
+        $this->assertSame(10, $this->core->executionState->jobsQueued);
+    }
+
     public function test_it_can_ignore_notifications(): void
     {
         $this->core->config['filtering']['ignore_notifications'] = true;
