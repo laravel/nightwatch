@@ -18,6 +18,7 @@ return [
         'ignore_notifications' => env('NIGHTWATCH_IGNORE_NOTIFICATIONS', false),
         'ignore_outgoing_requests' => env('NIGHTWATCH_IGNORE_OUTGOING_REQUESTS', false),
         'ignore_queries' => env('NIGHTWATCH_IGNORE_QUERIES', false),
+        'ignore_jobs' => env('NIGHTWATCH_IGNORE_JOBS', false),
     ],
 
     'ingest' => [

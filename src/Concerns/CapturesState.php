@@ -158,6 +158,10 @@ trait CapturesState
             return;
         }
 
+        if ($this->config['filtering']['ignore_jobs']) {
+            return;
+        }
+
         $this->sensor->queuedJob($event);
     }
 
@@ -278,6 +282,10 @@ trait CapturesState
             return;
         }
 
+        if ($this->config['filtering']['ignore_jobs']) {
+            return;
+        }
+
         $this->sensor->jobAttempt($event);
     }
 
@@ -366,6 +374,10 @@ trait CapturesState
         $this->shouldSampleOnException = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $this->config['sampling']['exceptions'];
 
         if (! $this->potentiallySampling()) {
+            return;
+        }
+
+        if ($this->config['filtering']['ignore_jobs']) {
             return;
         }
 
