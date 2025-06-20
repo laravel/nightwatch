@@ -39,7 +39,7 @@ final class GlobalMiddleware
         $this->hasHandledRequest = true;
 
         try {
-            $this->nightwatch->configureSampling('requests');
+            $this->nightwatch->configureRequestSampling();
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }

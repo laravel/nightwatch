@@ -63,6 +63,10 @@ trait CapturesState
      */
     public function sample(float $rate = 1.0): void
     {
+        if ($value < 0 || $value > 1) {
+            $rate = 0.0;
+        }
+
         $sample = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $rate;
 
         $this->sampling = $sample;
@@ -90,12 +94,18 @@ trait CapturesState
 
     /**
      * @internal
-     *
-     * @param  'requests'|'commands'  $by
      */
-    public function configureSampling(string $by): void
+    public function configureRequestSampling(): void
     {
-        $this->sample($this->config['sampling'][$by]);
+        $this->sample($this->config['sampling']['requests']);
+    }
+
+    /**
+     * @internal
+     */
+    public function configureCommandSampling(): void
+    {
+        $this->sample($this->config['sampling']['commands']);
     }
 
     /**
@@ -107,6 +117,7 @@ trait CapturesState
             return;
         }
 
+        // TODO: test
         if (! $this->sampling) {
             $this->sample($this->config['sampling']['exceptions']);
         }

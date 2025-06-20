@@ -110,7 +110,7 @@ final class CommandStartingListener
             return;
         }
 
-        $this->nightwatch->configureSampling('commands');
+        $this->nightwatch->configureCommandSampling();
 
         $this->nightwatch->prepareForCommand($event->command);
 
