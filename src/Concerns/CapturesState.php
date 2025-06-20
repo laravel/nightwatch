@@ -95,7 +95,7 @@ trait CapturesState
     /**
      * @internal
      */
-    public function configureRequestSampling(): void
+    public function configureGlobalRequestSampling(): void
     {
         $this->sample($this->config['sampling']['requests']);
     }
@@ -103,7 +103,7 @@ trait CapturesState
     /**
      * @internal
      */
-    public function configureCommandSampling(): void
+    public function configureGlobalCommandSampling(): void
     {
         $this->sample($this->config['sampling']['commands']);
     }
@@ -117,7 +117,6 @@ trait CapturesState
             return;
         }
 
-        // TODO: test
         if (! $this->sampling) {
             $this->sample($this->config['sampling']['exceptions']);
         }
