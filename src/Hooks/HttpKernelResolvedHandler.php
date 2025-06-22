@@ -32,6 +32,12 @@ final class HttpKernelResolvedHandler
         }
 
         try {
+            $this->nightwatch->configureGlobalRequestSampling();
+        } catch (Throwable $e) {
+            Nightwatch::unrecoverableExceptionOccurred($e);
+        }
+
+        try {
             /**
              * @see \Laravel\Nightwatch\ExecutionStage::End
              * @see \Laravel\Nightwatch\Records\Request
