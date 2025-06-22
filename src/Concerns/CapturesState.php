@@ -326,7 +326,7 @@ trait CapturesState
     public function prepareForJob(Job $job): void
     {
         $this->sample(
-            (bool) Compatibility::getHiddenContext('nightwatch_should_sample', true)
+            Compatibility::getHiddenContext('nightwatch_should_sample', true) ? 1.0 : 0.0
         );
 
         $this->waitingForJob = false;

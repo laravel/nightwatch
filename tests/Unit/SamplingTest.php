@@ -28,7 +28,7 @@ class SamplingTest extends TestCase
         Route::get('/users', fn () => []);
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertOk();
             $this->app->forgetScopedInstances();
         }
 
@@ -72,7 +72,7 @@ class SamplingTest extends TestCase
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(100, $writes, 8);
+        $this->assertSame(100, $writes);
         $this->assertCount(0, $this->core->ingest->buffer);
     }
 
