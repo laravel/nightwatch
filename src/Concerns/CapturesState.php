@@ -63,7 +63,7 @@ trait CapturesState
      */
     public function sample(float $rate = 1.0): void
     {
-        if ($value < 0 || $value > 1) {
+        if ($rate < 0 || $rate > 1) {
             $rate = 0.0;
         }
 

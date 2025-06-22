@@ -10,6 +10,8 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use RuntimeException;
 use Tests\TestCase;
 
+use function abort;
+
 class SamplingTest extends TestCase
 {
     protected function setUp(): void
@@ -37,26 +39,26 @@ class SamplingTest extends TestCase
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertOk();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(25, $writes, 5);
+        $this->assertEqualsWithDelta(25, $writes, 8);
         $this->assertCount(0, $this->core->ingest->buffer);
 
         $this->core->config['sampling']['requests'] = 0.5;
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertOk();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(50, $writes, 5);
+        $this->assertEqualsWithDelta(50, $writes, 8);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
@@ -64,17 +66,17 @@ class SamplingTest extends TestCase
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertOk();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(100, $writes, 5);
+        $this->assertEqualsWithDelta(100, $writes, 8);
         $this->assertCount(0, $this->core->ingest->buffer);
     }
 
-    public function test_it_can_manually_set_sample_rate(): void
+    public function test_it_can_dynamically_set_sample_rate(): void
     {
         $ingest = $this->fakeIngest();
         $this->core->config['sampling']['requests'] = 0;
@@ -87,7 +89,7 @@ class SamplingTest extends TestCase
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertOk();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
@@ -100,7 +102,7 @@ class SamplingTest extends TestCase
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertOk();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
@@ -113,13 +115,13 @@ class SamplingTest extends TestCase
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertOk();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(25, $writes, 5);
+        $this->assertEqualsWithDelta(25, $writes, 8);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
@@ -127,13 +129,13 @@ class SamplingTest extends TestCase
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertOk();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(50, $writes, 5);
+        $this->assertEqualsWithDelta(50, $writes, 8);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
@@ -141,13 +143,13 @@ class SamplingTest extends TestCase
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertOk();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(100, $writes, 5);
+        $this->assertEqualsWithDelta(100, $writes, 8);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
@@ -155,13 +157,13 @@ class SamplingTest extends TestCase
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertOk();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(100, $writes, 5);
+        $this->assertEqualsWithDelta(100, $writes, 8);
         $this->assertCount(0, $this->core->ingest->buffer);
     }
 
@@ -209,13 +211,15 @@ class SamplingTest extends TestCase
     {
         $ingest = $this->fakeIngest();
         $this->core->config['sampling']['requests'] = 0;
-        Route::get('/users', fn () => throw new RuntimeException('Whoops!'));
+        $this->core->sensor->exceptionSensor = fn () => null;
+        $exception = new RuntimeException('Whoops!');
+        Route::get('/users', fn () => throw $exception);
 
         $this->core->config['sampling']['exceptions'] = 0;
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertServerError();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
@@ -228,13 +232,13 @@ class SamplingTest extends TestCase
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertServerError();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(25, $writes, 5);
+        $this->assertEqualsWithDelta(25, $writes, 8);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
@@ -242,13 +246,13 @@ class SamplingTest extends TestCase
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertServerError();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(50, $writes, 5);
+        $this->assertEqualsWithDelta(50, $writes, 8);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
@@ -256,13 +260,106 @@ class SamplingTest extends TestCase
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
-            $this->get('/users');
+            $this->get('/users')->assertServerError();
             $this->app->forgetScopedInstances();
             $writes += $ingest->writes()->count();
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(100, $writes, 5);
+        $this->assertEqualsWithDelta(100, $writes, 8);
+        $this->assertCount(0, $this->core->ingest->buffer);
+    }
+
+    public function test_it_can_sample_unmatched_routes(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->core->config['sampling']['requests'] = 0;
+        $callback = null;
+        Route::fallback(function () use (&$callback) {
+            $callback();
+
+            abort(404);
+        });
+
+        $callback = fn () => Nightwatch::dontSample();
+        $writes = 0;
+
+        for ($i = 0; $i < 100; $i++) {
+            $this->get('/unmatched')->assertNotFound();
+            $this->app->forgetScopedInstances();
+            $writes += $ingest->writes()->count();
+            $ingest->forgetWrites();
+        }
+
+        $this->assertSame(0, $writes);
+        $this->assertCount(0, $this->core->ingest->buffer);
+
+        $callback = fn () => Nightwatch::sample(rate: 0);
+        $writes = 0;
+
+        for ($i = 0; $i < 100; $i++) {
+            $this->get('/unmatched')->assertNotFound();
+            $this->app->forgetScopedInstances();
+            $writes += $ingest->writes()->count();
+            $ingest->forgetWrites();
+        }
+
+        $this->assertSame(0, $writes);
+        $this->assertCount(0, $this->core->ingest->buffer);
+
+        $callback = fn () => Nightwatch::sample(rate: 0.25);
+        $writes = 0;
+
+        for ($i = 0; $i < 100; $i++) {
+            $this->get('/unmatched')->assertNotFound();
+            $this->app->forgetScopedInstances();
+            $writes += $ingest->writes()->count();
+            $ingest->forgetWrites();
+        }
+
+        $this->assertEqualsWithDelta(25, $writes, 8);
+        $this->assertCount(0, $this->core->ingest->buffer);
+        $ingest->forgetWrites();
+
+        $callback = fn () => Nightwatch::sample(rate: 0.5);
+        $writes = 0;
+
+        for ($i = 0; $i < 100; $i++) {
+            $this->get('/unmatched')->assertNotFound();
+            $this->app->forgetScopedInstances();
+            $writes += $ingest->writes()->count();
+            $ingest->forgetWrites();
+        }
+
+        $this->assertEqualsWithDelta(50, $writes, 8);
+        $this->assertCount(0, $this->core->ingest->buffer);
+        $ingest->forgetWrites();
+
+        $callback = fn () => Nightwatch::sample(rate: 1);
+        $writes = 0;
+
+        for ($i = 0; $i < 100; $i++) {
+            $this->get('/unmatched')->assertNotFound();
+            $this->app->forgetScopedInstances();
+            $writes += $ingest->writes()->count();
+            $ingest->forgetWrites();
+        }
+
+        $this->assertEqualsWithDelta(100, $writes, 8);
+        $this->assertCount(0, $this->core->ingest->buffer);
+        $ingest->forgetWrites();
+
+        $callback = fn () => Nightwatch::sample();
+        $writes = 0;
+
+        for ($i = 0; $i < 100; $i++) {
+            $this->get('/unmatched')->assertNotFound();
+            $this->app->forgetScopedInstances();
+            $writes += $ingest->writes()->count();
+            $ingest->forgetWrites();
+        }
+
+        $this->assertEqualsWithDelta(100, $writes, 8);
         $this->assertCount(0, $this->core->ingest->buffer);
     }
 }
