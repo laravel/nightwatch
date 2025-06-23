@@ -8,6 +8,7 @@ use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use RuntimeException;
 use Tests\TestCase;
@@ -201,12 +202,20 @@ class SamplingTest extends TestCase
         $this->core->dontSample();
         MyJob::dispatch();
 
-        $this->assertStringContainsString('"nightwatch_should_sample":"b:0;"', DB::table('jobs')->value('payload'));
+        if (Compatibility::$contextExists) {
+            $this->assertStringContainsString('"nightwatch_should_sample":false', DB::table('jobs')->value('payload'));
+        } else {
+            $this->assertStringContainsString('"nightwatch_should_sample":"b:0;"', DB::table('jobs')->value('payload'));
+        }
         DB::table('jobs')->truncate();
 
         $this->core->sample();
         MyJob::dispatch();
-        $this->assertStringContainsString('"nightwatch_should_sample":"b:1;"', DB::table('jobs')->value('payload'));
+        if (Compatibility::$contextExists) {
+            $this->assertStringContainsString('"nightwatch_should_sample":true', DB::table('jobs')->value('payload'));
+        } else {
+            $this->assertStringContainsString('"nightwatch_should_sample":"b:1;"', DB::table('jobs')->value('payload'));
+        }
     }
 
     public function test_it_samples_on_exception(): void
