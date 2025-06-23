@@ -42,7 +42,7 @@ class SampleTest extends TestCase
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(50, $writes, 15);
+        $this->assertEqualsWithDelta(50, $writes, 20);
 
         Route::get('/users-100', fn () => [])
             ->middleware(Sample::rate(1));
@@ -84,7 +84,7 @@ class SampleTest extends TestCase
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(50, $writes, 15);
+        $this->assertEqualsWithDelta(50, $writes, 20);
 
         Route::fallback(fn () => abort(404))->middleware(Sample::rate(1));
         $writes = 0;

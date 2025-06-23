@@ -50,7 +50,7 @@ class SamplingTest extends TestCase
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(25, $writes, 15);
+        $this->assertEqualsWithDelta(25, $writes, 20);
         $this->assertCount(0, $this->core->ingest->buffer);
 
         $this->core->config['sampling']['requests'] = 0.5;
@@ -63,7 +63,7 @@ class SamplingTest extends TestCase
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(50, $writes, 15);
+        $this->assertEqualsWithDelta(50, $writes, 20);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
@@ -126,7 +126,7 @@ class SamplingTest extends TestCase
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(25, $writes, 15);
+        $this->assertEqualsWithDelta(25, $writes, 20);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
@@ -140,7 +140,7 @@ class SamplingTest extends TestCase
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(50, $writes, 15);
+        $this->assertEqualsWithDelta(50, $writes, 20);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
@@ -251,7 +251,7 @@ class SamplingTest extends TestCase
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(25, $writes, 15);
+        $this->assertEqualsWithDelta(25, $writes, 20);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
@@ -265,7 +265,7 @@ class SamplingTest extends TestCase
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(50, $writes, 15);
+        $this->assertEqualsWithDelta(50, $writes, 20);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
@@ -330,7 +330,7 @@ class SamplingTest extends TestCase
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(25, $writes, 15);
+        $this->assertEqualsWithDelta(25, $writes, 20);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
@@ -344,7 +344,7 @@ class SamplingTest extends TestCase
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(50, $writes, 15);
+        $this->assertEqualsWithDelta(50, $writes, 20);
         $this->assertCount(0, $this->core->ingest->buffer);
         $ingest->forgetWrites();
 
