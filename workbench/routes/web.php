@@ -44,7 +44,7 @@ Route::get('/', static function () {
     return 'ok';
 });
 
-Route::get('/sampled-or-throw', fn () => [])->middleware([
+Route::get('/sampled-or-throw', static fn () => [])->middleware([
     'throwing-middleware',
     Sample::rate(0),
 ]);
