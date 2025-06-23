@@ -10,6 +10,7 @@ use Monolog\LogRecord;
 use RuntimeException;
 use Tests\TestCase;
 
+use function hex2bin;
 use function microtime;
 use function now;
 
@@ -239,5 +240,24 @@ class LogSensorTest extends TestCase
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('log:0.extra', '{"o":{"stdClass":{"hello":"world"}}}');
+    }
+
+    public function test_it_can_capture_binary_context_and_extra()
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function (): void {
+            Log::channel('nightwatch')->pushProcessor(fn (LogRecord $record) => $record->with(extra: [
+                'binary' => hex2bin('abc123'),
+            ]))->info('message', [
+                'binary' => hex2bin('abc123'),
+            ]);
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('log:0.context', '{"binary":"��#"}');
+        $ingest->assertLatestWrite('log:0.extra', '{"binary":"��#"}');
     }
 }

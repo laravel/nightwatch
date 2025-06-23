@@ -28,7 +28,7 @@ final class MailListener
         try {
             $this->nightwatch->mail($event);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

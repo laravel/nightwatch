@@ -46,7 +46,7 @@ final class LogRecordProcessor implements ProcessorInterface
                 extra: $formatted['extra'] ?? [],
             );
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
 
         return $record;

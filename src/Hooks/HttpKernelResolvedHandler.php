@@ -55,7 +55,7 @@ final class HttpKernelResolvedHandler
              */
             $kernel->prependMiddleware(GlobalMiddleware::class);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
 
         try {

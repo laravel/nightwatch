@@ -27,7 +27,7 @@ final class CacheEventListener
         try {
             $this->nightwatch->cacheEvent($event);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

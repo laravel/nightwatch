@@ -28,7 +28,7 @@ final class LogoutListener
                 $this->nightwatch->remember($event->user);
             }
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

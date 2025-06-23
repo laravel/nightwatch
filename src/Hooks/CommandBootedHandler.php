@@ -27,7 +27,7 @@ final class CommandBootedHandler
         try {
             $this->nightwatch->stage(ExecutionStage::Action);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

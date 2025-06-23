@@ -28,7 +28,7 @@ final class QueuedJobListener
         try {
             $this->nightwatch->queuedJob($event);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

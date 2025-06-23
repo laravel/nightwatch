@@ -28,13 +28,13 @@ final class CommandLifecycleIsLongerThanHandler
         try {
             $this->nightwatch->stage(ExecutionStage::End);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
 
         try {
             $this->nightwatch->command($input, $status);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
 
         $this->nightwatch->digest();

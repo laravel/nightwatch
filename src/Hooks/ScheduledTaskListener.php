@@ -44,7 +44,7 @@ final class ScheduledTaskListener
         try {
             $this->nightwatch->scheduledTask($event);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
 
         $this->nightwatch->digest();

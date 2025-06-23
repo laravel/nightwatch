@@ -29,7 +29,7 @@ final class ResponsePreparedListener
                 $this->nightwatch->stage(ExecutionStage::AfterMiddleware);
             }
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

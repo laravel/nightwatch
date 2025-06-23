@@ -33,7 +33,7 @@ final class TerminatingListener
         try {
             $this->nightwatch->stage(ExecutionStage::Terminating);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

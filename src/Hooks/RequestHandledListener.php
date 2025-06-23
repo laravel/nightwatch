@@ -27,7 +27,7 @@ final class RequestHandledListener
         try {
             $this->nightwatch->stage(ExecutionStage::Sending);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

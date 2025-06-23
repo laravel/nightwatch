@@ -55,7 +55,7 @@ final class SensorManager
     public $cacheEventSensor;
 
     /**
-     * @var (callable(Throwable): void)|null
+     * @var (callable(Throwable, null|bool): void)|null
      */
     public $exceptionSensor;
 
@@ -217,7 +217,7 @@ final class SensorManager
         $sensor($startMicrotime, $endMicrotime, $request, $response);
     }
 
-    public function exception(Throwable $e): void
+    public function exception(Throwable $e, ?bool $handled): void
     {
         $sensor = $this->exceptionSensor ??= new ExceptionSensor(
             ingest: $this->ingest,
@@ -226,7 +226,7 @@ final class SensorManager
             location: $this->location,
         );
 
-        $sensor($e);
+        $sensor($e, $handled);
     }
 
     public function log(LogRecord $record): void

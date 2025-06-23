@@ -55,7 +55,7 @@ final class QuerySensor
             file: $file ?? '',
             line: $line ?? 0,
             duration: $durationInMicroseconds,
-            connection: $event->connectionName,
+            connection: $event->connectionName ?? '', // @phpstan-ignore nullCoalesce.property
         ));
     }
 

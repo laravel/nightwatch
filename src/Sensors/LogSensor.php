@@ -38,8 +38,8 @@ final class LogSensor
             user: $this->executionState->user->id(),
             level: $record->level->toPsrLogLevel(),
             message: $record->message,
-            context: json_encode((object) $record->context, flags: JSON_THROW_ON_ERROR),
-            extra: json_encode((object) $record->extra, flags: JSON_THROW_ON_ERROR),
+            context: json_encode((object) $record->context, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE),
+            extra: json_encode((object) $record->extra, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE),
         ));
     }
 }

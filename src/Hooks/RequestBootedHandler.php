@@ -27,7 +27,7 @@ final class RequestBootedHandler
         try {
             $this->nightwatch->stage(ExecutionStage::BeforeMiddleware);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

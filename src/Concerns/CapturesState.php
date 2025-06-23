@@ -111,7 +111,7 @@ trait CapturesState
     /**
      * @api
      */
-    public function report(Throwable $e): void
+    public function report(Throwable $e, ?bool $handled = null): void
     {
         if (! $this->enabled()) {
             return;
@@ -122,7 +122,7 @@ trait CapturesState
         }
 
         try {
-            $this->sensor->exception($e);
+            $this->sensor->exception($e, $handled);
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }

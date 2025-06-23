@@ -27,7 +27,7 @@ final class QueryExecutedListener
         try {
             $this->nightwatch->query($event);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

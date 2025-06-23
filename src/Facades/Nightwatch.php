@@ -10,7 +10,7 @@ use function call_user_func;
 /**
  * @method static void user(callable $callback)
  * @method static callable guzzleMiddleware()
- * @method static void report(\Throwable $e)
+ * @method static void report(\Throwable $e, bool|null $handled = null)
  *
  * @see \Laravel\Nightwatch\Core
  */

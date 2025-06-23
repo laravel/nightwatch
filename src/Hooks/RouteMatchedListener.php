@@ -26,7 +26,7 @@ final class RouteMatchedListener
         try {
             $this->nightwatch->attachMiddlewareToRoute($event->route);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

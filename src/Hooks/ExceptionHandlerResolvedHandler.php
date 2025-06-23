@@ -35,7 +35,7 @@ final class ExceptionHandlerResolvedHandler
                 $handler->reportable(new ReportableHandler($this->nightwatch));
             }
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

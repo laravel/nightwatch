@@ -28,7 +28,7 @@ final class NotificationListener
         try {
             $this->nightwatch->notification($event);
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }
