@@ -44,7 +44,9 @@ Route::get('/', static function () {
     return 'ok';
 });
 
+// --- TESTING --- //
 Route::get('/sampled-or-throw', static fn () => [])->middleware([
+    // the order of these middleware matters
     'throwing-middleware',
     Sample::rate(0),
 ]);
