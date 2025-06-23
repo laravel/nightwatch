@@ -51,7 +51,7 @@ use Throwable;
 final class SensorManager
 {
     /**
-     * @var (callable(CacheEvent): void)|null
+     * @var (callable(CacheEvent): (array{ 0: Events\CacheEvent, 1: (callable(): Record) }|null))|null
      */
     public $cacheEventSensor;
 
@@ -175,15 +175,17 @@ final class SensorManager
         return $sensor($event, $trace);
     }
 
-    public function cacheEvent(CacheEvent $event): void
+    /**
+     * @return (array{ 0: Events\CacheEvent, 1: (callable(): Record) })|null
+     */
+    public function cacheEvent(CacheEvent $event): ?array
     {
         $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
-            ingest: $this->ingest,
             executionState: $this->executionState,
             clock: $this->clock,
         );
 
-        $sensor($event);
+        return $sensor($event);
     }
 
     public function mail(MessageSending|MessageSent $event): void

@@ -23,7 +23,6 @@ use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
-use Laravel\Nightwatch\Events\Query;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
@@ -54,11 +53,13 @@ trait CapturesState
 
     /**
      * @var array{
-     *   queries: list<(callable(Query): bool)>
+     *   queries: list<(callable(\Laravel\Nightwatch\Events\Query): bool)>,
+     *   cache_events: list<(callable(\Laravel\Nightwatch\Events\CacheEvent): bool)>
      * }
      */
     private array $filters = [
         'queries' => [],
+        'cache_events' => [],
     ];
 
     private bool $waitingForJob = false;
@@ -180,7 +181,7 @@ trait CapturesState
     /**
      * @api
      *
-     * @param  (callable(Query): bool)  $callback
+     * @param  (callable(\Laravel\Nightwatch\Events\Query): bool)  $callback
      */
     public function filterQueries(callable $callback): void
     {
@@ -228,7 +229,31 @@ trait CapturesState
             return;
         }
 
-        $this->sensor->cacheEvent($event);
+        $result = $this->sensor->cacheEvent($event);
+
+        if ($result === null) {
+            return;
+        }
+
+        [$event, $resolver] = $result;
+
+        foreach ($this->filters['cache_events'] as $filter) {
+            if (! $filter($event)) {
+                return;
+            }
+        }
+
+        $this->ingest->write($resolver());
+    }
+
+    /**
+     * @api
+     *
+     * @param  (callable(\Laravel\Nightwatch\Events\CacheEvent): bool)  $callback
+     */
+    public function filterCacheEvents(callable $callback): void
+    {
+        $this->filters['cache_events'][] = $callback;
     }
 
     /**

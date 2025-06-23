@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Laravel\Nightwatch\Events\CacheEvent;
 use Laravel\Nightwatch\Events\Query;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Tests\TestCase;
@@ -155,6 +156,26 @@ class FilteringTest extends TestCase
         }
 
         $this->assertSame(10, $this->core->executionState->cacheEvents);
+    }
+
+    public function test_it_can_filter_cache_events(): void
+    {
+        $ingest = $this->fakeIngest();
+        Nightwatch::filterCacheEvents(function (CacheEvent $cacheEvent) {
+            return str_contains($cacheEvent->key, 'keep');
+        });
+
+        Cache::get('keep');
+        Cache::get('forget');
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', 'keep');
     }
 
     public function test_it_can_ignore_outgoing_requests(): void

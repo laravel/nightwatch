@@ -44,9 +44,9 @@ final class QuerySensor
                 connection: $event->connectionName ?? '', // @phpstan-ignore nullCoalesce.property
             ),
             function () use ($event, $trace, $durationInMicroseconds, $timestamp, $query) {
-                [$file, $line] = $this->location->forQueryTrace($trace);
-
                 $this->executionState->queries++;
+
+                [$file, $line] = $this->location->forQueryTrace($trace);
 
                 return new Nightwatch\Records\Query(
                     timestamp: $timestamp,

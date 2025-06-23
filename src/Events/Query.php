@@ -2,13 +2,12 @@
 
 namespace Laravel\Nightwatch\Events;
 
-class Query
+final class Query
 {
     public function __construct(
         public string $sql,
-        public string $connection,
+        public readonly string $connection,
     ) {
         //
     }
 }
-
