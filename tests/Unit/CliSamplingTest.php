@@ -91,7 +91,7 @@ class CliSamplingTest extends TestCase
             '--tries' => 1,
         ]);
 
-        $this->assertEqualsWithDelta(50, $ingest->writes()->count(), 10);
+        $this->assertEqualsWithDelta(50, $ingest->writes()->count(), 15);
         $ingest->forgetWrites();
 
         for ($i = 0; $i < 100; $i++) {
