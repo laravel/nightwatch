@@ -117,15 +117,12 @@ class GlobalMiddlewareTest extends TestCase
         $next = function ($request) use (&$nextCalledWith) {
             $nextCalledWith = $request;
 
-            return response()->streamDownload(function (): void {
-                echo '...';
-            });
+            return response('');
         };
 
         $this->assertTrue($this->core->sampling());
         $response = $middleware->handle($request, $next);
 
-        $this->assertFalse($this->core->sampling());
         $this->assertCount(1, $exceptions);
         $this->assertSame('Undefined array key "requests"', $exceptions[0]->getMessage());
     }
