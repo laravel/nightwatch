@@ -9,7 +9,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Laravel\Nightwatch\Events\Query;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Tests\TestCase;
+
+use function str_contains;
 
 class FilteringTest extends TestCase
 {
@@ -37,6 +41,63 @@ class FilteringTest extends TestCase
         }
 
         $this->assertSame(10, $this->core->executionState->queries);
+    }
+
+    public function test_it_can_filter_queries(): void
+    {
+        $ingest = $this->fakeIngest();
+        Nightwatch::filterQueries(function (Query $query) {
+            return str_contains($query->sql, 'users');
+        });
+
+        DB::statement('select * from users');
+        DB::statement('select * from jobs');
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('query:0.sql', 'select * from users');
+    }
+
+    public function test_it_filters_queries_when_null_is_returned(): void
+    {
+        $ingest = $this->fakeIngest();
+        Nightwatch::filterQueries(function (Query $query) {
+            //
+        });
+
+        DB::statement('select * from users');
+        DB::statement('select * from jobs');
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(0);
+    }
+
+    public function test_it_can_modify_queries_while_filtering(): void
+    {
+        $ingest = $this->fakeIngest();
+        Nightwatch::filterQueries(function (Query $query) {
+            $query->sql = 'Hello World';
+
+            return true;
+        });
+
+        DB::statement('select * from users');
+        DB::statement('select * from jobs');
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('query:0.sql', 'Hello World');
+        $ingest->assertLatestWrite('query:0.sql', 'Hello World');
     }
 
     public function test_it_can_ignore_notifications(): void

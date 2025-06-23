@@ -23,6 +23,7 @@ use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\Events\Query;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
@@ -50,6 +51,15 @@ use function random_int;
 trait CapturesState
 {
     private bool $sampling = true;
+
+    /**
+     * @var array{
+     *   queries: list<(callable(Query): bool)>
+     * }
+     */
+    private array $filters = [
+        'queries' => [],
+    ];
 
     private bool $waitingForJob = false;
 
@@ -156,7 +166,25 @@ trait CapturesState
         $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 21);
         array_shift($trace);
 
-        $this->sensor->query($event, $trace);
+        [$event, $resolver] = $this->sensor->query($event, $trace);
+
+        foreach ($this->filters['queries'] as $filter) {
+            if (! $filter($event)) {
+                return;
+            }
+        }
+
+        $this->ingest->write($resolver());
+    }
+
+    /**
+     * @api
+     *
+     * @param  (callable(Query): bool)  $callback
+     */
+    public function filterQueries(callable $callback): void
+    {
+        $this->filters['queries'][] = $callback;
     }
 
     /**

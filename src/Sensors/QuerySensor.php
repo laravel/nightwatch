@@ -2,11 +2,11 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Closure;
 use Illuminate\Database\Events\QueryExecuted;
+use Laravel\Nightwatch;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Location;
-use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 
@@ -22,7 +22,6 @@ use function str_contains;
 final class QuerySensor
 {
     public function __construct(
-        private Ingest $ingest,
         private RequestState|CommandState $executionState,
         private Clock $clock,
         private Location $location,
@@ -32,31 +31,42 @@ final class QuerySensor
 
     /**
      * @param  list<array{ file?: string, line?: int }>  $trace
+     * @return array{0: Nightwatch\Events\Query, 1: (Closure(): Nightwatch\Records\Query)}
      */
-    public function __invoke(QueryExecuted $event, array $trace): void
+    public function __invoke(QueryExecuted $event, array $trace): array
     {
         $durationInMicroseconds = (int) round($event->time * 1000);
-        [$file, $line] = $this->location->forQueryTrace($trace);
+        $timestamp = $this->clock->microtime() - ($event->time / 1000);
 
-        $this->executionState->queries++;
+        return [
+            $query = new Nightwatch\Events\Query(
+                sql: $event->sql,
+                connection: $event->connectionName ?? '', // @phpstan-ignore nullCoalesce.property
+            ),
+            function () use ($event, $trace, $durationInMicroseconds, $timestamp, $query) {
+                [$file, $line] = $this->location->forQueryTrace($trace);
 
-        $this->ingest->write(new Query(
-            timestamp: $this->clock->microtime() - ($event->time / 1000),
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
-            _group: $this->hash($event),
-            trace_id: $this->executionState->trace,
-            execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id(),
-            execution_preview: $this->executionState->executionPreview(),
-            execution_stage: $this->executionState->stage,
-            user: $this->executionState->user->id(),
-            sql: $event->sql,
-            file: $file ?? '',
-            line: $line ?? 0,
-            duration: $durationInMicroseconds,
-            connection: $event->connectionName ?? '', // @phpstan-ignore nullCoalesce.property
-        ));
+                $this->executionState->queries++;
+
+                return new Nightwatch\Records\Query(
+                    timestamp: $timestamp,
+                    deploy: $this->executionState->deploy,
+                    server: $this->executionState->server,
+                    _group: $this->hash($event),
+                    trace_id: $this->executionState->trace,
+                    execution_source: $this->executionState->source,
+                    execution_id: $this->executionState->id(),
+                    execution_preview: $this->executionState->executionPreview(),
+                    execution_stage: $this->executionState->stage,
+                    user: $this->executionState->user->id(),
+                    sql: $query->sql,
+                    file: $file ?? '',
+                    line: $line ?? 0,
+                    duration: $durationInMicroseconds,
+                    connection: $query->connection,
+                );
+            },
+        ];
     }
 
     private function hash(QueryExecuted $event): string
