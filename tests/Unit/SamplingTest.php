@@ -4,7 +4,9 @@ namespace Tests\Unit;
 
 use App\Jobs\MyJob;
 use App\Models\User as UserModel;
+use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use RuntimeException;
@@ -361,5 +363,17 @@ class SamplingTest extends TestCase
 
         $this->assertEqualsWithDelta(100, $writes, 10);
         $this->assertCount(0, $this->core->ingest->buffer);
+    }
+
+    public function test_it_can_sample_health_checks(): void
+    {
+        $ingest = $this->fakeIngest();
+        Event::listen(function (DiagnosingHealth $event) {
+            Nightwatch::dontSample();
+        });
+
+        $this->get('/up')->assertOk();
+
+        $ingest->assertWrittenTimes(0);
     }
 }
