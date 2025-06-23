@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Jobs\MyJob;
 use App\Models\User as UserModel;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -14,6 +15,7 @@ use RuntimeException;
 use Tests\TestCase;
 
 use function abort;
+use function version_compare;
 
 class SamplingTest extends TestCase
 {
@@ -376,6 +378,8 @@ class SamplingTest extends TestCase
 
     public function test_it_can_sample_health_checks(): void
     {
+        $this->markTestSkippedWhen(version_compare(Application::VERSION, '11.0.0', '<'), 'Health endpoint was released in 11.x');
+
         $ingest = $this->fakeIngest();
         Event::listen(function (DiagnosingHealth $event) {
             Nightwatch::dontSample();
