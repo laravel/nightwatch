@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Http\Middleware\Sample;
 use Tests\TestCase;
 
@@ -96,5 +97,20 @@ class SampleTest extends TestCase
         }
 
         $this->assertSame(100, $writes);
+    }
+
+    public function test_it_has_priority(): void
+    {
+        $this->app->instance('throwing-middleware', function ($request, $next) {
+            if (Nightwatch::sampling()) {
+                throw new RuntimeException('Whoops!');
+            }
+
+            return $next($request);
+        });
+
+        $response = $this->get('/sampled-or-throw');
+
+        $response->assertOk();
     }
 }

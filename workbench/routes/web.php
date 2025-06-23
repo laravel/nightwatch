@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Http\Middleware\Sample;
 
 Route::get('/', static function () {
     // This should not be captured.
@@ -42,3 +43,8 @@ Route::get('/', static function () {
 
     return 'ok';
 });
+
+Route::get('/sampled-or-throw', fn () => [])->middleware([
+    'throwing-middleware',
+    Sample::rate(0),
+]);
