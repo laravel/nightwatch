@@ -203,18 +203,18 @@ class SamplingTest extends TestCase
         MyJob::dispatch();
 
         if (Compatibility::$contextExists) {
-            $this->assertStringContainsString('"nightwatch_should_sample":false', DB::table('jobs')->value('payload'));
-        } else {
             $this->assertStringContainsString('"nightwatch_should_sample":"b:0;"', DB::table('jobs')->value('payload'));
+        } else {
+            $this->assertStringContainsString('"nightwatch_should_sample":false', DB::table('jobs')->value('payload'));
         }
         DB::table('jobs')->truncate();
 
         $this->core->sample();
         MyJob::dispatch();
         if (Compatibility::$contextExists) {
-            $this->assertStringContainsString('"nightwatch_should_sample":true', DB::table('jobs')->value('payload'));
-        } else {
             $this->assertStringContainsString('"nightwatch_should_sample":"b:1;"', DB::table('jobs')->value('payload'));
+        } else {
+            $this->assertStringContainsString('"nightwatch_should_sample":true', DB::table('jobs')->value('payload'));
         }
     }
 
