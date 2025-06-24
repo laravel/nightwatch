@@ -6,6 +6,7 @@ use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Monolog\Handler\HandlerInterface;
+use Monolog\Level;
 use Monolog\Logger;
 use Monolog\LogRecord;
 use Throwable;
@@ -15,6 +16,8 @@ use Throwable;
  */
 final class LogHandler implements HandlerInterface
 {
+    protected Level $level;
+
     /**
      * @param  Core<RequestState|CommandState>  $nightwatch
      */
@@ -27,9 +30,9 @@ final class LogHandler implements HandlerInterface
 
     public function isHandling(LogRecord $record): bool
     {
-        $level = Logger::toMonologLevel($this->config['level'] ?? 'debug');
+        $this->level ??= Logger::toMonologLevel($this->config['level'] ?? 'debug');
 
-        return $this->nightwatch->shouldCaptureLogs() && $level->includes($record->level);
+        return $this->nightwatch->shouldCaptureLogs() && $this->level->includes($record->level);
     }
 
     public function handle(LogRecord $record): bool
