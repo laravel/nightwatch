@@ -47,7 +47,7 @@ class FilteringTest extends TestCase
     public function test_it_can_filter_queries(): void
     {
         $ingest = $this->fakeIngest();
-        Nightwatch::filterQueries(function (Query $query) {
+        Nightwatch::interceptQueries(function (Query $query) {
             return str_contains($query->sql, 'users');
         });
 
@@ -67,7 +67,7 @@ class FilteringTest extends TestCase
     public function test_it_filters_queries_when_null_is_returned(): void
     {
         $ingest = $this->fakeIngest();
-        Nightwatch::filterQueries(function (Query $query) {
+        Nightwatch::interceptQueries(function (Query $query) {
             //
         });
 
@@ -81,7 +81,7 @@ class FilteringTest extends TestCase
     public function test_it_can_modify_queries_while_filtering(): void
     {
         $ingest = $this->fakeIngest();
-        Nightwatch::filterQueries(function (Query $query) {
+        Nightwatch::interceptQueries(function (Query $query) {
             $query->sql = 'Hello World';
 
             return true;
@@ -161,7 +161,7 @@ class FilteringTest extends TestCase
     public function test_it_can_filter_cache_events(): void
     {
         $ingest = $this->fakeIngest();
-        Nightwatch::filterCacheEvents(function (CacheEvent $cacheEvent) {
+        Nightwatch::interceptCacheEvents(function (CacheEvent $cacheEvent) {
             return str_contains($cacheEvent->key, 'keep');
         });
 

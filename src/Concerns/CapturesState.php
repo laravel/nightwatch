@@ -57,7 +57,7 @@ trait CapturesState
      *   cache_events: list<(callable(\Laravel\Nightwatch\Events\CacheEvent): bool)>
      * }
      */
-    private array $filters = [
+    private array $interceptors = [
         'queries' => [],
         'cache_events' => [],
     ];
@@ -169,7 +169,7 @@ trait CapturesState
 
         [$event, $resolver] = $this->sensor->query($event, $trace);
 
-        foreach ($this->filters['queries'] as $filter) {
+        foreach ($this->interceptors['queries'] as $filter) {
             if (! $filter($event)) {
                 return;
             }
@@ -183,9 +183,9 @@ trait CapturesState
      *
      * @param  (callable(\Laravel\Nightwatch\Events\Query): bool)  $callback
      */
-    public function filterQueries(callable $callback): void
+    public function interceptQueries(callable $callback): void
     {
-        $this->filters['queries'][] = $callback;
+        $this->interceptors['queries'][] = $callback;
     }
 
     /**
@@ -237,7 +237,7 @@ trait CapturesState
 
         [$event, $resolver] = $result;
 
-        foreach ($this->filters['cache_events'] as $filter) {
+        foreach ($this->interceptors['cache_events'] as $filter) {
             if (! $filter($event)) {
                 return;
             }
@@ -251,9 +251,9 @@ trait CapturesState
      *
      * @param  (callable(\Laravel\Nightwatch\Events\CacheEvent): bool)  $callback
      */
-    public function filterCacheEvents(callable $callback): void
+    public function interceptCacheEvents(callable $callback): void
     {
-        $this->filters['cache_events'][] = $callback;
+        $this->interceptors['cache_events'][] = $callback;
     }
 
     /**
