@@ -5,7 +5,6 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -23,17 +22,16 @@ final class MailSensor
     private ?float $startTime = null;
 
     public function __construct(
-        private Ingest $ingest,
         private RequestState|CommandState $executionState,
         private Clock $clock,
     ) {
         //
     }
 
-    public function __invoke(MessageSending|MessageSent $event): void
+    public function __invoke(MessageSending|MessageSent $event): ?Mail
     {
         if (isset($event->data['__laravel_notification'])) {
-            return;
+            return null;
         }
 
         $now = $this->clock->microtime();
@@ -41,7 +39,7 @@ final class MailSensor
         if ($event instanceof MessageSending) {
             $this->startTime = $now;
 
-            return;
+            return null;
         }
 
         $class = $event->data['__laravel_mailable'] ?? '';
@@ -52,7 +50,7 @@ final class MailSensor
 
         $this->executionState->mail++;
 
-        $this->ingest->write(new Mail(
+        return new Mail(
             timestamp: $now,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
@@ -72,6 +70,6 @@ final class MailSensor
             attachments: count($event->message->getAttachments()),
             duration: (int) round(($now - $this->startTime) * 1_000_000),
             failed: false, // TODO: The framework doesn't dispatch a failed event.
-        ));
+        );
     }
 }

@@ -22,29 +22,29 @@ final class Mail extends Record
      * @param  string|LazyValue<string>  $user
      */
     public function __construct(
-        public float $timestamp,
-        public string $deploy,
-        public string $server,
-        public string $_group,
-        public string|LazyValue $trace_id,
-        public string $execution_source,
-        public LazyValue $execution_id,
-        public LazyValue $execution_preview,
-        public ExecutionStage $execution_stage,
-        public string|LazyValue $user,
+        private readonly float $timestamp,
+        private readonly string $deploy,
+        private readonly string $server,
+        private readonly string $_group,
+        private readonly string|LazyValue $trace_id,
+        private readonly string $execution_source,
+        private readonly LazyValue $execution_id,
+        private readonly LazyValue $execution_preview,
+        private readonly ExecutionStage $execution_stage,
+        private readonly string|LazyValue $user,
         // --- //
-        public string $mailer,
-        public string $class,
+        public readonly string $mailer,
+        public readonly string $class,
         public string $subject,
-        public int $to,
-        public int $cc,
-        public int $bcc,
-        public int $attachments,
-        public int $duration,
-        public bool $failed,
+        public readonly int $to,
+        public readonly int $cc,
+        public readonly int $bcc,
+        public readonly int $attachments,
+        public readonly int $duration,
+        public readonly bool $failed,
     ) {
-        $this->mailer = Str::tinyText($this->mailer);
-        $this->class = Str::tinyText($this->class);
-        $this->subject = Str::tinyText($this->subject);
+        // $this->mailer = Str::tinyText($this->mailer);
+        // $this->class = Str::tinyText($this->class);
+        // $this->subject = Str::tinyText($this->subject);
     }
 }

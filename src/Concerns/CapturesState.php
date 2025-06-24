@@ -28,6 +28,7 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
+use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\State\CommandState;
@@ -57,12 +58,14 @@ trait CapturesState
     /**
      * @var array{
      *   cache_events: ?callable(CacheEventRecord): bool,
+     *   mail: ?callable(Mail): bool,
      *   notifications: ?callable(Notification): bool,
      *   queries: ?callable(Query): bool,
      * }
      */
     private array $interceptors = [
         'cache_events' => null,
+        'mail' => null,
         'notifications' => null,
         'queries' => null,
     ];
@@ -222,6 +225,8 @@ trait CapturesState
     }
 
     /**
+     * @api
+     *
      * @param  callable(Notification): bool  $callback
      */
     public function interceptNotifications(callable $callback): void
@@ -238,7 +243,27 @@ trait CapturesState
             return;
         }
 
-        $this->sensor->mail($event);
+        $mail = $this->sensor->mail($event);
+
+        if ($mail === null) {
+            return;
+        }
+
+        if ($this->interceptors['mail'] && ! $this->interceptors['mail']($mail)) {
+            return;
+        }
+
+        $this->ingest->write($mail);
+    }
+
+    /**
+     * @api
+     *
+     * @param  (callable(Mail): bool)  $callback
+     */
+    public function interceptMail(callable $callback): void
+    {
+        $this->interceptors['mail'] = $callback;
     }
 
     /**

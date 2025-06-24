@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\Mail as MailRecord;
 use Laravel\Nightwatch\Records\Notification as NotificationRecord;
 use Laravel\Nightwatch\Records\Query;
 use Tests\TestCase;
@@ -160,6 +161,26 @@ class FilteringTest extends TestCase
         }
 
         $this->assertSame(10, $this->core->executionState->mail);
+    }
+
+    public function test_it_can_filter_mail(): void
+    {
+        $ingest = $this->fakeIngest();
+        Nightwatch::interceptMail(function (MailRecord $mail) {
+            return $mail->subject === 'Hello Nightwatch';
+        });
+
+        Mail::to('tim@laravel.com')->send(new MyMail('Hello Laravel'));
+        Mail::to('tim@laravel.com')->send(new MyMail('Hello Nightwatch'));
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('mail:0.subject', 'Hello Nightwatch');
     }
 
     public function test_it_can_ignore_cache_events(): void

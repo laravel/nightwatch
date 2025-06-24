@@ -15,7 +15,7 @@ class MyMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct(public $subject = 'Welcome')
     {
         //
     }
@@ -26,7 +26,7 @@ class MyMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome',
+            subject: $this->subject,
         );
     }
 

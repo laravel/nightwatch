@@ -20,6 +20,7 @@ use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
+use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
@@ -93,7 +94,7 @@ final class SensorManager
     public $notificationSensor;
 
     /**
-     * @var (callable(MessageSending|MessageSent): void)|null
+     * @var (callable(MessageSending|MessageSent): ?Mail)|null
      */
     public $mailSensor;
 
@@ -186,15 +187,14 @@ final class SensorManager
         return $sensor($event);
     }
 
-    public function mail(MessageSending|MessageSent $event): void
+    public function mail(MessageSending|MessageSent $event): ?Mail
     {
         $sensor = $this->mailSensor ??= new MailSensor(
-            ingest: $this->ingest,
             executionState: $this->executionState,
             clock: $this->clock,
         );
 
-        $sensor($event);
+        return $sensor($event);
     }
 
     public function notification(NotificationSending|NotificationSent $event): ?Notification
