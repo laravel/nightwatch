@@ -34,7 +34,7 @@ final class Logger
         return new Monolog(
             name: 'nightwatch',
             handlers: [
-                new LogHandler($this->nightwatch),
+                new LogHandler($this->nightwatch, $config),
             ],
             processors: [
                 new LogRecordProcessor($this->nightwatch, 'Y-m-d H:i:s.uP'),

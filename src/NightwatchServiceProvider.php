@@ -184,6 +184,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->config->set('logging.channels.nightwatch', [
                 'driver' => 'custom',
                 'via' => Logger::class,
+                'level' => $this->config->get('nightwatch.filtering.log_level'),
             ]);
         }
 

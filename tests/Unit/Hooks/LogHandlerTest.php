@@ -21,7 +21,7 @@ class LogHandlerTest extends TestCase
         };
         $record = new LogRecord(CarbonImmutable::now(), 'nightwatch', Level::Debug, 'hello world');
 
-        $handler = new LogHandler($this->core);
+        $handler = new LogHandler($this->core, []);
         $handler->handle($record);
 
         $this->assertTrue($thrownInLogSensor);
