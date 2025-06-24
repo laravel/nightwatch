@@ -4,6 +4,7 @@ namespace Tests\Feature\Sensors;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Monolog\LogRecord;
@@ -259,5 +260,70 @@ class LogSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('log:0.context', '{"binary":"��#"}');
         $ingest->assertLatestWrite('log:0.extra', '{"binary":"��#"}');
+    }
+
+    public function test_it_respects_the_log_level()
+    {
+        Env::getRepository()->set('LOG_LEVEL', 'warning');
+
+        $this->refreshApplication();
+        $this->setUp();
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function (): void {
+            Log::channel('nightwatch')->debug('hello world');
+            Log::channel('nightwatch')->info('hello world');
+            Log::channel('nightwatch')->notice('hello world');
+            Log::channel('nightwatch')->warning('hello world');
+            Log::channel('nightwatch')->error('hello world');
+            Log::channel('nightwatch')->critical('hello world');
+            Log::channel('nightwatch')->alert('hello world');
+            Log::channel('nightwatch')->emergency('hello world');
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.logs', 5);
+        $ingest->assertLatestWrite('log:0.level', 'warning');
+        $ingest->assertLatestWrite('log:1.level', 'error');
+        $ingest->assertLatestWrite('log:2.level', 'critical');
+        $ingest->assertLatestWrite('log:3.level', 'alert');
+        $ingest->assertLatestWrite('log:4.level', 'emergency');
+    }
+
+    public function test_it_respects_the_nightwatch_log_level()
+    {
+        Env::getRepository()->set('LOG_LEVEL', 'debug');
+        Env::getRepository()->set('NIGHTWATCH_LOG_LEVEL', 'warning');
+
+        $this->refreshApplication();
+        $this->setUp();
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function (): void {
+            Log::channel('nightwatch')->debug('hello world');
+            Log::channel('nightwatch')->info('hello world');
+            Log::channel('nightwatch')->notice('hello world');
+            Log::channel('nightwatch')->warning('hello world');
+            Log::channel('nightwatch')->error('hello world');
+            Log::channel('nightwatch')->critical('hello world');
+            Log::channel('nightwatch')->alert('hello world');
+            Log::channel('nightwatch')->emergency('hello world');
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.logs', 5);
+        $ingest->assertLatestWrite('log:0.level', 'warning');
+        $ingest->assertLatestWrite('log:1.level', 'error');
+        $ingest->assertLatestWrite('log:2.level', 'critical');
+        $ingest->assertLatestWrite('log:3.level', 'alert');
+        $ingest->assertLatestWrite('log:4.level', 'emergency');
     }
 }
