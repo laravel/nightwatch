@@ -34,7 +34,7 @@ final class Logger
         return new Monolog(
             name: 'nightwatch',
             handlers: [
-                new LogHandler($this->nightwatch, $config),
+                new LogHandler($this->nightwatch, Monolog::toMonologLevel($config['level'] ?? 'debug')),
             ],
             processors: [
                 new LogRecordProcessor($this->nightwatch, 'Y-m-d H:i:s.uP'),
