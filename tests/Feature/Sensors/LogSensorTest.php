@@ -21,6 +21,9 @@ class LogSensorTest extends TestCase
     {
         $this->forceRequestExecutionState();
 
+        Env::getRepository()->set('LOG_LEVEL', 'debug');
+        Env::getRepository()->set('NIGHTWATCH_LOG_LEVEL', 'debug');
+
         parent::setUp();
 
         $this->setDeploy('v1.2.3');
@@ -264,10 +267,11 @@ class LogSensorTest extends TestCase
 
     public function test_it_respects_the_log_level()
     {
+        Env::getRepository()->clear('NIGHTWATCH_LOG_LEVEL');
         Env::getRepository()->set('LOG_LEVEL', 'warning');
 
         $this->refreshApplication();
-        $this->setUp();
+        parent::setUp();
 
         $ingest = $this->fakeIngest();
 
@@ -300,7 +304,7 @@ class LogSensorTest extends TestCase
         Env::getRepository()->set('NIGHTWATCH_LOG_LEVEL', 'warning');
 
         $this->refreshApplication();
-        $this->setUp();
+        parent::setUp();
 
         $ingest = $this->fakeIngest();
 
