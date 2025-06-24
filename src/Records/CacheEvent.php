@@ -23,24 +23,24 @@ final class CacheEvent extends Record
      * @param  'hit'|'miss'|'write'|'write-failure'|'delete'|'delete-failure'  $type
      */
     public function __construct(
-        public float $timestamp,
-        public string $deploy,
-        public string $server,
-        public string $_group,
-        public string|LazyValue $trace_id,
-        public string $execution_source,
-        public LazyValue $execution_id,
-        public LazyValue $execution_preview,
-        public ExecutionStage $execution_stage,
-        public string|LazyValue $user,
+        private readonly float $timestamp,
+        private readonly string $deploy,
+        private readonly string $server,
+        private readonly string $_group,
+        private readonly string|LazyValue $trace_id,
+        private readonly string $execution_source,
+        private readonly LazyValue $execution_id,
+        private readonly LazyValue $execution_preview,
+        private readonly ExecutionStage $execution_stage,
+        private readonly string|LazyValue $user,
         // --- //
-        public string $store,
+        public readonly string $store,
         public string $key,
-        public string $type,
-        public int $duration,
-        public int $ttl,
+        public readonly string $type,
+        public readonly int $duration,
+        public readonly int $ttl,
     ) {
-        $this->store = Str::tinyText($this->store);
-        $this->key = Str::tinyText($this->key);
+        // $this->store = Str::tinyText($this->store);
+        // $this->key = Str::tinyText($this->key);
     }
 }

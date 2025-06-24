@@ -27,6 +27,8 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
+use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
+use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
 use Monolog\LogRecord;
@@ -53,13 +55,13 @@ trait CapturesState
 
     /**
      * @var array{
-     *   queries: list<(callable(\Laravel\Nightwatch\Events\Query): bool)>,
-     *   cache_events: list<(callable(\Laravel\Nightwatch\Events\CacheEvent): bool)>
+     *   queries: ?callable(Query): bool,
+     *   cache_events: ?callable(CacheEventRecord): bool,
      * }
      */
     private array $interceptors = [
-        'queries' => [],
-        'cache_events' => [],
+        'queries' => null,
+        'cache_events' => null,
     ];
 
     private bool $waitingForJob = false;
@@ -167,25 +169,23 @@ trait CapturesState
         $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 21);
         array_shift($trace);
 
-        [$event, $resolver] = $this->sensor->query($event, $trace);
+        $query = $this->sensor->query($event, $trace);
 
-        foreach ($this->interceptors['queries'] as $filter) {
-            if (! $filter($event)) {
-                return;
-            }
+        if ($this->interceptors['queries'] && ! $this->interceptors['queries']($query)) {
+            return;
         }
 
-        $this->ingest->write($resolver());
+        $this->ingest->write($query);
     }
 
     /**
      * @api
      *
-     * @param  (callable(\Laravel\Nightwatch\Events\Query): bool)  $callback
+     * @param  (callable(Query): bool)  $callback
      */
     public function interceptQueries(callable $callback): void
     {
-        $this->interceptors['queries'][] = $callback;
+        $this->interceptors['queries'] = $callback;
     }
 
     /**
@@ -229,31 +229,27 @@ trait CapturesState
             return;
         }
 
-        $result = $this->sensor->cacheEvent($event);
+        $cacheEvent = $this->sensor->cacheEvent($event);
 
-        if ($result === null) {
+        if ($cacheEvent === null) {
             return;
         }
 
-        [$event, $resolver] = $result;
-
-        foreach ($this->interceptors['cache_events'] as $filter) {
-            if (! $filter($event)) {
-                return;
-            }
+        if ($this->interceptors['cache_events'] && ! $this->interceptors['cache_events']($cacheEvent)) {
+            return;
         }
 
-        $this->ingest->write($resolver());
+        $this->ingest->write($cacheEvent);
     }
 
     /**
      * @api
      *
-     * @param  (callable(\Laravel\Nightwatch\Events\CacheEvent): bool)  $callback
+     * @param  (callable(CacheEventRecord): bool)  $callback
      */
     public function interceptCacheEvents(callable $callback): void
     {
-        $this->interceptors['cache_events'][] = $callback;
+        $this->interceptors['cache_events'] = $callback;
     }
 
     /**

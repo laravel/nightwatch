@@ -19,7 +19,8 @@ use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Contracts\Ingest;
-use Laravel\Nightwatch\Records\Record;
+use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
+use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
@@ -51,7 +52,7 @@ use Throwable;
 final class SensorManager
 {
     /**
-     * @var (callable(CacheEvent): (array{ 0: Events\CacheEvent, 1: (callable(): Record) }|null))|null
+     * @var (callable(CacheEvent): ?CacheEventRecord)|null
      */
     public $cacheEventSensor;
 
@@ -71,7 +72,7 @@ final class SensorManager
     public $outgoingRequestSensor;
 
     /**
-     * @var (callable(QueryExecuted, list<array{ file?: string, line?: int }>): (array{ 0: Events\Query, 1: (callable(): Record) }))|null
+     * @var (callable(QueryExecuted, list<array{ file?: string, line?: int }>): Query)|null
      */
     public $querySensor;
 
@@ -162,9 +163,8 @@ final class SensorManager
 
     /**
      * @param  list<array{ file?: string, line?: int }>  $trace
-     * @return array{ 0: Events\Query, 1: (callable(): Record) }
      */
-    public function query(QueryExecuted $event, array $trace): array
+    public function query(QueryExecuted $event, array $trace): Query
     {
         $sensor = $this->querySensor ??= new QuerySensor(
             executionState: $this->executionState,
@@ -175,10 +175,7 @@ final class SensorManager
         return $sensor($event, $trace);
     }
 
-    /**
-     * @return (array{ 0: Events\CacheEvent, 1: (callable(): Record) })|null
-     */
-    public function cacheEvent(CacheEvent $event): ?array
+    public function cacheEvent(CacheEvent $event): ?CacheEventRecord
     {
         $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
             executionState: $this->executionState,

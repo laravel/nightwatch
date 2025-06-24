@@ -2,11 +2,10 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Closure;
 use Illuminate\Database\Events\QueryExecuted;
-use Laravel\Nightwatch;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Location;
+use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 
@@ -31,42 +30,31 @@ final class QuerySensor
 
     /**
      * @param  list<array{ file?: string, line?: int }>  $trace
-     * @return array{0: Nightwatch\Events\Query, 1: (Closure(): Nightwatch\Records\Query)}
      */
-    public function __invoke(QueryExecuted $event, array $trace): array
+    public function __invoke(QueryExecuted $event, array $trace): Query
     {
         $durationInMicroseconds = (int) round($event->time * 1000);
-        $timestamp = $this->clock->microtime() - ($event->time / 1000);
+        [$file, $line] = $this->location->forQueryTrace($trace);
 
-        return [
-            $query = new Nightwatch\Events\Query(
-                sql: $event->sql,
-                connection: $event->connectionName ?? '', // @phpstan-ignore nullCoalesce.property
-            ),
-            function () use ($event, $trace, $durationInMicroseconds, $timestamp, $query) {
-                $this->executionState->queries++;
+        $this->executionState->queries++;
 
-                [$file, $line] = $this->location->forQueryTrace($trace);
-
-                return new Nightwatch\Records\Query(
-                    timestamp: $timestamp,
-                    deploy: $this->executionState->deploy,
-                    server: $this->executionState->server,
-                    _group: $this->hash($event),
-                    trace_id: $this->executionState->trace,
-                    execution_source: $this->executionState->source,
-                    execution_id: $this->executionState->id(),
-                    execution_preview: $this->executionState->executionPreview(),
-                    execution_stage: $this->executionState->stage,
-                    user: $this->executionState->user->id(),
-                    sql: $query->sql,
-                    file: $file ?? '',
-                    line: $line ?? 0,
-                    duration: $durationInMicroseconds,
-                    connection: $query->connection,
-                );
-            },
-        ];
+        return new Query(
+            timestamp: $this->clock->microtime() - ($event->time / 1000),
+            deploy: $this->executionState->deploy,
+            server: $this->executionState->server,
+            _group: $this->hash($event),
+            trace_id: $this->executionState->trace,
+            execution_source: $this->executionState->source,
+            execution_id: $this->executionState->id(),
+            execution_preview: $this->executionState->executionPreview(),
+            execution_stage: $this->executionState->stage,
+            user: $this->executionState->user->id(),
+            sql: $event->sql,
+            file: $file ?? '',
+            line: $line ?? 0,
+            duration: $durationInMicroseconds,
+            connection: $event->connectionName ?? '', // @phpstan-ignore nullCoalesce.property
+        );
     }
 
     private function hash(QueryExecuted $event): string

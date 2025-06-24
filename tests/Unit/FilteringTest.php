@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
-use Laravel\Nightwatch\Events\CacheEvent;
-use Laravel\Nightwatch\Events\Query;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\Query;
 use Tests\TestCase;
 
 use function str_contains;
@@ -199,5 +199,10 @@ class FilteringTest extends TestCase
         }
 
         $this->assertSame(10, $this->core->executionState->outgoingRequests);
+    }
+
+    public function test_it_handles_exceptions_when_intercepting(): void
+    {
+        //
     }
 }

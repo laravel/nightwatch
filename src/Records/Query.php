@@ -22,25 +22,26 @@ final class Query extends Record
      * @param  string|LazyValue<string>  $user
      */
     public function __construct(
-        public float $timestamp,
-        public string $deploy,
-        public string $server,
-        public string $_group,
-        public string|LazyValue $trace_id,
-        public string $execution_source,
-        public LazyValue $execution_id,
-        public LazyValue $execution_preview,
-        public ExecutionStage $execution_stage,
-        public string|LazyValue $user,
+        private readonly float $timestamp,
+        private readonly string $deploy,
+        private readonly string $server,
+        private readonly string $_group,
+        private readonly string|LazyValue $trace_id,
+        private readonly string $execution_source,
+        private readonly LazyValue $execution_id,
+        private readonly LazyValue $execution_preview,
+        private readonly ExecutionStage $execution_stage,
+        private readonly string|LazyValue $user,
         // --- //
         public string $sql,
-        public string $file,
-        public int $line,
-        public int $duration,
-        public string $connection,
+        public readonly string $file,
+        public readonly int $line,
+        public readonly int $duration,
+        public readonly string $connection,
     ) {
-        $this->sql = Str::mediumText($this->sql);
-        $this->file = Str::tinyText($this->file);
-        $this->connection = Str::tinyText($this->connection);
+        // This doesn't make sense anymore...
+        // $this->sql = Str::mediumText($this->sql);
+        // $this->file = Str::tinyText($this->file);
+        // $this->connection = Str::tinyText($this->connection);
     }
 }
