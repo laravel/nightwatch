@@ -27,7 +27,7 @@ final class Logger
     }
 
     /**
-     * @param  array<string, mixed>  $config
+     * @param  array<string, mixed>&array{level?: \Psr\Log\LogLevel::*}  $config
      */
     public function __invoke(array $config): LoggerInterface
     {

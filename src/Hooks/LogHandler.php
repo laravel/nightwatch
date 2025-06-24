@@ -20,6 +20,7 @@ final class LogHandler implements HandlerInterface
 
     /**
      * @param  Core<RequestState|CommandState>  $nightwatch
+     * @param  array{level?: \Psr\Log\LogLevel::*}  $config
      */
     public function __construct(
         private Core $nightwatch,
