@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\Notification as NotificationRecord;
 use Laravel\Nightwatch\Records\Query;
 use Tests\TestCase;
 
+use function array_shift;
 use function str_contains;
 
 class FilteringTest extends TestCase
@@ -118,6 +120,27 @@ class FilteringTest extends TestCase
         }
 
         $this->assertSame(10, $this->core->executionState->notifications);
+    }
+
+    public function test_it_can_filter_notifications(): void
+    {
+        $ingest = $this->fakeIngest();
+        $keep = [true, false];
+        Nightwatch::interceptNotifications(function (NotificationRecord $notification) use (&$keep) {
+            return array_shift($keep);
+        });
+
+        Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
+        Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('notification:0.class', MyNotification::class);
     }
 
     public function test_it_can_ignore_mail(): void

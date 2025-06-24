@@ -28,6 +28,7 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
+use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
@@ -55,13 +56,15 @@ trait CapturesState
 
     /**
      * @var array{
-     *   queries: ?callable(Query): bool,
      *   cache_events: ?callable(CacheEventRecord): bool,
+     *   notifications: ?callable(Notification): bool,
+     *   queries: ?callable(Query): bool,
      * }
      */
     private array $interceptors = [
-        'queries' => null,
         'cache_events' => null,
+        'notifications' => null,
+        'queries' => null,
     ];
 
     private bool $waitingForJob = false;
@@ -205,7 +208,25 @@ trait CapturesState
             return;
         }
 
-        $this->sensor->notification($event);
+        $notification = $this->sensor->notification($event);
+
+        if ($notification === null) {
+            return;
+        }
+
+        if ($this->interceptors['notifications'] && ! $this->interceptors['notifications']($notification)) {
+            return;
+        }
+
+        $this->ingest->write($notification);
+    }
+
+    /**
+     * @param  callable(Notification): bool  $callback
+     */
+    public function interceptNotifications(callable $callback): void
+    {
+        $this->interceptors['notifications'] = $callback;
     }
 
     /**
