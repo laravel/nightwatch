@@ -30,6 +30,7 @@ use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
+use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
@@ -61,6 +62,7 @@ trait CapturesState
      *   mail: ?callable(Mail): bool,
      *   notifications: ?callable(Notification): bool,
      *   queries: ?callable(Query): bool,
+     *   outgoing_requests: ?callable(OutgoingRequest): bool,
      * }
      */
     private array $interceptors = [
@@ -68,6 +70,7 @@ trait CapturesState
         'mail' => null,
         'notifications' => null,
         'queries' => null,
+        'outgoing_requests' => null,
     ];
 
     private bool $waitingForJob = false;
@@ -160,7 +163,23 @@ trait CapturesState
      */
     public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
-        $this->sensor->outgoingRequest($startMicrotime, $endMicrotime, $request, $response);
+        $outgoingRequest = $this->sensor->outgoingRequest($startMicrotime, $endMicrotime, $request, $response);
+
+        if ($this->interceptors['outgoing_requests'] && ! $this->interceptors['outgoing_requests']($outgoingRequest)) {
+            return;
+        }
+
+        $this->ingest->write($outgoingRequest);
+    }
+
+    /**
+     * @api
+     *
+     * @param  (callable(OutgoingRequest): bool)  $callback
+     */
+    public function interceptOutgoingRequests(callable $callback): void
+    {
+        $this->interceptors['outgoing_requests'] = $callback;
     }
 
     /**

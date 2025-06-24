@@ -22,6 +22,7 @@ use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
+use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
@@ -69,7 +70,7 @@ final class SensorManager
     public $logSensor;
 
     /**
-     * @var (callable(float, float, RequestInterface, ResponseInterface): void)|null
+     * @var (callable(float, float, RequestInterface, ResponseInterface): OutgoingRequest)|null
      */
     public $outgoingRequestSensor;
 
@@ -207,14 +208,13 @@ final class SensorManager
         return $sensor($event);
     }
 
-    public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
+    public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): OutgoingRequest
     {
         $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
-            ingest: $this->ingest,
             executionState: $this->executionState,
         );
 
-        $sensor($startMicrotime, $endMicrotime, $request, $response);
+        return $sensor($startMicrotime, $endMicrotime, $request, $response);
     }
 
     public function exception(Throwable $e, ?bool $handled): void

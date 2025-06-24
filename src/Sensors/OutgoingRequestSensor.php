@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -20,20 +19,19 @@ use function round;
 final class OutgoingRequestSensor
 {
     public function __construct(
-        private Ingest $ingest,
         private RequestState|CommandState $executionState,
     ) {
         //
     }
 
-    public function __invoke(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
+    public function __invoke(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): OutgoingRequest
     {
         $duration = (int) round(($endMicrotime - $startMicrotime) * 1_000_000);
         $uri = $request->getUri()->withUserInfo('', null);
 
         $this->executionState->outgoingRequests++;
 
-        $this->ingest->write(new OutgoingRequest(
+        return new OutgoingRequest(
             timestamp: $startMicrotime,
             deploy: $this->executionState->deploy,
             server: $this->executionState->server,
@@ -51,7 +49,7 @@ final class OutgoingRequestSensor
             request_size: $this->resolveMessageSize($request) ?? 0,
             response_size: $this->resolveMessageSize($response) ?? 0,
             status_code: $response->getStatusCode(),
-        ));
+        );
     }
 
     private function resolveMessageSize(MessageInterface $message): ?int

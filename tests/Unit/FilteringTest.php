@@ -13,6 +13,7 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Mail as MailRecord;
 use Laravel\Nightwatch\Records\Notification as NotificationRecord;
+use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Tests\TestCase;
 
@@ -243,6 +244,30 @@ class FilteringTest extends TestCase
         }
 
         $this->assertSame(10, $this->core->executionState->outgoingRequests);
+    }
+
+    public function test_it_can_filter_outgoing_requests(): void
+    {
+        $ingest = $this->fakeIngest();
+        Http::fake([
+            'https://nightwatch.laravel.com' => Http::response(status: 200),
+            'https://laravel.com' => Http::response(status: 200),
+        ]);
+        Nightwatch::interceptOutgoingRequests(function (OutgoingRequest $outgoingRequest) {
+            return $outgoingRequest->host === 'laravel.com';
+        });
+
+        Http::get('https://laravel.com');
+        Http::get('https://nightwatch.laravel.com');
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('outgoing-request:0.host', 'laravel.com');
     }
 
     public function test_it_handles_exceptions_when_intercepting(): void

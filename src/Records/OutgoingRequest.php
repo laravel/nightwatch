@@ -24,27 +24,27 @@ final class OutgoingRequest extends Record
      * @param  string|LazyValue<string>  $user
      */
     public function __construct(
-        public float $timestamp,
-        public string $deploy,
-        public string $server,
-        public string $_group,
-        public string|LazyValue $trace_id,
-        public string $execution_source,
-        public LazyValue $execution_id,
-        public LazyValue $execution_preview,
-        public ExecutionStage $execution_stage,
-        public string|LazyValue $user,
+        private float $timestamp,
+        private string $deploy,
+        private string $server,
+        private string $_group,
+        private string|LazyValue $trace_id,
+        private string $execution_source,
+        private LazyValue $execution_id,
+        private LazyValue $execution_preview,
+        private ExecutionStage $execution_stage,
+        private string|LazyValue $user,
         // --- /
-        public string $host,
-        public string $method,
+        public readonly string $host, // grouping?
+        public readonly string $method,
         public string $url,
-        public int $duration,
-        public int $request_size,
-        public int $response_size,
-        public int $status_code,
+        public readonly int $duration,
+        public readonly int $request_size,
+        public readonly int $response_size,
+        public readonly int $status_code,
     ) {
-        $this->host = Str::tinyText($this->host);
-        $this->method = Str::tinyText($this->method);
-        $this->url = Str::text($this->url);
+        // $this->host = Str::tinyText($this->host);
+        // $this->method = Str::tinyText($this->method);
+        // $this->url = Str::text($this->url);
     }
 }
