@@ -28,10 +28,14 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
+use Laravel\Nightwatch\Records\Command;
+use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
+use Laravel\Nightwatch\Records\QueuedJob;
+use Laravel\Nightwatch\Records\ScheduledTask;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
 use Monolog\LogRecord;
@@ -59,18 +63,28 @@ trait CapturesState
     /**
      * @var array{
      *   cache_events: ?callable(CacheEventRecord): bool,
+     *   commands: ?callable(Command): bool,
+     *   job_attempts: ?callable(JobAttempt): bool,
      *   mail: ?callable(Mail): bool,
      *   notifications: ?callable(Notification): bool,
-     *   queries: ?callable(Query): bool,
      *   outgoing_requests: ?callable(OutgoingRequest): bool,
+     *   queries: ?callable(Query): bool,
+     *   queued_jobs: ?callable(QueuedJob): bool,
+     *   requests: ?callable(Request): bool,
+     *   scheduled_tasks: ?callable(ScheduledTask): bool,
      * }
      */
     private array $interceptors = [
         'cache_events' => null,
+        'commands' => null,
+        'job_attempts' => null,
         'mail' => null,
         'notifications' => null,
-        'queries' => null,
         'outgoing_requests' => null,
+        'queries' => null,
+        'queued_jobs' => null,
+        'requests' => null,
+        'scheduled_tasks' => null,
     ];
 
     private bool $waitingForJob = false;
