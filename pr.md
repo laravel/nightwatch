@@ -16,3 +16,4 @@
 
 ## Global ignores
 - Should we offer the ability to ignore queued jobs via config
+- Should we offer the ability to ignore exceptions via config
