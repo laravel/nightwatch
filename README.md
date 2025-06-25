@@ -2,7 +2,7 @@
 
 ## Introduction
 
-[Laravel Nightwatch](https://nightwatch.laravel.com) is a hosted application monitoring platform design for Laravel. It delivers unparalleled insights into your application's performance, with the intelligence only a system obsessively optimized for Laravel can deliver.
+[Laravel Nightwatch](https://nightwatch.laravel.com) is a hosted application monitoring platform designed for Laravel. It delivers unparalleled insights into your application's performance, with the intelligence only a system obsessively optimized for Laravel can deliver.
 
 This repository contains the official Laravel Nightwatch package, which gathers metrics within your application and transmits them to Nightwatch. To learn more about Laravel Nightwatch and how to use this package, please consult the [official documentation](https://nightwatch.laravel.com/docs).
 
