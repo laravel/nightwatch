@@ -8,7 +8,7 @@ namespace Laravel\Nightwatch\Records;
 final class Request
 {
     /**
-     * @param  list<string>  $route_methods
+     * @param  list<string>  $routeMethods
      */
     public function __construct(
         public readonly string $method,

@@ -26,7 +26,7 @@ class RecordsBuffer implements Countable
     }
 
     /**
-     * @param  array<mixed>  $payload
+     * @param  array<string, mixed>  $record
      */
     public function write(array $record): void
     {

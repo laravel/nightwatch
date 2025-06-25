@@ -68,7 +68,7 @@ trait InterceptsState
     /**
      * @api
      *
-     * @param  (callable(CacheEventRecord): bool)  $callback
+     * @param  (callable(CacheEvent): bool)  $callback
      */
     public function interceptCacheEvents(callable $callback): void
     {

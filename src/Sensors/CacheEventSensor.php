@@ -48,7 +48,7 @@ final class CacheEventSensor
     }
 
     /**
-     * @return array{0: CacheEvent, 1: callable(): array<mixed>}
+     * @return array{0: CacheEventRecord, 1: callable(): array<mixed>}
      */
     public function __invoke(CacheEvent $event): ?array
     {
