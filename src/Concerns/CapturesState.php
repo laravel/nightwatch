@@ -593,7 +593,18 @@ trait CapturesState
             return;
         }
 
-        $this->ingest->write($scheduledTask);
+        [$record, $resolver] = $scheduledTask;
+
+        if ($this->interceptors['scheduled_tasks'] && ! $this->interceptors['scheduled_tasks']($record)) {
+            $this->dontSample();
+        } else {
+            $this->ingest->write($resolver());
+        }
+    }
+
+    public function interceptScheduledTasks(callable $callback): void
+    {
+        $this->interceptors['scheduled_tasks'] = $callback;
     }
 
     /**

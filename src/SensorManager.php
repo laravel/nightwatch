@@ -291,7 +291,10 @@ final class SensorManager
         return $sensor($event);
     }
 
-    public function scheduledTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): ?ScheduledTask
+    /**
+     * @return array{0: ScheduledTask, 1: callable(): array<mixed>}
+     */
+    public function scheduledTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): ?array
     {
         $sensor = $this->scheduledTaskSensor ??= new ScheduledTaskSensor(
             commandState: $this->executionState, // @phpstan-ignore argument.type

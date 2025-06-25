@@ -7,9 +7,11 @@ use App\Jobs\SampledJob;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schedule;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\JobAttempt;
+use Laravel\Nightwatch\Records\ScheduledTask;
 use Symfony\Component\Console\Input\StringInput;
 use Tests\TestCase;
 
@@ -106,5 +108,30 @@ class CliFilteringTest extends TestCase
 
             return true;
         });
+    }
+
+    public function test_it_can_filter_scheduled_tasks(): void
+    {
+        $ingest = $this->fakeIngest();
+        Schedule::call(function () {
+            DB::statement('select * from users');
+        })->name('first');
+        Schedule::call(function () {
+            DB::statement('select * from jobs');
+        })->name('second');
+        Nightwatch::interceptScheduledTasks(function (ScheduledTask $scheduledTask) {
+            return $scheduledTask->name === 'first';
+        });
+
+        Artisan::call('schedule:run');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('scheduled-task:0.name', 'first');
+        $ingest->assertLatestWrite('query:0.sql', 'select * from users');
     }
 }
