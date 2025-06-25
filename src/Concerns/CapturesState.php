@@ -218,13 +218,24 @@ trait CapturesState
      */
     public function queuedJob(JobQueueing|JobQueued $event): void
     {
-        $record = $this->sensor->queuedJob($event);
+        $queuedJob = $this->sensor->queuedJob($event);
 
-        if ($record === null) {
+        if ($queuedJob === null) {
             return;
         }
 
-        $this->ingest->write($record);
+        [$record, $resolver] = $queuedJob;
+
+        if ($this->interceptors['queued_jobs'] && ! $this->interceptors['queued_jobs']($record)) {
+            return;
+        }
+
+        $this->ingest->write($resolver());
+    }
+
+    public function interceptQueuedJob(callable $callback): void
+    {
+        $this->interceptors['queued_jobs'] = $callback;
     }
 
     /**

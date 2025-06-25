@@ -2,6 +2,8 @@
 
 namespace Tests\Unit;
 
+use App\Jobs\MyJob;
+use App\Jobs\SampledJob;
 use App\Mail\MyMail;
 use App\Notifications\MyNotification;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
@@ -16,6 +18,7 @@ use Laravel\Nightwatch\Records\Mail as MailRecord;
 use Laravel\Nightwatch\Records\Notification as NotificationRecord;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
+use Laravel\Nightwatch\Records\QueuedJob;
 use Tests\TestCase;
 
 use function array_shift;
@@ -271,5 +274,30 @@ class FilteringTest extends TestCase
             return true;
         });
         $ingest->assertLatestWrite('outgoing-request:0.host', 'laravel.com');
+    }
+
+    public function test_it_can_filter_queued_jobs(): void
+    {
+        $ingest = $this->fakeIngest();
+        Nightwatch::interceptQueuedJob(function (QueuedJob $queuedJob) {
+            return $queuedJob->name === SampledJob::class;
+        });
+
+        SampledJob::dispatch(1);
+        MyJob::dispatch();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(3, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('query:*', function ($queries) {
+            $this->assertCount(2, $queries);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('queued-job:0.name', SampledJob::class);
     }
 }

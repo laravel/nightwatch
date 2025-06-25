@@ -261,7 +261,7 @@ final class SensorManager
     }
 
     /**
-     * @return ?array<mixed>
+     * @return ?array{0: QueuedJob, 1: callable(): array<mixed>}
      */
     public function queuedJob(JobQueueing|JobQueued $event): ?array
     {
