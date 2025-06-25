@@ -59,11 +59,13 @@ final class CommandSensor
                 'server' => $this->commandState->server,
                 '_group' => hash('xxh128', $record->name),
                 'trace_id' => $this->commandState->trace,
+                // --- //
                 'class' => Str::text($record->class),
                 'name' => Str::tinyText($record->name),
                 'command' => Str::text($record->command),
                 'exit_code' => $record->exitCode,
                 'duration' => $record->duration,
+                // --- //
                 'bootstrap' => $this->commandState->stageDurations[ExecutionStage::Bootstrap->value],
                 'action' => $this->commandState->stageDurations[ExecutionStage::Action->value],
                 'terminating' => $this->commandState->stageDurations[ExecutionStage::Terminating->value],

@@ -2,11 +2,14 @@
 
 namespace Tests\Unit;
 
+use App\Jobs\MyJob;
+use App\Jobs\SampledJob;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Records\Command;
+use Laravel\Nightwatch\Records\JobAttempt;
 use Symfony\Component\Console\Input\StringInput;
 use Tests\TestCase;
 
@@ -55,5 +58,53 @@ class CliFilteringTest extends TestCase
         });
         $ingest->assertLatestWrite('command:0.name', 'first');
         $ingest->assertLatestWrite('query:0.sql', 'select * from users');
+    }
+
+    public function test_it_can_filter_job_attempts(): void
+    {
+        $ingest = $this->fakeIngest();
+        Nightwatch::interceptJobAttempts(function (JobAttempt $jobAttempt) {
+            return $jobAttempt->name === SampledJob::class;
+        });
+
+        SampledJob::dispatch(1);
+        MyJob::dispatch();
+        $this->core->flush();
+
+        Artisan::call('queue:work', [
+            '--max-jobs' => 1,
+            '--sleep' => 0,
+            '--stop-when-empty' => true,
+            '--tries' => 1,
+        ]);
+
+        $this->assertTrue($this->core->sampling());
+
+        Artisan::call('queue:work', [
+            '--max-jobs' => 1,
+            '--sleep' => 0,
+            '--stop-when-empty' => true,
+            '--tries' => 1,
+        ]);
+
+        $this->assertFalse($this->core->sampling());
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(6, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('job-attempt:0.name', SampledJob::class);
+        $ingest->assertLatestWrite('cache-event:*', function ($queries) {
+            $this->assertCount(1, $queries);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('query:*', function ($queries) {
+            $this->assertCount(4, $queries);
+
+            return true;
+        });
     }
 }

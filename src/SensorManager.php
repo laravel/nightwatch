@@ -237,7 +237,10 @@ final class SensorManager
         return $sensor($startMicrotime, $endMicrotime, $request, $response);
     }
 
-    public function exception(Throwable $e, ?bool $handled): Exception
+    /**
+     * @return array<mixed>
+     */
+    public function exception(Throwable $e, ?bool $handled): array
     {
         $sensor = $this->exceptionSensor ??= new ExceptionSensor(
             executionState: $this->executionState,
@@ -271,7 +274,10 @@ final class SensorManager
         return $sensor($event);
     }
 
-    public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): ?JobAttempt
+    /**
+     * @return ?array{0: JobAttempt, 1: callable(): array<mixed>}
+     */
+    public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): ?array
     {
         $sensor = $this->jobAttemptSensor ??= new JobAttemptSensor(
             commandState: $this->executionState, // @phpstan-ignore argument.type

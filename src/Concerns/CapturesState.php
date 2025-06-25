@@ -384,13 +384,24 @@ trait CapturesState
      */
     public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
-        $jobAttempt = $this->sensor->jobAttempt($event);
+        $jobAttempt = $jobAttempt = $this->sensor->jobAttempt($event);
 
         if ($jobAttempt === null) {
             return;
         }
 
-        $this->ingest->write($jobAttempt);
+        [$record, $resolver] = $jobAttempt;
+
+        if ($this->interceptors['job_attempts'] && ! $this->interceptors['job_attempts']($record)) {
+            $this->dontSample();
+        } else {
+            $this->ingest->write($resolver());
+        }
+    }
+
+    public function interceptJobAttempts(callable $callback): void
+    {
+        $this->interceptors['job_attempts'] = $callback;
     }
 
     /**

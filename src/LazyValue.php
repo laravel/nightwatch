@@ -25,6 +25,14 @@ final class LazyValue implements JsonSerializable
      */
     public function jsonSerialize(): mixed
     {
+        return $this->resolve();
+    }
+
+    /**
+     * @return TValue
+     */
+    public function resolve(): mixed
+    {
         return call_user_func($this->callback);
     }
 }
