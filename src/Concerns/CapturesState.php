@@ -410,6 +410,15 @@ trait CapturesState
     /**
      * @internal
      */
+    public function prepareForNextOctaneOperation(): void
+    {
+        $this->flush();
+        memory_reset_peak_usage();
+    }
+
+    /**
+     * @internal
+     */
     public function shouldCaptureLogs(): bool
     {
         return $this->enabled();

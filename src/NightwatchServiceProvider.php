@@ -10,6 +10,9 @@ use Illuminate\Cache\Events\ForgettingKey;
 use Illuminate\Cache\Events\KeyForgetFailed;
 use Illuminate\Cache\Events\KeyForgotten;
 use Illuminate\Cache\Events\KeyWriteFailed;
+use Laravel\Octane\Events\RequestReceived;
+use Laravel\Octane\Events\TaskReceived;
+use Laravel\Octane\Events\TickReceived;
 use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\RetrievingManyKeys;
@@ -53,6 +56,7 @@ use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
 use Laravel\Nightwatch\Hooks\LogoutListener;
 use Laravel\Nightwatch\Hooks\MailListener;
 use Laravel\Nightwatch\Hooks\NotificationListener;
+use Laravel\Nightwatch\Hooks\OctaneListener;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
 use Laravel\Nightwatch\Hooks\QueuedJobListener;
@@ -336,6 +340,12 @@ final class NightwatchServiceProvider extends ServiceProvider
             KeyForgotten::class,
             KeyForgetFailed::class,
         ], (new CacheEventListener($core))(...));
+
+        $events->listen([
+            RequestReceived::class, // @phpstan-ignore class.notFound
+            TaskReceived::class, // @phpstan-ignore class.notFound
+            TickReceived::class, // @phpstan-ignore class.notFound
+        ], (new OctaneListener($core))(...));
 
         //
         // -------------------------------------------------------------------------
