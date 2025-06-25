@@ -163,7 +163,7 @@ final class SensorManager
     }
 
     /**
-     * @return array{0: Command, 1: array<mixed>}
+     * @return array{0: Command, 1: callable(): array<mixed>}
      */
     public function command(InputInterface $input, int $status): array
     {
@@ -190,7 +190,7 @@ final class SensorManager
     }
 
     /**
-     * @return array{0: CacheEvent, 1: callable(): array<mixed>}
+     * @return array{0: CacheEventRecord, 1: callable(): array<mixed>}
      */
     public function cacheEvent(CacheEvent $event): ?array
     {
