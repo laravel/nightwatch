@@ -29,7 +29,10 @@ final class NotificationSensor
         //
     }
 
-    public function __invoke(NotificationSending|NotificationSent $event): ?Notification
+    /**
+     * @return array{0: Notification, 1: callable(): array<mixed>}
+     */
+    public function __invoke(NotificationSending|NotificationSent $event): ?array
     {
         $now = $this->clock->microtime();
 
@@ -49,23 +52,36 @@ final class NotificationSensor
             $class = $event->notification::class;
         }
 
-        $this->executionState->notifications++;
+        return [
+            $record = new Notification(
+                channel: $event->channel,
+                class: $class,
+                duration: (int) round(($now - $this->startTime) * 1_000_000),
+                failed: false, // TODO: The framework doesn't dispatch the `NotificationFailed` event.
+            ),
+            function () use ($now, $record) {
+                $this->executionState->notifications++;
 
-        return new Notification(
-            timestamp: $now,
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
-            _group: hash('xxh128', $class),
-            trace_id: $this->executionState->trace,
-            execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id(),
-            execution_preview: $this->executionState->executionPreview(),
-            execution_stage: $this->executionState->stage,
-            user: $this->executionState->user->id(),
-            channel: $event->channel,
-            class: $class,
-            duration: (int) round(($now - $this->startTime) * 1_000_000),
-            failed: false, // TODO: The framework doesn't dispatch the `NotificationFailed` event.
-        );
+                return [
+                    'v' => 1,
+                    't' => 'notification',
+                    'timestamp' => $now,
+                    'deploy' => $this->executionState->deploy,
+                    'server' => $this->executionState->server,
+                    '_group' => hash('xxh128', $record->class),
+                    'trace_id' => $this->executionState->trace,
+                    'execution_source' => $this->executionState->source,
+                    'execution_id' => $this->executionState->id(),
+                    'execution_preview' => $this->executionState->executionPreview(),
+                    'execution_stage' => $this->executionState->stage,
+                    'user' => $this->executionState->user->id(),
+                    // --- //
+                    'channel' => Str::tinyText($record->channel),
+                    'class' => Str::tinyText($record->class),
+                    'duration' => $record->duration,
+                    'failed' => $record->failed,
+                ];
+            },
+        ];
     }
 }

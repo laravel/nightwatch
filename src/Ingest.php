@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch;
 
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
-use Laravel\Nightwatch\Records\Record;
 use RuntimeException;
 use Throwable;
 
@@ -51,7 +50,7 @@ final class Ingest implements IngestContract
         ];
     }
 
-    public function write(Record $record): void
+    public function write(array $record): void
     {
         $this->buffer->write($record);
 

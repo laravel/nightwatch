@@ -8,7 +8,7 @@ use Laravel\Nightwatch\Types\Str;
 /**
  * @internal
  */
-final class ScheduledTask extends Record
+final class ScheduledTask
 {
     public int $v = 1;
 

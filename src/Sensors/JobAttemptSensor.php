@@ -7,7 +7,6 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
-use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\State\CommandState;
@@ -27,7 +26,6 @@ final class JobAttemptSensor
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
      */
     public function __construct(
-        private Ingest $ingest,
         private CommandState $commandState,
         private Clock $clock,
         private array $connectionConfig,
@@ -35,16 +33,16 @@ final class JobAttemptSensor
         //
     }
 
-    public function __invoke(JobProcessed|JobReleasedAfterException|JobFailed $event): void
+    public function __invoke(JobProcessed|JobReleasedAfterException|JobFailed $event): ?JobAttempt
     {
         if ($event->connectionName === 'sync') {
-            return;
+            return null;
         }
 
         $now = $this->clock->microtime();
         $name = $event->job->resolveName();
 
-        $this->ingest->write(new JobAttempt(
+        return new JobAttempt(
             timestamp: $this->commandState->timestamp,
             deploy: $this->commandState->deploy,
             server: $this->commandState->server,
@@ -77,6 +75,6 @@ final class JobAttemptSensor
             hydrated_models: new LazyValue(fn () => $this->commandState->hydratedModels),
             peak_memory_usage: new LazyValue(fn () => $this->commandState->peakMemory()),
             exception_preview: new LazyValue(fn () => Str::tinyText($this->commandState->exceptionPreview)),
-        ));
+        );
     }
 }

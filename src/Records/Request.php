@@ -10,7 +10,7 @@ use function array_map;
 /**
  * @internal
  */
-final class Request extends Record
+final class Request
 {
     public int $v = 1;
 
@@ -31,16 +31,16 @@ final class Request extends Record
         // --- //
         public string $method,
         public string $url,
-        public string $route_name,
-        public array $route_methods,
-        public string $route_domain,
-        public string $route_path,
-        public string $route_action,
+        public string $routeName,
+        public array $routeMethods,
+        public string $routeDomain,
+        public string $routePath,
+        public string $routeAction,
         public string $ip,
         public int $duration,
-        public int $status_code,
-        public int $request_size,
-        public int $response_size,
+        public int $statusCode,
+        public int $requestSize,
+        public int $responseSize,
         public int $bootstrap,
         public int $before_middleware,
         public int $action,

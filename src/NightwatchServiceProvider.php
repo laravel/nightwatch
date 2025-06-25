@@ -214,7 +214,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $executionState = $this->executionState();
 
         $this->app->instance(Core::class, $this->core = new Core(
-            ingest: $ingest = new Ingest(
+            ingest: new Ingest(
                 transmitTo: $this->nightwatchConfig['ingest']['uri'] ?? '127.0.0.1:2407',
                 connectionTimeout: $this->nightwatchConfig['ingest']['connection_timeout'] ?? 0.5,
                 timeout: $this->nightwatchConfig['ingest']['timeout'] ?? 0.5,
@@ -224,7 +224,6 @@ final class NightwatchServiceProvider extends ServiceProvider
                 ),
             ),
             sensor: new SensorManager(
-                ingest: $ingest,
                 executionState: $executionState,
                 clock: $clock = new Clock,
                 location: new Location(

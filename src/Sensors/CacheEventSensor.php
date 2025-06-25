@@ -47,7 +47,10 @@ final class CacheEventSensor
         //
     }
 
-    public function __invoke(CacheEvent $event): ?CacheEventRecord
+    /**
+     * @return array{0: CacheEvent, 1: callable(): array<mixed>}
+     */
+    public function __invoke(CacheEvent $event): ?array
     {
         $now = $this->clock->microtime();
 
@@ -74,8 +77,6 @@ final class CacheEventSensor
             ? ($event->storeName ?? '')
             : '';
 
-        $this->executionState->cacheEvents++;
-
         $type = match ($event::class) {
             CacheHit::class => 'hit',
             CacheMissed::class => 'miss',
@@ -86,22 +87,38 @@ final class CacheEventSensor
             default => throw new RuntimeException('Unexpected event type ['.$event::class.']'),
         };
 
-        return new CacheEventRecord(
-            timestamp: $startTime,
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
-            _group: hash('xxh128', "{$storeName},{$event->key}"),
-            trace_id: $this->executionState->trace,
-            execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id(),
-            execution_preview: $this->executionState->executionPreview(),
-            execution_stage: $this->executionState->stage,
-            user: $this->executionState->user->id(),
-            store: $storeName,
-            key: $event->key ?? '', // @phpstan-ignore nullCoalesce.property
-            type: $type,
-            duration: $duration,
-            ttl: in_array($event::class, [KeyWritten::class, KeyWriteFailed::class], true) ? ($event->seconds ?? 0) : 0,
-        );
+        return [
+            $record = new CacheEventRecord(
+                store: $storeName,
+                key: $event->key ?? '', // @phpstan-ignore nullCoalesce.property
+                type: $type,
+                duration: $duration,
+                ttl: in_array($event::class, [KeyWritten::class, KeyWriteFailed::class], true) ? ($event->seconds ?? 0) : 0,
+            ),
+            function () use ($startTime, $record) {
+                $this->executionState->cacheEvents++;
+
+                return [
+                    'v' => 1,
+                    't' => 'cache-event',
+                    'timestamp' => $startTime,
+                    'deploy' => $this->executionState->deploy,
+                    'server' => $this->executionState->server,
+                    '_group' => hash('xxh128', "{$record->store},{$record->key}"),
+                    'trace_id' => $this->executionState->trace,
+                    'execution_source' => $this->executionState->source,
+                    'execution_id' => $this->executionState->id(),
+                    'execution_preview' => $this->executionState->executionPreview(),
+                    'execution_stage' => $this->executionState->stage,
+                    'user' => $this->executionState->user->id(),
+                    // --- //
+                    'store' => $record->store,
+                    'key' => $record->key,
+                    'type' => $record->type,
+                    'duration' => $record->duration,
+                    'ttl' => $record->ttl,
+                ];
+            },
+        ];
     }
 }

@@ -4,6 +4,8 @@ namespace Tests\Unit;
 
 use App\Mail\MyMail;
 use App\Notifications\MyNotification;
+use Illuminate\Foundation\Testing\WithConsoleEvents;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -15,13 +17,17 @@ use Laravel\Nightwatch\Records\Mail as MailRecord;
 use Laravel\Nightwatch\Records\Notification as NotificationRecord;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
+use Symfony\Component\Console\Input\StringInput;
 use Tests\TestCase;
 
 use function array_shift;
+use function dd;
 use function str_contains;
 
 class FilteringTest extends TestCase
 {
+    use WithConsoleEvents;
+
     protected function setUp(): void
     {
         $this->forceRequestExecutionState();
@@ -268,6 +274,39 @@ class FilteringTest extends TestCase
             return true;
         });
         $ingest->assertLatestWrite('outgoing-request:0.host', 'laravel.com');
+    }
+
+    public function test_it_can_filter_commands(): void
+    {
+        $this->forceCommandExecutionState();
+        $this->refreshApplication();
+        dd($this->app);
+
+        Artisan::command('inspire', function () {
+            return 0;
+        });
+        $ingest = $this->fakeIngest();
+        Nightwatch::interceptCommands(function (Command $command) {
+            dd('here');
+
+            return $command->name === 'inspire';
+        });
+
+        $status = Artisan::handle($input = new StringInput('inspire'));
+        Artisan::terminate($input, $status);
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('outgoing-request:0.host', 'laravel.com');
+    }
+
+    public function test_filtered_commands_turn_off_sampling(): void
+    {
+        //
     }
 
     public function test_it_handles_exceptions_when_intercepting(): void

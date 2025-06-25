@@ -144,7 +144,7 @@ trait CapturesState
         }
 
         try {
-            $this->sensor->exception($e, $handled);
+            $this->ingest->write($this->sensor->exception($e, $handled));
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }
@@ -155,7 +155,7 @@ trait CapturesState
      */
     public function log(LogRecord $log): void
     {
-        $this->sensor->log($log);
+        $this->ingest->write($this->sensor->log($log));
     }
 
     /**
@@ -163,13 +163,13 @@ trait CapturesState
      */
     public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
-        $outgoingRequest = $this->sensor->outgoingRequest($startMicrotime, $endMicrotime, $request, $response);
+        [$record, $resolver] = $this->sensor->outgoingRequest($startMicrotime, $endMicrotime, $request, $response);
 
-        if ($this->interceptors['outgoing_requests'] && ! $this->interceptors['outgoing_requests']($outgoingRequest)) {
+        if ($this->interceptors['outgoing_requests'] && ! $this->interceptors['outgoing_requests']($record)) {
             return;
         }
 
-        $this->ingest->write($outgoingRequest);
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -194,13 +194,13 @@ trait CapturesState
         $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 21);
         array_shift($trace);
 
-        $query = $this->sensor->query($event, $trace);
+        [$record, $resolver] = $this->sensor->query($event, $trace);
 
-        if ($this->interceptors['queries'] && ! $this->interceptors['queries']($query)) {
+        if ($this->interceptors['queries'] && ! $this->interceptors['queries']($record)) {
             return;
         }
 
-        $this->ingest->write($query);
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -218,7 +218,13 @@ trait CapturesState
      */
     public function queuedJob(JobQueueing|JobQueued $event): void
     {
-        $this->sensor->queuedJob($event);
+        $record = $this->sensor->queuedJob($event);
+
+        if ($record === null) {
+            return;
+        }
+
+        $this->ingest->write($record);
     }
 
     /**
@@ -236,11 +242,13 @@ trait CapturesState
             return;
         }
 
-        if ($this->interceptors['notifications'] && ! $this->interceptors['notifications']($notification)) {
+        [$record, $resolver] = $notification;
+
+        if ($this->interceptors['notifications'] && ! $this->interceptors['notifications']($record)) {
             return;
         }
 
-        $this->ingest->write($notification);
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -268,11 +276,13 @@ trait CapturesState
             return;
         }
 
-        if ($this->interceptors['mail'] && ! $this->interceptors['mail']($mail)) {
+        [$record, $resolver] = $mail;
+
+        if ($this->interceptors['mail'] && ! $this->interceptors['mail']($record)) {
             return;
         }
 
-        $this->ingest->write($mail);
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -300,11 +310,13 @@ trait CapturesState
             return;
         }
 
-        if ($this->interceptors['cache_events'] && ! $this->interceptors['cache_events']($cacheEvent)) {
+        [$record, $resolver] = $cacheEvent;
+
+        if ($this->interceptors['cache_events'] && ! $this->interceptors['cache_events']($record)) {
             return;
         }
 
-        $this->ingest->write($cacheEvent);
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -350,7 +362,13 @@ trait CapturesState
      */
     public function captureUser(): void
     {
-        $this->sensor->user();
+        $user = $this->sensor->user();
+
+        if ($user === null) {
+            return;
+        }
+
+        $this->ingest->write($user);
     }
 
     /**
@@ -358,7 +376,7 @@ trait CapturesState
      */
     public function request(Request $request, Response $response): void
     {
-        $this->sensor->request($request, $response);
+        $this->ingest->write($this->sensor->request($request, $response));
     }
 
     /**
@@ -366,7 +384,13 @@ trait CapturesState
      */
     public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
-        $this->sensor->jobAttempt($event);
+        $jobAttempt = $this->sensor->jobAttempt($event);
+
+        if ($jobAttempt === null) {
+            return;
+        }
+
+        $this->ingest->write($jobAttempt);
     }
 
     /**
@@ -473,6 +497,7 @@ trait CapturesState
      */
     public function capturingCommandNamed(string $name): bool
     {
+
         /** @var Core<CommandState> $this */
         return $this->executionState->name === $name;
     }
@@ -482,7 +507,18 @@ trait CapturesState
      */
     public function command(InputInterface $input, int $status): void
     {
-        $this->sensor->command($input, $status);
+        [$record, $resolver] = $this->sensor->command($input, $status);
+
+        if ($this->interceptors['commands'] && ! $this->interceptors['commands']($record)) {
+            $this->dontSample();
+        } else {
+            $this->ingest->write($resolver());
+        }
+    }
+
+    public function interceptCommands(callable $callback): void
+    {
+        $this->interceptors['commands'] = $callback;
     }
 
     /**
@@ -518,7 +554,13 @@ trait CapturesState
      */
     public function scheduledTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
     {
-        $this->sensor->scheduledTask($event);
+        $scheduledTask = $this->sensor->scheduledTask($event);
+
+        if ($scheduledTask === null) {
+            return;
+        }
+
+        $this->ingest->write($scheduledTask);
     }
 
     /**

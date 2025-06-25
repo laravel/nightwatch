@@ -8,6 +8,7 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Types\Str;
 use RuntimeException;
 
 use function count;
@@ -28,7 +29,10 @@ final class MailSensor
         //
     }
 
-    public function __invoke(MessageSending|MessageSent $event): ?Mail
+    /**
+     * @return array{0: Mail, 1: callable(): array<mixed>}
+     */
+    public function __invoke(MessageSending|MessageSent $event): ?array
     {
         if (isset($event->data['__laravel_notification'])) {
             return null;
@@ -48,28 +52,46 @@ final class MailSensor
             throw new RuntimeException("No start time found for [{$class}].");
         }
 
-        $this->executionState->mail++;
+        return [
+            $record = new Mail(
+                mailer: $event->data['mailer'] ?? '',
+                class: $class,
+                subject: $event->message->getSubject() ?? '',
+                to: count($event->message->getTo()),
+                cc: count($event->message->getCc()),
+                bcc: count($event->message->getBcc()),
+                attachments: count($event->message->getAttachments()),
+                duration: (int) round(($now - $this->startTime) * 1_000_000),
+                failed: false, // TODO: The framework doesn't dispatch a failed event.
+            ),
+            function () use ($now, $record) {
+                $this->executionState->mail++;
 
-        return new Mail(
-            timestamp: $now,
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
-            _group: hash('xxh128', $class),
-            trace_id: $this->executionState->trace,
-            execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id(),
-            execution_preview: $this->executionState->executionPreview(),
-            execution_stage: $this->executionState->stage,
-            user: $this->executionState->user->id(),
-            mailer: $event->data['mailer'] ?? '',
-            class: $class,
-            subject: $event->message->getSubject() ?? '',
-            to: count($event->message->getTo()),
-            cc: count($event->message->getCc()),
-            bcc: count($event->message->getBcc()),
-            attachments: count($event->message->getAttachments()),
-            duration: (int) round(($now - $this->startTime) * 1_000_000),
-            failed: false, // TODO: The framework doesn't dispatch a failed event.
-        );
+                return [
+                    'v' => 1,
+                    't' => 'mail',
+                    'timestamp' => $now,
+                    'deploy' => $this->executionState->deploy,
+                    'server' => $this->executionState->server,
+                    '_group' => hash('xxh128', $record->class),
+                    'trace_id' => $this->executionState->trace,
+                    'execution_source' => $this->executionState->source,
+                    'execution_id' => $this->executionState->id(),
+                    'execution_preview' => $this->executionState->executionPreview(),
+                    'execution_stage' => $this->executionState->stage,
+                    'user' => $this->executionState->user->id(),
+                    // --- //
+                    'mailer' => Str::tinyText($record->mailer),
+                    'class' => Str::tinyText($record->class),
+                    'subject' => Str::tinyText($record->subject),
+                    'to' => $record->to,
+                    'cc' => $record->cc,
+                    'bcc' => $record->bcc,
+                    'attachments' => $record->attachments,
+                    'duration' => $record->duration,
+                    'failed' => $record->failed,
+                ];
+            },
+        ];
     }
 }

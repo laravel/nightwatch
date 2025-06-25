@@ -4,7 +4,6 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
-use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
@@ -28,13 +27,12 @@ use function strlen;
 final class RequestSensor
 {
     public function __construct(
-        private Ingest $ingest,
         private RequestState $requestState,
     ) {
         //
     }
 
-    public function __invoke(Request $request, Response $response): void
+    public function __invoke(Request $request, Response $response): RequestRecord
     {
         /** @var Route|null */
         $route = $request->route();
@@ -60,7 +58,7 @@ final class RequestSensor
             //
         }
 
-        $this->ingest->write(new RequestRecord(
+        return new RequestRecord(
             timestamp: $this->requestState->timestamp,
             deploy: $this->requestState->deploy,
             server: $this->requestState->server,
@@ -100,7 +98,7 @@ final class RequestSensor
             hydrated_models: $this->requestState->hydratedModels,
             peak_memory_usage: $this->requestState->peakMemory(),
             exception_preview: $this->requestState->exceptionPreview,
-        ));
+        );
     }
 
     private function parseResponseSize(Response $response): int

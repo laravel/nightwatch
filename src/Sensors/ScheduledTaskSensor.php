@@ -11,7 +11,6 @@ use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\ScheduledTask;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
@@ -34,26 +33,23 @@ use function str_replace;
 final class ScheduledTaskSensor
 {
     public function __construct(
-        private Ingest $ingest,
         private CommandState $commandState,
         private Clock $clock,
     ) {
         //
     }
 
-    public function __invoke(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
+    public function __invoke(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): ?ScheduledTask
     {
         $now = $this->clock->microtime();
         $name = $this->normalizeTaskName($event->task);
         $timezone = $event->task->timezone instanceof DateTimeZone ? $event->task->timezone->getName() : $event->task->timezone;
 
         if ($event instanceof ScheduledTaskSkipped) {
-            $this->recordSkippedTask($event, $now, $name, $timezone);
-
-            return;
+            return $this->recordSkippedTask($event, $now, $name, $timezone);
         }
 
-        $this->ingest->write(new ScheduledTask(
+        return new ScheduledTask(
             timestamp: $this->commandState->timestamp,
             deploy: $this->commandState->deploy,
             server: $this->commandState->server,
@@ -85,7 +81,7 @@ final class ScheduledTaskSensor
             hydrated_models: $this->commandState->hydratedModels,
             peak_memory_usage: $this->commandState->peakMemory(),
             exception_preview: $this->commandState->exceptionPreview,
-        ));
+        );
     }
 
     private function normalizeTaskName(SchedulingEvent $event): string
@@ -145,9 +141,9 @@ final class ScheduledTaskSensor
      * When a scheduled task is skipped, Laravel does not dispatch the `ScheduledTaskStarting` event.
      * Therefore, we need to manually generate a timestamp and trace ID for these tasks.
      */
-    private function recordSkippedTask(ScheduledTaskSkipped $event, float $timestamp, string $name, string $timezone): void
+    private function recordSkippedTask(ScheduledTaskSkipped $event, float $timestamp, string $name, string $timezone): ScheduledTask
     {
-        $this->ingest->write(new ScheduledTask(
+        return new ScheduledTask(
             timestamp: $timestamp,
             deploy: $this->commandState->deploy,
             server: $this->commandState->server,
@@ -176,6 +172,6 @@ final class ScheduledTaskSensor
             hydrated_models: 0,
             peak_memory_usage: 0,
             exception_preview: '',
-        ));
+        );
     }
 }
