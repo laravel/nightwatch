@@ -2,9 +2,6 @@
 
 namespace Laravel\Nightwatch\Records;
 
-/**
- * @internal
- */
 final class Request
 {
     /**
