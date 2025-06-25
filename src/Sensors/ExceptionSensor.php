@@ -55,10 +55,11 @@ final class ExceptionSensor
 
         $handled ??= $this->wasManuallyReported($normalizedException);
 
-        $this->executionState->exceptions++;
         if (! $handled) {
             $this->executionState->exceptionPreview = $normalizedException->getMessage();
         }
+
+        $this->executionState->exceptions++;
 
         return [
             'v' => 1,
