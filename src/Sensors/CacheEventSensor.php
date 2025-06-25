@@ -19,6 +19,7 @@ use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Types\Str;
 use RuntimeException;
 
 use function hash;
@@ -112,8 +113,8 @@ final class CacheEventSensor
                     'execution_stage' => $this->executionState->stage,
                     'user' => $this->executionState->user->id(),
                     // --- //
-                    'store' => $record->store,
-                    'key' => $record->key,
+                    'store' => Str::tinyText($record->store),
+                    'key' => Str::tinyText($record->key),
                     'type' => $record->type,
                     'duration' => $record->duration,
                     'ttl' => $record->ttl,
