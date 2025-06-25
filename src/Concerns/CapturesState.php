@@ -527,7 +527,7 @@ trait CapturesState
          * we need to clear previous task data to avoid metric pollution.
          */
         $this->flush();
-        $htis->monitoring = true;
+        $this->monitoring = true;
         memory_reset_peak_usage();
 
         $trace = (string) Str::uuid();
