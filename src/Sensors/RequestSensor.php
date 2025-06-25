@@ -84,7 +84,7 @@ final class RequestSensor
                 'timestamp' => $this->requestState->timestamp,
                 'deploy' => $this->requestState->deploy,
                 'server' => $this->requestState->server,
-                '_group' => hash('xxh128', implode('|', $routeMethods).",{$routeDomain},{$routePath}"),
+                '_group' => hash('xxh128', implode('|', $record->routeMethods).",{$record->routeDomain},{$record->routePath}"),
                 'trace_id' => $this->requestState->trace,
                 'user' => $this->requestState->user->id(),
                 // --- //
