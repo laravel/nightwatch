@@ -51,7 +51,7 @@ final class CommandStartingListener
 
         try {
             match ($event->command) {
-                'queue:work', 'queue:listen', 'horizon:work' => $this->registerJobHooks(),
+                'queue:work', 'queue:listen', 'horizon:work', 'vapor:work' => $this->registerJobHooks($event),
                 'schedule:run', 'schedule:work' => $this->registerScheduledTaskHooks(),
                 default => $this->registerCommandHooks($event),
             };
@@ -60,7 +60,7 @@ final class CommandStartingListener
         }
     }
 
-    private function registerJobHooks(): void
+    private function registerJobHooks(CommandStarting $event): void
     {
         $this->nightwatch->configureForJobs();
 
@@ -86,6 +86,10 @@ final class CommandStartingListener
             JobReleasedAfterException::class,
             JobFailed::class,
         ], (new JobAttemptListener($this->nightwatch))(...));
+
+        if ($event->command === 'vapor:work') {
+            $this->events->listen(CommandFinished::class, (new VaporWorkCommandFinishedListener($this->nightwatch))(...));
+        }
     }
 
     private function registerScheduledTaskHooks(): void
