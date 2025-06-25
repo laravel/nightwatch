@@ -9,13 +9,13 @@ final class Request
      */
     public function __construct(
         public readonly string $method,
-        public readonly string $url,
+        public string $url,
         public readonly string $routeName,
         public readonly array $routeMethods,
         public readonly string $routeDomain,
         public readonly string $routePath,
         public readonly string $routeAction,
-        public readonly string $ip,
+        public string $ip,
         public readonly int $duration,
         public readonly int $statusCode,
         public readonly int $requestSize,
