@@ -5,9 +5,9 @@ on:
   workflow_dispatch:
     inputs:
       version_type:
-        description: 'Version type'
+        description: "Version type"
         required: true
-        default: 'patch'
+        default: "patch"
         type: choice
         options:
           - patch
@@ -39,32 +39,44 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Bump version
+        shell: bash
         id: bump-version
         run: |
-          VERSION_TYPE=${{ github.event.inputs.version_type }}
-
-          if [[ "${VERSION_TYPE}" == "major" ]]; then
-            INDEX=0
-          elif [[ "${VERSION_TYPE}" == "minor" ]]; then
-            INDEX=1
-          elif [[ "${VERSION_TYPE}" == "patch" ]]; then
-            INDEX=2
-          else
-            echo "Unknown version type [${VERSION_TYPE}]"
-            exit 1
-          fi
-
           IFS="."
-          read -ra VERSION <<< $(<version.txt)
+          version_type=${{ inputs.version_type }}
+          current_version=$(cat version.txt)
 
-          echo "Bumping ${VERSION_TYPE} version"
-          echo "Was: ${VERSION[*]}"
+          if [[ $current_version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              major=${BASH_REMATCH[1]}
+              minor=${BASH_REMATCH[2]}
+              patch=${BASH_REMATCH[3]}
 
-          VERSION[$INDEX]=$((VERSION[$INDEX] + 1))
+            case "$version_type" in
+              major)
+                major=$((major + 1))
+                minor=0
+                patch=0
+                ;;
+              minor)
+                minor=$((minor + 1))
+                patch=0
+                ;;
+              patch)
+                patch=$((patch + 1))
+                ;;
+            esac
 
-          echo "version=${VERSION[*]}" >> "$GITHUB_OUTPUT"
-          echo "Now: ${VERSION[*]}"
-          echo "${VERSION[*]}" > version.txt
+            echo "Bumping ${version_type} version"
+            echo "Was: ${current_version}"
+
+            new_version="$major.$minor.$patch"
+            echo "version=$new_version" >> "$GITHUB_OUTPUT"
+            echo "Now: ${new_version}"
+            echo "${new_version}" > version.txt
+          else
+              echo "Current version format is invalid" >&2
+              exit 1
+          fi
 
       - uses: EndBug/add-and-commit@v9
         with:
