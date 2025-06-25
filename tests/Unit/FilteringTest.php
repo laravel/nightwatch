@@ -6,7 +6,6 @@ use App\Jobs\MyJob;
 use App\Jobs\SampledJob;
 use App\Mail\MyMail;
 use App\Notifications\MyNotification;
-use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -28,8 +27,6 @@ use function str_contains;
 
 class FilteringTest extends TestCase
 {
-    use WithConsoleEvents;
-
     protected function setUp(): void
     {
         $this->forceRequestExecutionState();
