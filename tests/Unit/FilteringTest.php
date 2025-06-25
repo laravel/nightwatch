@@ -9,6 +9,7 @@ use App\Notifications\MyNotification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
@@ -20,9 +21,11 @@ use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Records\Request;
+use RuntimeException;
 use Tests\TestCase;
 
 use function array_shift;
+use function report;
 use function str_contains;
 
 class FilteringTest extends TestCase
@@ -326,5 +329,53 @@ class FilteringTest extends TestCase
         });
         $ingest->assertLatestWrite('request:0.route_path', '/first');
         $ingest->assertLatestWrite('query:0.sql', 'select * from users');
+    }
+
+    // public function test_it_does_not_trigger_recursion_while_filtering()
+    // {
+    //     $ingest = $this->fakeIngest();
+    //     Nightwatch::interceptQueries(function (Query $query) {
+    //         DB::table('users')->exists();
+
+    //         return str_contains($query->sql, 'users');
+    //     });
+
+    //     DB::statement('select * from users');
+    //     DB::statement('select * from jobs');
+    //     $ingest->digest();
+
+    //     $ingest->assertWrittenTimes(1);
+    //     $ingest->assertLatestWrite(function ($records) {
+    //         $this->assertCount(1, $records);
+
+    //         return true;
+    //     });
+    //     $ingest->assertLatestWrite('query:0.sql', 'select * from users');
+    // }
+
+    public function test_it_can_ignore_events(): void
+    {
+        $ingest = $this->fakeIngest();
+        Http::fake([
+            'https://nightwatch.laravel.com' => Http::response(status: 200),
+        ]);
+
+        $run = false;
+        Nightwatch::ignore(function () use (&$run) {
+            report(new RuntimeException('Whoops!')); // ??
+            Log::channel('nightwatch')->info('Hello');
+            Http::get('https://nightwatch.laravel.com');
+            DB::statement('select * from users');
+            MyJob::dispatch();
+            Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
+            Mail::to('tim@laravel.com')->send(new MyMail('Hello Nightwatch'));
+            Cache::get('foo');
+
+            $run = true;
+        });
+        $this->core->digest();
+
+        $this->assertTrue($run);
+        $ingest->assertWrittenTimes(0);
     }
 }
