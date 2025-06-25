@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Laravel\Nightwatch\Records\Log;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
@@ -43,8 +42,8 @@ final class LogSensor
             // --- //
             'level' => Str::tinyText($record->level->toPsrLogLevel()),
             'message' => Str::text($record->message),
-            'context' => Str::mediumText((object) $record->context, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE)),
-            'extra' => Str::mediumText(((object) $record->extra, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE)),
-        };
+            'context' => Str::mediumText(json_encode((object) $record->context, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE)),
+            'extra' => Str::mediumText(json_encode((object) $record->extra, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE)),
+        ];
     }
 }

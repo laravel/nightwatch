@@ -2,9 +2,12 @@
 
 namespace Tests;
 
-use Laravel\Nightwatch\Records\Record;
-
-class FakeRecord extends Record
+class FakeRecord
 {
-    public string $t = 'fake-record';
+    public static function make(): array
+    {
+        return [
+            't' => 'fake-record',
+        ];
+    }
 }

@@ -65,8 +65,6 @@ final class QueuedJobSensor
             throw new RuntimeException("No start time found for [{$name}].");
         }
 
-        $this->executionState->jobsQueued++;
-
         return [
             $record = new QueuedJob(
                 jobId: $event->payload()['uuid'],
@@ -76,6 +74,8 @@ final class QueuedJobSensor
                 duration: (int) round(($now - $this->startTime) * 1_000_000),
             ),
             function () use ($now, $record) {
+                $this->executionState->jobsQueued++;
+
                 return [
                     'v' => 1,
                     't' => 'queued-job',

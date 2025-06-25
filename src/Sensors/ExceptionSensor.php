@@ -61,6 +61,8 @@ final class ExceptionSensor
         }
 
         return [
+            'v' => 1,
+            't' => 'exception',
             'timestamp' => $nowMicrotime,
             'deploy' => $this->executionState->deploy,
             'server' => $this->executionState->server,

@@ -60,8 +60,8 @@ final class OutgoingRequestSensor
                     'execution_stage' => $this->executionState->stage,
                     'user' => $this->executionState->user->id(),
                     // --- //
-                    'method' => Str::tinyText($record->method),
                     'host' => Str::tinyText($record->host),
+                    'method' => Str::tinyText($record->method),
                     'url' => Str::text($record->url),
                     'duration' => $record->duration,
                     'request_size' => $record->requestSize,

@@ -254,7 +254,10 @@ final class SensorManager
         return $sensor($e, $handled);
     }
 
-    public function log(LogRecord $record): Log
+    /**
+     * @return array<mixed>
+     */
+    public function log(LogRecord $record): array
     {
         $sensor = $this->logSensor ??= new LogSensor(
             executionState: $this->executionState,

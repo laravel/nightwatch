@@ -27,16 +27,6 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
-use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
-use Laravel\Nightwatch\Records\Command;
-use Laravel\Nightwatch\Records\JobAttempt;
-use Laravel\Nightwatch\Records\Mail;
-use Laravel\Nightwatch\Records\Notification;
-use Laravel\Nightwatch\Records\OutgoingRequest;
-use Laravel\Nightwatch\Records\Query;
-use Laravel\Nightwatch\Records\QueuedJob;
-use Laravel\Nightwatch\Records\Request as RequestRecord;
-use Laravel\Nightwatch\Records\ScheduledTask;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
 use Monolog\LogRecord;
@@ -60,33 +50,6 @@ use function random_int;
 trait CapturesState
 {
     private bool $sampling = true;
-
-    /**
-     * @var array{
-     *   cache_events: ?callable(CacheEventRecord): bool,
-     *   commands: ?callable(Command): bool,
-     *   job_attempts: ?callable(JobAttempt): bool,
-     *   mail: ?callable(Mail): bool,
-     *   notifications: ?callable(Notification): bool,
-     *   outgoing_requests: ?callable(OutgoingRequest): bool,
-     *   queries: ?callable(Query): bool,
-     *   queued_jobs: ?callable(QueuedJob): bool,
-     *   requests: ?callable(RequestRecord): bool,
-     *   scheduled_tasks: ?callable(ScheduledTask): bool,
-     * }
-     */
-    private array $interceptors = [
-        'cache_events' => null,
-        'commands' => null,
-        'job_attempts' => null,
-        'mail' => null,
-        'notifications' => null,
-        'outgoing_requests' => null,
-        'queries' => null,
-        'queued_jobs' => null,
-        'requests' => null,
-        'scheduled_tasks' => null,
-    ];
 
     private bool $waitingForJob = false;
 
@@ -180,21 +143,11 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->outgoingRequest($startMicrotime, $endMicrotime, $request, $response);
 
-        if ($this->interceptors['outgoing_requests'] && ! $this->interceptors['outgoing_requests']($record)) {
+        if (! $this->intercept($record)) {
             return;
         }
 
         $this->ingest->write($resolver());
-    }
-
-    /**
-     * @api
-     *
-     * @param  (callable(OutgoingRequest): bool)  $callback
-     */
-    public function interceptOutgoingRequests(callable $callback): void
-    {
-        $this->interceptors['outgoing_requests'] = $callback;
     }
 
     /**
@@ -211,21 +164,11 @@ trait CapturesState
 
         [$record, $resolver] = $this->sensor->query($event, $trace);
 
-        if ($this->interceptors['queries'] && ! $this->interceptors['queries']($record)) {
+        if (! $this->intercept($record)) {
             return;
         }
 
         $this->ingest->write($resolver());
-    }
-
-    /**
-     * @api
-     *
-     * @param  (callable(Query): bool)  $callback
-     */
-    public function interceptQueries(callable $callback): void
-    {
-        $this->interceptors['queries'] = $callback;
     }
 
     /**
@@ -241,16 +184,11 @@ trait CapturesState
 
         [$record, $resolver] = $queuedJob;
 
-        if ($this->interceptors['queued_jobs'] && ! $this->interceptors['queued_jobs']($record)) {
+        if (! $this->intercept($record)) {
             return;
         }
 
         $this->ingest->write($resolver());
-    }
-
-    public function interceptQueuedJob(callable $callback): void
-    {
-        $this->interceptors['queued_jobs'] = $callback;
     }
 
     /**
@@ -270,21 +208,11 @@ trait CapturesState
 
         [$record, $resolver] = $notification;
 
-        if ($this->interceptors['notifications'] && ! $this->interceptors['notifications']($record)) {
+        if (! $this->intercept($record)) {
             return;
         }
 
         $this->ingest->write($resolver());
-    }
-
-    /**
-     * @api
-     *
-     * @param  callable(Notification): bool  $callback
-     */
-    public function interceptNotifications(callable $callback): void
-    {
-        $this->interceptors['notifications'] = $callback;
     }
 
     /**
@@ -304,21 +232,11 @@ trait CapturesState
 
         [$record, $resolver] = $mail;
 
-        if ($this->interceptors['mail'] && ! $this->interceptors['mail']($record)) {
+        if (! $this->intercept($record)) {
             return;
         }
 
         $this->ingest->write($resolver());
-    }
-
-    /**
-     * @api
-     *
-     * @param  (callable(Mail): bool)  $callback
-     */
-    public function interceptMail(callable $callback): void
-    {
-        $this->interceptors['mail'] = $callback;
     }
 
     /**
@@ -338,21 +256,11 @@ trait CapturesState
 
         [$record, $resolver] = $cacheEvent;
 
-        if ($this->interceptors['cache_events'] && ! $this->interceptors['cache_events']($record)) {
+        if (! $this->intercept($record)) {
             return;
         }
 
         $this->ingest->write($resolver());
-    }
-
-    /**
-     * @api
-     *
-     * @param  (callable(CacheEventRecord): bool)  $callback
-     */
-    public function interceptCacheEvents(callable $callback): void
-    {
-        $this->interceptors['cache_events'] = $callback;
     }
 
     /**
@@ -404,16 +312,11 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->request($request, $response);
 
-        if ($this->interceptors['requests'] && ! $this->interceptors['requests']($record)) {
+        if (! $this->intercept($record)) {
             $this->dontSample();
         } else {
             $this->ingest->write($resolver());
         }
-    }
-
-    public function interceptRequests(callable $callback): void
-    {
-        $this->interceptors['requests'] = $callback;
     }
 
     /**
@@ -429,16 +332,11 @@ trait CapturesState
 
         [$record, $resolver] = $jobAttempt;
 
-        if ($this->interceptors['job_attempts'] && ! $this->interceptors['job_attempts']($record)) {
+        if (! $this->intercept($record)) {
             $this->dontSample();
         } else {
             $this->ingest->write($resolver());
         }
-    }
-
-    public function interceptJobAttempts(callable $callback): void
-    {
-        $this->interceptors['job_attempts'] = $callback;
     }
 
     /**
@@ -557,16 +455,11 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->command($input, $status);
 
-        if ($this->interceptors['commands'] && ! $this->interceptors['commands']($record)) {
+        if (! $this->intercept($record)) {
             $this->dontSample();
         } else {
             $this->ingest->write($resolver());
         }
-    }
-
-    public function interceptCommands(callable $callback): void
-    {
-        $this->interceptors['commands'] = $callback;
     }
 
     /**
@@ -610,16 +503,11 @@ trait CapturesState
 
         [$record, $resolver] = $scheduledTask;
 
-        if ($this->interceptors['scheduled_tasks'] && ! $this->interceptors['scheduled_tasks']($record)) {
+        if (! $this->intercept($record)) {
             $this->dontSample();
         } else {
             $this->ingest->write($resolver());
         }
-    }
-
-    public function interceptScheduledTasks(callable $callback): void
-    {
-        $this->interceptors['scheduled_tasks'] = $callback;
     }
 
     /**

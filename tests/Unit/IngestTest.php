@@ -49,7 +49,7 @@ class IngestTest extends TestCase
             return fopen($args[0], 'r+');
         };
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(1, $calls);
@@ -75,7 +75,7 @@ class IngestTest extends TestCase
         });
         StreamWrapper::intercept('stream_set_option', fn () => false);
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(1, $exceptions);
@@ -96,7 +96,7 @@ class IngestTest extends TestCase
 
     public function test_it_sets_the_read_timeout(): void
     {
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(1, StreamWrapper::type('stream_set_option'));
@@ -118,7 +118,7 @@ class IngestTest extends TestCase
     {
         StreamWrapper::intercept('stream_write', fn (string $value) => 32);
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(1, StreamWrapper::type('stream_write'));
@@ -144,7 +144,7 @@ class IngestTest extends TestCase
         });
         StreamWrapper::intercept('stream_write', fn (string $value) => false);
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(1, $exceptions);
@@ -170,7 +170,7 @@ class IngestTest extends TestCase
             return array_shift($writes);
         });
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(5, StreamWrapper::type('stream_write'));
@@ -213,7 +213,7 @@ class IngestTest extends TestCase
             return 3;
         });
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(1, $exceptions);
@@ -234,7 +234,7 @@ class IngestTest extends TestCase
 
     public function test_it_reads_response_from_stream(): void
     {
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(1, StreamWrapper::type('stream_read'));
@@ -259,7 +259,7 @@ class IngestTest extends TestCase
             return array_shift($response);
         });
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(4, StreamWrapper::type('stream_read'));
@@ -304,7 +304,7 @@ class IngestTest extends TestCase
             return array_shift($response);
         });
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(1, $exceptions);
@@ -331,7 +331,7 @@ class IngestTest extends TestCase
         });
         StreamWrapper::intercept('stream_read', fn () => 'XXXXXXXXXXXXXXXXXXXXXXX');
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(1, $exceptions);
@@ -352,7 +352,7 @@ class IngestTest extends TestCase
 
     public function test_it_closes_the_stream(): void
     {
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertSame('stream_close', StreamWrapper::$events->pluck('type')->last());
@@ -377,7 +377,7 @@ class IngestTest extends TestCase
             return false;
         });
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(1, $exceptions);
@@ -409,7 +409,7 @@ class IngestTest extends TestCase
             return '';
         });
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(1, $exceptions);
@@ -454,7 +454,7 @@ class IngestTest extends TestCase
             return '';
         });
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertSame(5, $reads);
@@ -504,7 +504,7 @@ class IngestTest extends TestCase
         });
 
         for ($i = 0; $i < 499; $i++) {
-            $this->core->ingest->write(new FakeRecord);
+            $this->core->ingest->write(FakeRecord::make());
         }
 
         $this->assertCount(0, $writes);
@@ -520,26 +520,26 @@ class IngestTest extends TestCase
         });
 
         for ($i = 0; $i < 499; $i++) {
-            $this->core->ingest->write(new FakeRecord);
+            $this->core->ingest->write(FakeRecord::make());
         }
 
         $this->assertCount(0, $writes);
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
 
         $this->assertCount(2, $writes);
-        $this->assertSame('10009:'.Payload::SIGNATURE.':['.implode(',', array_fill(0, 500, json_encode(new FakeRecord))).']', implode('', $writes));
+        $this->assertSame('10009:'.Payload::SIGNATURE.':['.implode(',', array_fill(0, 500, json_encode(FakeRecord::make()))).']', implode('', $writes));
 
         for ($i = 0; $i < 499; $i++) {
-            $this->core->ingest->write(new FakeRecord);
+            $this->core->ingest->write(FakeRecord::make());
         }
 
         $this->assertCount(2, $writes);
 
-        $this->core->ingest->write(new FakeRecord);
+        $this->core->ingest->write(FakeRecord::make());
 
         $this->assertCount(4, $writes);
-        $this->assertSame(str_repeat('10009:'.Payload::SIGNATURE.':['.implode(',', array_fill(0, 500, json_encode(new FakeRecord))).']', 2), implode('', $writes));
+        $this->assertSame(str_repeat('10009:'.Payload::SIGNATURE.':['.implode(',', array_fill(0, 500, json_encode(FakeRecord::make()))).']', 2), implode('', $writes));
     }
 }
 
