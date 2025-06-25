@@ -388,7 +388,7 @@ class FilteringTest extends TestCase
 
         $run = false;
         Nightwatch::ignore(function () use (&$run) {
-            report(new RuntimeException('Whoops!')); // ??
+            report(new RuntimeException('Whoops!'));
             Log::channel('nightwatch')->info('Hello');
             Http::get('https://nightwatch.laravel.com');
             DB::statement('select * from users');

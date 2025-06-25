@@ -33,8 +33,6 @@ final class GuzzleMiddleware
             return $handler;
         }
 
-        // TODO
-
         return function (RequestInterface $request, array $options) use ($handler): PromiseInterface {
             try {
                 $startMicrotime = $this->nightwatch->clock->microtime();
