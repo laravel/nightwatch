@@ -189,7 +189,7 @@ final class ScheduledTaskSensor
                     '_group' => hash('xxh128', "{$record->name},{$record->cron},{$record->timezone}"),
                     'trace_id' => (string) Str::uuid(),
                     // --- //
-                    'name' => $record->name,
+                    'name' => Str::tinyText($record->name),
                     'cron' => $record->cron,
                     'timezone' => $record->timezone,
                     'without_overlapping' => $record->withoutOverlapping,
