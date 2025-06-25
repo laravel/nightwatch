@@ -35,6 +35,7 @@ use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
+use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\Records\ScheduledTask;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
@@ -70,7 +71,7 @@ trait CapturesState
      *   outgoing_requests: ?callable(OutgoingRequest): bool,
      *   queries: ?callable(Query): bool,
      *   queued_jobs: ?callable(QueuedJob): bool,
-     *   requests: ?callable(Request): bool,
+     *   requests: ?callable(RequestRecord): bool,
      *   scheduled_tasks: ?callable(ScheduledTask): bool,
      * }
      */
