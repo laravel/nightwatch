@@ -68,7 +68,7 @@ trait InterceptsState
     /**
      * @api
      *
-     * @param  (callable(CacheEvent): bool)  $callback
+     * @param  callable(CacheEvent): bool  $callback
      */
     public function interceptCacheEvents(callable $callback): void
     {
@@ -78,7 +78,7 @@ trait InterceptsState
     /**
      * @api
      *
-     * @param  (callable(Command): bool)  $callback
+     * @param  callable(Command): bool  $callback
      */
     public function interceptCommands(callable $callback): void
     {
@@ -88,7 +88,7 @@ trait InterceptsState
     /**
      * @api
      *
-     * @param  (callable(JobAttempt): bool)  $callback
+     * @param  callable(JobAttempt): bool  $callback
      */
     public function interceptJobAttempts(callable $callback): void
     {
@@ -98,7 +98,7 @@ trait InterceptsState
     /**
      * @api
      *
-     * @param  (callable(Mail): bool)  $callback
+     * @param  callable(Mail): bool  $callback
      */
     public function interceptMail(callable $callback): void
     {
@@ -118,7 +118,7 @@ trait InterceptsState
     /**
      * @api
      *
-     * @param  (callable(OutgoingRequest): bool)  $callback
+     * @param  callable(OutgoingRequest): bool  $callback
      */
     public function interceptOutgoingRequests(callable $callback): void
     {
@@ -128,7 +128,7 @@ trait InterceptsState
     /**
      * @api
      *
-     * @param  (callable(Query): bool)  $callback
+     * @param  callable(Query): bool  $callback
      */
     public function interceptQueries(callable $callback): void
     {
@@ -138,7 +138,7 @@ trait InterceptsState
     /**
      * @api
      *
-     * @param  (callable(QueuedJob): bool)  $callback
+     * @param  callable(QueuedJob): bool  $callback
      */
     public function interceptQueuedJob(callable $callback): void
     {
@@ -148,7 +148,7 @@ trait InterceptsState
     /**
      * @api
      *
-     * @param  (callable(Request): bool)  $callback
+     * @param  callable(Request): bool  $callback
      */
     public function interceptRequests(callable $callback): void
     {
@@ -158,7 +158,7 @@ trait InterceptsState
     /**
      * @api
      *
-     * @param  (callable(ScheduledTask): bool)  $callback
+     * @param  callable(ScheduledTask): bool  $callback
      */
     public function interceptScheduledTasks(callable $callback): void
     {
