@@ -116,6 +116,11 @@ final class RequestState
         $this->filesWritten = 0;
         $this->cacheEvents = 0;
         $this->hydratedModels = 0;
+        $this->executionPreview = '';
         $this->exceptionPreview = '';
+        $this->user->flush();
+        foreach ($this->stageDurations as $key => $value) {
+            $this->stageDurations[$key] = 0;
+        }
     }
 }

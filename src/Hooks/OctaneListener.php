@@ -6,8 +6,6 @@ use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Octane\Events\RequestReceived;
-use Laravel\Octane\Events\TaskReceived;
-use Laravel\Octane\Events\TickReceived;
 use Throwable;
 
 class OctaneListener
@@ -20,10 +18,10 @@ class OctaneListener
         //
     }
 
-    public function __invoke(RequestReceived|TaskReceived|TickReceived $event): void // @phpstan-ignore class.notFound, class.notFound, class.notFound
+    public function __invoke(RequestReceived $event): void // @phpstan-ignore class.notFound, class.notFound, class.notFound
     {
         try {
-            $this->nightwatch->prepareForNextOctaneOperation();
+            $this->nightwatch->prepareForNextRequest();
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

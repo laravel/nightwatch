@@ -13,7 +13,6 @@ use function call_user_func;
  */
 final class UserProvider
 {
-    // TODO we need to reset this state between executions.
     private ?Authenticatable $rememberedUser = null;
 
     /**
@@ -76,5 +75,10 @@ final class UserProvider
     public function remember(Authenticatable $user): void
     {
         $this->rememberedUser = $user;
+    }
+
+    public function flush(): void
+    {
+        $this->rememberedUser = null;
     }
 }
