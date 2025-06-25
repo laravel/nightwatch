@@ -281,7 +281,7 @@ class FilteringTest extends TestCase
     public function test_it_can_filter_queued_jobs(): void
     {
         $ingest = $this->fakeIngest();
-        Nightwatch::interceptQueuedJob(function (QueuedJob $queuedJob) {
+        Nightwatch::interceptQueuedJobs(function (QueuedJob $queuedJob) {
             return $queuedJob->name === SampledJob::class;
         });
 
@@ -331,27 +331,53 @@ class FilteringTest extends TestCase
         $ingest->assertLatestWrite('query:0.sql', 'select * from users');
     }
 
-    // public function test_it_does_not_trigger_recursion_while_filtering()
-    // {
-    //     $ingest = $this->fakeIngest();
-    //     Nightwatch::interceptQueries(function (Query $query) {
-    //         DB::table('users')->exists();
+    public function test_it_does_not_trigger_recursion_while_filtering()
+    {
+        $ingest = $this->fakeIngest();
+        Http::fake([
+            'https://nightwatch.laravel.com' => Http::response(status: 200),
+        ]);
+        Nightwatch::interceptQueries(function () {
+            return DB::table('users')->exists();
 
-    //         return str_contains($query->sql, 'users');
-    //     });
+            return false;
+        });
+        Nightwatch::interceptQueuedJobs(function () {
+            MyJob::dispatch();
 
-    //     DB::statement('select * from users');
-    //     DB::statement('select * from jobs');
-    //     $ingest->digest();
+            return false;
+        });
+        Nightwatch::interceptOutgoingRequests(function () {
+            Http::get('https://nightwatch.laravel.com');
 
-    //     $ingest->assertWrittenTimes(1);
-    //     $ingest->assertLatestWrite(function ($records) {
-    //         $this->assertCount(1, $records);
+            return false;
+        });
+        Nightwatch::interceptNotifications(function (NotificationRecord $notification) use (&$keep) {
+            Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
 
-    //         return true;
-    //     });
-    //     $ingest->assertLatestWrite('query:0.sql', 'select * from users');
-    // }
+            return false;
+        });
+        Nightwatch::interceptMail(function (MailRecord $mail) {
+            Mail::to('tim@laravel.com')->send(new MyMail('Hello Laravel'));
+
+            return false;
+        });
+        Nightwatch::interceptCacheEvents(function (CacheEvent $cacheEvent) {
+            Cache::get('keep');
+
+            return false;
+        });
+
+        DB::statement('select * from users');
+        MyJob::dispatch();
+        Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
+        Mail::to('tim@laravel.com')->send(new MyMail('Hello Laravel'));
+        Cache::get('keep');
+        Http::get('https://nightwatch.laravel.com');
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(0);
+    }
 
     public function test_it_can_ignore_events(): void
     {

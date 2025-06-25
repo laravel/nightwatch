@@ -185,11 +185,11 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->outgoingRequest($startMicrotime, $endMicrotime, $request, $response);
 
-        if (! $this->intercept($record)) {
-            return;
-        }
+        $capture = $this->ignore(fn () => $this->intercept($record));
 
-        $this->ingest->write($resolver());
+        if ($capture) {
+            $this->ingest->write($resolver());
+        }
     }
 
     /**
@@ -206,11 +206,11 @@ trait CapturesState
 
         [$record, $resolver] = $this->sensor->query($event, $trace);
 
-        if (! $this->intercept($record)) {
-            return;
-        }
+        $capture = $this->ignore(fn () => $this->intercept($record));
 
-        $this->ingest->write($resolver());
+        if ($capture) {
+            $this->ingest->write($resolver());
+        }
     }
 
     /**
@@ -230,11 +230,11 @@ trait CapturesState
 
         [$record, $resolver] = $queuedJob;
 
-        if (! $this->intercept($record)) {
-            return;
-        }
+        $capture = $this->ignore(fn () => $this->intercept($record));
 
-        $this->ingest->write($resolver());
+        if ($capture) {
+            $this->ingest->write($resolver());
+        }
     }
 
     /**
@@ -254,11 +254,11 @@ trait CapturesState
 
         [$record, $resolver] = $notification;
 
-        if (! $this->intercept($record)) {
-            return;
-        }
+        $capture = $this->ignore(fn () => $this->intercept($record));
 
-        $this->ingest->write($resolver());
+        if ($capture) {
+            $this->ingest->write($resolver());
+        }
     }
 
     /**
@@ -278,11 +278,11 @@ trait CapturesState
 
         [$record, $resolver] = $mail;
 
-        if (! $this->intercept($record)) {
-            return;
-        }
+        $capture = $this->ignore(fn () => $this->intercept($record));
 
-        $this->ingest->write($resolver());
+        if ($capture) {
+            $this->ingest->write($resolver());
+        }
     }
 
     /**
@@ -302,11 +302,11 @@ trait CapturesState
 
         [$record, $resolver] = $cacheEvent;
 
-        if (! $this->intercept($record)) {
-            return;
-        }
+        $capture = $this->ignore(fn () => $this->intercept($record));
 
-        $this->ingest->write($resolver());
+        if ($capture) {
+            $this->ingest->write($resolver());
+        }
     }
 
     /**
@@ -358,10 +358,10 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->request($request, $response);
 
-        if (! $this->intercept($record)) {
-            $this->dontSample();
-        } else {
+        if ($this->intercept($record)) {
             $this->ingest->write($resolver());
+        } else {
+            $this->dontSample();
         }
     }
 
@@ -378,10 +378,10 @@ trait CapturesState
 
         [$record, $resolver] = $jobAttempt;
 
-        if (! $this->intercept($record)) {
-            $this->dontSample();
-        } else {
+        if ($this->intercept($record)) {
             $this->ingest->write($resolver());
+        } else {
+            $this->dontSample();
         }
     }
 
@@ -501,10 +501,10 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->command($input, $status);
 
-        if (! $this->intercept($record)) {
-            $this->dontSample();
-        } else {
+        if ($this->intercept($record)) {
             $this->ingest->write($resolver());
+        } else {
+            $this->dontSample();
         }
     }
 
@@ -550,10 +550,10 @@ trait CapturesState
 
         [$record, $resolver] = $scheduledTask;
 
-        if (! $this->intercept($record)) {
-            $this->dontSample();
-        } else {
+        if ($this->intercept($record)) {
             $this->ingest->write($resolver());
+        } else {
+            $this->dontSample();
         }
     }
 

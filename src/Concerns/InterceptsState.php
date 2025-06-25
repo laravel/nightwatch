@@ -140,7 +140,7 @@ trait InterceptsState
      *
      * @param  callable(QueuedJob): bool  $callback
      */
-    public function interceptQueuedJob(callable $callback): void
+    public function interceptQueuedJobs(callable $callback): void
     {
         $this->queuedJobInterceptor = $callback;
     }
