@@ -79,7 +79,7 @@ final class SensorManager
     public $outgoingRequestSensor;
 
     /**
-     * @var (callable(QueryExecuted, list<array{ file?: string, line?: int }>): array{0: QueryExecuted, 1: callable(): array<mixed>})|null
+     * @var (callable(QueryExecuted, list<array{ file?: string, line?: int }>): array{0: Query, 1: callable(): array<mixed>})|null
      */
     public $querySensor;
 
@@ -94,7 +94,7 @@ final class SensorManager
     public $jobAttemptSensor;
 
     /**
-     * @var (callable(NotificationSending|NotificationSent): ?array{0: Notification, 1: array<mixed>})|null
+     * @var (callable(NotificationSending|NotificationSent): ?array{0: Notification, 1: callable(): array<mixed>})|null
      */
     public $notificationSensor;
 
