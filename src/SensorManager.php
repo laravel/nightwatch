@@ -20,9 +20,7 @@ use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\Records\Command;
-use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\Records\JobAttempt;
-use Laravel\Nightwatch\Records\Log;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\OutgoingRequest;
@@ -30,7 +28,6 @@ use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\Records\ScheduledTask;
-use Laravel\Nightwatch\Records\User;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
@@ -62,52 +59,52 @@ use Throwable;
 final class SensorManager
 {
     /**
-     * @var (callable(CacheEvent): ?CacheEventRecord)|null
+     * @var (callable(CacheEvent): ?array{0: CacheEventRecord, 1: callable(): array<mixed>})|null
      */
     public $cacheEventSensor;
 
     /**
-     * @var (callable(Throwable, null|bool): Exception)|null
+     * @var (callable(Throwable, null|bool): array<mixed>)|null
      */
     public $exceptionSensor;
 
     /**
-     * @var (callable(LogRecord): Log)|null
+     * @var (callable(LogRecord): array<mixed>)|null
      */
     public $logSensor;
 
     /**
-     * @var (callable(float, float, RequestInterface, ResponseInterface): OutgoingRequest)|null
+     * @var (callable(float, float, RequestInterface, ResponseInterface): array{0: OutgoingRequest, 1: callable(): array<mixed>})|null
      */
     public $outgoingRequestSensor;
 
     /**
-     * @var (callable(QueryExecuted, list<array{ file?: string, line?: int }>): Query)|null
+     * @var (callable(QueryExecuted, list<array{ file?: string, line?: int }>): array{0: QueryExecuted, 1: callable(): array<mixed>})|null
      */
     public $querySensor;
 
     /**
-     * @var (callable(JobQueueing|JobQueued): ?QueuedJob)|null
+     * @var (callable(JobQueueing|JobQueued): ?array{0: QueuedJob, 1: callable(): array<mixed>})|null
      */
     public $queuedJobSensor;
 
     /**
-     * @var (callable(JobProcessed|JobReleasedAfterException|JobFailed): ?JobAttempt)|null
+     * @var (callable(JobProcessed|JobReleasedAfterException|JobFailed): ?array{0: JobAttempt, 1: callable(): array<mixed>})|null
      */
     public $jobAttemptSensor;
 
     /**
-     * @var (callable(NotificationSending|NotificationSent): ?Notification)|null
+     * @var (callable(NotificationSending|NotificationSent): ?array{0: Notification, 1: array<mixed>})|null
      */
     public $notificationSensor;
 
     /**
-     * @var (callable(MessageSending|MessageSent): ?Mail)|null
+     * @var (callable(MessageSending|MessageSent): ?array{0: Mail, 1: callable(): array<mixed>})|null
      */
     public $mailSensor;
 
     /**
-     * @var (callable(): ?User)|null
+     * @var (callable(): ?array<mixed>)|null
      */
     public $userSensor;
 
@@ -117,17 +114,17 @@ final class SensorManager
     public $stageSensor;
 
     /**
-     * @var (callable(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed): ?ScheduledTask)|null
+     * @var (callable(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed): ?array{0: ScheduledTask, 1: callable(): array<mixed>})|null
      */
     public $scheduledTaskSensor;
 
     /**
-     * @var (callable(Request, Response): RequestRecord)|null
+     * @var (callable(Request, Response): array{0: RequestRecord, 1: callable(): array<mixed>})|null
      */
     public $requestSensor;
 
     /**
-     * @var (callable(InputInterface, int): Command)|null
+     * @var (callable(InputInterface, int): array{0: Command, 1: callable(): array<mixed>})|null
      */
     public $commandSensor;
 
@@ -216,7 +213,7 @@ final class SensorManager
     }
 
     /**
-     * @return array{0: Notification, 1: callable(): array<mixed>}
+     * @return ?array{0: Notification, 1: callable(): array<mixed>}
      */
     public function notification(NotificationSending|NotificationSent $event): ?array
     {

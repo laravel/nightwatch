@@ -30,7 +30,7 @@ final class NotificationSensor
     }
 
     /**
-     * @return array{0: Notification, 1: callable(): array<mixed>}
+     * @return ?array{0: Notification, 1: callable(): array<mixed>}
      */
     public function __invoke(NotificationSending|NotificationSent $event): ?array
     {

@@ -31,7 +31,7 @@ final class QuerySensor
 
     /**
      * @param  list<array{ file?: string, line?: int }>  $trace
-     * @return array{ 0: Query, 1: callable(): array<mixed>}
+     * @return array{0: Query, 1: callable(): array<mixed>}
      */
     public function __invoke(QueryExecuted $event, array $trace): array
     {
