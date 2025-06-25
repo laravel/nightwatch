@@ -150,7 +150,10 @@ final class SensorManager
         $sensor($executionStage);
     }
 
-    public function request(Request $request, Response $response): RequestRecord
+    /**
+     * @return array{0: RequestRecord, 1: callable(): array<mixed>}
+     */
+    public function request(Request $request, Response $response): array
     {
         $sensor = $this->requestSensor ??= new RequestSensor(
             requestState: $this->executionState, // @phpstan-ignore argument.type

@@ -387,7 +387,18 @@ trait CapturesState
      */
     public function request(Request $request, Response $response): void
     {
-        $this->ingest->write($this->sensor->request($request, $response));
+        [$record, $resolver] = $this->sensor->request($request, $response);
+
+        if ($this->interceptors['requests'] && ! $this->interceptors['requests']($record)) {
+            $this->dontSample();
+        } else {
+            $this->ingest->write($resolver());
+        }
+    }
+
+    public function interceptRequests(callable $callback): void
+    {
+        $this->interceptors['requests'] = $callback;
     }
 
     /**

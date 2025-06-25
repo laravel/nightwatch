@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Mail as MailRecord;
@@ -19,6 +20,7 @@ use Laravel\Nightwatch\Records\Notification as NotificationRecord;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
+use Laravel\Nightwatch\Records\Request;
 use Tests\TestCase;
 
 use function array_shift;
@@ -299,5 +301,33 @@ class FilteringTest extends TestCase
             return true;
         });
         $ingest->assertLatestWrite('queued-job:0.name', SampledJob::class);
+    }
+
+    public function test_it_can_filter_requests(): void
+    {
+        $ingest = $this->fakeIngest();
+        Nightwatch::interceptRequests(function (Request $request) {
+            return $request->routePath === '/first';
+        });
+        Route::get('/first', function () {
+            DB::select('select * from users');
+        });
+        Route::get('/second', function () {
+            DB::select('select * from jobs');
+        });
+
+        $this->get('/first')->assertOk();
+        $this->assertTrue($this->core->sampling());
+        $this->get('/second')->assertOk();
+        $this->assertFalse($this->core->sampling());
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('request:0.route_path', '/first');
+        $ingest->assertLatestWrite('query:0.sql', 'select * from users');
     }
 }
