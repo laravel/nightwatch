@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Mail as MailRecord;
@@ -377,5 +379,52 @@ class FilteringTest extends TestCase
         });
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('log:0.message', 'Hello');
+    }
+
+    public function test_ignore_prevents_dispatched_jobs_from_being_captured(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {
+            $this->assertTrue(Compatibility::getHiddenContext('nightwatch_should_sample'));
+            MyJob::dispatch();
+
+            $response = $this->core->ignore(function () {
+                MyJob::dispatch();
+                $this->assertFalse(Compatibility::getHiddenContext('nightwatch_should_sample'));
+
+                return 'ok';
+            });
+
+            MyJob::dispatch();
+            $this->assertTrue(Compatibility::getHiddenContext('nightwatch_should_sample'));
+
+            return $response;
+        });
+
+        $response = $this->get('/test');
+
+        $response->assertOk();
+        $response->assertContent('ok');
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(5, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('queued-job:0.name', MyJob::class);
+        $ingest->assertLatestWrite('queued-job:1.name', MyJob::class);
+        $ingest->assertLatestWrite('query:0.sql', 'insert into "jobs" ("queue", "attempts", "reserved_at", "available_at", "created_at", "payload") values (?, ?, ?, ?, ?, ?)');
+        $ingest->assertLatestWrite('query:1.sql', 'insert into "jobs" ("queue", "attempts", "reserved_at", "available_at", "created_at", "payload") values (?, ?, ?, ?, ?, ?)');
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/test');
+        [$first, $second, $third] = DB::table('jobs')->orderBy('id')->pluck('payload');
+        if (Compatibility::$contextExists) {
+            $this->assertStringContainsString('"nightwatch_should_sample":"b:1;"', $first);
+            $this->assertStringContainsString('"nightwatch_should_sample":"b:0;"', $second);
+            $this->assertStringContainsString('"nightwatch_should_sample":"b:1;"', $third);
+        } else {
+            $this->assertStringContainsString('"nightwatch_should_sample":true', $first);
+            $this->assertStringContainsString('"nightwatch_should_sample":false', $second);
+            $this->assertStringContainsString('"nightwatch_should_sample":true', $third);
+        }
     }
 }

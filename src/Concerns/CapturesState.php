@@ -119,12 +119,12 @@ trait CapturesState
 
         try {
             $this->paused = true;
-            // Compatibility::addHiddenContext(...);
+            Compatibility::addHiddenContext('nightwatch_should_sample', ! $this->paused);
 
             return $callback();
         } finally {
             $this->paused = $cachedPaused;
-            // Compatibility::addHiddenContext(...);
+            Compatibility::addHiddenContext('nightwatch_should_sample', ! $this->paused);
         }
     }
 
@@ -134,7 +134,8 @@ trait CapturesState
     public function resume(): void
     {
         $this->paused = false;
-        // Compatibility::addHiddenContext(...);
+
+        Compatibility::addHiddenContext('nightwatch_should_sample', true);
     }
 
     /**
@@ -143,7 +144,8 @@ trait CapturesState
     public function pause(): void
     {
         $this->paused = true;
-        // Compatibility::addHiddenContext(...);
+
+        Compatibility::addHiddenContext('nightwatch_should_sample', false);
     }
 
     /**
