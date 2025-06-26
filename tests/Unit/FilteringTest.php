@@ -357,9 +357,6 @@ class FilteringTest extends TestCase
     public function test_exceptions_and_logs_are_not_ignored()
     {
         $ingest = $this->fakeIngest();
-        Http::fake([
-            'https://nightwatch.laravel.com' => Http::response(status: 200),
-        ]);
 
         $run = false;
         Nightwatch::ignore(function () use (&$run) {
