@@ -67,8 +67,6 @@ use Laravel\Nightwatch\Http\Middleware\Sample;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Octane\Events\RequestReceived;
-use Laravel\Octane\Events\TaskReceived;
-use Laravel\Octane\Events\TickReceived;
 use Throwable;
 
 use function defined;
@@ -341,11 +339,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             KeyForgetFailed::class,
         ], (new CacheEventListener($core))(...));
 
-        $events->listen([
-            RequestReceived::class, // @phpstan-ignore class.notFound
-            TaskReceived::class, // @phpstan-ignore class.notFound
-            TickReceived::class, // @phpstan-ignore class.notFound
-        ], (new OctaneListener($core))(...));
+        $events->listen(RequestReceived::class, (new OctaneListener($core))(...)); // @phpstan-ignore class.notFound
 
         //
         // -------------------------------------------------------------------------
