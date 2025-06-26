@@ -10,6 +10,8 @@ use Throwable;
 
 class OctaneListener
 {
+    private bool $firstRequest = true;
+
     /**
      * @param  Core<RequestState|CommandState>  $nightwatch
      */
@@ -20,6 +22,12 @@ class OctaneListener
 
     public function __invoke(RequestReceived $event): void // @phpstan-ignore class.notFound
     {
+        if ($this->firstRequest) {
+            $this->firstRequest = false;
+
+            return;
+        }
+
         try {
             $this->nightwatch->prepareForNextRequest();
         } catch (Throwable $e) {
