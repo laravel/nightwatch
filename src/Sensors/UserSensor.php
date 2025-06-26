@@ -3,33 +3,36 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Contracts\Ingest;
-use Laravel\Nightwatch\Records\User;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Types\Str;
 
 final class UserSensor
 {
     public function __construct(
-        private Ingest $ingest,
         private RequestState $requestState,
         public Clock $clock,
     ) {
         //
     }
 
-    public function __invoke(): void
+    /**
+     * @return ?array<mixed>
+     */
+    public function __invoke(): ?array
     {
         $details = $this->requestState->user->details();
 
         if ($details === null) {
-            return;
+            return null;
         }
 
-        $this->ingest->write(new User(
-            timestamp: $this->clock->microtime(),
-            id: (string) $details['id'], // @phpstan-ignore cast.string
-            name: (string) ($details['name'] ?? ''), // @phpstan-ignore cast.string
-            username: (string) ($details['username'] ?? ''), // @phpstan-ignore cast.string
-        ));
+        return [
+            'v' => 1,
+            't' => 'user',
+            'timestamp' => $this->clock->microtime(),
+            'id' => Str::tinyText((string) $details['id']), // @phpstan-ignore cast.string
+            'name' => Str::tinyText((string) ($details['name'] ?? '')), // @phpstan-ignore cast.string
+            'username' => Str::tinyText((string) ($details['username'] ?? '')), // @phpstan-ignore cast.string
+        ];
     }
 }

@@ -18,7 +18,12 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
-use Laravel\Nightwatch\Contracts\Ingest;
+use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
+use Laravel\Nightwatch\Records\Mail;
+use Laravel\Nightwatch\Records\Notification;
+use Laravel\Nightwatch\Records\OutgoingRequest;
+use Laravel\Nightwatch\Records\Query;
+use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
@@ -48,52 +53,52 @@ use Throwable;
 final class SensorManager
 {
     /**
-     * @var (callable(CacheEvent): void)|null
+     * @var (callable(CacheEvent): ?array{0: CacheEventRecord, 1: callable(): array<mixed>})|null
      */
     public $cacheEventSensor;
 
     /**
-     * @var (callable(Throwable, null|bool): void)|null
+     * @var (callable(Throwable, null|bool): array<mixed>)|null
      */
     public $exceptionSensor;
 
     /**
-     * @var (callable(LogRecord): void)|null
+     * @var (callable(LogRecord): array<mixed>)|null
      */
     public $logSensor;
 
     /**
-     * @var (callable(float, float, RequestInterface, ResponseInterface): void)|null
+     * @var (callable(float, float, RequestInterface, ResponseInterface): array{0: OutgoingRequest, 1: callable(): array<mixed>})|null
      */
     public $outgoingRequestSensor;
 
     /**
-     * @var (callable(QueryExecuted, list<array{ file?: string, line?: int }>): void)|null
+     * @var (callable(QueryExecuted, list<array{ file?: string, line?: int }>): array{0: Query, 1: callable(): array<mixed>})|null
      */
     public $querySensor;
 
     /**
-     * @var (callable(JobQueueing|JobQueued): void)|null
+     * @var (callable(JobQueueing|JobQueued): ?array{0: QueuedJob, 1: callable(): array<mixed>})|null
      */
     public $queuedJobSensor;
 
     /**
-     * @var (callable(JobProcessed|JobReleasedAfterException|JobFailed): void)|null
+     * @var (callable(JobProcessed|JobReleasedAfterException|JobFailed): ?array<mixed>)|null
      */
     public $jobAttemptSensor;
 
     /**
-     * @var (callable(NotificationSending|NotificationSent): void)|null
+     * @var (callable(NotificationSending|NotificationSent): ?array{0: Notification, 1: callable(): array<mixed>})|null
      */
     public $notificationSensor;
 
     /**
-     * @var (callable(MessageSending|MessageSent): void)|null
+     * @var (callable(MessageSending|MessageSent): ?array{0: Mail, 1: callable(): array<mixed>})|null
      */
     public $mailSensor;
 
     /**
-     * @var (callable(): void)|null
+     * @var (callable(): ?array<mixed>)|null
      */
     public $userSensor;
 
@@ -103,22 +108,21 @@ final class SensorManager
     public $stageSensor;
 
     /**
-     * @var (callable(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed): void)|null
+     * @var (callable(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed): ?array<mixed>)|null
      */
     public $scheduledTaskSensor;
 
     /**
-     * @var (callable(Request, Response): void)|null
+     * @var (callable(Request, Response): array<mixed>)|null
      */
     public $requestSensor;
 
     /**
-     * @var (callable(InputInterface, int): void)|null
+     * @var (callable(InputInterface, int): array<mixed>)|null
      */
     public $commandSensor;
 
     public function __construct(
-        public Ingest $ingest,
         private RequestState|CommandState $executionState,
         private Clock $clock,
         public Location $location,
@@ -137,150 +141,174 @@ final class SensorManager
         $sensor($executionStage);
     }
 
-    public function request(Request $request, Response $response): void
+    /**
+     * @return array<mixed>
+     */
+    public function request(Request $request, Response $response): array
     {
         $sensor = $this->requestSensor ??= new RequestSensor(
-            ingest: $this->ingest,
             requestState: $this->executionState, // @phpstan-ignore argument.type
         );
 
-        $sensor($request, $response);
+        return $sensor($request, $response);
     }
 
-    public function command(InputInterface $input, int $status): void
+    /**
+     * @return array<mixed>
+     */
+    public function command(InputInterface $input, int $status): array
     {
         $sensor = $this->commandSensor ??= new CommandSensor(
-            ingest: $this->ingest,
             commandState: $this->executionState, // @phpstan-ignore argument.type
         );
 
-        $sensor($input, $status);
+        return $sensor($input, $status);
     }
 
     /**
      * @param  list<array{ file?: string, line?: int }>  $trace
+     * @return array{0: Query, 1: callable(): array<mixed>}
      */
-    public function query(QueryExecuted $event, array $trace): void
+    public function query(QueryExecuted $event, array $trace): array
     {
         $sensor = $this->querySensor ??= new QuerySensor(
-            ingest: $this->ingest,
             executionState: $this->executionState,
             clock: $this->clock,
             location: $this->location,
         );
 
-        $sensor($event, $trace);
+        return $sensor($event, $trace);
     }
 
-    public function cacheEvent(CacheEvent $event): void
+    /**
+     * @return array{0: CacheEventRecord, 1: callable(): array<mixed>}
+     */
+    public function cacheEvent(CacheEvent $event): ?array
     {
         $sensor = $this->cacheEventSensor ??= new CacheEventSensor(
-            ingest: $this->ingest,
             executionState: $this->executionState,
             clock: $this->clock,
         );
 
-        $sensor($event);
+        return $sensor($event);
     }
 
-    public function mail(MessageSending|MessageSent $event): void
+    /**
+     * @return array{0: Mail, 1: callable(): array<mixed>}
+     */
+    public function mail(MessageSending|MessageSent $event): ?array
     {
         $sensor = $this->mailSensor ??= new MailSensor(
-            ingest: $this->ingest,
             executionState: $this->executionState,
             clock: $this->clock,
         );
 
-        $sensor($event);
+        return $sensor($event);
     }
 
-    public function notification(NotificationSending|NotificationSent $event): void
+    /**
+     * @return ?array{0: Notification, 1: callable(): array<mixed>}
+     */
+    public function notification(NotificationSending|NotificationSent $event): ?array
     {
         $sensor = $this->notificationSensor ??= new NotificationSensor(
-            ingest: $this->ingest,
             executionState: $this->executionState,
             clock: $this->clock,
         );
 
-        $sensor($event);
+        return $sensor($event);
     }
 
-    public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
+    /**
+     * @return array{0: OutgoingRequest, 1: callable(): array<mixed>}
+     */
+    public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): array
     {
         $sensor = $this->outgoingRequestSensor ??= new OutgoingRequestSensor(
-            ingest: $this->ingest,
             executionState: $this->executionState,
         );
 
-        $sensor($startMicrotime, $endMicrotime, $request, $response);
+        return $sensor($startMicrotime, $endMicrotime, $request, $response);
     }
 
-    public function exception(Throwable $e, ?bool $handled): void
+    /**
+     * @return array<mixed>
+     */
+    public function exception(Throwable $e, ?bool $handled): array
     {
         $sensor = $this->exceptionSensor ??= new ExceptionSensor(
-            ingest: $this->ingest,
             executionState: $this->executionState,
             clock: $this->clock,
             location: $this->location,
         );
 
-        $sensor($e, $handled);
+        return $sensor($e, $handled);
     }
 
-    public function log(LogRecord $record): void
+    /**
+     * @return array<mixed>
+     */
+    public function log(LogRecord $record): array
     {
         $sensor = $this->logSensor ??= new LogSensor(
-            ingest: $this->ingest,
             executionState: $this->executionState,
         );
 
-        $sensor($record);
+        return $sensor($record);
     }
 
-    public function queuedJob(JobQueueing|JobQueued $event): void
+    /**
+     * @return ?array{0: QueuedJob, 1: callable(): array<mixed>}
+     */
+    public function queuedJob(JobQueueing|JobQueued $event): ?array
     {
         $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
-            ingest: $this->ingest,
             executionState: $this->executionState,
             clock: $this->clock,
             connectionConfig: $this->config->all()['queue']['connections'] ?? [],
         );
 
-        $sensor($event);
+        return $sensor($event);
     }
 
-    public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
+    /**
+     * @return ?array<mixed>
+     */
+    public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): ?array
     {
         $sensor = $this->jobAttemptSensor ??= new JobAttemptSensor(
-            ingest: $this->ingest,
             commandState: $this->executionState, // @phpstan-ignore argument.type
             clock: $this->clock,
             connectionConfig: $this->config->all()['queue']['connections'] ?? [],
         );
 
-        $sensor($event);
+        return $sensor($event);
     }
 
-    public function scheduledTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
+    /**
+     * @return ?array<mixed>
+     */
+    public function scheduledTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): ?array
     {
         $sensor = $this->scheduledTaskSensor ??= new ScheduledTaskSensor(
-            ingest: $this->ingest,
             commandState: $this->executionState, // @phpstan-ignore argument.type
             clock: $this->clock,
         );
 
-        $sensor($event);
+        return $sensor($event);
     }
 
-    public function user(): void
+    /**
+     * @return ?array<mixed>
+     */
+    public function user(): ?array
     {
         $sensor = $this->userSensor ??= new UserSensor(
-            ingest: $this->ingest,
             requestState: $this->executionState, // @phpstan-ignore argument.type
             clock: $this->clock,
         );
 
-        $sensor();
+        return $sensor();
     }
 
     public function flush(): void

@@ -2,45 +2,15 @@
 
 namespace Laravel\Nightwatch\Records;
 
-use Laravel\Nightwatch\ExecutionStage;
-use Laravel\Nightwatch\LazyValue;
-use Laravel\Nightwatch\Types\Str;
-
-/**
- * @internal
- */
-final class Query extends Record
+final class Query
 {
-    public int $v = 1;
-
-    public string $t = 'query';
-
-    /**
-     * @param  string|LazyValue<string>  $trace_id
-     * @param  LazyValue<string>  $execution_id
-     * @param  LazyValue<string>  $execution_preview
-     * @param  string|LazyValue<string>  $user
-     */
     public function __construct(
-        public float $timestamp,
-        public string $deploy,
-        public string $server,
-        public string $_group,
-        public string|LazyValue $trace_id,
-        public string $execution_source,
-        public LazyValue $execution_id,
-        public LazyValue $execution_preview,
-        public ExecutionStage $execution_stage,
-        public string|LazyValue $user,
-        // --- //
-        public string $sql,
-        public string $file,
-        public int $line,
-        public int $duration,
-        public string $connection,
+        public readonly string $sql,
+        public readonly string $file,
+        public readonly int $line,
+        public readonly int $duration,
+        public readonly string $connection,
     ) {
-        $this->sql = Str::mediumText($this->sql);
-        $this->file = Str::tinyText($this->file);
-        $this->connection = Str::tinyText($this->connection);
+        //
     }
 }

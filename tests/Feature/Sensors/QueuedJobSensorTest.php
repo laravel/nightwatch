@@ -211,14 +211,14 @@ class QueuedJobSensorTest extends TestCase
             delay: 0,
         ));
 
-        $this->core->sensor->queuedJob(new JobQueued(
+        $this->core->ingest->write($this->core->sensor->queuedJob(new JobQueued(
             connectionName: 'my-sqs-queue',
             queue: 'https://sqs.us-east-1.amazonaws.com/your-account-id/queue-name-production',
             id: Str::uuid()->toString(),
             job: 'Tests\Feature\Sensors\MyJobClass',
             payload: '{"uuid":"00000000-0000-0000-0000-000000000000"}',
             delay: 0,
-        ));
+        ))[1]());
         $ingest->digest();
 
         $ingest->assertWrittenTimes(1);

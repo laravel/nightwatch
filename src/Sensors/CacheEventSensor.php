@@ -16,10 +16,10 @@ use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Compatibility;
-use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Types\Str;
 use RuntimeException;
 
 use function hash;
@@ -42,14 +42,16 @@ final class CacheEventSensor
     ];
 
     public function __construct(
-        private Ingest $ingest,
         private RequestState|CommandState $executionState,
         private Clock $clock,
     ) {
         //
     }
 
-    public function __invoke(CacheEvent $event): void
+    /**
+     * @return array{0: CacheEventRecord, 1: callable(): array<mixed>}
+     */
+    public function __invoke(CacheEvent $event): ?array
     {
         $now = $this->clock->microtime();
 
@@ -57,7 +59,7 @@ final class CacheEventSensor
             if (in_array($event::class, self::START_EVENTS, strict: true)) {
                 $this->startTime = $now;
 
-                return;
+                return null;
             }
 
             if ($this->startTime === null) {
@@ -76,8 +78,6 @@ final class CacheEventSensor
             ? ($event->storeName ?? '')
             : '';
 
-        $this->executionState->cacheEvents++;
-
         $type = match ($event::class) {
             CacheHit::class => 'hit',
             CacheMissed::class => 'miss',
@@ -88,22 +88,38 @@ final class CacheEventSensor
             default => throw new RuntimeException('Unexpected event type ['.$event::class.']'),
         };
 
-        $this->ingest->write(new CacheEventRecord(
-            timestamp: $startTime,
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
-            _group: hash('xxh128', "{$storeName},{$event->key}"),
-            trace_id: $this->executionState->trace,
-            execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id(),
-            execution_preview: $this->executionState->executionPreview(),
-            execution_stage: $this->executionState->stage,
-            user: $this->executionState->user->id(),
-            store: $storeName,
-            key: $event->key ?? '', // @phpstan-ignore nullCoalesce.property
-            type: $type,
-            duration: $duration,
-            ttl: in_array($event::class, [KeyWritten::class, KeyWriteFailed::class], true) ? ($event->seconds ?? 0) : 0,
-        ));
+        return [
+            $record = new CacheEventRecord(
+                store: $storeName,
+                key: $event->key ?? '', // @phpstan-ignore nullCoalesce.property
+                type: $type,
+                duration: $duration,
+                ttl: in_array($event::class, [KeyWritten::class, KeyWriteFailed::class], true) ? ($event->seconds ?? 0) : 0,
+            ),
+            function () use ($startTime, $record) {
+                $this->executionState->cacheEvents++;
+
+                return [
+                    'v' => 1,
+                    't' => 'cache-event',
+                    'timestamp' => $startTime,
+                    'deploy' => $this->executionState->deploy,
+                    'server' => $this->executionState->server,
+                    '_group' => hash('xxh128', "{$record->store},{$record->key}"),
+                    'trace_id' => $this->executionState->trace,
+                    'execution_source' => $this->executionState->source,
+                    'execution_id' => $this->executionState->id(),
+                    'execution_preview' => $this->executionState->executionPreview(),
+                    'execution_stage' => $this->executionState->stage,
+                    'user' => $this->executionState->user->id(),
+                    // --- //
+                    'store' => Str::tinyText($record->store),
+                    'key' => Str::tinyText($record->key),
+                    'type' => $record->type,
+                    'duration' => $record->duration,
+                    'ttl' => $record->ttl,
+                ];
+            },
+        ];
     }
 }

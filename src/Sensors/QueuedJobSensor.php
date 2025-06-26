@@ -8,10 +8,10 @@ use Illuminate\Queue\Events\JobQueueing;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
-use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Types\Str;
 use ReflectionClass;
 use RuntimeException;
 
@@ -35,7 +35,6 @@ final class QueuedJobSensor
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
      */
     public function __construct(
-        private Ingest $ingest,
         private RequestState|CommandState $executionState,
         private Clock $clock,
         private array $connectionConfig,
@@ -43,14 +42,17 @@ final class QueuedJobSensor
         //
     }
 
-    public function __invoke(JobQueueing|JobQueued $event): void
+    /**
+     * @return ?array{0: QueuedJob, 1: callable(): array<mixed>}
+     */
+    public function __invoke(JobQueueing|JobQueued $event): ?array
     {
         $now = $this->clock->microtime();
 
         if ($event instanceof JobQueueing) {
             $this->startTime = $now;
 
-            return;
+            return null;
         }
 
         $name = match (true) {
@@ -63,25 +65,38 @@ final class QueuedJobSensor
             throw new RuntimeException("No start time found for [{$name}].");
         }
 
-        $this->executionState->jobsQueued++;
+        return [
+            $record = new QueuedJob(
+                jobId: $event->payload()['uuid'],
+                name: $name,
+                connection: $event->connectionName,
+                queue: $this->normalizeQueue($event->connectionName, $this->resolveQueue($event)),
+                duration: (int) round(($now - $this->startTime) * 1_000_000),
+            ),
+            function () use ($now, $record) {
+                $this->executionState->jobsQueued++;
 
-        $this->ingest->write(new QueuedJob(
-            timestamp: $now,
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
-            _group: hash('xxh128', $name),
-            trace_id: $this->executionState->trace,
-            execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id(),
-            execution_preview: $this->executionState->executionPreview(),
-            execution_stage: $this->executionState->stage,
-            user: $this->executionState->user->id(),
-            job_id: $event->payload()['uuid'],
-            name: $name,
-            connection: $event->connectionName,
-            queue: $this->normalizeQueue($event->connectionName, $this->resolveQueue($event)),
-            duration: (int) round(($now - $this->startTime) * 1_000_000)
-        ));
+                return [
+                    'v' => 1,
+                    't' => 'queued-job',
+                    'timestamp' => $now,
+                    'deploy' => $this->executionState->deploy,
+                    'server' => $this->executionState->server,
+                    '_group' => hash('xxh128', $record->name),
+                    'trace_id' => $this->executionState->trace,
+                    'execution_source' => $this->executionState->source,
+                    'execution_id' => $this->executionState->id(),
+                    'execution_preview' => $this->executionState->executionPreview(),
+                    'execution_stage' => $this->executionState->stage,
+                    'user' => $this->executionState->user->id(),
+                    'job_id' => $record->jobId,
+                    'name' => Str::text($record->name),
+                    'connection' => Str::tinyText($record->connection),
+                    'queue' => Str::tinyText($record->queue),
+                    'duration' => $record->duration,
+                ];
+            },
+        ];
     }
 
     private function resolveQueue(JobQueued $event): string
