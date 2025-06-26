@@ -27,8 +27,6 @@ final class HttpClientFactoryResolvedHandler
         try {
             /**
              * @see \Laravel\Nightwatch\Records\OutgoingRequest
-             *
-             * TODO check this isn't a memory leak in octane
              */
             $factory->globalMiddleware($this->nightwatch->guzzleMiddleware());
         } catch (Throwable $e) {
