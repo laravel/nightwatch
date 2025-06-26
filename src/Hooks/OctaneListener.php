@@ -18,7 +18,7 @@ class OctaneListener
         //
     }
 
-    public function __invoke(RequestReceived $event): void // @phpstan-ignore class.notFound, class.notFound, class.notFound
+    public function __invoke(RequestReceived $event): void // @phpstan-ignore class.notFound
     {
         try {
             $this->nightwatch->prepareForNextRequest();

@@ -421,7 +421,7 @@ trait CapturesState
 
         $this->executionState->timestamp = $timestamp;
         $this->executionState->trace = $trace;
-        $this->executionState->id = $trace;
+        $this->executionState->setId($trace);
         $this->executionState->currentExecutionStageStartedAtMicrotime = $timestamp;
         $this->executionState->stage = ExecutionStage::BeforeMiddleware;
     }
