@@ -45,6 +45,5 @@ final class RequestLifecycleIsLongerThanHandler
         }
 
         $this->nightwatch->digest();
-
     }
 }
