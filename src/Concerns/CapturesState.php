@@ -51,7 +51,7 @@ trait CapturesState
 {
     private bool $sampling = true;
 
-    private bool $monitoring = true;
+    private bool $paused = false;
 
     private bool $waitingForJob = false;
 
@@ -115,39 +115,39 @@ trait CapturesState
      */
     public function ignore(callable $callback): mixed
     {
-        $cachedMonitoring = $this->monitoring;
+        $cachedMonitoring = $this->paused;
 
         try {
-            $this->monitoring = false;
+            $this->paused = true;
 
             return $callback();
         } finally {
-            $this->monitoring = $cachedMonitoring;
+            $this->paused = $cachedMonitoring;
         }
     }
 
     /**
      * @api
      */
-    public function startMonitoring(): void
+    public function resume(): void
     {
-        $this->monitoring = true;
+        $this->paused = false;
     }
 
     /**
      * @api
      */
-    public function stopMonitoring(): void
+    public function pause(): void
     {
-        $this->monitoring = false;
+        $this->paused = true;
     }
 
     /**
      * @api
      */
-    public function monitoring(): bool
+    public function paused(): bool
     {
-        return $this->monitoring;
+        return $this->paused;
     }
 
     /**
@@ -155,7 +155,7 @@ trait CapturesState
      */
     public function report(Throwable $e, ?bool $handled = null): void
     {
-        if (! $this->enabled() || ! $this->monitoring) {
+        if (! $this->enabled() || $this->paused) {
             return;
         }
 
@@ -197,7 +197,7 @@ trait CapturesState
      */
     public function query(QueryExecuted $event): void
     {
-        if ($this->config['filtering']['ignore_queries'] || ! $this->monitoring) {
+        if ($this->config['filtering']['ignore_queries'] || $this->paused) {
             return;
         }
 
@@ -218,7 +218,7 @@ trait CapturesState
      */
     public function queuedJob(JobQueueing|JobQueued $event): void
     {
-        if (! $this->monitoring) {
+        if ($this->paused) {
             return;
         }
 
@@ -242,7 +242,7 @@ trait CapturesState
      */
     public function notification(NotificationSending|NotificationSent $event): void
     {
-        if ($this->config['filtering']['ignore_notifications'] || ! $this->monitoring) {
+        if ($this->config['filtering']['ignore_notifications'] || $this->paused) {
             return;
         }
 
@@ -266,7 +266,7 @@ trait CapturesState
      */
     public function mail(MessageSending|MessageSent $event): void
     {
-        if ($this->config['filtering']['ignore_mail'] || ! $this->monitoring) {
+        if ($this->config['filtering']['ignore_mail'] || $this->paused) {
             return;
         }
 
@@ -290,7 +290,7 @@ trait CapturesState
      */
     public function cacheEvent(CacheEvent $event): void
     {
-        if ($this->config['filtering']['ignore_cache_events'] || ! $this->monitoring) {
+        if ($this->config['filtering']['ignore_cache_events'] || $this->paused) {
             return;
         }
 
@@ -447,7 +447,7 @@ trait CapturesState
     public function prepareForNextJob(): void
     {
         $this->flush();
-        $this->monitoring = true;
+        $this->paused = false;
         memory_reset_peak_usage();
     }
 
@@ -527,7 +527,7 @@ trait CapturesState
          * we need to clear previous task data to avoid metric pollution.
          */
         $this->flush();
-        $this->monitoring = true;
+        $this->paused = false;
         memory_reset_peak_usage();
 
         $trace = (string) Str::uuid();
@@ -562,7 +562,7 @@ trait CapturesState
      */
     public function shouldCaptureLogs(): bool
     {
-        return $this->enabled() && $this->monitoring;
+        return $this->enabled();
     }
 
     /**
