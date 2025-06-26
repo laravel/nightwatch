@@ -55,7 +55,7 @@ final class JobAttemptSensor
             'user' => $this->commandState->user->id(),
             // --- //
             'job_id' => $event->job->uuid(),
-            'attempt_id' => $this->commandState->id()->resolve(),
+            'attempt_id' => $this->commandState->id(),
             'attempt' => $event->job->attempts(),
             'name' => $name,
             'connection' => $event->job->getConnectionName(),
