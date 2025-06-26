@@ -119,7 +119,7 @@ trait CapturesState
 
         try {
             $this->paused = true;
-            Compatibility::addHiddenContext('nightwatch_should_sample', ! $this->paused);
+            Compatibility::addHiddenContext('nightwatch_should_sample', false);
 
             return $callback();
         } finally {
