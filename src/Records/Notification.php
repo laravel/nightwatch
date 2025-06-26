@@ -8,7 +8,6 @@ final class Notification
         public readonly string $channel,
         public readonly string $class,
         public readonly int $duration,
-        public readonly bool $failed,
     ) {
         //
     }

@@ -57,7 +57,6 @@ final class NotificationSensor
                 channel: $event->channel,
                 class: $class,
                 duration: (int) round(($now - $this->startTime) * 1_000_000),
-                failed: false, // TODO: The framework doesn't dispatch the `NotificationFailed` event.
             ),
             function () use ($now, $record) {
                 $this->executionState->notifications++;
@@ -79,7 +78,7 @@ final class NotificationSensor
                     'channel' => Str::tinyText($record->channel),
                     'class' => Str::tinyText($record->class),
                     'duration' => $record->duration,
-                    'failed' => $record->failed,
+                    'failed' => false, // TODO: The framework doesn't dispatch the `NotificationFailed` event.
                 ];
             },
         ];
