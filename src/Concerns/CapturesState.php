@@ -437,7 +437,7 @@ trait CapturesState
     public function prepareForNextJob(): void
     {
         $this->flush();
-        $this->paused = false;
+        $this->resume();
         memory_reset_peak_usage();
     }
 
@@ -511,7 +511,7 @@ trait CapturesState
          * we need to clear previous task data to avoid metric pollution.
          */
         $this->flush();
-        $this->paused = false;
+        $this->resume();
         memory_reset_peak_usage();
 
         $trace = (string) Str::uuid();
