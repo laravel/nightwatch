@@ -348,11 +348,9 @@ trait CapturesState
     {
         $user = $this->sensor->user();
 
-        if ($user === null) {
-            return;
+        if ($user !== null) {
+            $this->ingest->write($user);
         }
-
-        $this->ingest->write($user);
     }
 
     /**
