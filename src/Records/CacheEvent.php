@@ -9,7 +9,7 @@ final class CacheEvent
      */
     public function __construct(
         public readonly string $store,
-        public string $key,
+        public readonly string $key,
         public readonly string $type,
         public readonly int $duration,
         public readonly int $ttl,

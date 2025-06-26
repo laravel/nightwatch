@@ -119,10 +119,12 @@ trait CapturesState
 
         try {
             $this->paused = true;
+            // Compatibility::addHiddenContext(...);
 
             return $callback();
         } finally {
             $this->paused = $cachedPaused;
+            // Compatibility::addHiddenContext(...);
         }
     }
 
@@ -132,6 +134,7 @@ trait CapturesState
     public function resume(): void
     {
         $this->paused = false;
+        // Compatibility::addHiddenContext(...);
     }
 
     /**
@@ -140,6 +143,7 @@ trait CapturesState
     public function pause(): void
     {
         $this->paused = true;
+        // Compatibility::addHiddenContext(...);
     }
 
     /**
@@ -185,11 +189,11 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->outgoingRequest($startMicrotime, $endMicrotime, $request, $response);
 
-        $capture = $this->ignore(fn () => $this->intercept($record));
-
-        if ($capture) {
-            $this->ingest->write($resolver());
+        if ($this->rejectOutgoingRequestCallback && $this->ignore(fn () => ($this->rejectOutgoingRequestCallback)($record))) {
+            return;
         }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -206,11 +210,11 @@ trait CapturesState
 
         [$record, $resolver] = $this->sensor->query($event, $trace);
 
-        $capture = $this->ignore(fn () => $this->intercept($record));
-
-        if ($capture) {
-            $this->ingest->write($resolver());
+        if ($this->rejectQueryCallback && $this->ignore(fn () => ($this->rejectQueryCallback)($record))) {
+            return;
         }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -230,11 +234,11 @@ trait CapturesState
 
         [$record, $resolver] = $queuedJob;
 
-        $capture = $this->ignore(fn () => $this->intercept($record));
-
-        if ($capture) {
-            $this->ingest->write($resolver());
+        if ($this->rejectQueuedJobCallback && $this->ignore(fn () => ($this->rejectQueuedJobCallback)($record))) {
+            return;
         }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -254,11 +258,11 @@ trait CapturesState
 
         [$record, $resolver] = $notification;
 
-        $capture = $this->ignore(fn () => $this->intercept($record));
-
-        if ($capture) {
-            $this->ingest->write($resolver());
+        if ($this->rejectNotificationCallback && $this->ignore(fn () => ($this->rejectNotificationCallback)($record))) {
+            return;
         }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -278,11 +282,11 @@ trait CapturesState
 
         [$record, $resolver] = $mail;
 
-        $capture = $this->ignore(fn () => $this->intercept($record));
-
-        if ($capture) {
-            $this->ingest->write($resolver());
+        if ($this->rejectMailCallback && $this->ignore(fn () => ($this->rejectMailCallback)($record))) {
+            return;
         }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -302,11 +306,11 @@ trait CapturesState
 
         [$record, $resolver] = $cacheEvent;
 
-        $capture = $this->ignore(fn () => $this->intercept($record));
-
-        if ($capture) {
-            $this->ingest->write($resolver());
+        if ($this->rejectCacheEventCallback && $this->ignore(fn () => ($this->rejectCacheEventCallback)($record))) {
+            return;
         }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -356,13 +360,7 @@ trait CapturesState
      */
     public function request(Request $request, Response $response): void
     {
-        [$record, $resolver] = $this->sensor->request($request, $response);
-
-        if ($this->intercept($record)) {
-            $this->ingest->write($resolver());
-        } else {
-            $this->dontSample();
-        }
+        $this->ingest->write($this->sensor->request($request, $response));
     }
 
     /**
@@ -372,16 +370,8 @@ trait CapturesState
     {
         $jobAttempt = $jobAttempt = $this->sensor->jobAttempt($event);
 
-        if ($jobAttempt === null) {
-            return;
-        }
-
-        [$record, $resolver] = $jobAttempt;
-
-        if ($this->intercept($record)) {
-            $this->ingest->write($resolver());
-        } else {
-            $this->dontSample();
+        if ($jobAttempt !== null) {
+            $this->ingest->write($jobAttempt);
         }
     }
 
@@ -499,13 +489,7 @@ trait CapturesState
      */
     public function command(InputInterface $input, int $status): void
     {
-        [$record, $resolver] = $this->sensor->command($input, $status);
-
-        if ($this->intercept($record)) {
-            $this->ingest->write($resolver());
-        } else {
-            $this->dontSample();
-        }
+        $this->ingest->write($this->sensor->command($input, $status));
     }
 
     /**
@@ -544,16 +528,8 @@ trait CapturesState
     {
         $scheduledTask = $this->sensor->scheduledTask($event);
 
-        if ($scheduledTask === null) {
-            return;
-        }
-
-        [$record, $resolver] = $scheduledTask;
-
-        if ($this->intercept($record)) {
-            $this->ingest->write($resolver());
-        } else {
-            $this->dontSample();
+        if ($scheduledTask !== null) {
+            $this->ingest->write($scheduledTask);
         }
     }
 

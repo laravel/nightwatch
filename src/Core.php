@@ -17,7 +17,7 @@ use WeakMap;
 final class Core
 {
     use Concerns\CapturesState,
-        Concerns\InterceptsState;
+        Concerns\RejectsRecords;
 
     /**
      * @internal

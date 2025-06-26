@@ -19,15 +19,11 @@ use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
-use Laravel\Nightwatch\Records\Command;
-use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
-use Laravel\Nightwatch\Records\Request as RequestRecord;
-use Laravel\Nightwatch\Records\ScheduledTask;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
@@ -89,7 +85,7 @@ final class SensorManager
     public $queuedJobSensor;
 
     /**
-     * @var (callable(JobProcessed|JobReleasedAfterException|JobFailed): ?array{0: JobAttempt, 1: callable(): array<mixed>})|null
+     * @var (callable(JobProcessed|JobReleasedAfterException|JobFailed): ?array<mixed>)|null
      */
     public $jobAttemptSensor;
 
@@ -114,17 +110,17 @@ final class SensorManager
     public $stageSensor;
 
     /**
-     * @var (callable(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed): ?array{0: ScheduledTask, 1: callable(): array<mixed>})|null
+     * @var (callable(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed): ?array<mixed>)|null
      */
     public $scheduledTaskSensor;
 
     /**
-     * @var (callable(Request, Response): array{0: RequestRecord, 1: callable(): array<mixed>})|null
+     * @var (callable(Request, Response): array<mixed>)|null
      */
     public $requestSensor;
 
     /**
-     * @var (callable(InputInterface, int): array{0: Command, 1: callable(): array<mixed>})|null
+     * @var (callable(InputInterface, int): array<mixed>)|null
      */
     public $commandSensor;
 
@@ -148,7 +144,7 @@ final class SensorManager
     }
 
     /**
-     * @return array{0: RequestRecord, 1: callable(): array<mixed>}
+     * @return array<mixed>
      */
     public function request(Request $request, Response $response): array
     {
@@ -160,7 +156,7 @@ final class SensorManager
     }
 
     /**
-     * @return array{0: Command, 1: callable(): array<mixed>}
+     * @return array<mixed>
      */
     public function command(InputInterface $input, int $status): array
     {
@@ -278,7 +274,7 @@ final class SensorManager
     }
 
     /**
-     * @return ?array{0: JobAttempt, 1: callable(): array<mixed>}
+     * @return ?array<mixed>
      */
     public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): ?array
     {
@@ -292,7 +288,7 @@ final class SensorManager
     }
 
     /**
-     * @return array{0: ScheduledTask, 1: callable(): array<mixed>}
+     * @return ?array<mixed>
      */
     public function scheduledTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): ?array
     {

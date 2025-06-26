@@ -11,7 +11,6 @@ use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Records\ScheduledTask;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
 use ReflectionClass;
@@ -40,7 +39,7 @@ final class ScheduledTaskSensor
     }
 
     /**
-     * @return array{0: ScheduledTask, 1: callable(): array<mixed>}
+     * @return ?array<mixed>
      */
     public function __invoke(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): ?array
     {
@@ -53,56 +52,41 @@ final class ScheduledTaskSensor
         }
 
         return [
-            $record = new ScheduledTask(
-                name: $name,
-                cron: $event->task->expression,
-                timezone: $timezone,
-                withoutOverlapping: $event->task->withoutOverlapping,
-                onOneServer: $event->task->onOneServer,
-                runInBackground: $event->task->runInBackground,
-                evenInMaintenanceMode: $event->task->evenInMaintenanceMode,
-                status: match ($event::class) { // @phpstan-ignore-line match.unhandled
-                    ScheduledTaskFinished::class => 'processed',
-                    ScheduledTaskFailed::class => 'failed',
-                },
-                duration: (int) round(($now - $this->commandState->timestamp) * 1_000_000),
-            ),
-            function () use ($record) {
-                return [
-                    'v' => 1,
-                    't' => 'scheduled-task',
-                    'timestamp' => $this->commandState->timestamp,
-                    'deploy' => $this->commandState->deploy,
-                    'server' => $this->commandState->server,
-                    '_group' => hash('xxh128', "{$record->name},{$record->cron},{$record->timezone}"),
-                    'trace_id' => $this->commandState->trace,
-                    // --- //
-                    'name' => Str::tinyText($record->name),
-                    'cron' => $record->cron,
-                    'timezone' => $record->timezone,
-                    'without_overlapping' => $record->withoutOverlapping,
-                    'on_one_server' => $record->onOneServer,
-                    'run_in_background' => $record->runInBackground,
-                    'even_in_maintenance_mode' => $record->evenInMaintenanceMode,
-                    'status' => $record->status,
-                    'duration' => $record->duration,
-                    // --- //
-                    'exceptions' => $this->commandState->exceptions,
-                    'logs' => $this->commandState->logs,
-                    'queries' => $this->commandState->queries,
-                    'lazy_loads' => $this->commandState->lazyLoads,
-                    'jobs_queued' => $this->commandState->jobsQueued,
-                    'mail' => $this->commandState->mail,
-                    'notifications' => $this->commandState->notifications,
-                    'outgoing_requests' => $this->commandState->outgoingRequests,
-                    'files_read' => $this->commandState->filesRead,
-                    'files_written' => $this->commandState->filesWritten,
-                    'cache_events' => $this->commandState->cacheEvents,
-                    'hydrated_models' => $this->commandState->hydratedModels,
-                    'peak_memory_usage' => $this->commandState->peakMemory(),
-                    'exception_preview' => Str::tinyText($this->commandState->exceptionPreview),
-                ];
+            'v' => 1,
+            't' => 'scheduled-task',
+            'timestamp' => $this->commandState->timestamp,
+            'deploy' => $this->commandState->deploy,
+            'server' => $this->commandState->server,
+            '_group' => hash('xxh128', "{$name},{$event->task->expression},{$timezone}"),
+            'trace_id' => $this->commandState->trace,
+            // --- //
+            'name' => $name,
+            'cron' => $event->task->expression,
+            'timezone' => $timezone,
+            'without_overlapping' => $event->task->withoutOverlapping,
+            'on_one_server' => $event->task->onOneServer,
+            'run_in_background' => $event->task->runInBackground,
+            'even_in_maintenance_mode' => $event->task->evenInMaintenanceMode,
+            'status' => match ($event::class) { // @phpstan-ignore-line match.unhandled
+                ScheduledTaskFinished::class => 'processed',
+                ScheduledTaskFailed::class => 'failed',
             },
+            'duration' => (int) round(($now - $this->commandState->timestamp) * 1_000_000),
+            // --- //
+            'exceptions' => $this->commandState->exceptions,
+            'logs' => $this->commandState->logs,
+            'queries' => $this->commandState->queries,
+            'lazy_loads' => $this->commandState->lazyLoads,
+            'jobs_queued' => $this->commandState->jobsQueued,
+            'mail' => $this->commandState->mail,
+            'notifications' => $this->commandState->notifications,
+            'outgoing_requests' => $this->commandState->outgoingRequests,
+            'files_read' => $this->commandState->filesRead,
+            'files_written' => $this->commandState->filesWritten,
+            'cache_events' => $this->commandState->cacheEvents,
+            'hydrated_models' => $this->commandState->hydratedModels,
+            'peak_memory_usage' => $this->commandState->peakMemory(),
+            'exception_preview' => Str::tinyText($this->commandState->exceptionPreview),
         ];
     }
 
@@ -163,58 +147,43 @@ final class ScheduledTaskSensor
      * When a scheduled task is skipped, Laravel does not dispatch the `ScheduledTaskStarting` event.
      * Therefore, we need to manually generate a timestamp and trace ID for these tasks.
      *
-     * @return array{0: ScheduledTask, 1: callable(): array<mixed>}
+     * @return array<mixed>
      */
     private function recordSkippedTask(ScheduledTaskSkipped $event, float $timestamp, string $name, string $timezone): array
     {
         return [
-            $record = new ScheduledTask(
-                name: $name,
-                cron: $event->task->expression,
-                timezone: $timezone,
-                withoutOverlapping: $event->task->withoutOverlapping,
-                onOneServer: $event->task->onOneServer,
-                runInBackground: $event->task->runInBackground,
-                evenInMaintenanceMode: $event->task->evenInMaintenanceMode,
-                status: 'skipped',
-                duration: 0,
-            ),
-            function () use ($timestamp, $record) {
-                return [
-                    'v' => 1,
-                    't' => 'scheduled-task',
-                    'timestamp' => $timestamp,
-                    'deploy' => $this->commandState->deploy,
-                    'server' => $this->commandState->server,
-                    '_group' => hash('xxh128', "{$record->name},{$record->cron},{$record->timezone}"),
-                    'trace_id' => (string) Str::uuid(),
-                    // --- //
-                    'name' => Str::tinyText($record->name),
-                    'cron' => $record->cron,
-                    'timezone' => $record->timezone,
-                    'without_overlapping' => $record->withoutOverlapping,
-                    'on_one_server' => $record->onOneServer,
-                    'run_in_background' => $record->runInBackground,
-                    'even_in_maintenance_mode' => $record->evenInMaintenanceMode,
-                    'status' => $record->status,
-                    'duration' => $record->duration,
-                    // --- //
-                    'exceptions' => 0,
-                    'logs' => 0,
-                    'queries' => 0,
-                    'lazy_loads' => 0,
-                    'jobs_queued' => 0,
-                    'mail' => 0,
-                    'notifications' => 0,
-                    'outgoing_requests' => 0,
-                    'files_read' => 0,
-                    'files_written' => 0,
-                    'cache_events' => 0,
-                    'hydrated_models' => 0,
-                    'peak_memory_usage' => 0,
-                    'exception_preview' => '',
-                ];
-            },
+            'v' => 1,
+            't' => 'scheduled-task',
+            'timestamp' => $timestamp,
+            'deploy' => $this->commandState->deploy,
+            'server' => $this->commandState->server,
+            '_group' => hash('xxh128', "{$name},{$event->task->expression},{$timezone}"),
+            'trace_id' => (string) Str::uuid(),
+            // --- //
+            'name' => $name,
+            'cron' => $event->task->expression,
+            'timezone' => $timezone,
+            'without_overlapping' => $event->task->withoutOverlapping,
+            'on_one_server' => $event->task->onOneServer,
+            'run_in_background' => $event->task->runInBackground,
+            'even_in_maintenance_mode' => $event->task->evenInMaintenanceMode,
+            'status' => 'skipped',
+            'duration' => 0,
+            // --- //
+            'exceptions' => 0,
+            'logs' => 0,
+            'queries' => 0,
+            'lazy_loads' => 0,
+            'jobs_queued' => 0,
+            'mail' => 0,
+            'notifications' => 0,
+            'outgoing_requests' => 0,
+            'files_read' => 0,
+            'files_written' => 0,
+            'cache_events' => 0,
+            'hydrated_models' => 0,
+            'peak_memory_usage' => 0,
+            'exception_preview' => '',
         ];
     }
 }

@@ -36,14 +36,13 @@ final class OutgoingRequestSensor
         return [
             $record = new OutgoingRequest(
                 method: $request->getMethod(),
-                host: $uri->getHost(),
                 url: (string) $uri,
                 duration: $duration,
                 requestSize: $this->resolveMessageSize($request) ?? 0,
                 responseSize: $this->resolveMessageSize($response) ?? 0,
                 statusCode: $response->getStatusCode(),
             ),
-            function () use ($startMicrotime, $record) {
+            function () use ($startMicrotime, $uri, $record) {
                 $this->executionState->outgoingRequests++;
 
                 return [
@@ -52,7 +51,7 @@ final class OutgoingRequestSensor
                     'timestamp' => $startMicrotime,
                     'deploy' => $this->executionState->deploy,
                     'server' => $this->executionState->server,
-                    '_group' => hash('xxh128', $record->host),
+                    '_group' => hash('xxh128', $uri->getHost()),
                     'trace_id' => $this->executionState->trace,
                     'execution_source' => $this->executionState->source,
                     'execution_id' => $this->executionState->id(),
@@ -60,7 +59,7 @@ final class OutgoingRequestSensor
                     'execution_stage' => $this->executionState->stage,
                     'user' => $this->executionState->user->id(),
                     // --- //
-                    'host' => Str::tinyText($record->host),
+                    'host' => Str::tinyText($uri->getHost()),
                     'method' => Str::tinyText($record->method),
                     'url' => Str::text($record->url),
                     'duration' => $record->duration,
