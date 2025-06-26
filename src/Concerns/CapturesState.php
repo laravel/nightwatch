@@ -115,14 +115,14 @@ trait CapturesState
      */
     public function ignore(callable $callback): mixed
     {
-        $cachedMonitoring = $this->paused;
+        $cachedPaused = $this->paused;
 
         try {
             $this->paused = true;
 
             return $callback();
         } finally {
-            $this->paused = $cachedMonitoring;
+            $this->paused = $cachedPaused;
         }
     }
 
