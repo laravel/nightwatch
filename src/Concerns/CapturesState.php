@@ -155,7 +155,7 @@ trait CapturesState
      */
     public function report(Throwable $e, ?bool $handled = null): void
     {
-        if (! $this->enabled() || $this->paused) {
+        if (! $this->enabled()) {
             return;
         }
 
