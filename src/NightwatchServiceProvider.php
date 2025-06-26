@@ -100,6 +100,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      *         ignore_notifications?: bool,
      *         ignore_outgoing_requests?: bool,
      *         ignore_queries?: bool,
+     *         log_level?: \Psr\Log\LogLevel::*,
      *     },
      *     token?: string,
      *     deployment?: string,
@@ -184,6 +185,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->config->set('logging.channels.nightwatch', [
                 'driver' => 'custom',
                 'via' => Logger::class,
+                'level' => $this->nightwatchConfig['filtering']['log_level'] ?? 'debug',
             ]);
         }
 

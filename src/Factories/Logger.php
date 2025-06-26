@@ -27,14 +27,14 @@ final class Logger
     }
 
     /**
-     * @param  array<string, mixed>  $config
+     * @param  array<string, mixed>&array{level: \Psr\Log\LogLevel::*}  $config
      */
     public function __invoke(array $config): LoggerInterface
     {
         return new Monolog(
             name: 'nightwatch',
             handlers: [
-                new LogHandler($this->nightwatch),
+                new LogHandler($this->nightwatch, Monolog::toMonologLevel($config['level'])),
             ],
             processors: [
                 new LogRecordProcessor($this->nightwatch, 'Y-m-d H:i:s.uP'),
