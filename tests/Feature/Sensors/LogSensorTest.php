@@ -21,9 +21,6 @@ class LogSensorTest extends TestCase
     {
         $this->forceRequestExecutionState();
 
-        Env::getRepository()->clear('LOG_LEVEL');
-        Env::getRepository()->clear('NIGHTWATCH_LOG_LEVEL');
-
         parent::setUp();
 
         $this->setDeploy('v1.2.3');
@@ -32,6 +29,14 @@ class LogSensorTest extends TestCase
         $this->setTraceId('00000000-0000-0000-0000-000000000000');
         $this->setExecutionId('00000000-0000-0000-0000-000000000001');
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        Env::getRepository()->clear('LOG_LEVEL');
+        Env::getRepository()->clear('NIGHTWATCH_LOG_LEVEL');
     }
 
     public function test_it_ingests_logs(): void
