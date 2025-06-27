@@ -59,7 +59,7 @@ class ServerTest extends TestCase
         $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake;
-        $signature = $this->agentSignature();
+        $signature = $this->payloadSignature();
 
         $loop->addTimer(0, $server->pendingConnection("12:{$signature}:PING"));
 
@@ -117,7 +117,7 @@ class ServerTest extends TestCase
         $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Incoming signature has changed
+        {date} {info} Incoming payload signature has changed
         {date} {info} Shutting down
         OUTPUT, $output);
         $loop->assertRun([

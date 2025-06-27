@@ -17,7 +17,7 @@ final class Payload
      *
      * Do not modify or re-locate this constant.
      */
-    public const SIGNATURE = '76D218F';
+    public const PAYLOAD_SIGNATURE = 'ed64a06';
 
     private bool $pulled = false;
 
@@ -52,9 +52,9 @@ final class Payload
 
         $this->payload = '';
 
-        $length = strlen(self::SIGNATURE) + 1 + strlen($payload);
+        $length = strlen(self::PAYLOAD_SIGNATURE) + 1 + strlen($payload);
 
-        return $length.':'.self::SIGNATURE.':'.$payload;
+        return $length.':'.self::PAYLOAD_SIGNATURE.':'.$payload;
     }
 
     public function rawPayload(): string

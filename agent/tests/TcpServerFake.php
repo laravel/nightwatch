@@ -31,7 +31,7 @@ class TcpServerFake extends EventEmitter implements ServerInterface
 
         $records = json_encode($records, flags: JSON_THROW_ON_ERROR);
 
-        $records = (strlen($records) + 8).':'.TestCase::agentSignature().':'.$records;
+        $records = (strlen($records) + 8).':'.TestCase::payloadSignature().':'.$records;
 
         return new PendingConnection($this, $records);
     }

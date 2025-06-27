@@ -59,7 +59,7 @@ class PayloadTest extends TestCase
         $payload = Payload::text('abc123');
         $encoded = $payload->pull();
 
-        $this->assertSame('14:'.Payload::SIGNATURE.':abc123', $encoded);
+        $this->assertSame('14:'.Payload::PAYLOAD_SIGNATURE.':abc123', $encoded);
     }
 
     public function test_it_can_only_pull_the_payload_once(): void
@@ -95,6 +95,6 @@ class PayloadTest extends TestCase
 
         $signature = substr($signature, 0, 7);
 
-        $this->assertSame($signature, Payload::SIGNATURE);
+        $this->assertSame($signature, Payload::PAYLOAD_SIGNATURE);
     }
 }

@@ -76,10 +76,10 @@ $error = static function (string $message): void {
 $debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
 /** @var ?string $basePath */
 $basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
-$signature = file_get_contents($basePath.'/signature.txt');
+$signature = file_get_contents($basePath.'/payload_signature.txt');
 
 if ($signature === false) {
-    $error("Unable to read the agent's signature");
+    $error("Unable to read the agent's payload signature");
 
     return;
 } else {
@@ -154,7 +154,7 @@ $server = new Server(
     onConnectionError: static fn (string $message) => $error("Connection error: {$message}"),
     onPayloadReceived: $ingest->write(...),
     onInvalidSignature: static function () use ($info, $loop, $ingest) {
-        $info('Incoming signature has changed');
+        $info('Incoming payload signature has changed');
 
         $ingest->forceDigest()->finally(static function () use ($info, $loop) {
             $loop->stop();

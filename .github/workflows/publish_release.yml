@@ -38,6 +38,21 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
 
+      - name: Check for changes in the payload
+        id: payload-changed
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            agent/src/Payload.php
+            src/Payload.php
+
+      - name: Bump payload version
+        if: steps.payload-changed.outputs.any_changed
+        run: |
+          PAYLOAD_SIGNATURE=$(head -c 7 /dev/urandom | xxd -p)
+          echo $PAYLOAD_SIGNATURE > agent/build/payload_signature.txt
+          sed -i "s/public const PAYLOAD_SIGNATURE = '.*';/public const PAYLOAD_SIGNATURE = '${PAYLOAD_SIGNATURE}';/" src/Payload.php
+
       - name: Bump version
         shell: bash
         id: bump-version

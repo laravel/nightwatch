@@ -100,12 +100,12 @@ abstract class TestCase extends BaseTestCase
         return [$output, null];
     }
 
-    public static function agentSignature(): string
+    public static function payloadSignature(): string
     {
-        $signature = file_get_contents(__DIR__.'./../build/signature.txt');
+        $signature = file_get_contents(__DIR__.'./../build/payload_signature.txt');
 
         if ($signature === false) {
-            throw new RuntimeException('Unable to read signature');
+            throw new RuntimeException('Unable to read payload signature');
         }
 
         return substr($signature, 0, 7);

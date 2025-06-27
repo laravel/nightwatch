@@ -123,7 +123,7 @@ class IngestTest extends TestCase
 
         $this->assertCount(1, StreamWrapper::type('stream_write'));
         $this->assertSame([
-            '29:'.Payload::SIGNATURE.':[{"t":"fake-record"}]',
+            '29:'.Payload::PAYLOAD_SIGNATURE.':[{"t":"fake-record"}]',
         ], StreamWrapper::type('stream_write')->value('args'));
         $this->assertSame([
             'stream_open',
@@ -175,8 +175,8 @@ class IngestTest extends TestCase
 
         $this->assertCount(5, StreamWrapper::type('stream_write'));
         $this->assertSame([
-            ['29:'.Payload::SIGNATURE.':[{"t":"fake-record"}]'],
-            [Payload::SIGNATURE.':[{"t":"fake-record"}]'],
+            ['29:'.Payload::PAYLOAD_SIGNATURE.':[{"t":"fake-record"}]'],
+            [Payload::PAYLOAD_SIGNATURE.':[{"t":"fake-record"}]'],
             [':[{"t":"fake-record"}]'],
             ['"t":"fake-record"}]'],
             ['fake-record"}]'],
@@ -528,7 +528,7 @@ class IngestTest extends TestCase
         $this->core->ingest->write(FakeRecord::make());
 
         $this->assertCount(2, $writes);
-        $this->assertSame('10009:'.Payload::SIGNATURE.':['.implode(',', array_fill(0, 500, json_encode(FakeRecord::make()))).']', implode('', $writes));
+        $this->assertSame('10009:'.Payload::PAYLOAD_SIGNATURE.':['.implode(',', array_fill(0, 500, json_encode(FakeRecord::make()))).']', implode('', $writes));
 
         for ($i = 0; $i < 499; $i++) {
             $this->core->ingest->write(FakeRecord::make());
@@ -539,7 +539,7 @@ class IngestTest extends TestCase
         $this->core->ingest->write(FakeRecord::make());
 
         $this->assertCount(4, $writes);
-        $this->assertSame(str_repeat('10009:'.Payload::SIGNATURE.':['.implode(',', array_fill(0, 500, json_encode(FakeRecord::make()))).']', 2), implode('', $writes));
+        $this->assertSame(str_repeat('10009:'.Payload::PAYLOAD_SIGNATURE.':['.implode(',', array_fill(0, 500, json_encode(FakeRecord::make()))).']', 2), implode('', $writes));
     }
 }
 

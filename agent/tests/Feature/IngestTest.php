@@ -969,7 +969,7 @@ class IngestTest extends TestCase
     {
         $loop = new LoopFake(runForSeconds: 8);
         $server = new TcpServerFake;
-        $signature = $this->agentSignature();
+        $signature = $this->payloadSignature();
         $signaturePart = substr($signature, 0, 2);
         $ingestDetailsBrowser = new BrowserFake([
             Response::jwt(),
@@ -1049,7 +1049,7 @@ class IngestTest extends TestCase
         $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Incoming signature has changed
+        {date} {info} Incoming payload signature has changed
         {date} {info} Ingest successful {duration}
         {date} {info} Shutting down
         OUTPUT, $output);
@@ -1097,7 +1097,7 @@ class IngestTest extends TestCase
         $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Incoming signature has changed
+        {date} {info} Incoming payload signature has changed
         {date} {info} Shutting down
         OUTPUT, $output);
         $loop->assertRun([
@@ -1145,7 +1145,7 @@ class IngestTest extends TestCase
         $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Incoming signature has changed
+        {date} {info} Incoming payload signature has changed
         {date} {info} Ingest successful {duration}
         {date} {info} Shutting down
         OUTPUT, $output);
