@@ -534,6 +534,9 @@ trait CapturesState
         }
     }
 
+    /**
+     * @internal
+     */
     public function prepareForNextRequest(): void
     {
         /** @var Core<RequestState> $this */
