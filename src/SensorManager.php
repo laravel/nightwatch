@@ -19,11 +19,13 @@ use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
+use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
+use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
@@ -113,12 +115,12 @@ final class SensorManager
     public $scheduledTaskSensor;
 
     /**
-     * @var (callable(Request, Response): array<mixed>)|null
+     * @var (callable(Request, Response): array{0: RequestRecord, 1: callable(): array<mixed>})|null
      */
     public $requestSensor;
 
     /**
-     * @var (callable(InputInterface, int): array<mixed>)|null
+     * @var (callable(InputInterface, int): array{0: Command, 1: callable(): array<mixed>})|null
      */
     public $commandSensor;
 
@@ -142,7 +144,7 @@ final class SensorManager
     }
 
     /**
-     * @return array<mixed>
+     * @return array{0: RequestRecord, 1: callable(): array<mixed>}
      */
     public function request(Request $request, Response $response): array
     {
@@ -154,7 +156,7 @@ final class SensorManager
     }
 
     /**
-     * @return array<mixed>
+     * @return array{0: Command, 1: callable(): array<mixed>}
      */
     public function command(InputInterface $input, int $status): array
     {

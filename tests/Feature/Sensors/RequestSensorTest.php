@@ -138,7 +138,8 @@ class RequestSensorTest extends TestCase
         $response = response()->file(stream_get_meta_data($file)['uri'])->deleteFileAfterSend()->sendContent();
         ob_end_clean();
 
-        $this->core->ingest->write($this->core->sensor->request($request, $response));
+        [$record, $resolver] = $this->core->sensor->request($request, $response);
+        $this->core->ingest->write($resolver());
         $ingest->digest();
 
         $ingest->assertLatestWrite('request:0.response_size', 0);
@@ -182,7 +183,8 @@ class RequestSensorTest extends TestCase
         $response = response()->file(stream_get_meta_data($file)['uri'], headers: ['Content-length' => 17])->deleteFileAfterSend()->sendContent();
         ob_end_clean();
 
-        $this->core->ingest->write($this->core->sensor->request($request, $response));
+        [$record, $resolver] = $this->core->sensor->request($request, $response);
+        $this->core->ingest->write($resolver());
         $ingest->digest();
 
         $ingest->assertWrittenTimes(1);

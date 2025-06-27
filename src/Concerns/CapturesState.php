@@ -196,6 +196,10 @@ trait CapturesState
             return;
         }
 
+        if ($this->redactOutgoingRequestCallback) {
+            $this->ignore(fn () => ($this->redactOutgoingRequestCallback)($record));
+        }
+
         $this->ingest->write($resolver());
     }
 
@@ -215,6 +219,10 @@ trait CapturesState
 
         if ($this->rejectQueryCallback && $this->ignore(fn () => ($this->rejectQueryCallback)($record))) {
             return;
+        }
+
+        if ($this->redactQueryCallback) {
+            $this->ignore(fn () => ($this->redactQueryCallback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -289,6 +297,10 @@ trait CapturesState
             return;
         }
 
+        if ($this->redactMailCallback) {
+            $this->ignore(fn () => ($this->redactMailCallback)($record));
+        }
+
         $this->ingest->write($resolver());
     }
 
@@ -311,6 +323,10 @@ trait CapturesState
 
         if ($this->rejectCacheEventCallback && $this->ignore(fn () => ($this->rejectCacheEventCallback)($record))) {
             return;
+        }
+
+        if ($this->redactCacheEventCallback) {
+            $this->ignore(fn () => ($this->redactCacheEventCallback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -361,7 +377,13 @@ trait CapturesState
      */
     public function request(Request $request, Response $response): void
     {
-        $this->ingest->write($this->sensor->request($request, $response));
+        [$record, $resolver] = $this->sensor->request($request, $response);
+
+        if ($this->redactRequestCallback) {
+            $this->ignore(fn () => ($this->redactRequestCallback)($record));
+        }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -490,7 +512,13 @@ trait CapturesState
      */
     public function command(InputInterface $input, int $status): void
     {
-        $this->ingest->write($this->sensor->command($input, $status));
+        [$record, $resolver] = $this->sensor->command($input, $status);
+
+        if ($this->redactCommandCallback) {
+            $this->ignore(fn () => ($this->redactCommandCallback)($record));
+        }
+
+        $this->ingest->write($resolver());
     }
 
     /**

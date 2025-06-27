@@ -17,6 +17,7 @@ use WeakMap;
 final class Core
 {
     use Concerns\CapturesState,
+        Concerns\RedactsRecords,
         Concerns\RejectsRecords;
 
     /**

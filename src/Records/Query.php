@@ -5,7 +5,7 @@ namespace Laravel\Nightwatch\Records;
 final class Query
 {
     public function __construct(
-        public readonly string $sql,
+        public string $sql,
         public readonly string $file,
         public readonly int $line,
         public readonly int $duration,

@@ -6,7 +6,7 @@ final class OutgoingRequest
 {
     public function __construct(
         public readonly string $method,
-        public readonly string $url,
+        public string $url,
         public readonly int $duration,
         public readonly int $requestSize,
         public readonly int $responseSize,
