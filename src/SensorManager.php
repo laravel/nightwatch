@@ -20,6 +20,7 @@ use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\Records\Command;
+use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\OutgoingRequest;
@@ -85,7 +86,7 @@ final class SensorManager
     public $queuedJobSensor;
 
     /**
-     * @var (callable(JobProcessed|JobReleasedAfterException|JobFailed): ?array<mixed>)|null
+     * @var (callable(JobProcessed|JobReleasedAfterException|JobFailed): ?array{0: JobAttempt, 1: callable(): array<mixed>})|null
      */
     public $jobAttemptSensor;
 
@@ -274,7 +275,7 @@ final class SensorManager
     }
 
     /**
-     * @return ?array<mixed>
+     * @return ?array{0: JobAttempt, 1: callable(): array<mixed>}
      */
     public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): ?array
     {

@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Concerns;
 
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Command;
+use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
@@ -20,6 +21,11 @@ trait RedactsRecords
      * @var ?callable(Command): bool
      */
     private $redactCommandCallback = null;
+
+    /**
+     * @var ?callable(JobAttempt): bool
+     */
+    private $redactJobAttemptCallback = null;
 
     /**
      * @var ?callable(Mail): bool
@@ -59,6 +65,16 @@ trait RedactsRecords
     public function redactCommands(callable $callback): void
     {
         $this->redactCommandCallback = $callback;
+    }
+
+    /**
+     * @api
+     *
+     * @param  callable(JobAttempt): bool  $callback
+     */
+    public function redactJobAttempts(callable $callback): void
+    {
+        $this->redactJobAttemptCallback = $callback;
     }
 
     /**

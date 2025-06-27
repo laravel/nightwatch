@@ -53,6 +53,7 @@ final class CommandState
         public int $queries = 0,
         public int $lazyLoads = 0,
         public int $jobsQueued = 0,
+        public int $jobsAttempted = 0,
         public int $mail = 0,
         public int $notifications = 0,
         public int $outgoingRequests = 0,
@@ -109,6 +110,7 @@ final class CommandState
         $this->queries = 0;
         $this->lazyLoads = 0;
         $this->jobsQueued = 0;
+        $this->jobsAttempted = 0;
         $this->mail = 0;
         $this->notifications = 0;
         $this->outgoingRequests = 0;

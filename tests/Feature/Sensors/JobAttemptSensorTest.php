@@ -82,6 +82,7 @@ class JobAttemptSensorTest extends TestCase
                 'queue' => 'default',
                 'status' => 'processed',
                 'duration' => 2500,
+                'exception' => null,
                 'exceptions' => 0,
                 'logs' => 0,
                 'queries' => 4, // Reserve and delete the job
@@ -131,6 +132,7 @@ class JobAttemptSensorTest extends TestCase
                 'queue' => 'default',
                 'status' => 'released',
                 'duration' => 2500,
+                'exception' => null,
                 'exceptions' => 1,
                 'logs' => 0,
                 'queries' => 5, // Reserve, delete, and insert into the jobs table
@@ -180,6 +182,7 @@ class JobAttemptSensorTest extends TestCase
                 'queue' => 'default',
                 'status' => 'released',
                 'duration' => 2500,
+                'exception' => null,
                 'exceptions' => 0,
                 'logs' => 0,
                 'queries' => 5, // Reserve, delete, and insert into the jobs table
@@ -229,6 +232,7 @@ class JobAttemptSensorTest extends TestCase
                 'queue' => 'default',
                 'status' => 'failed',
                 'duration' => 2500,
+                'exception' => 'Job failed',
                 'exceptions' => 1,
                 'logs' => 0,
                 'queries' => 5, // Reserve and delete the job, and insert into the failed_jobs table
@@ -289,6 +293,7 @@ class JobAttemptSensorTest extends TestCase
                 'queue' => 'default',
                 'status' => 'processed',
                 'duration' => 2500,
+                'exception' => null,
                 'exceptions' => 0,
                 'logs' => 0,
                 'queries' => 4,
@@ -339,6 +344,7 @@ class JobAttemptSensorTest extends TestCase
                 'queue' => 'default',
                 'status' => 'processed',
                 'duration' => 2500,
+                'exception' => null,
                 'exceptions' => 0,
                 'logs' => 0,
                 'queries' => 4,
@@ -388,6 +394,7 @@ class JobAttemptSensorTest extends TestCase
                 'queue' => 'default',
                 'status' => 'processed',
                 'duration' => 2500,
+                'exception' => null,
                 'exceptions' => 0,
                 'logs' => 0,
                 'queries' => 4,
@@ -482,6 +489,7 @@ class JobAttemptSensorTest extends TestCase
                 'queue' => 'default',
                 'status' => 'processed',
                 'duration' => 2500,
+                'exception' => null,
                 'exceptions' => 1,
                 'logs' => 0,
                 'queries' => 4,
