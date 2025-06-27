@@ -8,16 +8,19 @@ use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
+use Livewire\Livewire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 use function array_sum;
+use function class_exists;
 use function hash;
 use function implode;
 use function is_int;
 use function is_numeric;
 use function is_string;
+use function json_decode;
 use function sort;
 use function strlen;
 
@@ -61,6 +64,16 @@ final class RequestSensor
             //
         }
 
+        $routeAction = $route?->getActionName() ?? '';
+
+        // TODO: Replace with Livewire event listener
+        if (class_exists(Livewire::class) && $routeAction === 'Livewire\Mechanisms\HandleRequests\HandleRequests@handleUpdate') {
+            $components = $request->input('components', []);
+            $snapshot = json_decode($components[0]['snapshot'], true); // @phpstan-ignore offsetAccess.nonOffsetAccessible, offsetAccess.nonOffsetAccessible, argument.type
+            [$component] = Livewire::fromSnapshot($snapshot); // @phpstan-ignore offsetAccess.nonArray, staticMethod.void
+            $routeAction = $component::class;
+        }
+
         return [
             $record = new RequestRecord(
                 method: $request->getMethod(),
@@ -69,7 +82,7 @@ final class RequestSensor
                 routeMethods: $routeMethods,
                 routeDomain: $routeDomain,
                 routePath: $routePath,
-                routeAction: $route?->getActionName() ?? '',
+                routeAction: $routeAction,
                 ip: $request->ip() ?? '',
                 duration: array_sum($this->requestState->stageDurations),
                 statusCode: $response->getStatusCode(),

@@ -16,14 +16,18 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
+use Livewire\Livewire;
+use Tests\fixtures\Counter;
 use Tests\TestCase;
 
 use function fseek;
 use function fwrite;
 use function hash;
+use function html_entity_decode;
 use function now;
 use function ob_end_clean;
 use function ob_start;
+use function preg_match;
 use function report;
 use function response;
 use function stream_get_meta_data;
@@ -762,5 +766,52 @@ class RequestSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.method', 'BLAH');
         $ingest->assertLatestWrite('request:0.route_methods', ['BLAH']);
+    }
+
+    public function test_livewire(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/counter', Counter::class);
+        Livewire::component('tests.fixtures.counter', Counter::class);
+
+        $response = $this
+            ->get('/counter')
+            ->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.route_action', Counter::class);
+
+        preg_match('/wire:snapshot="([^"]+)"/', $response->getContent(), $matches);
+        $snapshot = html_entity_decode($matches[1]);
+
+        $response = $this
+            ->post('/livewire/update', [
+                'components' => [
+                    [
+                        'snapshot' => $snapshot,
+                        'updates' => [
+                            'count' => 2,
+                        ],
+                        'calls' => [
+                            [
+                                'method' => 'increment',
+                                'params' => [],
+                            ],
+                            [
+                                'method' => 'increment',
+                                'params' => [],
+                            ],
+                            [
+                                'method' => 'decrement',
+                                'params' => [],
+                            ],
+                        ],
+                    ],
+                ],
+            ])
+            ->assertOk();
+
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertLatestWrite('request:0.route_action', Counter::class);
     }
 }
