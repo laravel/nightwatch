@@ -2,6 +2,9 @@
 
 namespace Laravel\Nightwatch\Concerns;
 
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
@@ -15,6 +18,11 @@ trait RejectsRecords
      * @var ?callable(CacheEvent): bool
      */
     private $rejectCacheEventCallback = null;
+
+    /**
+     * @var ?callable(JobProcessed|JobReleasedAfterException|JobFailed): bool
+     */
+    private $rejectJobAttemptCallback = null;
 
     /**
      * @var ?callable(Mail): bool
@@ -49,6 +57,16 @@ trait RejectsRecords
     public function rejectCacheEvents(callable $callback): void
     {
         $this->rejectCacheEventCallback = $callback;
+    }
+
+    /**
+     * @api
+     *
+     * @param  callable(JobProcessed|JobReleasedAfterException|JobFailed): bool  $callback
+     */
+    public function rejectJobAttempts(callable $callback): void
+    {
+        $this->rejectJobAttemptCallback = $callback;
     }
 
     /**

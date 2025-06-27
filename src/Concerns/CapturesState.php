@@ -391,11 +391,19 @@ trait CapturesState
      */
     public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
-        $jobAttempt = $jobAttempt = $this->sensor->jobAttempt($event);
+        $jobAttempt = $this->sensor->jobAttempt($event);
 
-        if ($jobAttempt !== null) {
-            $this->ingest->write($jobAttempt);
+        if ($jobAttempt === null) {
+            return;
         }
+
+        [$record, $resolver] = $jobAttempt;
+
+        if ($this->rejectJobAttemptCallback && $this->ignore(fn () => ($this->rejectJobAttemptCallback)($record))) {
+            return;
+        }
+
+        $this->ingest->write($resolver());
     }
 
     /**
