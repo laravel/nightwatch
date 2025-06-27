@@ -541,14 +541,15 @@ trait CapturesState
         $this->resume();
         memory_reset_peak_usage();
 
-        $trace = (string) Str::uuid();
         $timestamp = $this->clock->microtime();
-
+        $this->executionState->stage = ExecutionStage::BeforeMiddleware;
         $this->executionState->timestamp = $timestamp;
+        $this->executionState->currentExecutionStageStartedAtMicrotime = $timestamp;
+
+        $trace = (string) Str::uuid();
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
-        $this->executionState->currentExecutionStageStartedAtMicrotime = $timestamp;
-        $this->executionState->stage = ExecutionStage::BeforeMiddleware;
+        Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
     }
 
     /**
