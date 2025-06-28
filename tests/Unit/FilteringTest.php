@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\Mail as MailRecord;
 use Laravel\Nightwatch\Records\Notification as NotificationRecord;
 use Laravel\Nightwatch\Records\OutgoingRequest;
@@ -282,6 +283,29 @@ class FilteringTest extends TestCase
         $ingest->assertLatestWrite('queued-job:0.name', SampledJob::class);
     }
 
+    public function test_it_can_filter_commands(): void
+    {
+        $this->forceCommandExecutionState();
+        $ingest = $this->fakeIngest();
+        
+        Nightwatch::rejectCommands(function (Command $command) {
+            return str_contains($command->name, 'migrate');
+        });
+
+        // Simulate running commands
+        $this->artisan('help');
+        $this->artisan('migrate:status');
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('command:0.name', 'help');
+    }
+
     public function test_it_does_not_trigger_recursion_while_filtering()
     {
         $ingest = $this->fakeIngest();
@@ -318,6 +342,11 @@ class FilteringTest extends TestCase
 
             return true;
         });
+        Nightwatch::rejectCommands(function (Command $command) {
+            $this->artisan('help');
+
+            return true;
+        });
 
         DB::statement('select * from users');
         MyJob::dispatch();
@@ -325,6 +354,7 @@ class FilteringTest extends TestCase
         Mail::to('tim@laravel.com')->send(new MyMail('Hello Laravel'));
         Cache::get('keep');
         Http::get('https://nightwatch.laravel.com');
+        $this->artisan('help');
         $ingest->digest();
 
         $ingest->assertWrittenTimes(0);

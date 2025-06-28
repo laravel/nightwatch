@@ -19,6 +19,7 @@ use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
+use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\OutgoingRequest;
@@ -118,7 +119,7 @@ final class SensorManager
     public $requestSensor;
 
     /**
-     * @var (callable(InputInterface, int): array<mixed>)|null
+     * @var (callable(InputInterface, int): array{0: Command, 1: callable(): array<mixed>})|null
      */
     public $commandSensor;
 
@@ -154,7 +155,7 @@ final class SensorManager
     }
 
     /**
-     * @return array<mixed>
+     * @return array{0: Command, 1: callable(): array<mixed>}
      */
     public function command(InputInterface $input, int $status): array
     {

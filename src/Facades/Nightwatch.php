@@ -24,6 +24,7 @@ use function call_user_func;
  * @method static void rejectOutgoingRequests(callable $callback)
  * @method static void rejectQueries(callable $callback)
  * @method static void rejectQueuedJobs(callable $callback)
+ * @method static void rejectCommands(callable $callback)
  *
  * @see \Laravel\Nightwatch\Core
  */

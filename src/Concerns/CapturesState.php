@@ -490,7 +490,13 @@ trait CapturesState
      */
     public function command(InputInterface $input, int $status): void
     {
-        $this->ingest->write($this->sensor->command($input, $status));
+        [$record, $resolver] = $this->sensor->command($input, $status);
+
+        if ($this->rejectCommandCallback && $this->ignore(fn () => ($this->rejectCommandCallback)($record))) {
+            return;
+        }
+
+        $this->ingest->write($resolver());
     }
 
     /**
