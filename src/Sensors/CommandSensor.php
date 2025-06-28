@@ -43,15 +43,13 @@ final class CommandSensor
             default => (string) $input,
         };
 
-        $duration = array_sum($this->commandState->stageDurations);
-
         return [
             $record = new Command(
                 class: $class,
                 name: $name,
                 command: $command,
                 exitCode: $exitCode,
-                duration: $duration,
+                duration: array_sum($this->commandState->stageDurations),
             ),
             function () use ($record): array {
                 return [
