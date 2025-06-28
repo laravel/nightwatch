@@ -18,6 +18,11 @@ trait RejectsRecords
     private $rejectCacheEventCallback = null;
 
     /**
+     * @var ?callable(Command): bool
+     */
+    private $rejectCommandCallback = null;
+
+    /**
      * @var ?callable(Mail): bool
      */
     private $rejectMailCallback = null;
@@ -43,11 +48,6 @@ trait RejectsRecords
     private $rejectQueuedJobCallback = null;
 
     /**
-     * @var ?callable(Command): bool
-     */
-    private $rejectCommandCallback = null;
-
-    /**
      * @api
      *
      * @param  callable(CacheEvent): bool  $callback
@@ -55,6 +55,16 @@ trait RejectsRecords
     public function rejectCacheEvents(callable $callback): void
     {
         $this->rejectCacheEventCallback = $callback;
+    }
+
+    /**
+     * @api
+     *
+     * @param  callable(Command): bool  $callback
+     */
+    public function rejectCommands(callable $callback): void
+    {
+        $this->rejectCommandCallback = $callback;
     }
 
     /**
@@ -105,15 +115,5 @@ trait RejectsRecords
     public function rejectQueuedJobs(callable $callback): void
     {
         $this->rejectQueuedJobCallback = $callback;
-    }
-
-    /**
-     * @api
-     *
-     * @param  callable(Command): bool  $callback
-     */
-    public function rejectCommands(callable $callback): void
-    {
-        $this->rejectCommandCallback = $callback;
     }
 }
