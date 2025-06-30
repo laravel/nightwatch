@@ -153,6 +153,6 @@ final class Compatibility
         /** @var Context */
         $context = self::$app->make(Context::class);
 
-        return $context->getHidden($key, $default);
+        return $context->getHidden($key, $default) ?? value($default);
     }
 }
