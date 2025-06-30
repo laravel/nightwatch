@@ -87,10 +87,10 @@ class PayloadTest extends TestCase
 
     public function test_it_has_up_to_date_signature(): void
     {
-        $signature = file_get_contents(__DIR__.'/../../agent/build/signature.txt');
+        $signature = file_get_contents(__DIR__.'/../../agent/build/payload_signature.txt');
 
         if ($signature === false) {
-            throw new RuntimeException('Unable to read signature');
+            throw new RuntimeException('Unable to read payload signature');
         }
 
         $signature = substr($signature, 0, 7);
