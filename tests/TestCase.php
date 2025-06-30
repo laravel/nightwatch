@@ -13,11 +13,13 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Laravel\Horizon\HorizonServiceProvider;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Ingest;
+use Laravel\Nightwatch\NightwatchServiceProvider;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -71,6 +73,14 @@ abstract class TestCase extends OrchestraTestCase
         unset($this->core);
 
         parent::tearDown();
+    }
+
+    protected function getPackageProviders($app)
+    {
+        return [
+            NightwatchServiceProvider::class,
+            HorizonServiceProvider::class,
+        ];
     }
 
     protected function beforeRefreshingDatabase(): void
