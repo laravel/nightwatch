@@ -232,7 +232,7 @@ trait CapturesState
      */
     public function queuedJob(JobQueueing|JobQueued $event): void
     {
-        if ($this->paused) {
+        if ($this->config['filtering']['ignore_queued_jobs'] || $this->paused) {
             return;
         }
 

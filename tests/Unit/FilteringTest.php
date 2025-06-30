@@ -6,10 +6,12 @@ use App\Jobs\MyJob;
 use App\Jobs\SampledJob;
 use App\Mail\MyMail;
 use App\Notifications\MyNotification;
+use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -26,7 +28,10 @@ use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Records\Request;
 use RuntimeException;
+use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\NullOutput;
+use Tests\FakeJob;
 use Tests\TestCase;
 
 use function array_shift;
@@ -81,6 +86,27 @@ class FilteringTest extends TestCase
             return true;
         });
         $ingest->assertLatestWrite('query:0.sql', 'select * from users');
+    }
+
+    public function test_it_can_ignore_queued_jobs(): void
+    {
+        Event::dispatch(new CommandStarting('queue:work', new ArgvInput, new NullOutput));
+
+        $this->core->config['filtering']['ignore_queued_jobs'] = true;
+
+        for ($i = 0; $i < 10; $i++) {
+            FakeJob::dispatch();
+        }
+
+        $this->assertSame(0, $this->core->executionState->jobsQueued);
+
+        $this->core->config['filtering']['ignore_queued_jobs'] = false;
+
+        for ($i = 0; $i < 10; $i++) {
+            FakeJob::dispatch();
+        }
+
+        $this->assertSame(10, $this->core->executionState->jobsQueued);
     }
 
     public function test_it_records_queries_when_null_is_returned(): void

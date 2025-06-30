@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Illuminate\Contracts\Queue\Job as JobContract;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\Jobs\Job;
 use Illuminate\Support\Str;
 
@@ -10,6 +11,10 @@ use function once;
 
 class FakeJob extends Job implements JobContract
 {
+    use Dispatchable;
+
+    public function handle(): void {}
+
     /**
      * Get the job identifier.
      *
