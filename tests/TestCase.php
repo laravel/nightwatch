@@ -230,4 +230,11 @@ abstract class TestCase extends OrchestraTestCase
 
         self::assertSame($expected, $actual, $message);
     }
+
+    protected function markTestSkippedWhen(bool $condition, string $message): void
+    {
+        if ($condition) {
+            $this->markTestSkipped($message);
+        }
+    }
 }
