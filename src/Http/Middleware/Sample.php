@@ -19,7 +19,7 @@ class Sample
         //
     }
 
-    public static function rate($rate): string
+    public static function rate(float $rate): string
     {
         $rate = (string) $rate;
 
