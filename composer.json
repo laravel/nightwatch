@@ -38,7 +38,7 @@
         "orchestra/testbench": "^8.0|^9.0|^10.0",
         "orchestra/testbench-core": "^8.30|^9.7|^10.0",
         "phpstan/phpstan": "^1.0",
-        "phpunit/phpunit": "^10.0|^11.0",
+        "phpunit/phpunit": "^10.0|^11.1",
         "ramsey/uuid": "^4.0",
         "spatie/laravel-ignition": "^2.0",
         "symfony/mailer": "^6.0|^7.0",
