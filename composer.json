@@ -37,6 +37,7 @@
         "mongodb/laravel-mongodb": "^5.0",
         "orchestra/testbench": "^8.0|^9.0|^10.0",
         "orchestra/testbench-core": "^8.0|^9.0|^10.0",
+        "orchestra/workbench": "^8.0|^9.0|^10.0",
         "phpstan/phpstan": "^1.0",
         "phpunit/phpunit": "^10.0|^11.0",
         "ramsey/uuid": "^4.0",
@@ -60,8 +61,8 @@
     },
     "scripts": {
         "post-autoload-dump": [
-            "@php vendor/bin/testbench package:purge-skeleton || true",
-            "@php vendor/bin/testbench package:discover || true",
+            "@php vendor/bin/testbench package:purge-skeleton",
+            "@php vendor/bin/testbench package:discover",
             "@build"
         ],
         "dev": [
@@ -81,7 +82,7 @@
         ],
         "build": [
             "@php vendor/bin/testbench package:sync-skeleton || true",
-            "@php vendor/bin/testbench workbench:build || true"
+            "@php vendor/bin/testbench workbench:build"
         ],
         "ci": [
             "@composer test",
