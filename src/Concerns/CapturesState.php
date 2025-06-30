@@ -33,7 +33,6 @@ use Laravel\Nightwatch\Types\Str;
 use Monolog\LogRecord;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use RuntimeException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -338,7 +337,7 @@ trait CapturesState
     public function stage(ExecutionStage $stage): void
     {
         if ($this->executionStageIs($stage)) {
-            throw new RuntimeException("Cannot transition to the same stage [{$stage->value}].");
+            return;
         }
 
         $this->sensor->stage($stage);
