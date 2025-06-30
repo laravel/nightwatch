@@ -2,13 +2,13 @@
 
 namespace Laravel\Nightwatch;
 
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\View\ViewException;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
 
 use function array_key_exists;
-use function Illuminate\Filesystem\join_paths;
+use function implode;
+use function ltrim;
 use function preg_match;
 use function str_starts_with;
 use function strlen;
@@ -36,11 +36,11 @@ final class Location
         string $publicPath,
     ) {
         $this->basePath = $basePath.DIRECTORY_SEPARATOR;
-        $this->artisanPath = join_paths($basePath, 'artisan');
-        $this->vendorPath = join_paths($basePath, 'vendor');
-        $this->nightwatchPath = join_paths($this->vendorPath, 'laravel', 'nightwatch');
-        $this->frameworkPath = join_paths($this->vendorPath, 'laravel', 'framework');
-        $this->publicIndexPath = join_paths($publicPath, 'index.php');
+        $this->artisanPath = $this->joinPaths($basePath, 'artisan');
+        $this->vendorPath = $this->joinPaths($basePath, 'vendor');
+        $this->nightwatchPath = $this->joinPaths($this->vendorPath, 'laravel', 'nightwatch');
+        $this->frameworkPath = $this->joinPaths($this->vendorPath, 'laravel', 'framework');
+        $this->publicIndexPath = $this->joinPaths($publicPath, 'index.php');
     }
 
     /**
@@ -205,18 +205,31 @@ final class Location
     public function setBasePath(string $path): self
     {
         $this->basePath = $path.DIRECTORY_SEPARATOR;
-        $this->artisanPath = join_paths($path, 'artisan');
-        $this->vendorPath = join_paths($path, 'vendor');
-        $this->nightwatchPath = join_paths($this->vendorPath, 'laravel', 'nightwatch');
-        $this->frameworkPath = join_paths($this->vendorPath, 'laravel', 'framework');
+        $this->artisanPath = $this->joinPaths($path, 'artisan');
+        $this->vendorPath = $this->joinPaths($path, 'vendor');
+        $this->nightwatchPath = $this->joinPaths($this->vendorPath, 'laravel', 'nightwatch');
+        $this->frameworkPath = $this->joinPaths($this->vendorPath, 'laravel', 'framework');
 
         return $this;
     }
 
     public function setPublicPath(string $path): self
     {
-        $this->publicIndexPath = join_paths($path, 'index.php');
+        $this->publicIndexPath = $this->joinPaths($path, 'index.php');
 
         return $this;
+    }
+
+    private function joinPaths(string $basePath, string ...$paths): string
+    {
+        foreach ($paths as $index => $path) {
+            if (empty($path) && $path !== '0') {
+                unset($paths[$index]);
+            } else {
+                $paths[$index] = DIRECTORY_SEPARATOR.ltrim($path, DIRECTORY_SEPARATOR);
+            }
+        }
+
+        return $basePath.implode('', $paths);
     }
 }

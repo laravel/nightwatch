@@ -31,7 +31,6 @@ use function array_intersect_key;
 use function collect;
 use function env;
 use function fopen;
-use function Illuminate\Filesystem\join_paths;
 use function method_exists;
 use function now;
 use function realpath;
@@ -99,7 +98,7 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function fixturePath(string $path): string
     {
-        return join_paths(__DIR__, 'fixtures', $path);
+        return __DIR__.'/fixtures'.Str::start($path, '/');
     }
 
     protected function forceRequestExecutionState(): void
