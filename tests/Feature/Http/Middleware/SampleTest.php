@@ -126,11 +126,9 @@ class SampleTest extends TestCase
         yield [1, 'Laravel\Nightwatch\Http\Middleware\Sample:1'];
         yield [1.0, 'Laravel\Nightwatch\Http\Middleware\Sample:1'];
         yield [0.9999, 'Laravel\Nightwatch\Http\Middleware\Sample:0.9999'];
-        yield [0.0, 'Laravel\Nightwatch\Http\Middleware\Sample:0'];
         yield [0.5, 'Laravel\Nightwatch\Http\Middleware\Sample:0.5'];
         yield [0.001, 'Laravel\Nightwatch\Http\Middleware\Sample:0.001'];
-        yield [0.001, 'Laravel\Nightwatch\Http\Middleware\Sample:0.001'];
-        yield [0, 'Laravel\Nightwatch\Http\Middleware\Sample:0'];
-        yield [0.0, 'Laravel\Nightwatch\Http\Middleware\Sample:0'];
+        yield [0, 'Laravel\Nightwatch\Http\Middleware\Sample:0.0'];
+        yield [0.0, 'Laravel\Nightwatch\Http\Middleware\Sample:0.0'];
     }
 }
