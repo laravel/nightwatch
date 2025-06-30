@@ -474,7 +474,7 @@ class CacheEventSensorTest extends TestCase
     {
         $ingest = $this->fakeIngest();
         Route::post('/users', function (): void {
-            Cache::repository(new ArrayStore)->get('users:345');
+            Cache::repository(new ArrayStore, [])->get('users:345');
         });
 
         $response = $this->post('/users');
