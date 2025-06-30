@@ -8,6 +8,7 @@ use Laravel\NightwatchAgent\Factories\BrowserFactory;
 use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
+use React\EventLoop\StreamSelectLoop;
 use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
 
@@ -88,12 +89,8 @@ if ($signature === false) {
 /*
  * Initialize services...
  */
-
-if ($loop) {
-    Loop::set($loop);
-} else {
-    $loop = Loop::get();
-}
+$loop ??= new StreamSelectLoop;
+Loop::set($loop);
 
 $packageVersion = new PackageVersionRepository(
     path: $basePath.'/../../version.txt',

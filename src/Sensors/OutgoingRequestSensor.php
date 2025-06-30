@@ -2,10 +2,10 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Types\Str;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -20,38 +20,55 @@ use function round;
 final class OutgoingRequestSensor
 {
     public function __construct(
-        private Ingest $ingest,
         private RequestState|CommandState $executionState,
     ) {
         //
     }
 
-    public function __invoke(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
+    /**
+     * @return array{0: OutgoingRequest, 1: callable(): array<mixed>}
+     */
+    public function __invoke(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): array
     {
         $duration = (int) round(($endMicrotime - $startMicrotime) * 1_000_000);
         $uri = $request->getUri()->withUserInfo('', null);
 
-        $this->executionState->outgoingRequests++;
+        return [
+            $record = new OutgoingRequest(
+                method: $request->getMethod(),
+                url: (string) $uri,
+                duration: $duration,
+                requestSize: $this->resolveMessageSize($request) ?? 0,
+                responseSize: $this->resolveMessageSize($response) ?? 0,
+                statusCode: $response->getStatusCode(),
+            ),
+            function () use ($startMicrotime, $uri, $record) {
+                $this->executionState->outgoingRequests++;
 
-        $this->ingest->write(new OutgoingRequest(
-            timestamp: $startMicrotime,
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
-            _group: hash('xxh128', $uri->getHost()),
-            trace_id: $this->executionState->trace,
-            execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id(),
-            execution_preview: $this->executionState->executionPreview(),
-            execution_stage: $this->executionState->stage,
-            user: $this->executionState->user->id(),
-            method: $request->getMethod(),
-            host: $uri->getHost(),
-            url: (string) $uri,
-            duration: $duration,
-            request_size: $this->resolveMessageSize($request) ?? 0,
-            response_size: $this->resolveMessageSize($response) ?? 0,
-            status_code: $response->getStatusCode(),
-        ));
+                return [
+                    'v' => 1,
+                    't' => 'outgoing-request',
+                    'timestamp' => $startMicrotime,
+                    'deploy' => $this->executionState->deploy,
+                    'server' => $this->executionState->server,
+                    '_group' => hash('xxh128', $uri->getHost()),
+                    'trace_id' => $this->executionState->trace,
+                    'execution_source' => $this->executionState->source,
+                    'execution_id' => $this->executionState->id(),
+                    'execution_preview' => $this->executionState->executionPreview(),
+                    'execution_stage' => $this->executionState->stage,
+                    'user' => $this->executionState->user->id(),
+                    // --- //
+                    'host' => Str::tinyText($uri->getHost()),
+                    'method' => Str::tinyText($record->method),
+                    'url' => Str::text($record->url),
+                    'duration' => $record->duration,
+                    'request_size' => $record->requestSize,
+                    'response_size' => $record->responseSize,
+                    'status_code' => $record->statusCode,
+                ];
+            },
+        ];
     }
 
     private function resolveMessageSize(MessageInterface $message): ?int

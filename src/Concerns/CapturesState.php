@@ -28,6 +28,7 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
 use Monolog\LogRecord;
 use Psr\Http\Message\RequestInterface;
@@ -49,15 +50,9 @@ use function random_int;
  */
 trait CapturesState
 {
-    /**
-     * @internal
-     */
-    public bool $shouldSample = true;
+    private bool $sampling = true;
 
-    /**
-     * @internal
-     */
-    public bool $shouldSampleOnException = true;
+    private bool $paused = false;
 
     private bool $waitingForJob = false;
 
@@ -67,25 +62,99 @@ trait CapturesState
     private WeakMap $routesWithMiddlewareRegistered;
 
     /**
-     * @internal
-     *
-     * @param  'requests'|'commands'  $by
+     * @api
      */
-    public function configureSampling(string $by): void
+    public function sample(float $rate = 1.0): void
     {
-        $sampleFloat = random_int(0, PHP_INT_MAX) / PHP_INT_MAX;
-
-        $this->ingest->shouldDigest(
-            $this->shouldSample = $sampleFloat <= $this->config['sampling'][$by]
-        );
-
-        $this->shouldSampleOnException = $sampleFloat <= $this->config['sampling']['exceptions'];
-
-        Compatibility::addHiddenContext('nightwatch_should_sample', $this->shouldSample);
-
-        if (! $this->potentiallySampling()) {
-            $this->flush();
+        if ($rate < 0 || $rate > 1) {
+            $rate = 0.0;
         }
+
+        $sample = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $rate;
+
+        $this->sampling = $sample;
+
+        $this->ingest->shouldDigest($sample);
+
+        Compatibility::addHiddenContext('nightwatch_should_sample', $sample);
+    }
+
+    /**
+     * @api
+     */
+    public function dontSample(): void
+    {
+        $this->sample(rate: 0);
+    }
+
+    /**
+     * @api
+     */
+    public function sampling(): bool
+    {
+        return $this->sampling;
+    }
+
+    /**
+     * @internal
+     */
+    public function configureGlobalRequestSampling(): void
+    {
+        $this->sample($this->config['sampling']['requests']);
+    }
+
+    /**
+     * @internal
+     */
+    public function configureGlobalCommandSampling(): void
+    {
+        $this->sample($this->config['sampling']['commands']);
+    }
+
+    /**
+     * @api
+     */
+    public function ignore(callable $callback): mixed
+    {
+        $cachedPaused = $this->paused;
+
+        try {
+            $this->paused = true;
+            Compatibility::addHiddenContext('nightwatch_should_sample', false);
+
+            return $callback();
+        } finally {
+            $this->paused = $cachedPaused;
+            Compatibility::addHiddenContext('nightwatch_should_sample', ! $this->paused);
+        }
+    }
+
+    /**
+     * @api
+     */
+    public function resume(): void
+    {
+        $this->paused = false;
+
+        Compatibility::addHiddenContext('nightwatch_should_sample', true);
+    }
+
+    /**
+     * @api
+     */
+    public function pause(): void
+    {
+        $this->paused = true;
+
+        Compatibility::addHiddenContext('nightwatch_should_sample', false);
+    }
+
+    /**
+     * @api
+     */
+    public function paused(): bool
+    {
+        return $this->paused;
     }
 
     /**
@@ -97,18 +166,12 @@ trait CapturesState
             return;
         }
 
-        if ($this->shouldSampleOnException) {
-            $this->ingest->shouldDigest(
-                $this->shouldSample = true
-            );
-        }
-
-        if (! $this->shouldSample) {
-            return;
+        if (! $this->sampling) {
+            $this->sample($this->config['sampling']['exceptions']);
         }
 
         try {
-            $this->sensor->exception($e, $handled);
+            $this->ingest->write($this->sensor->exception($e, $handled));
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }
@@ -119,7 +182,7 @@ trait CapturesState
      */
     public function log(LogRecord $log): void
     {
-        $this->sensor->log($log);
+        $this->ingest->write($this->sensor->log($log));
     }
 
     /**
@@ -127,7 +190,13 @@ trait CapturesState
      */
     public function outgoingRequest(float $startMicrotime, float $endMicrotime, RequestInterface $request, ResponseInterface $response): void
     {
-        $this->sensor->outgoingRequest($startMicrotime, $endMicrotime, $request, $response);
+        [$record, $resolver] = $this->sensor->outgoingRequest($startMicrotime, $endMicrotime, $request, $response);
+
+        if ($this->rejectOutgoingRequestCallback && $this->ignore(fn () => ($this->rejectOutgoingRequestCallback)($record))) {
+            return;
+        }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -135,18 +204,20 @@ trait CapturesState
      */
     public function query(QueryExecuted $event): void
     {
-        if (! $this->potentiallySampling()) {
-            return;
-        }
-
-        if ($this->config['filtering']['ignore_queries']) {
+        if ($this->config['filtering']['ignore_queries'] || $this->paused) {
             return;
         }
 
         $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 21);
         array_shift($trace);
 
-        $this->sensor->query($event, $trace);
+        [$record, $resolver] = $this->sensor->query($event, $trace);
+
+        if ($this->rejectQueryCallback && $this->ignore(fn () => ($this->rejectQueryCallback)($record))) {
+            return;
+        }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -154,11 +225,23 @@ trait CapturesState
      */
     public function queuedJob(JobQueueing|JobQueued $event): void
     {
-        if (! $this->potentiallySampling()) {
+        if ($this->paused) {
             return;
         }
 
-        $this->sensor->queuedJob($event);
+        $queuedJob = $this->sensor->queuedJob($event);
+
+        if ($queuedJob === null) {
+            return;
+        }
+
+        [$record, $resolver] = $queuedJob;
+
+        if ($this->rejectQueuedJobCallback && $this->ignore(fn () => ($this->rejectQueuedJobCallback)($record))) {
+            return;
+        }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -166,15 +249,23 @@ trait CapturesState
      */
     public function notification(NotificationSending|NotificationSent $event): void
     {
-        if (! $this->potentiallySampling()) {
+        if ($this->config['filtering']['ignore_notifications'] || $this->paused) {
             return;
         }
 
-        if ($this->config['filtering']['ignore_notifications']) {
+        $notification = $this->sensor->notification($event);
+
+        if ($notification === null) {
             return;
         }
 
-        $this->sensor->notification($event);
+        [$record, $resolver] = $notification;
+
+        if ($this->rejectNotificationCallback && $this->ignore(fn () => ($this->rejectNotificationCallback)($record))) {
+            return;
+        }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -182,15 +273,23 @@ trait CapturesState
      */
     public function mail(MessageSending|MessageSent $event): void
     {
-        if (! $this->potentiallySampling()) {
+        if ($this->config['filtering']['ignore_mail'] || $this->paused) {
             return;
         }
 
-        if ($this->config['filtering']['ignore_mail']) {
+        $mail = $this->sensor->mail($event);
+
+        if ($mail === null) {
             return;
         }
 
-        $this->sensor->mail($event);
+        [$record, $resolver] = $mail;
+
+        if ($this->rejectMailCallback && $this->ignore(fn () => ($this->rejectMailCallback)($record))) {
+            return;
+        }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -198,15 +297,23 @@ trait CapturesState
      */
     public function cacheEvent(CacheEvent $event): void
     {
-        if (! $this->potentiallySampling()) {
+        if ($this->config['filtering']['ignore_cache_events'] || $this->paused) {
             return;
         }
 
-        if ($this->config['filtering']['ignore_cache_events']) {
+        $cacheEvent = $this->sensor->cacheEvent($event);
+
+        if ($cacheEvent === null) {
             return;
         }
 
-        $this->sensor->cacheEvent($event);
+        [$record, $resolver] = $cacheEvent;
+
+        if ($this->rejectCacheEventCallback && $this->ignore(fn () => ($this->rejectCacheEventCallback)($record))) {
+            return;
+        }
+
+        $this->ingest->write($resolver());
     }
 
     /**
@@ -214,10 +321,6 @@ trait CapturesState
      */
     public function stage(ExecutionStage $stage): void
     {
-        if (! $this->potentiallySampling()) {
-            return;
-        }
-
         if ($this->executionStageIs($stage)) {
             throw new RuntimeException("Cannot transition to the same stage [{$stage->value}].");
         }
@@ -238,10 +341,6 @@ trait CapturesState
      */
     public function remember(Authenticatable $user): void
     {
-        if (! $this->potentiallySampling()) {
-            return;
-        }
-
         $this->executionState->user->remember($user);
     }
 
@@ -250,11 +349,11 @@ trait CapturesState
      */
     public function captureUser(): void
     {
-        if (! $this->shouldSample) {
-            return;
-        }
+        $user = $this->sensor->user();
 
-        $this->sensor->user();
+        if ($user !== null) {
+            $this->ingest->write($user);
+        }
     }
 
     /**
@@ -262,11 +361,7 @@ trait CapturesState
      */
     public function request(Request $request, Response $response): void
     {
-        if (! $this->shouldSample) {
-            return;
-        }
-
-        $this->sensor->request($request, $response);
+        $this->ingest->write($this->sensor->request($request, $response));
     }
 
     /**
@@ -274,11 +369,11 @@ trait CapturesState
      */
     public function jobAttempt(JobProcessed|JobReleasedAfterException|JobFailed $event): void
     {
-        if (! $this->potentiallySampling()) {
-            return;
-        }
+        $jobAttempt = $jobAttempt = $this->sensor->jobAttempt($event);
 
-        $this->sensor->jobAttempt($event);
+        if ($jobAttempt !== null) {
+            $this->ingest->write($jobAttempt);
+        }
     }
 
     /**
@@ -286,10 +381,6 @@ trait CapturesState
      */
     public function captureRequestPreview(Request $request): void
     {
-        if (! $this->potentiallySampling()) {
-            return;
-        }
-
         $this->executionState->executionPreview = Str::tinyText(
             $request->getMethod().' '.$request->getBaseUrl().$request->getPathInfo()
         );
@@ -300,10 +391,6 @@ trait CapturesState
      */
     public function attachMiddlewareToRoute(Route $route): void
     {
-        if (! $this->potentiallySampling()) {
-            return;
-        }
-
         if ($this->routesWithMiddlewareRegistered[$route] ?? false) {
             return;
         }
@@ -351,6 +438,7 @@ trait CapturesState
     public function prepareForNextJob(): void
     {
         $this->flush();
+        $this->resume();
         memory_reset_peak_usage();
     }
 
@@ -359,15 +447,9 @@ trait CapturesState
      */
     public function prepareForJob(Job $job): void
     {
-        $this->ingest->shouldDigest(
-            $this->shouldSample = (bool) Compatibility::getHiddenContext('nightwatch_should_sample', true)
+        $this->sample(
+            Compatibility::getHiddenContext('nightwatch_should_sample', true) ? 1.0 : 0.0
         );
-
-        $this->shouldSampleOnException = (random_int(0, PHP_INT_MAX) / PHP_INT_MAX) <= $this->config['sampling']['exceptions'];
-
-        if (! $this->potentiallySampling()) {
-            return;
-        }
 
         $this->waitingForJob = false;
         $this->executionState->timestamp = $this->clock->microtime();
@@ -390,10 +472,6 @@ trait CapturesState
     public function prepareForCommand(string $name): void
     {
         /** @var Core<CommandState> $this */
-        if (! $this->potentiallySampling()) {
-            return;
-        }
-
         $this->executionState->name = $name;
         $this->executionState->executionPreview = Str::tinyText($name);
     }
@@ -412,11 +490,7 @@ trait CapturesState
      */
     public function command(InputInterface $input, int $status): void
     {
-        if (! $this->shouldSample) {
-            return;
-        }
-
-        $this->sensor->command($input, $status);
+        $this->ingest->write($this->sensor->command($input, $status));
     }
 
     /**
@@ -438,6 +512,7 @@ trait CapturesState
          * we need to clear previous task data to avoid metric pollution.
          */
         $this->flush();
+        $this->resume();
         memory_reset_peak_usage();
 
         $trace = (string) Str::uuid();
@@ -452,15 +527,32 @@ trait CapturesState
      */
     public function scheduledTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): void
     {
-        $this->sensor->scheduledTask($event);
+        $scheduledTask = $this->sensor->scheduledTask($event);
+
+        if ($scheduledTask !== null) {
+            $this->ingest->write($scheduledTask);
+        }
     }
 
     /**
      * @internal
      */
-    public function potentiallySampling(): bool
+    public function prepareForNextRequest(): void
     {
-        return $this->shouldSample || $this->shouldSampleOnException;
+        /** @var Core<RequestState> $this */
+        $this->flush();
+        $this->resume();
+        memory_reset_peak_usage();
+
+        $timestamp = $this->clock->microtime();
+        $this->executionState->stage = ExecutionStage::BeforeMiddleware;
+        $this->executionState->timestamp = $timestamp;
+        $this->executionState->currentExecutionStageStartedAtMicrotime = $timestamp;
+
+        $trace = (string) Str::uuid();
+        $this->executionState->trace = $trace;
+        $this->executionState->setId($trace);
+        Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
     }
 
     /**
@@ -468,11 +560,7 @@ trait CapturesState
      */
     public function shouldCaptureLogs(): bool
     {
-        if (! $this->enabled()) {
-            return false;
-        }
-
-        return $this->potentiallySampling();
+        return $this->enabled();
     }
 
     /**

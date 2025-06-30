@@ -29,11 +29,7 @@ final class GuzzleMiddleware
      */
     public function __invoke(callable $handler): callable
     {
-        if (! $this->nightwatch->potentiallySampling()) {
-            return $handler;
-        }
-
-        if ($this->nightwatch->config['filtering']['ignore_outgoing_requests']) {
+        if ($this->nightwatch->config['filtering']['ignore_outgoing_requests'] || $this->nightwatch->paused()) {
             return $handler;
         }
 

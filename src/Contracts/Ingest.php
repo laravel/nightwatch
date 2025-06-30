@@ -2,14 +2,15 @@
 
 namespace Laravel\Nightwatch\Contracts;
 
-use Laravel\Nightwatch\Records\Record;
-
 /**
  * @internal
  */
 interface Ingest
 {
-    public function write(Record $record): void;
+    /**
+     * @param  array<mixed>  $record
+     */
+    public function write(array $record): void;
 
     public function ping(): void;
 

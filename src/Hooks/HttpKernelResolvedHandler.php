@@ -8,6 +8,7 @@ use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Kernel;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Laravel\Nightwatch\Http\Middleware\Sample;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
@@ -32,22 +33,10 @@ final class HttpKernelResolvedHandler
         }
 
         try {
-            $this->nightwatch->configureSampling('requests');
-        } catch (Throwable $e) {
-            $this->nightwatch->shouldSample = false;
-
-            Nightwatch::unrecoverableExceptionOccurred($e);
-        }
-
-        try {
             /**
              * @see \Laravel\Nightwatch\ExecutionStage::End
              * @see \Laravel\Nightwatch\Records\Request
              * @see \Laravel\Nightwatch\Core::digest()
-             *
-             * TODO Check this isn't a memory leak in Octane.
-             * TODO Check if we can cache this handler between requests on Octane. Same goes for other
-             * sub-handlers.
              */
             $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->nightwatch));
         } catch (Throwable $e) {
@@ -57,12 +46,16 @@ final class HttpKernelResolvedHandler
         try {
             /**
              * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-             *
-             * TODO Check this isn't a memory leak in Octane.
              */
             $kernel->prependMiddleware(GlobalMiddleware::class);
         } catch (Throwable $e) {
             $this->nightwatch->report($e, handled: true);
+        }
+
+        try {
+            $kernel->prependToMiddlewarePriority(Sample::class);
+        } catch (Throwable $e) {
+            $this->nightwatch->report($e);
         }
     }
 }

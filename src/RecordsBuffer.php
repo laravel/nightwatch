@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch;
 
 use Countable;
-use Laravel\Nightwatch\Records\Record;
 
 use function array_shift;
 use function count;
@@ -15,7 +14,7 @@ use function json_encode;
 class RecordsBuffer implements Countable
 {
     /**
-     * @var list<Record>
+     * @var list<array<mixed>>
      */
     private array $records = [];
 
@@ -26,7 +25,10 @@ class RecordsBuffer implements Countable
         //
     }
 
-    public function write(Record $record): void
+    /**
+     * @param  array<string, mixed>  $record
+     */
+    public function write(array $record): void
     {
         if ($this->full) {
             array_shift($this->records);

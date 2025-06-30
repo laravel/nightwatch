@@ -680,8 +680,11 @@ class ExceptionSensorTest extends TestCase
     public function test_it_reports_internally_reported_exceptions_as_handled()
     {
         $ingest = $this->fakeIngest();
+        $this->core->sensor->cacheEventSensor = function () {
+            throw new RuntimeException('Whoops!');
+        };
         Route::get('/test', function () {
-            Cache::get(null);
+            Cache::get('key');
         });
 
         $response = $this->get('/test');

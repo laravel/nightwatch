@@ -102,20 +102,4 @@ class HttpKernelResolvedHandlerTest extends TestCase
         $this->assertTrue($kernel->thrownInPrependMiddleware);
         $this->assertSame(1, $this->core->executionState->exceptions);
     }
-
-    public function test_it_gracefully_handles_exceptions_when_determining_whether_to_sample_the_request(): void
-    {
-        $this->core->config['sampling'] = [];
-        $exceptions = [];
-        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
-            $exceptions[] = $e;
-        });
-
-        $this->assertTrue($this->core->shouldSample);
-        $this->app[HttpKernel::class];
-
-        $this->assertFalse($this->core->shouldSample);
-        $this->assertCount(1, $exceptions);
-        $this->assertSame('Undefined array key "requests"', $exceptions[0]->getMessage());
-    }
 }

@@ -4,11 +4,10 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Location;
-use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Types\Str;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
 
@@ -31,7 +30,6 @@ use function json_encode;
 final class ExceptionSensor
 {
     public function __construct(
-        private Ingest $ingest,
         private RequestState|CommandState $executionState,
         private Clock $clock,
         private Location $location,
@@ -39,7 +37,10 @@ final class ExceptionSensor
         //
     }
 
-    public function __invoke(Throwable $e, ?bool $handled): void
+    /**
+     * @return array<mixed>
+     */
+    public function __invoke(Throwable $e, ?bool $handled): array
     {
         $nowMicrotime = $this->clock->microtime();
         [$file, $line] = $this->location->forException($e);
@@ -54,32 +55,35 @@ final class ExceptionSensor
 
         $handled ??= $this->wasManuallyReported($normalizedException);
 
-        $this->executionState->exceptions++;
         if (! $handled) {
             $this->executionState->exceptionPreview = $normalizedException->getMessage();
         }
 
-        $this->ingest->write(new Exception(
-            timestamp: $nowMicrotime,
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
-            _group: hash('xxh128', $normalizedException::class.','.$normalizedException->getCode().','.$file.','.$line),
-            trace_id: $this->executionState->trace,
-            execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id(),
-            execution_preview: $this->executionState->executionPreview(),
-            execution_stage: $this->executionState->stage,
-            user: $this->executionState->user->id(),
-            class: $normalizedException::class,
-            file: $file,
-            line: $line ?? 0,
-            message: $normalizedException->getMessage(),
-            code: (string) $normalizedException->getCode(),
-            trace: $this->serializeTrace($normalizedException),
-            handled: $handled,
-            php_version: $this->executionState->phpVersion,
-            laravel_version: $this->executionState->laravelVersion,
-        ));
+        $this->executionState->exceptions++;
+
+        return [
+            'v' => 1,
+            't' => 'exception',
+            'timestamp' => $nowMicrotime,
+            'deploy' => $this->executionState->deploy,
+            'server' => $this->executionState->server,
+            '_group' => hash('xxh128', $normalizedException::class.','.$normalizedException->getCode().','.$file.','.$line),
+            'trace_id' => $this->executionState->trace,
+            'execution_source' => $this->executionState->source,
+            'execution_id' => $this->executionState->id(),
+            'execution_preview' => $this->executionState->executionPreview(),
+            'execution_stage' => $this->executionState->stage,
+            'user' => $this->executionState->user->id(),
+            'class' => Str::tinyText($normalizedException::class),
+            'file' => Str::tinyText($file),
+            'line' => $line ?? 0,
+            'message' => Str::text($normalizedException->getMessage()),
+            'code' => (string) $normalizedException->getCode(),
+            'trace' => Str::mediumText($this->serializeTrace($normalizedException)),
+            'handled' => $handled,
+            'php_version' => $this->executionState->phpVersion,
+            'laravel_version' => $this->executionState->laravelVersion,
+        ];
     }
 
     private function wasManuallyReported(Throwable $e): bool

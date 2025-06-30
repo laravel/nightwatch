@@ -138,7 +138,7 @@ class RequestSensorTest extends TestCase
         $response = response()->file(stream_get_meta_data($file)['uri'])->deleteFileAfterSend()->sendContent();
         ob_end_clean();
 
-        $this->core->sensor->request($request, $response);
+        $this->core->ingest->write($this->core->sensor->request($request, $response));
         $ingest->digest();
 
         $ingest->assertLatestWrite('request:0.response_size', 0);
@@ -182,9 +182,10 @@ class RequestSensorTest extends TestCase
         $response = response()->file(stream_get_meta_data($file)['uri'], headers: ['Content-length' => 17])->deleteFileAfterSend()->sendContent();
         ob_end_clean();
 
-        $this->core->sensor->request($request, $response);
+        $this->core->ingest->write($this->core->sensor->request($request, $response));
         $ingest->digest();
 
+        $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.response_size', 17);
     }
 
@@ -759,19 +760,5 @@ class RequestSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.method', 'BLAH');
         $ingest->assertLatestWrite('request:0.route_methods', ['BLAH']);
-    }
-
-    public function test_it_resets_the_state_between_requests(): void
-    {
-        $ingest = $this->fakeIngest();
-        Route::get('/unhappy', fn () => throw new Exception('Unhappy!'));
-        Route::get('/happy', fn () => 'Happy!');
-
-        $this->get('/unhappy');
-        $this->get('/happy');
-
-        $ingest->assertWrittenTimes(2);
-        $ingest->assertWrite(0, 'request:0.exception_preview', 'Unhappy!');
-        $ingest->assertWrite(1, 'request:0.exception_preview', '');
     }
 }

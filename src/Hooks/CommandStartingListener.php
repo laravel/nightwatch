@@ -110,13 +110,7 @@ final class CommandStartingListener
             return;
         }
 
-        try {
-            $this->nightwatch->configureSampling('commands');
-        } catch (Throwable $e) {
-            $this->nightwatch->shouldSample = false;
-
-            throw $e;
-        }
+        $this->nightwatch->configureGlobalCommandSampling();
 
         $this->nightwatch->prepareForCommand($event->command);
 
@@ -129,10 +123,6 @@ final class CommandStartingListener
          * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Records\Command
          * @see \Laravel\Nightwatch\Core::digest()
-         *
-         * TODO Check this isn't a memory leak in Octane.
-         * TODO Check if we can cache this handler between requests on Octane. Same goes for other
-         * sub-handlers.
          */
         $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->nightwatch));
     }

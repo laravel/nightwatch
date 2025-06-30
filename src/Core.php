@@ -16,7 +16,8 @@ use WeakMap;
  */
 final class Core
 {
-    use Concerns\CapturesState;
+    use Concerns\CapturesState,
+        Concerns\RejectsRecords;
 
     /**
      * @internal
@@ -77,10 +78,6 @@ final class Core
     public function digest(): self
     {
         if ($this->waitingForJob) {
-            return $this;
-        }
-
-        if (! $this->potentiallySampling()) {
             return $this;
         }
 

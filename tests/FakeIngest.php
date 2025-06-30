@@ -8,7 +8,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Ingest;
-use Laravel\Nightwatch\Records\Record;
 use PHPUnit\Framework\Assert;
 
 use function collect;
@@ -30,7 +29,7 @@ class FakeIngest implements IngestContract
         //
     }
 
-    public function write(Record $record): void
+    public function write(array $record): void
     {
         $this->ingest->write($record);
     }
@@ -127,6 +126,11 @@ class FakeIngest implements IngestContract
         return $this->writes()->map(function ($write) {
             return json_decode($write, true, flags: JSON_THROW_ON_ERROR);
         });
+    }
+
+    public function forgetWrites(): void
+    {
+        $this->streams->forget($this->streams->keys());
     }
 
     public function __get(string $name): mixed

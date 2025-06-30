@@ -11,8 +11,6 @@ use function preg_replace;
 trait NormalizesQueue
 {
     /**
-     * TODO memory leak?
-     *
      * @var array<string, array<string, string>>
      */
     private array $normalizedQueues = [];

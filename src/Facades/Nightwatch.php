@@ -10,7 +10,20 @@ use function call_user_func;
 /**
  * @method static void user(callable $callback)
  * @method static callable guzzleMiddleware()
+ * @method static void sample(float $rate = 1)
+ * @method static void dontSample()
+ * @method static bool sampling()
+ * @method static mixed ignore(callable $callback)
+ * @method static void resume()
+ * @method static void pause()
+ * @method static bool paused()
  * @method static void report(\Throwable $e, bool|null $handled = null)
+ * @method static void rejectCacheEvents(callable $callback)
+ * @method static void rejectMail(callable $callback)
+ * @method static void rejectNotifications(callable $callback)
+ * @method static void rejectOutgoingRequests(callable $callback)
+ * @method static void rejectQueries(callable $callback)
+ * @method static void rejectQueuedJobs(callable $callback)
  *
  * @see \Laravel\Nightwatch\Core
  */

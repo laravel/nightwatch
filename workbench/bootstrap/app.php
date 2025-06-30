@@ -11,6 +11,7 @@ return Application::configure(basePath: $APP_BASE_PATH ?? default_skeleton_path(
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
+        health: '/up',
     )
     ->withMiddleware(static function (Middleware $middleware) {
         //

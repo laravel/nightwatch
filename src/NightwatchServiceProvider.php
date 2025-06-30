@@ -53,6 +53,7 @@ use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
 use Laravel\Nightwatch\Hooks\LogoutListener;
 use Laravel\Nightwatch\Hooks\MailListener;
 use Laravel\Nightwatch\Hooks\NotificationListener;
+use Laravel\Nightwatch\Hooks\OctaneListener;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
 use Laravel\Nightwatch\Hooks\QueuedJobListener;
@@ -62,8 +63,10 @@ use Laravel\Nightwatch\Hooks\ResponsePreparedListener;
 use Laravel\Nightwatch\Hooks\RouteMatchedListener;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
+use Laravel\Nightwatch\Http\Middleware\Sample;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Octane\Events\RequestReceived;
 use Throwable;
 
 use function defined;
@@ -99,6 +102,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      *         ignore_notifications?: bool,
      *         ignore_outgoing_requests?: bool,
      *         ignore_queries?: bool,
+     *         log_level?: \Psr\Log\LogLevel::*,
      *     },
      *     token?: string,
      *     deployment?: string,
@@ -183,6 +187,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->config->set('logging.channels.nightwatch', [
                 'driver' => 'custom',
                 'via' => Logger::class,
+                'level' => $this->nightwatchConfig['filtering']['log_level'] ?? 'debug',
             ]);
         }
 
@@ -194,6 +199,8 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->app->singleton(RouteMiddleware::class, fn () => new RouteMiddleware($this->core)); // @phpstan-ignore argument.type
 
         $this->app->scoped(GlobalMiddleware::class, fn () => new GlobalMiddleware($this->core)); // @phpstan-ignore argument.type
+
+        $this->app->singleton(Sample::class, fn () => new Sample($this->core)); // @phpstan-ignore argument.type
     }
 
     private function registerAgentCommand(): void
@@ -211,7 +218,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $executionState = $this->executionState();
 
         $this->app->instance(Core::class, $this->core = new Core(
-            ingest: $ingest = new Ingest(
+            ingest: new Ingest(
                 transmitTo: $this->nightwatchConfig['ingest']['uri'] ?? '127.0.0.1:2407',
                 connectionTimeout: $this->nightwatchConfig['ingest']['connection_timeout'] ?? 0.5,
                 timeout: $this->nightwatchConfig['ingest']['timeout'] ?? 0.5,
@@ -221,7 +228,6 @@ final class NightwatchServiceProvider extends ServiceProvider
                 ),
             ),
             sensor: new SensorManager(
-                ingest: $ingest,
                 executionState: $executionState,
                 clock: $clock = new Clock,
                 location: new Location(
@@ -235,9 +241,9 @@ final class NightwatchServiceProvider extends ServiceProvider
             config: [
                 'enabled' => $this->nightwatchConfig['enabled'] ?? true,
                 'sampling' => [
-                    'requests' => $this->configuredSampleRate('requests'),
-                    'commands' => $this->configuredSampleRate('commands'),
-                    'exceptions' => $this->configuredSampleRate('exceptions'),
+                    'requests' => $this->nightwatchConfig['sampling']['requests'] ?? 1.0,
+                    'commands' => $this->nightwatchConfig['sampling']['commands'] ?? 1.0,
+                    'exceptions' => $this->nightwatchConfig['sampling']['exceptions'] ?? 1.0,
                 ],
                 'filtering' => [
                     'ignore_cache_events' => (bool) ($this->nightwatchConfig['filtering']['ignore_cache_events'] ?? false),
@@ -248,20 +254,6 @@ final class NightwatchServiceProvider extends ServiceProvider
                 ],
             ],
         ));
-    }
-
-    /**
-     * @param  'requests'|'commands'|'exceptions'  $key
-     */
-    private function configuredSampleRate($key): float
-    {
-        $value = (float) ($this->nightwatchConfig['sampling'][$key] ?? 1.0);
-
-        if ($value < 0 || $value > 1) {
-            return 0.0;
-        }
-
-        return $value;
     }
 
     private function handleAndClearRegisterException(): void
@@ -345,6 +337,8 @@ final class NightwatchServiceProvider extends ServiceProvider
             KeyForgotten::class,
             KeyForgetFailed::class,
         ], (new CacheEventListener($core))(...));
+
+        $events->listen(RequestReceived::class, (new OctaneListener($core))(...)); // @phpstan-ignore class.notFound
 
         //
         // -------------------------------------------------------------------------

@@ -5,6 +5,7 @@ namespace Tests\Unit\Hooks;
 use Illuminate\Http\Request;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -101,5 +102,28 @@ class GlobalMiddlewareTest extends TestCase
 
         $this->assertTrue($thrownInStageSensor);
         $this->assertSame(1, $this->core->executionState->exceptions);
+    }
+
+    public function test_it_gracefully_handles_exceptions_when_determining_whether_to_sample_the_request(): void
+    {
+        $this->core->config['sampling'] = [];
+        $exceptions = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
+            $exceptions[] = $e;
+        });
+        $middleware = new GlobalMiddleware($this->core);
+        $request = Request::create('/test');
+        $nextCalledWith = null;
+        $next = function ($request) use (&$nextCalledWith) {
+            $nextCalledWith = $request;
+
+            return response('');
+        };
+
+        $this->assertTrue($this->core->sampling());
+        $response = $middleware->handle($request, $next);
+
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Undefined array key "requests"', $exceptions[0]->getMessage());
     }
 }

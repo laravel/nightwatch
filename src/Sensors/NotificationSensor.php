@@ -5,7 +5,6 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Contracts\Ingest;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -24,21 +23,23 @@ final class NotificationSensor
     private ?float $startTime = null;
 
     public function __construct(
-        private Ingest $ingest,
         private RequestState|CommandState $executionState,
         private Clock $clock,
     ) {
         //
     }
 
-    public function __invoke(NotificationSending|NotificationSent $event): void
+    /**
+     * @return ?array{0: Notification, 1: callable(): array<mixed>}
+     */
+    public function __invoke(NotificationSending|NotificationSent $event): ?array
     {
         $now = $this->clock->microtime();
 
         if ($event instanceof NotificationSending) {
             $this->startTime = $now;
 
-            return;
+            return null;
         }
 
         if ($this->startTime === null) {
@@ -51,23 +52,35 @@ final class NotificationSensor
             $class = $event->notification::class;
         }
 
-        $this->executionState->notifications++;
+        return [
+            $record = new Notification(
+                channel: $event->channel,
+                class: $class,
+                duration: (int) round(($now - $this->startTime) * 1_000_000),
+            ),
+            function () use ($now, $record) {
+                $this->executionState->notifications++;
 
-        $this->ingest->write(new Notification(
-            timestamp: $now,
-            deploy: $this->executionState->deploy,
-            server: $this->executionState->server,
-            _group: hash('xxh128', $class),
-            trace_id: $this->executionState->trace,
-            execution_source: $this->executionState->source,
-            execution_id: $this->executionState->id(),
-            execution_preview: $this->executionState->executionPreview(),
-            execution_stage: $this->executionState->stage,
-            user: $this->executionState->user->id(),
-            channel: $event->channel,
-            class: $class,
-            duration: (int) round(($now - $this->startTime) * 1_000_000),
-            failed: false, // TODO: The framework doesn't dispatch the `NotificationFailed` event.
-        ));
+                return [
+                    'v' => 1,
+                    't' => 'notification',
+                    'timestamp' => $now,
+                    'deploy' => $this->executionState->deploy,
+                    'server' => $this->executionState->server,
+                    '_group' => hash('xxh128', $record->class),
+                    'trace_id' => $this->executionState->trace,
+                    'execution_source' => $this->executionState->source,
+                    'execution_id' => $this->executionState->id(),
+                    'execution_preview' => $this->executionState->executionPreview(),
+                    'execution_stage' => $this->executionState->stage,
+                    'user' => $this->executionState->user->id(),
+                    // --- //
+                    'channel' => Str::tinyText($record->channel),
+                    'class' => Str::tinyText($record->class),
+                    'duration' => $record->duration,
+                    'failed' => false, // TODO: The framework doesn't dispatch the `NotificationFailed` event.
+                ];
+            },
+        ];
     }
 }
