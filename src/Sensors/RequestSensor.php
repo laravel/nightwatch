@@ -9,7 +9,6 @@ use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\Exception\UnexpectedValueException;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -57,8 +56,8 @@ final class RequestSensor
         $query = '';
 
         try {
-            $query = $request->server->getString('QUERY_STRING');
-        } catch (UnexpectedValueException $e) {
+            $query = (string) $request->server->get('QUERY_STRING'); // @phpstan-ignore cast.string
+        } catch (Throwable) {
             //
         }
 
