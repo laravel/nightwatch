@@ -84,7 +84,7 @@ class QueuedJobSensorTest extends TestCase
                 'name' => 'Tests\Feature\Sensors\MyJob',
                 'connection' => 'database',
                 'queue' => Compatibility::$queueNameCapturable ? 'default' : '',
-                'duration' => 5200,
+                'duration' => Compatibility::$queuedJobDurationCapturable ? 5200 : 0,
             ],
         ]);
     }

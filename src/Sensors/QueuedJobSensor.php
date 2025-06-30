@@ -13,7 +13,6 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
 use ReflectionClass;
-use RuntimeException;
 
 use function hash;
 use function is_object;
@@ -61,17 +60,13 @@ final class QueuedJobSensor
             default => $event->job::class,
         };
 
-        if ($this->startTime === null) {
-            throw new RuntimeException("No start time found for [{$name}].");
-        }
-
         return [
             $record = new QueuedJob(
                 jobId: $event->payload()['uuid'],
                 name: $name,
                 connection: $event->connectionName,
                 queue: $this->normalizeQueue($event->connectionName, $this->resolveQueue($event)),
-                duration: (int) round(($now - $this->startTime) * 1_000_000),
+                duration: Compatibility::$queuedJobDurationCapturable ? (int) round(($now - $this->startTime) * 1_000_000) : 0,
             ),
             function () use ($now, $record) {
                 $this->executionState->jobsQueued++;

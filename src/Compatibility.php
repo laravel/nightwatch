@@ -35,6 +35,8 @@ final class Compatibility
 
     public static bool $contextExists = false;
 
+    public static bool $queuedJobDurationCapturable = false;
+
     /**
      * @var array<string, mixed>
      */
@@ -84,6 +86,13 @@ final class Compatibility
          * @see https://github.com/laravel/framework/releases/tag/v12.18.0
          */
         self::$firesFinishedAndFailedEventsForScheduledConsoleCommands = version_compare($version, '12.11.0', '=') || version_compare($version, '12.18.0', '>=');
+
+        /**
+         * @see https://github.com/laravel/framework/pull/49722
+         * @see https://github.com/laravel/framework/releases/tag/v10.42.0
+         */
+        self::$queuedJobDurationCapturable =
+            version_compare($version, '10.42.0', '>=');
 
         if (! self::$contextExists) {
             Queue::createPayloadUsing(static fn ($c, $q, array $payload) => [
