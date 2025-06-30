@@ -267,6 +267,9 @@ jobs:
       - name: Install dependencies
         run: COMPOSER_PREFER_LOWEST=${{ matrix.prefer-lowest }} composer update --prefer-dist --no-interaction --no-progress
 
+      - name: Create database
+        run: touch tests/database.sqlite
+
       - name: Execute tests
         run: vendor/bin/phpunit --order-by=random --coverage-text
 
