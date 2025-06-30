@@ -265,7 +265,7 @@ jobs:
         run: composer require laravel/framework:^${{ matrix.laravel }} --no-update
 
       - name: Install dependencies
-        run: COMPOSER_PREFER_LOWEST=${{ matrix.prefer-lowest }} composer install --prefer-dist --no-interaction --no-progress
+        run: COMPOSER_PREFER_LOWEST=${{ matrix.prefer-lowest }} composer update --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
         run: vendor/bin/phpunit --order-by=random --coverage-text --show-uncovered-for-coverage-text
