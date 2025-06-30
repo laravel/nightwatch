@@ -116,10 +116,10 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           ref: ${{ github.head_ref }}
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
+      - name: Setup PHP 8.4 and tooling
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ env.minimum_supported_php_version }}
+          php-version: 8.4
           extensions: ${{ env.package_extensions }}
           ini-values: error_reporting=E_ALL
           tools: composer:v2
