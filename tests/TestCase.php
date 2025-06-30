@@ -8,6 +8,7 @@ use Closure;
 use DateTimeInterface;
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Queue\Console\WorkCommand;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Http;
@@ -29,6 +30,7 @@ use function collect;
 use function env;
 use function fopen;
 use function Illuminate\Filesystem\join_paths;
+use function method_exists;
 use function now;
 use function realpath;
 use function sprintf;
@@ -61,6 +63,10 @@ abstract class TestCase extends OrchestraTestCase
     protected function tearDown(): void
     {
         Str::createUuidsNormally();
+
+        if (method_exists(WorkCommand::class, 'flushState')) {
+            WorkCommand::flushState();
+        }
 
         unset($this->core);
 
