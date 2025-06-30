@@ -35,6 +35,8 @@ final class Compatibility
 
     public static bool $contextExists = false;
 
+    public static bool $contextGetHiddenSupportsDefaultValue = false;
+
     public static bool $queuedJobDurationCapturable = false;
 
     /**
@@ -57,6 +59,12 @@ final class Compatibility
         self::$queueNameCapturable =
         self::$cacheStoreNameCapturable =
             version_compare($version, '11.0.0', '>=');
+
+        /**
+         * @see https://github.com/laravel/framework/pull/50824
+         * @see https://github.com/laravel/framework/releases/tag/v11.2.0
+         */
+        self::$contextGetHiddenSupportsDefaultValue = version_compare($version, '11.2.0', '>=');
 
         /**
          * @see https://github.com/laravel/framework/pull/51560
@@ -153,6 +161,10 @@ final class Compatibility
         /** @var Context */
         $context = self::$app->make(Context::class);
 
-        return $context->getHidden($key, $default) ?? value($default);
+        if (! self::$contextGetHiddenSupportsDefaultValue) {
+            return $context->getHidden($key) ?? value($default);
+        }
+
+        return $context->getHidden($key, $default);
     }
 }
