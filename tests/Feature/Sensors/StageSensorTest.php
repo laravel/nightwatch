@@ -67,13 +67,13 @@ class StageSensorTest extends TestCase
         $this->freezeTime();
 
         $this->core->stage(ExecutionStage::Action);
-        $this->travel(5)->microseconds();
+        $this->travel(5)->seconds();
         $this->core->stage(ExecutionStage::Action);
-        $this->travel(5)->microseconds();
+        $this->travel(5)->seconds();
         $this->core->stage(ExecutionStage::AfterMiddleware);
 
         $actionDuration = $this->core->executionState->stageDurations[ExecutionStage::Action->value];
 
-        $this->assertSame(10, $actionDuration);
+        $this->assertSame(10_000_000, $actionDuration);
     }
 }
