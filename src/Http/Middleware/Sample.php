@@ -21,6 +21,12 @@ class Sample
 
     public static function rate(float $rate): string
     {
+        $rate = (string) $rate;
+
+        if ($rate === '0') {
+            $rate = '0.0';
+        }
+
         return static::class.':'.$rate;
     }
 

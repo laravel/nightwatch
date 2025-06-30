@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Http\Middleware\Sample;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class SampleTest extends TestCase
@@ -112,5 +113,22 @@ class SampleTest extends TestCase
         $response = $this->get('/sampled-or-throw');
 
         $response->assertOk();
+    }
+
+    #[DataProvider('sampleRates')]
+    public function test_it_can_sample_at_different_rates(float|int $rate, string $expected): void
+    {
+        $this->assertSame(Sample::rate($rate), $expected);
+    }
+
+    public static function sampleRates(): iterable
+    {
+        yield [1, 'Laravel\Nightwatch\Http\Middleware\Sample:1'];
+        yield [1.0, 'Laravel\Nightwatch\Http\Middleware\Sample:1'];
+        yield [0.9999, 'Laravel\Nightwatch\Http\Middleware\Sample:0.9999'];
+        yield [0.5, 'Laravel\Nightwatch\Http\Middleware\Sample:0.5'];
+        yield [0.001, 'Laravel\Nightwatch\Http\Middleware\Sample:0.001'];
+        yield [0, 'Laravel\Nightwatch\Http\Middleware\Sample:0.0'];
+        yield [0.0, 'Laravel\Nightwatch\Http\Middleware\Sample:0.0'];
     }
 }
