@@ -43,6 +43,12 @@ jobs:
           key: ${{ runner.os }}-package-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-package-composer
 
+        # We want to run static analysis against the lowest PHP version we can, however
+        # Pint is conflicting. We will remove it so we can successfully install dependencies
+        # in PHP 8.1
+      - name: Remove Pint
+        run: composer remove laravel/pint --dev --no-update
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
@@ -86,6 +92,12 @@ jobs:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-agent-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-agent-composer
+
+        # We want to run static analysis against the lowest PHP version we can, however
+        # Pint is conflicting. We will remove it so we can successfully install dependencies
+        # in PHP 8.1
+      - name: Remove Pint
+        run: composer remove laravel/pint --dev --no-update
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
