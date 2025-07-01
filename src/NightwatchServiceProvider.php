@@ -69,6 +69,7 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Octane\Events\RequestReceived;
 use Livewire\Livewire;
+use Livewire\LivewireManager;
 use Throwable;
 
 use function class_exists;
@@ -384,15 +385,6 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->app->booted((new RequestBootedHandler($core))(...));
 
-        if (class_exists(Livewire::class)) {
-            $this->app->booted(function () {
-                $listener = $this->app->make(LivewireListener::class);
-
-                Livewire::listen('component.boot', static fn (...$params) => $listener->componentBoot(...$params));
-                Livewire::listen('pre-mount', static fn (...$params) => $listener->preMount(...$params));
-            });
-        }
-
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Action
          * @see \Laravel\Nightwatch\ExecutionStage::Terminating
@@ -421,6 +413,8 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\Core::digest()
          */
         $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($core))(...));
+
+        $this->registerLivewireHooks();
     }
 
     /**
@@ -462,6 +456,27 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\Core::digest()
          */
         $events->listen(CommandStarting::class, (new CommandStartingListener($events, $core, $kernel))(...));
+    }
+
+    private function registerLivewireHooks(): void
+    {
+        if (! class_exists(Livewire::class)) {
+            return;
+        }
+
+        $this->app->booted(function ($app) {
+            if (! $app->bound(LivewireManager::class)) {
+                return;
+            }
+
+            $listener = $this->app->make(LivewireListener::class);
+
+            // Livewire 2
+            Livewire::listen('component.boot', $listener->componentBoot(...));
+
+            // Livewire 3
+            Livewire::listen('pre-mount', $listener->preMount(...));
+        });
     }
 
     private function executionState(): RequestState|CommandState
