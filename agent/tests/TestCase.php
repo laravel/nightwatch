@@ -16,7 +16,6 @@ use function is_file;
 use function rand;
 use function serialize;
 use function str_replace;
-use function substr;
 use function unlink;
 use function unserialize;
 
@@ -98,17 +97,6 @@ abstract class TestCase extends BaseTestCase
         }
 
         return [$output, null];
-    }
-
-    public static function payloadSignature(): string
-    {
-        $signature = file_get_contents(__DIR__.'./../build/payload_signature.txt');
-
-        if ($signature === false) {
-            throw new RuntimeException('Unable to read payload signature');
-        }
-
-        return substr($signature, 0, 7);
     }
 
     protected function functionName(): string

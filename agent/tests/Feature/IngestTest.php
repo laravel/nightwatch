@@ -15,7 +15,6 @@ use Tests\Timer;
 use function array_fill;
 use function gethostname;
 use function str_repeat;
-use function substr;
 
 class IngestTest extends TestCase
 {
@@ -969,20 +968,18 @@ class IngestTest extends TestCase
     {
         $loop = new LoopFake(runForSeconds: 8);
         $server = new TcpServerFake;
-        $signature = $this->payloadSignature();
-        $signaturePart = substr($signature, 0, 2);
         $ingestDetailsBrowser = new BrowserFake([
             Response::jwt(),
         ]);
         $ingestBrowser = new BrowserFake([]);
-        $loop->addTimer(0, $server->pendingConnection('12'));
-        $loop->addTimer(1, $server->pendingConnection('12:'));
-        $loop->addTimer(2, $server->pendingConnection("12:{$signaturePart}"));
-        $loop->addTimer(3, $server->pendingConnection("12:{$signature}"));
-        $loop->addTimer(4, $server->pendingConnection("12:{$signature}:["));
-        $loop->addTimer(5, $server->pendingConnection("12:{$signature}:[{"));
-        $loop->addTimer(6, $server->pendingConnection("12:{$signature}:[{}"));
-        $loop->addTimer(7, $server->pendingConnection("12:{$signature}:[{}]"));
+        $loop->addTimer(0, $server->pendingConnection('7'));
+        $loop->addTimer(1, $server->pendingConnection('7:'));
+        $loop->addTimer(2, $server->pendingConnection('7:v'));
+        $loop->addTimer(3, $server->pendingConnection('7:v1'));
+        $loop->addTimer(4, $server->pendingConnection('7:v1:['));
+        $loop->addTimer(5, $server->pendingConnection('7:v1:[{'));
+        $loop->addTimer(6, $server->pendingConnection('7:v1:[{}'));
+        $loop->addTimer(7, $server->pendingConnection('7:v1:[{}]'));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -995,13 +992,13 @@ class IngestTest extends TestCase
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<OUTPUT
             {date} {info} Authentication successful {duration}
-            {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[12\]
-            {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[12:\]
-            {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[12:{$signaturePart}\]
-            {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[12:{$signature}\]
-            {date} {error} Connection error: Incomplete payload received\. Length: \[12\] Value: \[\[\]
-            {date} {error} Connection error: Incomplete payload received\. Length: \[12\] Value: \[\[\{\]
-            {date} {error} Connection error: Incomplete payload received\. Length: \[12\] Value: \[\[\{\}\]
+            {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[7\]
+            {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[7:\]
+            {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[7:v\]
+            {date} {error} Connection error: Incomplete payload received\. Length: \[\] Value: \[7:v1\]
+            {date} {error} Connection error: Incomplete payload received\. Length: \[7\] Value: \[\[\]
+            {date} {error} Connection error: Incomplete payload received\. Length: \[7\] Value: \[\[\{\]
+            {date} {error} Connection error: Incomplete payload received\. Length: \[7\] Value: \[\[\{\}\]
             OUTPUT, $output);
         $loop->assertRun([
             new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: $this->functionName()),
@@ -1022,7 +1019,7 @@ class IngestTest extends TestCase
         ]);
     }
 
-    public function test_it_sends_pending_records_on_invalid_signature(): void
+    public function test_it_sends_pending_records_on_invalid_payload_version(): void
     {
         $loop = new LoopFake(runForSeconds: 2);
         $server = new TcpServerFake;
@@ -1049,7 +1046,7 @@ class IngestTest extends TestCase
         $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Incoming payload signature has changed
+        {date} {info} Incoming payload version has changed
         {date} {info} Ingest successful {duration}
         {date} {info} Shutting down
         OUTPUT, $output);
@@ -1097,7 +1094,7 @@ class IngestTest extends TestCase
         $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Incoming payload signature has changed
+        {date} {info} Incoming payload version has changed
         {date} {info} Shutting down
         OUTPUT, $output);
         $loop->assertRun([
@@ -1145,7 +1142,7 @@ class IngestTest extends TestCase
         $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Incoming payload signature has changed
+        {date} {info} Incoming payload version has changed
         {date} {info} Ingest successful {duration}
         {date} {info} Shutting down
         OUTPUT, $output);

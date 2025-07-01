@@ -23,7 +23,7 @@ class TcpServerFake extends EventEmitter implements ServerInterface
     /**
      * @param  string|list<array<string, mixed>>  $records
      */
-    public function pendingConnection(array|string $records, ?string $signature = null): PendingConnection
+    public function pendingConnection(array|string $records): PendingConnection
     {
         if (is_string($records)) {
             return new PendingConnection($this, $records);
@@ -31,7 +31,7 @@ class TcpServerFake extends EventEmitter implements ServerInterface
 
         $records = json_encode($records, flags: JSON_THROW_ON_ERROR);
 
-        $records = (strlen($records) + 8).':'.TestCase::payloadSignature().':'.$records;
+        $records = (strlen($records) + 3).':v1:'.$records;
 
         return new PendingConnection($this, $records);
     }

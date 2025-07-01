@@ -14,7 +14,7 @@ class PayloadTest extends TestCase
         $payload->append('10:a1b2c3d:[]');
 
         $this->assertSame(10, $payload->length);
-        $this->assertSame('a1b2c3d', $payload->signature);
+        $this->assertSame('a1b2c3d', $payload->payloadVersion);
         $this->assertSame('[]', $payload->value);
         $this->assertTrue($payload->complete);
     }
@@ -27,7 +27,7 @@ class PayloadTest extends TestCase
 
         $this->assertSame(25, $payload->length);
         $this->assertSame('[{"t":"request"}]', $payload->value);
-        $this->assertSame('a1b2c3d', $payload->signature);
+        $this->assertSame('a1b2c3d', $payload->payloadVersion);
         $this->assertTrue($payload->complete);
     }
 
@@ -37,43 +37,43 @@ class PayloadTest extends TestCase
 
         $payload->append('10');
         $this->assertNull($payload->length);
-        $this->assertSame('', $payload->signature);
+        $this->assertSame('', $payload->payloadVersion);
         $this->assertSame('10', $payload->value);
         $this->assertFalse($payload->complete);
 
         $payload->append(':');
         $this->assertNull($payload->length);
-        $this->assertSame('', $payload->signature);
+        $this->assertSame('', $payload->payloadVersion);
         $this->assertSame('10:', $payload->value);
         $this->assertFalse($payload->complete);
 
         $payload->append('a1b2c3');
         $this->assertNull($payload->length);
-        $this->assertSame('', $payload->signature);
+        $this->assertSame('', $payload->payloadVersion);
         $this->assertSame('10:a1b2c3', $payload->value);
         $this->assertFalse($payload->complete);
 
         $payload->append('d');
         $this->assertNull($payload->length);
-        $this->assertSame('', $payload->signature);
+        $this->assertSame('', $payload->payloadVersion);
         $this->assertSame('10:a1b2c3d', $payload->value);
         $this->assertFalse($payload->complete);
 
         $payload->append(':');
         $this->assertSame(10, $payload->length);
-        $this->assertSame('a1b2c3d', $payload->signature);
+        $this->assertSame('a1b2c3d', $payload->payloadVersion);
         $this->assertSame('', $payload->value);
         $this->assertFalse($payload->complete);
 
         $payload->append('[');
         $this->assertSame(10, $payload->length);
-        $this->assertSame('a1b2c3d', $payload->signature);
+        $this->assertSame('a1b2c3d', $payload->payloadVersion);
         $this->assertSame('[', $payload->value);
         $this->assertFalse($payload->complete);
 
         $payload->append(']');
         $this->assertSame(10, $payload->length);
-        $this->assertSame('a1b2c3d', $payload->signature);
+        $this->assertSame('a1b2c3d', $payload->payloadVersion);
         $this->assertSame('[]', $payload->value);
         $this->assertTrue($payload->complete);
     }
@@ -100,7 +100,7 @@ class PayloadTest extends TestCase
         $this->assertFalse($payload->complete);
     }
 
-    public function test_it_can_have_a_signature_of_any_length(): void
+    public function test_it_can_have_a_payload_version_of_any_length(): void
     {
         $payload = new Payload;
 

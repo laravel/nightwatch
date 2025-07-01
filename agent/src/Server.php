@@ -17,16 +17,16 @@ class Server
      * @param  (Closure(string $message): mixed)  $onServerError
      * @param  (Closure(string $message): mixed)  $onConnectionError
      * @param  (Closure(string $payload): mixed)  $onPayloadReceived
-     * @param  (Closure(): mixed)  $onInvalidSignature
+     * @param  (Closure(): mixed)  $onInvalidPayloadVersion
      */
     public function __construct(
         private Closure $serverResolver,
-        private string $signature,
+        private string $payloadVersion,
         private Closure $onServerStarted,
         private Closure $onServerError,
         private Closure $onConnectionError,
         private Closure $onPayloadReceived,
-        private Closure $onInvalidSignature,
+        private Closure $onInvalidPayloadVersion,
     ) {
         //
     }
@@ -55,10 +55,10 @@ class Server
                     return;
                 }
 
-                if ($payload->signature !== $this->signature) {
+                if ($payload->payloadVersion !== $this->payloadVersion) {
                     $server->close();
 
-                    call_user_func($this->onInvalidSignature);
+                    call_user_func($this->onInvalidPayloadVersion);
 
                     return;
                 }

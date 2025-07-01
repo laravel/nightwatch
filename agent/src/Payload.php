@@ -10,7 +10,7 @@ class Payload
 {
     public string $value = '';
 
-    public string $signature = '';
+    public string $payloadVersion = '';
 
     public ?int $length = null;
 
@@ -22,7 +22,7 @@ class Payload
 
         $this->parsePayload();
 
-        $this->complete = $this->length === (strlen($this->signature) + 1 + strlen($this->value));
+        $this->complete = $this->length === (strlen($this->payloadVersion) + 1 + strlen($this->value));
     }
 
     private function parsePayload(): void
@@ -38,7 +38,7 @@ class Payload
         }
 
         $this->length = (int) $bits[0];
-        $this->signature = $bits[1];
+        $this->payloadVersion = $bits[1];
         $this->value = $bits[2];
     }
 }

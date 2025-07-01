@@ -6,6 +6,7 @@ use RuntimeException;
 
 use function in_array;
 use function strlen;
+use function hash;
 
 /**
  * @internal
@@ -17,7 +18,9 @@ final class Payload
      *
      * Do not modify or re-locate this constant.
      */
-    public const PAYLOAD_SIGNATURE = 'ed64a06';
+    public const PAYLOAD_VERSION = 'v1';
+
+    //    public const NIGHWATCH_TOKEN_HASH = hash('xxh128', $this->nightwatchConfig['token']) ?? null;
 
     private bool $pulled = false;
 
@@ -52,9 +55,9 @@ final class Payload
 
         $this->payload = '';
 
-        $length = strlen(self::PAYLOAD_SIGNATURE) + 1 + strlen($payload);
+        $length = strlen(self::PAYLOAD_VERSION) + 1 + strlen($payload);
 
-        return $length.':'.self::PAYLOAD_SIGNATURE.':'.$payload;
+        return $length.':'.self::PAYLOAD_VERSION.':'.$payload;
     }
 
     public function rawPayload(): string

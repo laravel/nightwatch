@@ -59,9 +59,8 @@ class ServerTest extends TestCase
         $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake;
-        $signature = $this->payloadSignature();
 
-        $loop->addTimer(0, $server->pendingConnection("12:{$signature}:PING"));
+        $loop->addTimer(0, $server->pendingConnection('7:v1:PING'));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -93,7 +92,7 @@ class ServerTest extends TestCase
         $ingestBrowser->assertPending([]);
     }
 
-    public function test_it_stops_loop_when_an_incorrect_signature_is_received(): void
+    public function test_it_stops_loop_when_an_incorrect_payload_version_is_received(): void
     {
         $loop = new LoopFake(runForSeconds: 2);
         $server = new TcpServerFake;
@@ -117,7 +116,7 @@ class ServerTest extends TestCase
         $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Incoming payload signature has changed
+        {date} {info} Incoming payload version has changed
         {date} {info} Shutting down
         OUTPUT, $output);
         $loop->assertRun([
