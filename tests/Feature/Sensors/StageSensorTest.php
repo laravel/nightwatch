@@ -5,6 +5,7 @@ namespace Tests\Feature\Sensors;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\ExecutionStage;
 use Tests\TestCase;
 
 use function class_exists;
@@ -59,5 +60,20 @@ class StageSensorTest extends TestCase
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.terminating', 123);
+    }
+
+    public function test_it_can_transition_to_the_same_stage(): void
+    {
+        $this->freezeTime();
+
+        $this->core->stage(ExecutionStage::Action);
+        $this->travel(5)->seconds();
+        $this->core->stage(ExecutionStage::Action);
+        $this->travel(5)->seconds();
+        $this->core->stage(ExecutionStage::AfterMiddleware);
+
+        $actionDuration = $this->core->executionState->stageDurations[ExecutionStage::Action->value];
+
+        $this->assertSame(10_000_000, $actionDuration);
     }
 }
