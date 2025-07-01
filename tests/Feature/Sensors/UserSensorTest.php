@@ -241,14 +241,9 @@ class UserSensorTest extends TestCase
         $response->assertOk();
         $response->assertContent('ok');
         $ingest->assertLatestWriteRecordCount(4);
-        $ingest->assertLatestWrite('exception:*', function ($exceptions) {
-            $this->assertCount(1, $exceptions);
-            $this->assertSame('Undefined array key "id"', $exceptions[0]['message']);
-            $this->assertSame('ErrorException', $exceptions[0]['class']);
-            $this->assertSame(true, $exceptions[0]['handled']);
-
-            return true;
-        });
+        $ingest->assertLatestWrite('exception:0.message', 'Undefined array key "id"');
+        $ingest->assertLatestWrite('exception:0.class', 'ErrorException');
+        $ingest->assertLatestWrite('exception:0.handled', true);
         $ingest->assertLatestWrite('query:0.user', '');
         $ingest->assertLatestWrite('query:1.user', '');
         $ingest->assertLatestWrite('request:0.user', '');
