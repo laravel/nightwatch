@@ -19,10 +19,8 @@ use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Ingest;
-use Laravel\Nightwatch\NightwatchServiceProvider;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use PHPUnit\Framework\ExpectationFailedException;
@@ -94,14 +92,6 @@ abstract class TestCase extends OrchestraTestCase
     protected function fixturePath(string $path): string
     {
         return __DIR__.'/fixtures'.Str::start($path, '/');
-    }
-
-    protected function getPackageProviders($app): array
-    {
-        return [
-            NightwatchServiceProvider::class,
-            LivewireServiceProvider::class,
-        ];
     }
 
     protected function forceRequestExecutionState(): void
