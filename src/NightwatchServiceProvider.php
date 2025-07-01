@@ -388,27 +388,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $this->app->booted(function () {
                 $listener = $this->app->make(LivewireListener::class);
 
-                // component.boot
-                // component.hydrate
-                // component.hydrate.initial
-                // component.mount
-                // component.booted
-                // component.rendering
-                // component.rendered
-                // view:render
-                // component.dehydrate
-                // component.dehydrate.initial
-                // property.dehydrate
-                // mounted
                 Livewire::listen('component.boot', static fn (...$params) => $listener->componentBoot(...$params));
-
-                // pre-mount
-                // mount
-                // render
-                // view:compile
-                // dehydrate
-                // checksum:generate
-                // destroy
                 Livewire::listen('pre-mount', static fn (...$params) => $listener->preMount(...$params));
             });
         }
