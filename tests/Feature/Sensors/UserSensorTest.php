@@ -6,6 +6,8 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Tests\TestCase;
@@ -219,5 +221,35 @@ class UserSensorTest extends TestCase
             'name' => '',
             'username' => '',
         ]]);
+    }
+
+    public function test_it_gracefully_handles_exceptions_while_resolving_user_ids(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/login', function () {
+            DB::statement('select * from users');
+
+            Auth::setUser(new GenericUser([]));
+
+            DB::statement('select * from users');
+
+            return 'ok';
+        });
+
+        $response = $this->get('/login');
+
+        $response->assertOk();
+        $response->assertContent('ok');
+        $ingest->assertLatestWriteRecordCount(4);
+        $ingest->assertLatestWrite('exception:*', function ($exceptions) {
+            $this->assertCount(1, $exceptions);
+            $this->assertSame('Undefined array key "id"', $exceptions[0]['message']);
+            $this->assertSame('ErrorException', $exceptions[0]['class']);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('query:0.user', '');
+        $ingest->assertLatestWrite('query:1.user', '');
+        $ingest->assertLatestWrite('request:0.user', '');
     }
 }

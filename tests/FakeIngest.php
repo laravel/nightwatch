@@ -109,6 +109,13 @@ class FakeIngest implements IngestContract
         return $this->assertWrite($this->streams->count() - 1, $key, $expected);
     }
 
+    public function assertLatestWriteRecordCount(int $count): self
+    {
+        Assert::assertCount($count, $this->decodedWrites()->last() ?? []);
+
+        return $this;
+    }
+
     public function latestWriteAsString(): ?string
     {
         return $this->streams->last()?->value;
