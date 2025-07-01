@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\RequestState;
+use Livewire\Component;
 
 class LivewireListener
 {
@@ -17,14 +18,16 @@ class LivewireListener
     }
 
     // Livewire 2
-    public function componentBoot(...$params): void
+
+    public function componentBoot(Component $component): void
     {
-        $this->nightwatch->executionState->routeAction = $params[0]::class ?? null;
+        $this->nightwatch->executionState->routeAction = $component::class;
     }
 
     // Livewire 3
-    public function preMount(...$params): void
+
+    public function preMount(string $component): void
     {
-        $this->nightwatch->executionState->routeAction = $params[0] ?? null;
+        $this->nightwatch->executionState->routeAction = $component;
     }
 }
