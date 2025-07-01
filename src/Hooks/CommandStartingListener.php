@@ -47,9 +47,7 @@ final class CommandStartingListener
             return;
         }
 
-        if ($event->command !== 'vapor:work') {
-            $this->hasRun = true;
-        }
+        $this->hasRun = true;
 
         try {
             match ($event->command) {
@@ -90,8 +88,6 @@ final class CommandStartingListener
         ], (new JobAttemptListener($this->nightwatch))(...));
 
         if ($event->command === 'vapor:work') {
-            $this->nightwatch->prepareForNextJob();
-
             $this->events->listen(CommandFinished::class, (new VaporWorkCommandFinishedListener($this->nightwatch))(...));
         }
     }

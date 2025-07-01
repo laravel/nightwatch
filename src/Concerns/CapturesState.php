@@ -469,21 +469,15 @@ trait CapturesState
     /**
      * @internal
      */
-    public function prepareForNextJob(): void
-    {
-        $this->flush();
-        $this->resume();
-        memory_reset_peak_usage();
-    }
-
-    /**
-     * @internal
-     */
     public function prepareForJob(Job $job): void
     {
         $this->sample(
             Compatibility::getHiddenContext('nightwatch_should_sample', true) ? 1.0 : 0.0
         );
+
+        $this->flush();
+        $this->resume();
+        memory_reset_peak_usage();
 
         $this->waitingForJob = false;
         $this->executionState->timestamp = $this->clock->microtime();
