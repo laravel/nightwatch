@@ -61,7 +61,7 @@ abstract class TestCase extends OrchestraTestCase
         $this->core->flush();
         $this->core->clock->microtimeResolver = fn () => (float) now()->format('U.u');
 
-        View::addNamespace('fixtures', join_paths(__DIR__, 'fixtures', 'views'));
+        View::addNamespace('fixtures', __DIR__.'/fixtures/views');
     }
 
     protected function tearDown(): void
