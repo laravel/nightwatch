@@ -38,13 +38,13 @@ class LivewireListener
     }
 
     /* Livewire 3 Events
-     * -  pre-mount
-     * -  mount
-     * -  render
-     * -  view:compile
-     * -  dehydrate
-     * -  checksum:generate
-     * -  destroy
+     * - pre-mount
+     * - mount
+     * - render
+     * - view:compile
+     * - dehydrate
+     * - checksum:generate
+     * - destroy
      */
 
     public function preMount(string $component): void

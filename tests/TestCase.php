@@ -12,7 +12,6 @@ use Illuminate\Queue\Console\WorkCommand;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
@@ -58,8 +57,6 @@ abstract class TestCase extends OrchestraTestCase
         $this->core = $this->app->make(Core::class);
         $this->core->flush();
         $this->core->clock->microtimeResolver = fn () => (float) now()->format('U.u');
-
-        View::addNamespace('fixtures', __DIR__.'/fixtures/views');
     }
 
     protected function tearDown(): void
