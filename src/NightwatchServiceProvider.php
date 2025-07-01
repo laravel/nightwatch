@@ -400,7 +400,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 // component.dehydrate.initial
                 // property.dehydrate
                 // mounted
-                Livewire::listen('component.boot', fn (...$params) => $listener->componentBoot(...$params));
+                Livewire::listen('component.boot', static fn (...$params) => $listener->componentBoot(...$params));
 
                 // pre-mount
                 // mount
@@ -409,7 +409,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 // dehydrate
                 // checksum:generate
                 // destroy
-                Livewire::listen('pre-mount', fn (...$params) => $listener->preMount(...$params));
+                Livewire::listen('pre-mount', static fn (...$params) => $listener->preMount(...$params));
             });
         }
 
