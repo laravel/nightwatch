@@ -18,7 +18,6 @@ use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Queue\Events\Looping;
 use Illuminate\Queue\Events\WorkerStopping;
-use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\State\CommandState;
@@ -48,7 +47,9 @@ final class CommandStartingListener
             return;
         }
 
-        $this->hasRun = true;
+        if ($event->command !== 'vapor:work') {
+            $this->hasRun = true;
+        }
 
         try {
             match ($event->command) {
@@ -89,8 +90,6 @@ final class CommandStartingListener
         ], (new JobAttemptListener($this->nightwatch))(...));
 
         if ($event->command === 'vapor:work') {
-            Log::info('vapor:work command starting');
-
             $this->nightwatch->prepareForNextJob();
 
             $this->events->listen(CommandFinished::class, (new VaporWorkCommandFinishedListener($this->nightwatch))(...));
