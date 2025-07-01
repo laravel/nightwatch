@@ -792,7 +792,39 @@ class RequestSensorTest extends TestCase
             ->post('/livewire/message/counter', [
                 'fingerprint' => $snapshot['fingerprint'],
                 'serverMemo' => $snapshot['serverMemo'],
-                'updates' => [],
+                'updates' => [
+                    [
+                        'type' => 'syncInput',
+                        'payload' => [
+                            'name' => 'count',
+                            'value' => 2,
+                        ],
+                    ],
+                    [
+                        'type' => 'callMethod',
+                        'payload' => [
+                            'id' => 'foo',
+                            'method' => 'increment',
+                            'params' => [],
+                        ],
+                    ],
+                    [
+                        'type' => 'callMethod',
+                        'payload' => [
+                            'id' => 'foo',
+                            'method' => 'increment',
+                            'params' => [],
+                        ],
+                    ],
+                    [
+                        'type' => 'callMethod',
+                        'payload' => [
+                            'id' => 'foo',
+                            'method' => 'decrement',
+                            'params' => [],
+                        ],
+                    ],
+                ],
             ])
             ->assertOk();
 
@@ -824,21 +856,21 @@ class RequestSensorTest extends TestCase
                     [
                         'snapshot' => $snapshot,
                         'updates' => [
-                            //     'count' => 2,
+                            'count' => 2,
                         ],
                         'calls' => [
-                            //     [
-                            //         'method' => 'increment',
-                            //         'params' => [],
-                            //     ],
-                            //     [
-                            //         'method' => 'increment',
-                            //         'params' => [],
-                            //     ],
-                            //     [
-                            //         'method' => 'decrement',
-                            //         'params' => [],
-                            //     ],
+                            [
+                                'method' => 'increment',
+                                'params' => [],
+                            ],
+                            [
+                                'method' => 'increment',
+                                'params' => [],
+                            ],
+                            [
+                                'method' => 'decrement',
+                                'params' => [],
+                            ],
                         ],
                     ],
                 ],
