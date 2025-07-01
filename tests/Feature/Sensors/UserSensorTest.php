@@ -245,6 +245,7 @@ class UserSensorTest extends TestCase
             $this->assertCount(1, $exceptions);
             $this->assertSame('Undefined array key "id"', $exceptions[0]['message']);
             $this->assertSame('ErrorException', $exceptions[0]['class']);
+            $this->assertSame(true, $exceptions[0]['handled']);
 
             return true;
         });
