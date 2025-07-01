@@ -273,6 +273,77 @@ jobs:
       - name: Execute tests
         run: vendor/bin/phpunit --order-by=random --coverage-text
 
+  livewire_tests:
+    runs-on: ubuntu-latest
+    needs:
+      - build_agent
+    if: ${{ needs.build_agent.outputs.agent-committed == 'false' }}
+
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+        options: --entrypoint redis-server
+
+    strategy:
+      matrix:
+        include:
+          - php: 8.2
+            laravel: 10
+            livewire: 2
+            prefer-lowest: '1'
+          - php: 8.2
+            laravel: 10
+            livewire: 3
+            prefer-lowest: '1'
+          - php: 8.4
+            laravel: 12
+            livewire: 3
+            prefer-lowest: '0'
+
+    name: Test Livewire [PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }}, Livewire ${{ matrix.livewire }}${{ matrix.prefer-lowest == '1' && ', prefer lowest' || '' }}]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.1 and tooling
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: ${{ env.package_extensions }}
+          ini-values: error_reporting=E_ALL
+          tools: composer:v2
+          coverage: pcov
+
+      # See: https://github.com/shivammathur/setup-php#cache-composer-dependencies
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-package-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-package-composer
+
+      - name: Require Laravel Version
+        run: composer require laravel/framework:^${{ matrix.laravel }} --no-update
+
+      - name: Require Livewire Version
+        run: composer require --dev livewire/livewire:^${{ matrix.livewire }} --no-update
+
+      - name: Install dependencies
+        run: COMPOSER_PREFER_LOWEST=${{ matrix.prefer-lowest }} composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Create database
+        run: touch tests/database.sqlite
+
+      - name: Execute tests
+        run: vendor/bin/phpunit --order-by=random --coverage-text
+
   agent_tests:
     runs-on: ubuntu-latest
     needs:
