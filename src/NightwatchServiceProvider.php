@@ -50,6 +50,7 @@ use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
 use Laravel\Nightwatch\Hooks\HttpKernelResolvedHandler;
+use Laravel\Nightwatch\Hooks\LivewireListener;
 use Laravel\Nightwatch\Hooks\LogoutListener;
 use Laravel\Nightwatch\Hooks\MailListener;
 use Laravel\Nightwatch\Hooks\NotificationListener;
@@ -67,8 +68,10 @@ use Laravel\Nightwatch\Http\Middleware\Sample;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Octane\Events\RequestReceived;
+use Livewire\Livewire;
 use Throwable;
 
+use function class_exists;
 use function defined;
 use function microtime;
 
@@ -380,6 +383,35 @@ final class NightwatchServiceProvider extends ServiceProvider
          * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
          */
         $this->app->booted((new RequestBootedHandler($core))(...));
+
+        if (class_exists(Livewire::class)) {
+            $this->app->booted(function () {
+                $listener = $this->app->make(LivewireListener::class);
+
+                // component.boot
+                // component.hydrate
+                // component.hydrate.initial
+                // component.mount
+                // component.booted
+                // component.rendering
+                // component.rendered
+                // view:render
+                // component.dehydrate
+                // component.dehydrate.initial
+                // property.dehydrate
+                // mounted
+                Livewire::listen('component.boot', fn (...$params) => $listener->componentBoot(...$params));
+
+                // pre-mount
+                // mount
+                // render
+                // view:compile
+                // dehydrate
+                // checksum:generate
+                // destroy
+                Livewire::listen('pre-mount', fn (...$params) => $listener->preMount(...$params));
+            });
+        }
 
         /**
          * @see \Laravel\Nightwatch\ExecutionStage::Action

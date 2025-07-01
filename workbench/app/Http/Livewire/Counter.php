@@ -5,7 +5,7 @@ namespace App\Http\Livewire;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('fixtures::app')]
+#[Layout('layouts.app')]
 class Counter extends Component
 {
     public $count = 1;

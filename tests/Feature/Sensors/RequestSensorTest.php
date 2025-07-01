@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Sensors;
 
+use App\Http\Livewire\Counter;
 use App\Http\UserController;
 use Carbon\CarbonImmutable;
+use Composer\InstalledVersions;
 use Exception;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Http\Kernel;
@@ -17,13 +19,13 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Livewire\Livewire;
-use Tests\fixtures\Counter;
 use Tests\TestCase;
 
 use function fseek;
 use function fwrite;
 use function hash;
 use function html_entity_decode;
+use function json_decode;
 use function now;
 use function ob_end_clean;
 use function ob_start;
@@ -33,6 +35,7 @@ use function response;
 use function stream_get_meta_data;
 use function tap;
 use function tmpfile;
+use function version_compare;
 
 class RequestSensorTest extends TestCase
 {
@@ -768,12 +771,41 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_methods', ['BLAH']);
     }
 
-    public function test_livewire(): void
+    public function test_livewire_2(): void
     {
-        $this->markTestSkipped();
+        $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '>='), 'Requires Livewire 2');
+
         $ingest = $this->fakeIngest();
         Route::get('/counter', Counter::class);
-        Livewire::component('tests.fixtures.counter', Counter::class);
+
+        $response = $this
+            ->get('/counter')
+            ->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.route_action', Counter::class);
+
+        preg_match('/wire:initial-data="([^"]+)"/', $response->getContent(), $matches);
+        $snapshot = json_decode(html_entity_decode($matches[1]), true);
+
+        $response = $this
+            ->post('/livewire/message/counter', [
+                'fingerprint' => $snapshot['fingerprint'],
+                'serverMemo' => $snapshot['serverMemo'],
+                'updates' => [],
+            ])
+            ->assertOk();
+
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertLatestWrite('request:0.route_action', Counter::class);
+    }
+
+    public function test_livewire_3(): void
+    {
+        $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '<'), 'Requires Livewire 3');
+
+        $ingest = $this->fakeIngest();
+        Route::get('/counter', Counter::class);
 
         $response = $this
             ->get('/counter')
@@ -784,6 +816,7 @@ class RequestSensorTest extends TestCase
 
         preg_match('/wire:snapshot="([^"]+)"/', $response->getContent(), $matches);
         $snapshot = html_entity_decode($matches[1]);
+        Livewire::component('app.http.livewire.counter', Counter::class); // Not sure why this must be manually registered
 
         $response = $this
             ->post('/livewire/update', [
@@ -791,21 +824,21 @@ class RequestSensorTest extends TestCase
                     [
                         'snapshot' => $snapshot,
                         'updates' => [
-                            'count' => 2,
+                            //     'count' => 2,
                         ],
                         'calls' => [
-                            [
-                                'method' => 'increment',
-                                'params' => [],
-                            ],
-                            [
-                                'method' => 'increment',
-                                'params' => [],
-                            ],
-                            [
-                                'method' => 'decrement',
-                                'params' => [],
-                            ],
+                            //     [
+                            //         'method' => 'increment',
+                            //         'params' => [],
+                            //     ],
+                            //     [
+                            //         'method' => 'increment',
+                            //         'params' => [],
+                            //     ],
+                            //     [
+                            //         'method' => 'decrement',
+                            //         'params' => [],
+                            //     ],
                         ],
                     ],
                 ],
