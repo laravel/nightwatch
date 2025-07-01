@@ -128,7 +128,7 @@ class FakeIngest implements IngestContract
     public function writes(): Collection
     {
         return $this->streams->map(function ($stream) {
-            return explode(':', $stream->value, 3)[2];
+            return explode(':', $stream->value, 4)[3];
         });
     }
 

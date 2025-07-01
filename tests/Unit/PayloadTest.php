@@ -9,6 +9,7 @@ use Tests\TestCase;
 use Throwable;
 
 use function file_get_contents;
+use function hash;
 use function json_encode;
 use function substr;
 
@@ -17,7 +18,8 @@ class PayloadTest extends TestCase
     #[DataProvider('jsonPayloads')]
     public function test_it_can_determine_if_a_jso_n_payload_is_empty(mixed $value, bool $empty): void
     {
-        $payload = Payload::json(json_encode($value, flags: JSON_THROW_ON_ERROR));
+        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
+        $payload = Payload::json(json_encode($value, flags: JSON_THROW_ON_ERROR), $tokenHash);
 
         $this->assertSame($empty, $payload->isEmpty());
     }
@@ -42,7 +44,7 @@ class PayloadTest extends TestCase
     #[DataProvider('textPayloads')]
     public function test_it_can_determine_if_a_text_payload_is_empty(string $value, bool $empty): void
     {
-        $payload = Payload::text($value);
+        $payload = Payload::text($value, 'tokenHash');
 
         $this->assertSame($empty, $payload->isEmpty());
     }
@@ -56,20 +58,22 @@ class PayloadTest extends TestCase
 
     public function test_it_can_pull_the_bencoded_signed_value(): void
     {
-        $payload = Payload::text('abc123');
+        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
+        $payload = Payload::text('abc123', $tokenHash);
         $encoded = $payload->pull();
 
-        $this->assertSame('9:'.Payload::PAYLOAD_VERSION.':abc123', $encoded);
+        $this->assertSame('17:'.Payload::PAYLOAD_VERSION.':'.$tokenHash.':abc123', $encoded);
     }
 
     public function test_it_can_only_pull_the_payload_once(): void
     {
-        $payload = Payload::text('abc123');
+        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
+        $payload = Payload::text('abc123', $tokenHash);
         $payload->pull();
 
         try {
             $payload->pull();
-            throw new RuntimeException();
+            throw new RuntimeException;
         } catch (Throwable $e) {
             $this->assertSame('Payload has already been read', $e->getMessage());
         }
@@ -77,7 +81,7 @@ class PayloadTest extends TestCase
 
     public function test_it_frees_memory_after_pulling_the_payload(): void
     {
-        $payload = Payload::text('abc123');
+        $payload = Payload::text('abc123', 'tokenHash');
 
         $this->assertSame('abc123', $payload->rawPayload());
 

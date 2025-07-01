@@ -11,10 +11,11 @@ class PayloadTest extends TestCase
     {
         $payload = new Payload;
 
-        $payload->append('10:a1b2c3d:[]');
+        $payload->append('13:v1:a1b2c3d:[]');
 
-        $this->assertSame(10, $payload->length);
-        $this->assertSame('a1b2c3d', $payload->payloadVersion);
+        $this->assertSame(13, $payload->length);
+        $this->assertSame('v1', $payload->payloadVersion);
+        $this->assertSame('a1b2c3d', $payload->tokenHash);
         $this->assertSame('[]', $payload->value);
         $this->assertTrue($payload->complete);
     }
@@ -23,11 +24,12 @@ class PayloadTest extends TestCase
     {
         $payload = new Payload;
 
-        $payload->append('25:a1b2c3d:[{"t":"request"}]');
+        $payload->append('28:v1:a1b2c3d:[{"t":"request"}]');
 
-        $this->assertSame(25, $payload->length);
+        $this->assertSame(28, $payload->length);
         $this->assertSame('[{"t":"request"}]', $payload->value);
-        $this->assertSame('a1b2c3d', $payload->payloadVersion);
+        $this->assertSame('v1', $payload->payloadVersion);
+        $this->assertSame('a1b2c3d', $payload->tokenHash);
         $this->assertTrue($payload->complete);
     }
 
@@ -35,45 +37,66 @@ class PayloadTest extends TestCase
     {
         $payload = new Payload;
 
-        $payload->append('10');
+        $payload->append('13');
         $this->assertNull($payload->length);
         $this->assertSame('', $payload->payloadVersion);
-        $this->assertSame('10', $payload->value);
+        $this->assertSame('', $payload->tokenHash);
+        $this->assertSame('13', $payload->value);
         $this->assertFalse($payload->complete);
 
         $payload->append(':');
         $this->assertNull($payload->length);
         $this->assertSame('', $payload->payloadVersion);
-        $this->assertSame('10:', $payload->value);
+        $this->assertSame('', $payload->tokenHash);
+        $this->assertSame('13:', $payload->value);
+        $this->assertFalse($payload->complete);
+
+        $payload->append('v1');
+        $this->assertNull($payload->length);
+        $this->assertSame('', $payload->payloadVersion);
+        $this->assertSame('', $payload->tokenHash);
+        $this->assertSame('13:v1', $payload->value);
+        $this->assertFalse($payload->complete);
+
+        $payload->append(':');
+        $this->assertNull($payload->length);
+        $this->assertSame('', $payload->payloadVersion);
+        $this->assertSame('', $payload->tokenHash);
+        $this->assertSame('13:v1:', $payload->value);
         $this->assertFalse($payload->complete);
 
         $payload->append('a1b2c3');
         $this->assertNull($payload->length);
         $this->assertSame('', $payload->payloadVersion);
-        $this->assertSame('10:a1b2c3', $payload->value);
+        $this->assertSame('', $payload->tokenHash);
+        $this->assertSame('13:v1:a1b2c3', $payload->value);
         $this->assertFalse($payload->complete);
 
         $payload->append('d');
         $this->assertNull($payload->length);
         $this->assertSame('', $payload->payloadVersion);
-        $this->assertSame('10:a1b2c3d', $payload->value);
+        $this->assertSame('', $payload->tokenHash);
+        $this->assertSame('13:v1:a1b2c3d', $payload->value);
         $this->assertFalse($payload->complete);
 
         $payload->append(':');
-        $this->assertSame(10, $payload->length);
-        $this->assertSame('a1b2c3d', $payload->payloadVersion);
+        $this->assertSame(13, $payload->length);
+        $this->assertSame('v1', $payload->payloadVersion);
+        $this->assertSame('a1b2c3d', $payload->tokenHash);
         $this->assertSame('', $payload->value);
         $this->assertFalse($payload->complete);
 
         $payload->append('[');
-        $this->assertSame(10, $payload->length);
-        $this->assertSame('a1b2c3d', $payload->payloadVersion);
+        $this->assertSame(13, $payload->length);
+        $this->assertSame('v1', $payload->payloadVersion);
+        $this->assertSame('a1b2c3d', $payload->tokenHash);
         $this->assertSame('[', $payload->value);
         $this->assertFalse($payload->complete);
 
         $payload->append(']');
-        $this->assertSame(10, $payload->length);
-        $this->assertSame('a1b2c3d', $payload->payloadVersion);
+        $this->assertSame(13, $payload->length);
+        $this->assertSame('v1', $payload->payloadVersion);
+        $this->assertSame('a1b2c3d', $payload->tokenHash);
         $this->assertSame('[]', $payload->value);
         $this->assertTrue($payload->complete);
     }
@@ -82,7 +105,7 @@ class PayloadTest extends TestCase
     {
         $payload = new Payload;
 
-        $payload->append('2:a1b2c3d4:[{}]');
+        $payload->append('2:v1:a1b2c3d4:[{}]');
 
         $this->assertSame(2, $payload->length);
         $this->assertSame('[{}]', $payload->value);
@@ -104,9 +127,9 @@ class PayloadTest extends TestCase
     {
         $payload = new Payload;
 
-        $payload->append('19:1234567890abcdef:[]');
+        $payload->append('22:v1:1234567890abcdef:[]');
 
-        $this->assertSame(19, $payload->length);
+        $this->assertSame(22, $payload->length);
         $this->assertSame('[]', $payload->value);
         $this->assertTrue($payload->complete);
     }

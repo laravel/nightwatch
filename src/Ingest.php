@@ -12,6 +12,7 @@ use function feof;
 use function fread;
 use function fwrite;
 use function gettype;
+use function hash;
 use function intval;
 use function stream_get_meta_data;
 use function stream_set_timeout;
@@ -24,6 +25,8 @@ use function substr;
 final class Ingest implements IngestContract
 {
     private string $transmitTo;
+
+    private string $tokenHash;
 
     /**
      * @var array{seconds: int, microseconds: int}
@@ -41,6 +44,7 @@ final class Ingest implements IngestContract
         float $timeout,
         public $streamFactory,
         public RecordsBuffer $buffer,
+        ?string $token,
     ) {
         $this->transmitTo = "tcp://{$transmitTo}";
 
@@ -48,6 +52,13 @@ final class Ingest implements IngestContract
             'seconds' => $seconds = (int) $timeout,
             'microseconds' => intval(($timeout - $seconds) * 1_000_000),
         ];
+
+        $this->tokenHash = $this->getTokenHash($token);
+    }
+
+    private function getTokenHash(?string $token): string
+    {
+        return $token !== null ? substr(hash('xxh128', $token), 0, 7) : '';
     }
 
     public function write(array $record): void
@@ -66,7 +77,7 @@ final class Ingest implements IngestContract
 
     public function ping(): void
     {
-        $this->transmit(Payload::text('PING'));
+        $this->transmit(Payload::text('PING', $this->tokenHash));
     }
 
     public function shouldDigest(bool $bool): void
@@ -77,7 +88,7 @@ final class Ingest implements IngestContract
     public function digest(): void
     {
         if ($this->shouldDigest) {
-            $this->transmit($this->buffer->pull());
+            $this->transmit($this->buffer->pull($this->tokenHash));
         } else {
             $this->flush();
         }

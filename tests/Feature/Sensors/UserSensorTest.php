@@ -307,3 +307,4 @@ class UserSensorTest extends TestCase
         $this->assertFalse(Auth::hasResolvedGuards());
     }
 }
+

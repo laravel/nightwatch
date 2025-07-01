@@ -15,12 +15,14 @@ use function array_shift;
 use function call_user_func_array;
 use function fclose;
 use function fopen;
+use function hash;
 use function implode;
 use function json_encode;
 use function str_repeat;
 use function stream_wrapper_register;
 use function stream_wrapper_unregister;
 use function strlen;
+use function substr;
 
 class IngestTest extends TestCase
 {
@@ -116,14 +118,15 @@ class IngestTest extends TestCase
 
     public function test_it_can_write_the_payload_in_one_write(): void
     {
-        StreamWrapper::intercept('stream_write', fn (string $value) => 27);
+        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
+        StreamWrapper::intercept('stream_write', fn (string $value) => 35);
 
         $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
         $this->assertCount(1, StreamWrapper::type('stream_write'));
         $this->assertSame([
-            '24:'.Payload::PAYLOAD_VERSION.':[{"t":"fake-record"}]',
+            '32:'.Payload::PAYLOAD_VERSION.':'.$tokenHash.':[{"t":"fake-record"}]',
         ], StreamWrapper::type('stream_write')->value('args'));
         $this->assertSame([
             'stream_open',
@@ -151,7 +154,7 @@ class IngestTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(<<<'MESSAGE'
-        Unable to write to the agent. Written [0] Expected [27]
+        Unable to write to the agent. Written [0] Expected [35]
 
         Timed out: false
         EOF: false
@@ -165,7 +168,8 @@ class IngestTest extends TestCase
 
     public function test_it_can_write_the_payload_in_multiple_write(): void
     {
-        $writes = [3, 2, 3, 5, 14];
+        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
+        $writes = [3, 2, 8, 3, 5, 14];
         StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
             return array_shift($writes);
         });
@@ -173,10 +177,11 @@ class IngestTest extends TestCase
         $this->core->ingest->write(FakeRecord::make());
         $this->core->digest();
 
-        $this->assertCount(5, StreamWrapper::type('stream_write'));
+        $this->assertCount(6, StreamWrapper::type('stream_write'));
         $this->assertSame([
-            ['24:'.Payload::PAYLOAD_VERSION.':[{"t":"fake-record"}]'],
-            [Payload::PAYLOAD_VERSION.':[{"t":"fake-record"}]'],
+            ['32:'.Payload::PAYLOAD_VERSION.':'.$tokenHash.':[{"t":"fake-record"}]'],
+            [Payload::PAYLOAD_VERSION.':'.$tokenHash.':[{"t":"fake-record"}]'],
+            [':'.$tokenHash.':[{"t":"fake-record"}]'],
             [':[{"t":"fake-record"}]'],
             ['"t":"fake-record"}]'],
             ['fake-record"}]'],
@@ -184,6 +189,7 @@ class IngestTest extends TestCase
         $this->assertSame([
             'stream_open',
             'stream_set_option',
+            'stream_write',
             'stream_write',
             'stream_write',
             'stream_write',
@@ -220,7 +226,7 @@ class IngestTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(<<<'MESSAGE'
-        Unable to write to the agent. Written [6] Expected [27]
+        Unable to write to the agent. Written [6] Expected [35]
 
         Timed out: false
         EOF: false
@@ -512,6 +518,7 @@ class IngestTest extends TestCase
 
     public function test_it_triggers_ingest_after_exceeding_threshold(): void
     {
+        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
         $writes = [];
         StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
             $writes[] = $value;
@@ -528,7 +535,7 @@ class IngestTest extends TestCase
         $this->core->ingest->write(FakeRecord::make());
 
         $this->assertCount(2, $writes);
-        $this->assertSame('10004:'.Payload::PAYLOAD_VERSION.':['.implode(',', array_fill(0, 500, json_encode(FakeRecord::make()))).']', implode('', $writes));
+        $this->assertSame('10012:'.Payload::PAYLOAD_VERSION.':'.$tokenHash.':['.implode(',', array_fill(0, 500, json_encode(FakeRecord::make()))).']', implode('', $writes));
 
         for ($i = 0; $i < 499; $i++) {
             $this->core->ingest->write(FakeRecord::make());
@@ -539,7 +546,7 @@ class IngestTest extends TestCase
         $this->core->ingest->write(FakeRecord::make());
 
         $this->assertCount(4, $writes);
-        $this->assertSame(str_repeat('10004:'.Payload::PAYLOAD_VERSION.':['.implode(',', array_fill(0, 500, json_encode(FakeRecord::make()))).']', 2), implode('', $writes));
+        $this->assertSame(str_repeat('10012:'.Payload::PAYLOAD_VERSION.':'.$tokenHash.':['.implode(',', array_fill(0, 500, json_encode(FakeRecord::make()))).']', 2), implode('', $writes));
     }
 }
 
@@ -577,7 +584,7 @@ class StreamWrapper
 
     public static function reset(): void
     {
-        static::$events = new Collection();
+        static::$events = new Collection;
 
         static::$on = [
             'stream_open' => fn (string $path, string $mode, int $options, ?string &$openedPath): bool => true,

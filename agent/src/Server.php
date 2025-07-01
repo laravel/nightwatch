@@ -18,15 +18,18 @@ class Server
      * @param  (Closure(string $message): mixed)  $onConnectionError
      * @param  (Closure(string $payload): mixed)  $onPayloadReceived
      * @param  (Closure(): mixed)  $onInvalidPayloadVersion
+     * @param  (Closure(): mixed)  $onInvalidTokenHash
      */
     public function __construct(
         private Closure $serverResolver,
         private string $payloadVersion,
+        private string $tokenHash,
         private Closure $onServerStarted,
         private Closure $onServerError,
         private Closure $onConnectionError,
         private Closure $onPayloadReceived,
         private Closure $onInvalidPayloadVersion,
+        private Closure $onInvalidTokenHash,
     ) {
         //
     }
@@ -59,6 +62,14 @@ class Server
                     $server->close();
 
                     call_user_func($this->onInvalidPayloadVersion);
+
+                    return;
+                }
+
+                if ($payload->tokenHash !== $this->tokenHash) {
+                    $server->close();
+
+                    call_user_func($this->onInvalidTokenHash);
 
                     return;
                 }

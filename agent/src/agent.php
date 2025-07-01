@@ -14,10 +14,12 @@ use React\Socket\TcpServer;
 
 use function date;
 use function gethostname;
+use function hash;
 use function in_array;
 use function round;
 use function rtrim;
 use function str_replace;
+use function substr;
 
 require __DIR__.'/../vendor/react/promise/src/functions_include.php';
 require __DIR__.'/../vendor/autoload.php';
@@ -75,6 +77,7 @@ $debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
 /** @var ?string $basePath */
 $basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
 $payloadVersion = 'v1';
+$tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 
 /*
  * Initialize services...
@@ -139,12 +142,22 @@ $ingest = new Ingest(
 $server = new Server(
     serverResolver: $serverResolver ?? static fn (): ServerInterface => new TcpServer($listenOn),
     payloadVersion: $payloadVersion,
+    tokenHash: $tokenHash,
     onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]"),
     onServerError: static fn (string $message) => $error("Server error: {$message}"),
     onConnectionError: static fn (string $message) => $error("Connection error: {$message}"),
     onPayloadReceived: $ingest->write(...),
     onInvalidPayloadVersion: static function () use ($info, $loop, $ingest) {
         $info('Incoming payload version has changed');
+
+        $ingest->forceDigest()->finally(static function () use ($info, $loop) {
+            $loop->stop();
+
+            $info('Shutting down');
+        });
+    },
+    onInvalidTokenHash: static function () use ($info, $loop, $ingest) {
+        $info('Incoming token hash mismatch! Check your application/agent configuration.');
 
         $ingest->forceDigest()->finally(static function () use ($info, $loop) {
             $loop->stop();

@@ -12,6 +12,8 @@ class Payload
 
     public string $payloadVersion = '';
 
+    public string $tokenHash = '';
+
     public ?int $length = null;
 
     public bool $complete = false;
@@ -22,7 +24,7 @@ class Payload
 
         $this->parsePayload();
 
-        $this->complete = $this->length === (strlen($this->payloadVersion) + 1 + strlen($this->value));
+        $this->complete = $this->length === (strlen($this->payloadVersion) + 1 + (strlen($this->tokenHash)) + 1 + strlen($this->value));
     }
 
     private function parsePayload(): void
@@ -31,14 +33,15 @@ class Payload
             return;
         }
 
-        $bits = explode(':', $this->value, 3);
+        $bits = explode(':', $this->value, 4);
 
-        if (count($bits) !== 3) {
+        if (count($bits) !== 4) {
             return;
         }
 
         $this->length = (int) $bits[0];
         $this->payloadVersion = $bits[1];
-        $this->value = $bits[2];
+        $this->tokenHash = $bits[2];
+        $this->value = $bits[3];
     }
 }

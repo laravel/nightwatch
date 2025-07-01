@@ -229,6 +229,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 buffer: new RecordsBuffer(
                     length: $this->nightwatchConfig['ingest']['event_buffer'] ?? 500,
                 ),
+                token: $this->nightwatchConfig['token'] ?? null,
             ),
             sensor: new SensorManager(
                 executionState: $executionState,
