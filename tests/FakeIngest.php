@@ -11,6 +11,7 @@ use Laravel\Nightwatch\Ingest;
 use PHPUnit\Framework\Assert;
 
 use function collect;
+use function dd;
 use function explode;
 use function is_array;
 use function json_decode;
@@ -148,5 +149,10 @@ class FakeIngest implements IngestContract
     public function __set(string $name, mixed $value): void
     {
         $this->ingest->{$name} = $value;
+    }
+
+    public function dd(): never
+    {
+        dd($this->decodedWrites()->all());
     }
 }
