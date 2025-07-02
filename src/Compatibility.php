@@ -136,7 +136,7 @@ final class Compatibility
         }
 
         /** @var Context */
-        $context = self::$app->make(Context::class);
+        $context = app()->make(Context::class);
 
         $context->addHidden($key, $value);
     }
