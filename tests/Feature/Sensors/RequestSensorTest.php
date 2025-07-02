@@ -14,6 +14,7 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -778,6 +779,7 @@ class RequestSensorTest extends TestCase
         $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '>='), 'Requires Livewire 2');
 
         $ingest = $this->fakeIngest();
+        Config::set('livewire.class_namespace', 'App\\Livewire'); // This is the default for Livewire 3, but we set it here to ensure compatibility with Livewire 2.
         Route::get('/counter', Counter::class);
 
         $response = $this
@@ -792,8 +794,6 @@ class RequestSensorTest extends TestCase
 
         preg_match('/wire:initial-data="([^"]+)"/', $response->getContent(), $matches);
         $snapshot = json_decode(html_entity_decode($matches[1]), true);
-        // The Livewire component must be manually registered because we're using the Livewire 3 default location.
-        Livewire::component('app.livewire.counter', Counter::class);
 
         $response = $this
             ->withHeader('X-Livewire', true)

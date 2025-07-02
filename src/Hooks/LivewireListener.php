@@ -18,6 +18,7 @@ class LivewireListener
     }
 
     /* Livewire 2 Events
+     *
      * Initial request:
      * - component.boot
      * - component.hydrate
