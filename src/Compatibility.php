@@ -128,13 +128,12 @@ final class Compatibility
      */
     public static function addHiddenContext(string $key, mixed $value): void
     {
-        if (! self::$contextExists) {
-            self::$context[$key] = $value;
+        // if (! self::$contextExists) {
+        self::$context[$key] = $value;
 
-            return;
-        }
+        // }
 
-        Context::addHidden($key, $value);
+        // Context::addHidden($key, $value);
     }
 
     /**
@@ -143,10 +142,10 @@ final class Compatibility
      */
     public static function getHiddenContext(string $key, mixed $default = null): mixed
     {
-        if (! self::$contextExists) {
-            return self::$context[$key] ?? value($default);
-        }
+        // if (! self::$contextExists) {
+        return self::$context[$key] ?? value($default);
+        // }
 
-        return Context::getHidden($key) ?? value($default);
+        // return Context::getHidden($key) ?? value($default);
     }
 }
