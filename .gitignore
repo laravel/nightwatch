@@ -7,4 +7,3 @@
 /phpunit.xml
 /tests/database.sqlite*
 /vendor
-/.cursor
