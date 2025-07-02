@@ -3,7 +3,6 @@
 namespace Tests\Feature\Sensors;
 
 use App\Http\UserController;
-use App\Livewire\AnotherCounter;
 use App\Livewire\Counter;
 use Carbon\CarbonImmutable;
 use Composer\InstalledVersions;
@@ -837,7 +836,7 @@ class RequestSensorTest extends TestCase
             ->assertOk();
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.route_action', Counter::class);
+        $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
     }
 
     public function test_livewire_3(): void
@@ -889,7 +888,7 @@ class RequestSensorTest extends TestCase
             ->assertOk();
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.route_action', Counter::class);
+        $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
     }
 
     public function test_livewire_3_with_multiple_components(): void
@@ -949,6 +948,6 @@ class RequestSensorTest extends TestCase
             ->assertOk();
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.route_action', Counter::class.', '.AnotherCounter::class);
+        $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter, App\Livewire\AnotherCounter');
     }
 }
