@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sensors;
 
 use App\Http\UserController;
+use App\Livewire\AnotherCounter;
 use App\Livewire\Counter;
 use Carbon\CarbonImmutable;
 use Composer\InstalledVersions;
@@ -30,6 +31,7 @@ use function now;
 use function ob_end_clean;
 use function ob_start;
 use function preg_match;
+use function preg_match_all;
 use function report;
 use function response;
 use function stream_get_meta_data;
@@ -794,6 +796,7 @@ class RequestSensorTest extends TestCase
         Livewire::component('app.livewire.counter', Counter::class);
 
         $response = $this
+            ->withHeader('X-Livewire', true)
             ->post('/livewire/message/counter', [
                 'fingerprint' => $snapshot['fingerprint'],
                 'serverMemo' => $snapshot['serverMemo'],
@@ -887,5 +890,65 @@ class RequestSensorTest extends TestCase
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.route_action', Counter::class);
+    }
+
+    public function test_livewire_3_with_multiple_components(): void
+    {
+        $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '<'), 'Requires Livewire 3');
+
+        $ingest = $this->fakeIngest();
+        Route::view('/dashboard', 'dashboard');
+
+        $response = $this
+            ->get('/dashboard')
+            ->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.route_action', '\Illuminate\Routing\ViewController');
+
+        $ingest->forgetWrites();
+        $this->core->prepareForNextRequest();
+
+        preg_match_all('/wire:snapshot="([^"]+)"/', $response->getContent(), $matches);
+        $snapshot1 = html_entity_decode($matches[1][0]);
+        $snapshot2 = html_entity_decode($matches[1][1]);
+
+        $response = $this
+            ->withHeader('X-Livewire', true)
+            ->post('/livewire/update', [
+                'components' => [
+                    [
+                        'snapshot' => $snapshot1,
+                        'updates' => [
+                            'count' => 2,
+                        ],
+                        'calls' => [
+                            [
+                                'method' => 'increment',
+                                'params' => [],
+                            ],
+                            [
+                                'method' => 'increment',
+                                'params' => [],
+                            ],
+                            [
+                                'method' => 'decrement',
+                                'params' => [],
+                            ],
+                        ],
+                    ],
+                    [
+                        'snapshot' => $snapshot2,
+                        'updates' => [
+                            'count' => 2,
+                        ],
+                        'calls' => [],
+                    ],
+                ],
+            ])
+            ->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.route_action', Counter::class.', '.AnotherCounter::class);
     }
 }

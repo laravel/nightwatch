@@ -83,6 +83,10 @@ class LivewireListener
 
     public function hydrate(Component $component): void
     {
-        $this->nightwatch->executionState->routeAction = $component::class;
+        if ($this->nightwatch->executionState->routeAction === null) {
+            $this->nightwatch->executionState->routeAction = $component::class;
+        } else {
+            $this->nightwatch->executionState->routeAction .= ', '.$component::class;
+        }
     }
 }
