@@ -32,12 +32,10 @@ use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
-use Illuminate\Queue\Queue;
 use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Env;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\AgentCommand;
@@ -508,8 +506,6 @@ final class NightwatchServiceProvider extends ServiceProvider
                 trace: new LazyValue(static function () {
                     return (string) Compatibility::getHiddenContext('nightwatch_trace_id', static function () { // @phpstan-ignore cast.string
                         $trace = (string) Str::uuid();
-
-                        Log::info('Generated trace id: '.$trace);
 
                         Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
 
