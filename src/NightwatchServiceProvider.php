@@ -472,7 +472,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             $listener = $this->app->make(LivewireListener::class);
 
             // Livewire 2
-            Livewire::listen('component.boot', $listener->componentBoot(...));
+            Livewire::listen('component.hydrate.subsequent', $listener->componentHydrateSubsequent(...));
 
             // Livewire 3
             Livewire::listen('hydrate', $listener->hydrate(...));

@@ -18,6 +18,7 @@ class LivewireListener
     }
 
     /* Livewire 2 Events
+     * Initial request:
      * - component.boot
      * - component.hydrate
      * - component.hydrate.initial
@@ -30,9 +31,25 @@ class LivewireListener
      * - component.dehydrate.initial
      * - property.dehydrate
      * - mounted
+     *
+     * Update request:
+     * - component.boot
+     * - property.hydrate
+     * - component.hydrate
+     * - component.hydrate.subsequent
+     * - component.booted
+     * - component.updating
+     * - component.updated
+     * - action.returned
+     * - component.rendering
+     * - component.rendered
+     * - view:render
+     * - component.dehydrate
+     * - component.dehydrate.subsequent
+     * - property.dehydrate
      */
 
-    public function componentBoot(Component $component): void
+    public function componentHydrateSubsequent(Component $component): void
     {
         $this->nightwatch->executionState->routeAction = $component::class;
     }
@@ -55,8 +72,6 @@ class LivewireListener
      * - snapshot-verified
      * - hydrate
      * - update
-     * - call
-     * - call
      * - call
      * - render
      * - view:compile

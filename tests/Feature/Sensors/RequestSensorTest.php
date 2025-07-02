@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 use function fseek;
@@ -784,8 +785,13 @@ class RequestSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.route_action', Counter::class);
 
+        $ingest->forgetWrites();
+        $this->core->prepareForNextRequest();
+
         preg_match('/wire:initial-data="([^"]+)"/', $response->getContent(), $matches);
         $snapshot = json_decode(html_entity_decode($matches[1]), true);
+        // The Livewire component must be manually registered because we're using the Livewire 3 default location.
+        Livewire::component('app.livewire.counter', Counter::class);
 
         $response = $this
             ->post('/livewire/message/counter', [
@@ -827,7 +833,7 @@ class RequestSensorTest extends TestCase
             ])
             ->assertOk();
 
-        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.route_action', Counter::class);
     }
 
