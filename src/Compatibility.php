@@ -10,6 +10,7 @@ use Illuminate\Queue\Queue;
 use ReflectionProperty;
 use Symfony\Component\Console\Input\ArgvInput;
 
+use function app;
 use function implode;
 use function method_exists;
 use function value;
@@ -151,7 +152,7 @@ final class Compatibility
         }
 
         /** @var Context */
-        $context = self::$app->make(Context::class);
+        $context = app()->make(Context::class);
 
         return $context->getHidden($key) ?? value($default);
     }
