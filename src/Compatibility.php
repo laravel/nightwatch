@@ -7,10 +7,12 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Queue;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Log;
 use ReflectionProperty;
 use Symfony\Component\Console\Input\ArgvInput;
 
 use function implode;
+use function json_encode;
 use function method_exists;
 use function value;
 use function version_compare;
@@ -103,6 +105,8 @@ final class Compatibility
             /** @var Dispatcher */
             $events = $app->make(Dispatcher::class);
             $events->listen(static function (JobProcessing $event) {
+                Log::info('JobProcessing event: '.json_encode($event->job->payload()));
+
                 self::$context = $event->job->payload()['nightwatch'] ?? [];
             });
         }
