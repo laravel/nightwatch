@@ -42,27 +42,51 @@ final class UserProvider
      */
     public function id(): LazyValue|string
     {
+        if (! $this->auth->hasResolvedGuards()) {
+            return $this->lazyId();
+        }
+
+        if ($this->auth->hasUser()) {
+            return $this->currentId();
+        }
+
+        return '';
+    }
+
+    private function currentId(): string
+    {
         try {
-            if ($this->auth->hasUser()) {
-                return Str::tinyText((string) $this->auth->id());
-            }
+            return Str::tinyText((string) $this->auth->id());
         } catch (Throwable $e) {
             $this->reportResolvingUserIdException($e);
 
             return '';
         }
+    }
 
+    private function lazyId(): LazyValue
+    {
         return new LazyValue(function () {
-            try {
-                if ($this->auth->hasUser()) {
-                    return Str::tinyText((string) $this->auth->id());
-                } else {
-                    return Str::tinyText((string) $this->rememberedUser?->getAuthIdentifier());  // @phpstan-ignore cast.string
-                }
-            } catch (Throwable $e) {
-                $this->reportResolvingUserIdException($e);
-
+            if (! $this->auth->hasResolvedGuards()) {
                 return '';
+            }
+
+            if ($this->auth->hasUser()) {
+                try {
+                    return Str::tinyText((string) $this->auth->id());
+                } catch (Throwable $e) {
+                    $this->reportResolvingUserIdException($e);
+
+                    return '';
+                }
+            } else {
+                try {
+                    return Str::tinyText((string) $this->rememberedUser?->getAuthIdentifier());  // @phpstan-ignore cast.string
+                } catch (Throwable $e) {
+                    $this->reportResolvingUserIdException($e);
+
+                    return '';
+                }
             }
         });
     }
@@ -72,7 +96,11 @@ final class UserProvider
      */
     public function details(): ?array
     {
-        $user = $this->auth->user() ?? $this->rememberedUser;
+        if ($this->auth->hasResolvedGuards()) {
+            $user = $this->auth->user() ?? $this->rememberedUser;
+        } else {
+            $user = $this->rememberedUser;
+        }
 
         if ($user === null) {
             return null;
