@@ -38,6 +38,8 @@ class LivewireListener
     }
 
     /* Livewire 3 Events
+     *
+     * Initial request:
      * - pre-mount
      * - mount
      * - render
@@ -45,10 +47,27 @@ class LivewireListener
      * - dehydrate
      * - checksum:generate
      * - destroy
+     *
+     * Update request:
+     * - request
+     * - checksum.verify
+     * - checksum.generate
+     * - snapshot-verified
+     * - hydrate
+     * - update
+     * - call
+     * - call
+     * - call
+     * - render
+     * - view:compile
+     * - dehydrate
+     * - checksum.generate
+     * - destroy
+     * - response
      */
 
-    public function preMount(string $component): void
+    public function hydrate(Component $component): void
     {
-        $this->nightwatch->executionState->routeAction = $component;
+        $this->nightwatch->executionState->routeAction = $component::class;
     }
 }

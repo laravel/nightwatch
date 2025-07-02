@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Sensors;
 
-use App\Http\Livewire\Counter;
 use App\Http\UserController;
+use App\Livewire\Counter;
 use Carbon\CarbonImmutable;
 use Composer\InstalledVersions;
 use Exception;
@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 use function fseek;
@@ -846,11 +845,14 @@ class RequestSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.route_action', Counter::class);
 
+        $ingest->forgetWrites();
+        $this->core->prepareForNextRequest();
+
         preg_match('/wire:snapshot="([^"]+)"/', $response->getContent(), $matches);
         $snapshot = html_entity_decode($matches[1]);
-        Livewire::component('app.http.livewire.counter', Counter::class); // Not sure why this must be manually registered
 
         $response = $this
+            ->withHeader('X-Livewire', true)
             ->post('/livewire/update', [
                 'components' => [
                     [
@@ -877,7 +879,7 @@ class RequestSensorTest extends TestCase
             ])
             ->assertOk();
 
-        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.route_action', Counter::class);
     }
 }

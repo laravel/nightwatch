@@ -475,7 +475,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             Livewire::listen('component.boot', $listener->componentBoot(...));
 
             // Livewire 3
-            Livewire::listen('pre-mount', $listener->preMount(...));
+            Livewire::listen('hydrate', $listener->hydrate(...));
         });
     }
 
