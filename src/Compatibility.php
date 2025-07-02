@@ -96,20 +96,20 @@ final class Compatibility
         self::$queuedJobDurationCapturable =
             version_compare($version, '10.42.0', '>=');
 
-        if (! self::$contextExists) {
-            Queue::createPayloadUsing(static fn ($c, $q, array $payload) => [
-                ...$payload,
-                'nightwatch' => self::$context,
-            ]);
+        // if (! self::$contextExists) {
+        Queue::createPayloadUsing(static fn ($c, $q, array $payload) => [
+            ...$payload,
+            'nightwatch' => self::$context,
+        ]);
 
-            /** @var Dispatcher */
-            $events = $app->make(Dispatcher::class);
-            $events->listen(static function (JobProcessing $event) {
-                Log::info('JobProcessing event: '.json_encode($event->job->payload()));
+        /** @var Dispatcher */
+        $events = $app->make(Dispatcher::class);
+        $events->listen(static function (JobProcessing $event) {
+            Log::info('JobProcessing event: '.json_encode($event->job->payload()));
 
-                self::$context = $event->job->payload()['nightwatch'] ?? [];
-            });
-        }
+            self::$context = $event->job->payload()['nightwatch'] ?? [];
+        });
+        // }
     }
 
     /**
