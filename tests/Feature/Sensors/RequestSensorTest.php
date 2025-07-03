@@ -786,7 +786,9 @@ class RequestSensorTest extends TestCase
             ->assertOk();
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.route_action', Counter::class);
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/counter');
+        $ingest->assertLatestWrite('request:0.route_path', '/counter');
+        $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
 
         $ingest->forgetWrites();
         $this->core->prepareForNextRequest();
@@ -836,6 +838,8 @@ class RequestSensorTest extends TestCase
             ->assertOk();
 
         $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/livewire/message/counter');
+        $ingest->assertLatestWrite('request:0.route_path', '/livewire/message/{name}');
         $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
     }
 
@@ -851,7 +855,9 @@ class RequestSensorTest extends TestCase
             ->assertOk();
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.route_action', Counter::class);
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/counter');
+        $ingest->assertLatestWrite('request:0.route_path', '/counter');
+        $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
 
         $ingest->forgetWrites();
         $this->core->prepareForNextRequest();
@@ -888,6 +894,8 @@ class RequestSensorTest extends TestCase
             ->assertOk();
 
         $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/livewire/update');
+        $ingest->assertLatestWrite('request:0.route_path', '/livewire/update');
         $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
     }
 
@@ -903,6 +911,8 @@ class RequestSensorTest extends TestCase
             ->assertOk();
 
         $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/dashboard');
+        $ingest->assertLatestWrite('request:0.route_path', '/dashboard');
         $ingest->assertLatestWrite('request:0.route_action', '\Illuminate\Routing\ViewController');
 
         $ingest->forgetWrites();
@@ -948,6 +958,8 @@ class RequestSensorTest extends TestCase
             ->assertOk();
 
         $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/livewire/update');
+        $ingest->assertLatestWrite('request:0.route_path', '/livewire/update');
         $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter, App\Livewire\AnotherCounter');
     }
 }
