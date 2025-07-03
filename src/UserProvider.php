@@ -50,18 +50,11 @@ final class UserProvider
             return $this->currentUserId();
         }
 
-        return '';
-    }
-
-    private function currentUserId(): string
-    {
-        try {
-            return Str::tinyText((string) $this->auth->id());
-        } catch (Throwable $e) {
-            $this->reportResolvingUserIdException($e);
-
-            return '';
+        if ($this->rememberedUser) {
+            return $this->rememberedUserId();
         }
+
+        return '';
     }
 
     /**
@@ -75,23 +68,37 @@ final class UserProvider
             }
 
             if ($this->auth->hasUser()) {
-                try {
-                    return Str::tinyText((string) $this->auth->id());
-                } catch (Throwable $e) {
-                    $this->reportResolvingUserIdException($e);
-
-                    return '';
-                }
-            } else {
-                try {
-                    return Str::tinyText((string) $this->rememberedUser?->getAuthIdentifier());  // @phpstan-ignore cast.string
-                } catch (Throwable $e) {
-                    $this->reportResolvingUserIdException($e);
-
-                    return '';
-                }
+                return $this->currentUserId();
             }
+
+            if ($this->rememberedUser) {
+                return $this->rememberedUserId();
+            }
+
+            return '';
         });
+    }
+
+    private function currentUserId(): string
+    {
+        try {
+            return Str::tinyText((string) $this->auth->id());
+        } catch (Throwable $e) {
+            $this->reportResolvingUserIdException($e);
+
+            return '';
+        }
+    }
+
+    private function rememberedUserId(): string
+    {
+        try {
+            return Str::tinyText((string) $this->rememberedUser?->getAuthIdentifier());  // @phpstan-ignore cast.string
+        } catch (Throwable $e) {
+            $this->reportResolvingUserIdException($e);
+
+            return '';
+        }
     }
 
     /**
