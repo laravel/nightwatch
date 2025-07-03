@@ -488,6 +488,9 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
 
+        /** @var AuthManager */
+        $auth = $this->app->make(AuthManager::class);
+
         if ($this->isRequest) {
             return new RequestState(
                 timestamp: $this->timestamp,
@@ -496,12 +499,11 @@ final class NightwatchServiceProvider extends ServiceProvider
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
                 server: $this->nightwatchConfig['server'] ?? '',
-                user: new UserProvider(function ($callback) {
-                    /** @var AuthManager */
-                    $auth = $this->app->make(AuthManager::class);
-
-                    return $this->core->ignore(static fn () => $callback($auth));
-                }, fn () => $this->core->userDetailsResolver, fn () => $this->core->report(...)),
+                user: new UserProvider(
+                    fn (callable $callback) => $this->core->ignore(static fn () => $callback($auth)),
+                    fn () => $this->core->userDetailsResolver,
+                    fn () => $this->core->report(...),
+                ),
             );
         } else {
             return new CommandState(
