@@ -488,10 +488,10 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
 
-        /** @var AuthManager */
-        $auth = $this->app->make(AuthManager::class);
-
         if ($this->isRequest) {
+            /** @var AuthManager */
+            $auth = $this->app->make(AuthManager::class);
+
             return new RequestState(
                 timestamp: $this->timestamp,
                 trace: $trace,
