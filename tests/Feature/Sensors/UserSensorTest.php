@@ -5,8 +5,12 @@ namespace Tests\Feature\Sensors;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\GenericUser;
+use Illuminate\Auth\GuardHelpers;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Facades\Nightwatch;
@@ -237,6 +241,55 @@ class UserSensorTest extends TestCase
         });
 
         $response = $this->get('/login');
+
+        $response->assertOk();
+        $response->assertContent('ok');
+        $ingest->assertLatestWriteRecordCount(4);
+        $ingest->assertLatestWrite('exception:0.message', 'Undefined array key "id"');
+        $ingest->assertLatestWrite('exception:0.class', 'ErrorException');
+        $ingest->assertLatestWrite('exception:0.handled', true);
+        $ingest->assertLatestWrite('query:0.user', '');
+        $ingest->assertLatestWrite('query:1.user', '');
+        $ingest->assertLatestWrite('request:0.user', '');
+    }
+
+    public function test_it_can_resolve_user_when_set_user_is_called_on_stateless_auth(): void
+    {
+        // TODO
+    }
+
+    public function test_it_ignores_events_occurring_while_retrieving_user_credentials(): void
+    {
+        $ingest = $this->fakeIngest();
+        Config::set('auth.guards.cached', ['driver' => 'cached']);
+        Auth::extend('cached', function () {
+            return new class implements Guard
+            {
+                use GuardHelpers;
+
+                public function hasUser()
+                {
+                    return $this->user() !== null;
+                }
+
+                public function user()
+                {
+                    return Cache::remember('user-123', 5, fn () => new GenericUser([
+                        'id' => '123',
+                    ]));
+                }
+
+                public function validate(array $credentials = [])
+                {
+                    return true;
+                }
+            };
+        });
+
+        Route::get('/login', fn () => 'ok')->middleware('auth:cached');
+
+        $response = $this->get('/login');
+        $ingest->dd();
 
         $response->assertOk();
         $response->assertContent('ok');
