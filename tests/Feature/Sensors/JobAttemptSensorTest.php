@@ -188,7 +188,7 @@ class JobAttemptSensorTest extends TestCase
                 'duration' => 2500,
                 'exceptions' => 1,
                 'logs' => 0,
-                'queries' => $this->isVapor ? 0 : 5, // Vapor doesn't use database queries for job management
+                'queries' => $this->isVapor ? 0 : 5,
                 'lazy_loads' => 0,
                 'jobs_queued' => 0,
                 'mail' => 0,
@@ -245,7 +245,7 @@ class JobAttemptSensorTest extends TestCase
                 'duration' => 2500,
                 'exceptions' => 0,
                 'logs' => 0,
-                'queries' => $this->isVapor ? 0 : 5, // Vapor doesn't use database queries for job management
+                'queries' => $this->isVapor ? 0 : 5,
                 'lazy_loads' => 0,
                 'jobs_queued' => 0,
                 'mail' => 0,
