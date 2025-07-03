@@ -64,6 +64,9 @@ final class UserProvider
         }
     }
 
+    /**
+     * @return LazyValue<string>
+     */
     private function lazyId(): LazyValue
     {
         return new LazyValue(function () {
@@ -96,11 +99,9 @@ final class UserProvider
      */
     public function details(): ?array
     {
-        if ($this->auth->hasResolvedGuards()) {
-            $user = $this->auth->user() ?? $this->rememberedUser;
-        } else {
-            $user = $this->rememberedUser;
-        }
+        $user = $this->auth->hasResolvedGuards()
+            ? $this->auth->user() ?? $this->rememberedUser
+            : $this->rememberedUser;
 
         if ($user === null) {
             return null;
