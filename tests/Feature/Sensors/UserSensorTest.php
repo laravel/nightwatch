@@ -6,6 +6,8 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Tests\TestCase;
@@ -219,5 +221,41 @@ class UserSensorTest extends TestCase
             'name' => '',
             'username' => '',
         ]]);
+    }
+
+    public function test_it_gracefully_handles_exceptions_while_resolving_user_ids(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/login', function () {
+            DB::statement('select * from users');
+
+            Auth::setUser(new GenericUser([]));
+
+            DB::statement('select * from users');
+
+            return 'ok';
+        });
+
+        $response = $this->get('/login');
+
+        $response->assertOk();
+        $response->assertContent('ok');
+        $ingest->assertLatestWriteRecordCount(4);
+        $ingest->assertLatestWrite('exception:0.message', 'Undefined array key "id"');
+        $ingest->assertLatestWrite('exception:0.class', 'ErrorException');
+        $ingest->assertLatestWrite('exception:0.handled', true);
+        $ingest->assertLatestWrite('query:0.user', '');
+        $ingest->assertLatestWrite('query:1.user', '');
+        $ingest->assertLatestWrite('request:0.user', '');
+    }
+
+    public function test_it_does_not_actively_resolve_guards(): void
+    {
+        Route::get('/test', fn () => 'ok');
+
+        $response = $this->get('/test');
+
+        $response->assertOk();
+        $this->assertFalse(Auth::hasResolvedGuards());
     }
 }

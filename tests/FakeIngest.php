@@ -11,6 +11,7 @@ use Laravel\Nightwatch\Ingest;
 use PHPUnit\Framework\Assert;
 
 use function collect;
+use function dd;
 use function explode;
 use function is_array;
 use function json_decode;
@@ -109,6 +110,13 @@ class FakeIngest implements IngestContract
         return $this->assertWrite($this->streams->count() - 1, $key, $expected);
     }
 
+    public function assertLatestWriteRecordCount(int $count): self
+    {
+        Assert::assertCount($count, $this->decodedWrites()->last() ?? []);
+
+        return $this;
+    }
+
     public function latestWriteAsString(): ?string
     {
         return $this->streams->last()?->value;
@@ -141,5 +149,10 @@ class FakeIngest implements IngestContract
     public function __set(string $name, mixed $value): void
     {
         $this->ingest->{$name} = $value;
+    }
+
+    public function dd(): never
+    {
+        dd($this->decodedWrites()->all());
     }
 }
