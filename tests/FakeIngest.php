@@ -138,7 +138,7 @@ class FakeIngest implements IngestContract
 
     public function forgetWrites(): void
     {
-        $this->streams->forget($this->streams->keys());
+        $this->streams->pop($this->streams->count());
     }
 
     public function __get(string $name): mixed

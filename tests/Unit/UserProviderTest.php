@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\User;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Nightwatch\UserProvider;
@@ -15,6 +16,13 @@ use function strlen;
 
 class UserProviderTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        $this->forceRequestExecutionState();
+
+        parent::setUp();
+    }
+
     public function test_it_limits_the_length_of_the_user_identifier(): void
     {
         Auth::login(new GenericUser([
@@ -41,12 +49,12 @@ class UserProviderTest extends TestCase
 
     public function test_it_can_remember_an_authenticated_user_and_limits_the_length_of_their_identifier(): void
     {
-        $provider = new UserProvider($this->app['auth'], fn () => [], fn () => fn () => null);
-        $provider->remember($user = new GenericUser([
+        Auth::login((new User([
             'id' => str_repeat('x', 1000),
-        ]));
+        ]))->setKeyType('string'));
+        Auth::logout();
 
-        $this->assertSame(str_repeat('x', 255), $provider->id()->jsonSerialize());
+        $this->assertSame(str_repeat('x', 255), $this->core->executionState->user->id());
     }
 
     public function test_it_only_reports_exceptions_occurring_while_resolving_user_ids_once_before_user_is_available(): void

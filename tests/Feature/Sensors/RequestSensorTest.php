@@ -3,7 +3,9 @@
 namespace Tests\Feature\Sensors;
 
 use App\Http\UserController;
+use App\Livewire\Counter;
 use Carbon\CarbonImmutable;
+use Composer\InstalledVersions;
 use Exception;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Http\Kernel;
@@ -11,24 +13,31 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 use function fseek;
 use function fwrite;
 use function hash;
+use function html_entity_decode;
+use function json_decode;
 use function now;
 use function ob_end_clean;
 use function ob_start;
+use function preg_match;
+use function preg_match_all;
 use function report;
 use function response;
 use function stream_get_meta_data;
 use function tap;
 use function tmpfile;
+use function version_compare;
 
 class RequestSensorTest extends TestCase
 {
@@ -762,5 +771,195 @@ class RequestSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.method', 'BLAH');
         $ingest->assertLatestWrite('request:0.route_methods', ['BLAH']);
+    }
+
+    public function test_livewire_2(): void
+    {
+        $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '>='), 'Requires Livewire 2');
+
+        $ingest = $this->fakeIngest();
+        Config::set('livewire.class_namespace', 'App\\Livewire'); // This is the default for Livewire 3, but we set it here to ensure compatibility with Livewire 2.
+        Route::get('/counter', Counter::class);
+
+        $response = $this
+            ->get('/counter')
+            ->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/counter');
+        $ingest->assertLatestWrite('request:0.route_path', '/counter');
+        $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
+
+        $ingest->forgetWrites();
+        $this->core->prepareForNextRequest();
+
+        preg_match('/wire:initial-data="([^"]+)"/', $response->getContent(), $matches);
+        $snapshot = json_decode(html_entity_decode($matches[1]), true);
+
+        $response = $this
+            ->withHeader('X-Livewire', true)
+            ->post('/livewire/message/counter', [
+                'fingerprint' => $snapshot['fingerprint'],
+                'serverMemo' => $snapshot['serverMemo'],
+                'updates' => [
+                    [
+                        'type' => 'syncInput',
+                        'payload' => [
+                            'name' => 'count',
+                            'value' => 2,
+                        ],
+                    ],
+                    [
+                        'type' => 'callMethod',
+                        'payload' => [
+                            'id' => 'foo',
+                            'method' => 'increment',
+                            'params' => [],
+                        ],
+                    ],
+                    [
+                        'type' => 'callMethod',
+                        'payload' => [
+                            'id' => 'foo',
+                            'method' => 'increment',
+                            'params' => [],
+                        ],
+                    ],
+                    [
+                        'type' => 'callMethod',
+                        'payload' => [
+                            'id' => 'foo',
+                            'method' => 'decrement',
+                            'params' => [],
+                        ],
+                    ],
+                ],
+            ])
+            ->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/livewire/message/counter');
+        $ingest->assertLatestWrite('request:0.route_path', '/livewire/message/{name}');
+        $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
+    }
+
+    public function test_livewire_3(): void
+    {
+        $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '<'), 'Requires Livewire 3');
+
+        $ingest = $this->fakeIngest();
+        Route::get('/counter', Counter::class);
+
+        $response = $this
+            ->get('/counter')
+            ->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/counter');
+        $ingest->assertLatestWrite('request:0.route_path', '/counter');
+        $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
+
+        $ingest->forgetWrites();
+        $this->core->prepareForNextRequest();
+
+        preg_match('/wire:snapshot="([^"]+)"/', $response->getContent(), $matches);
+        $snapshot = html_entity_decode($matches[1]);
+
+        $response = $this
+            ->withHeader('X-Livewire', true)
+            ->post('/livewire/update', [
+                'components' => [
+                    [
+                        'snapshot' => $snapshot,
+                        'updates' => [
+                            'count' => 2,
+                        ],
+                        'calls' => [
+                            [
+                                'method' => 'increment',
+                                'params' => [],
+                            ],
+                            [
+                                'method' => 'increment',
+                                'params' => [],
+                            ],
+                            [
+                                'method' => 'decrement',
+                                'params' => [],
+                            ],
+                        ],
+                    ],
+                ],
+            ])
+            ->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/livewire/update');
+        $ingest->assertLatestWrite('request:0.route_path', '/livewire/update');
+        $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
+    }
+
+    public function test_livewire_3_with_multiple_components(): void
+    {
+        $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '<'), 'Requires Livewire 3');
+
+        $ingest = $this->fakeIngest();
+        Route::view('/dashboard', 'dashboard');
+
+        $response = $this
+            ->get('/dashboard')
+            ->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/dashboard');
+        $ingest->assertLatestWrite('request:0.route_path', '/dashboard');
+        $ingest->assertLatestWrite('request:0.route_action', '\Illuminate\Routing\ViewController');
+
+        $ingest->forgetWrites();
+        $this->core->prepareForNextRequest();
+
+        preg_match_all('/wire:snapshot="([^"]+)"/', $response->getContent(), $matches);
+        $snapshot1 = html_entity_decode($matches[1][0]);
+        $snapshot2 = html_entity_decode($matches[1][1]);
+
+        $response = $this
+            ->withHeader('X-Livewire', true)
+            ->post('/livewire/update', [
+                'components' => [
+                    [
+                        'snapshot' => $snapshot1,
+                        'updates' => [
+                            'count' => 2,
+                        ],
+                        'calls' => [
+                            [
+                                'method' => 'increment',
+                                'params' => [],
+                            ],
+                            [
+                                'method' => 'increment',
+                                'params' => [],
+                            ],
+                            [
+                                'method' => 'decrement',
+                                'params' => [],
+                            ],
+                        ],
+                    ],
+                    [
+                        'snapshot' => $snapshot2,
+                        'updates' => [
+                            'count' => 2,
+                        ],
+                        'calls' => [],
+                    ],
+                ],
+            ])
+            ->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.url', 'http://localhost/livewire/update');
+        $ingest->assertLatestWrite('request:0.route_path', '/livewire/update');
+        $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter, App\Livewire\AnotherCounter');
     }
 }

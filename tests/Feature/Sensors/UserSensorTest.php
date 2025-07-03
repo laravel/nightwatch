@@ -301,4 +301,14 @@ class UserSensorTest extends TestCase
         $ingest->assertLatestWrite('query:1.user', '');
         $ingest->assertLatestWrite('request:0.user', '');
     }
+
+    public function test_it_does_not_actively_resolve_guards(): void
+    {
+        Route::get('/test', fn () => 'ok');
+
+        $response = $this->get('/test');
+
+        $response->assertOk();
+        $this->assertFalse(Auth::hasResolvedGuards());
+    }
 }

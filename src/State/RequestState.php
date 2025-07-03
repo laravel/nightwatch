@@ -40,6 +40,7 @@ final class RequestState
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
         public UserProvider $user,
+        public ?string $routeAction = null,
         public ExecutionStage $stage = ExecutionStage::Bootstrap,
         public array $stageDurations = [
             ExecutionStage::Bootstrap->value => 0,
@@ -104,6 +105,7 @@ final class RequestState
 
     public function flush(): void
     {
+        $this->routeAction = null;
         $this->exceptions = 0;
         $this->logs = 0;
         $this->queries = 0;

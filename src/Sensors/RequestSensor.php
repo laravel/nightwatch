@@ -69,7 +69,7 @@ final class RequestSensor
                 routeMethods: $routeMethods,
                 routeDomain: $routeDomain,
                 routePath: $routePath,
-                routeAction: $route?->getActionName() ?? '',
+                routeAction: $this->requestState->routeAction ?? $route?->getActionName() ?? '',
                 ip: $request->ip() ?? '',
                 duration: array_sum($this->requestState->stageDurations),
                 statusCode: $response->getStatusCode(),
