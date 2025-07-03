@@ -467,7 +467,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app->booted(function ($app) use ($core) {
+        $this->app->booted(static function ($app) use ($core) {
             if (! $app->bound(LivewireManager::class)) {
                 return;
             }
