@@ -249,7 +249,7 @@ class UserSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.user', '');
     }
 
-    public function test_it_does_not_resolve_guards_unless_they_are_already_resolved(): void
+    public function test_it_does_not_actively_resolve_guards(): void
     {
         Route::get('/test', fn () => 'ok');
 

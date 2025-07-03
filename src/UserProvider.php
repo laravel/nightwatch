@@ -43,17 +43,17 @@ final class UserProvider
     public function id(): LazyValue|string
     {
         if (! $this->auth->hasResolvedGuards()) {
-            return $this->lazyId();
+            return $this->lazyUserId();
         }
 
         if ($this->auth->hasUser()) {
-            return $this->currentId();
+            return $this->currentUserId();
         }
 
         return '';
     }
 
-    private function currentId(): string
+    private function currentUserId(): string
     {
         try {
             return Str::tinyText((string) $this->auth->id());
@@ -67,7 +67,7 @@ final class UserProvider
     /**
      * @return LazyValue<string>
      */
-    private function lazyId(): LazyValue
+    private function lazyUserId(): LazyValue
     {
         return new LazyValue(function () {
             if (! $this->auth->hasResolvedGuards()) {
