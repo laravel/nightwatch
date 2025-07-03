@@ -40,8 +40,8 @@ final class RequestState
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
         public UserProvider $user,
-        public ExecutionStage $stage = ExecutionStage::Bootstrap,
         public ?string $routeAction = null,
+        public ExecutionStage $stage = ExecutionStage::Bootstrap,
         public array $stageDurations = [
             ExecutionStage::Bootstrap->value => 0,
             ExecutionStage::BeforeMiddleware->value => 0,

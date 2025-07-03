@@ -410,6 +410,19 @@ trait CapturesState
     /**
      * @internal
      */
+    public function captureRequestRouteAction(string $routeAction): void
+    {
+        /** @var Core<RequestState> $this */
+        if ($this->executionState->routeAction === null) {
+            $this->executionState->routeAction = $routeAction;
+        } else {
+            $this->executionState->routeAction .= ', '.$routeAction;
+        }
+    }
+
+    /**
+     * @internal
+     */
     public function attachMiddlewareToRoute(Route $route): void
     {
         if ($this->routesWithMiddlewareRegistered[$route] ?? false) {

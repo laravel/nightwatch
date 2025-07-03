@@ -414,7 +414,7 @@ final class NightwatchServiceProvider extends ServiceProvider
          */
         $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($core))(...));
 
-        $this->registerLivewireHooks();
+        $this->registerLivewireHooks($core);
     }
 
     /**
@@ -458,18 +458,21 @@ final class NightwatchServiceProvider extends ServiceProvider
         $events->listen(CommandStarting::class, (new CommandStartingListener($events, $core, $kernel))(...));
     }
 
-    private function registerLivewireHooks(): void
+    /**
+     * @param  Core<RequestState>  $core
+     */
+    private function registerLivewireHooks(Core $core): void
     {
         if (! class_exists(Livewire::class)) {
             return;
         }
 
-        $this->app->booted(function ($app) {
+        $this->app->booted(function ($app) use ($core) {
             if (! $app->bound(LivewireManager::class)) {
                 return;
             }
 
-            $listener = $this->app->make(LivewireListener::class);
+            $listener = new LivewireListener($core);
 
             // Livewire 2
             Livewire::listen('component.hydrate.subsequent', $listener->componentHydrateSubsequent(...));

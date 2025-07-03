@@ -52,7 +52,7 @@ class LivewireListener
 
     public function componentHydrateSubsequent(Component $component): void
     {
-        $this->nightwatch->executionState->routeAction = $component::class;
+        $this->nightwatch->captureRequestRouteAction($component::class);
     }
 
     /* Livewire 3 Events
@@ -84,10 +84,6 @@ class LivewireListener
 
     public function hydrate(Component $component): void
     {
-        if ($this->nightwatch->executionState->routeAction === null) {
-            $this->nightwatch->executionState->routeAction = $component::class;
-        } else {
-            $this->nightwatch->executionState->routeAction .= ', '.$component::class;
-        }
+        $this->nightwatch->captureRequestRouteAction($component::class);
     }
 }
