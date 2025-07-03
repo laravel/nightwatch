@@ -253,11 +253,6 @@ class UserSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.user', '');
     }
 
-    public function test_it_can_resolve_user_when_set_user_is_called_on_stateless_auth(): void
-    {
-        // TODO
-    }
-
     public function test_it_ignores_events_occurring_while_retrieving_user_credentials(): void
     {
         $ingest = $this->fakeIngest();
@@ -289,17 +284,16 @@ class UserSensorTest extends TestCase
         Route::get('/login', fn () => 'ok')->middleware('auth:cached');
 
         $response = $this->get('/login');
-        $ingest->dd();
 
         $response->assertOk();
         $response->assertContent('ok');
         $ingest->assertLatestWriteRecordCount(4);
-        $ingest->assertLatestWrite('exception:0.message', 'Undefined array key "id"');
-        $ingest->assertLatestWrite('exception:0.class', 'ErrorException');
-        $ingest->assertLatestWrite('exception:0.handled', true);
-        $ingest->assertLatestWrite('query:0.user', '');
-        $ingest->assertLatestWrite('query:1.user', '');
-        $ingest->assertLatestWrite('request:0.user', '');
+        $ingest->assertLatestWrite('user:0.id', '123');
+        $ingest->assertLatestWrite('request:0.user', '123');
+        $ingest->assertLatestWrite('cache-event:0.type', 'miss');
+        $ingest->assertLatestWrite('cache-event:0.user', '123');
+        $ingest->assertLatestWrite('cache-event:1.type', 'write');
+        $ingest->assertLatestWrite('cache-event:1.user', '123');
     }
 
     public function test_it_does_not_actively_resolve_guards(): void
