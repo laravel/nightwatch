@@ -48,11 +48,11 @@ final class UserProvider
      */
     public function id(): LazyValue|string
     {
-        if (! $this->withAuth(fn ($auth) => $auth->hasResolvedGuards())) {
+        if (! $this->withAuth(static fn ($auth) => $auth->hasResolvedGuards())) {
             return $this->lazyUserId();
         }
 
-        if ($this->withAuth(fn ($auth) => $auth->hasUser())) {
+        if ($this->withAuth(static fn ($auth) => $auth->hasUser())) {
             return $this->currentUserId();
         }
 
@@ -69,11 +69,11 @@ final class UserProvider
     private function lazyUserId(): LazyValue
     {
         return new LazyValue(function () {
-            if (! $this->withAuth(fn ($auth) => $auth->hasResolvedGuards())) {
+            if (! $this->withAuth(static fn ($auth) => $auth->hasResolvedGuards())) {
                 return '';
             }
 
-            if ($this->withAuth(fn ($auth) => $auth->hasUser())) {
+            if ($this->withAuth(static fn ($auth) => $auth->hasUser())) {
                 return $this->currentUserId();
             }
 
@@ -88,7 +88,7 @@ final class UserProvider
     private function currentUserId(): string
     {
         try {
-            return Str::tinyText((string) $this->withAuth(fn ($auth) => $auth->id()));
+            return Str::tinyText((string) $this->withAuth(static fn ($auth) => $auth->id()));
         } catch (Throwable $e) {
             $this->reportResolvingUserIdException($e);
 

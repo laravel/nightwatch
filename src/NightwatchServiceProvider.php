@@ -500,7 +500,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                     /** @var AuthManager */
                     $auth = $this->app->make(AuthManager::class);
 
-                    return $this->core->ignore(fn () => $callback($auth));
+                    return $this->core->ignore(static fn () => $callback($auth));
                 }, fn () => $this->core->userDetailsResolver, fn () => $this->core->report(...)),
             );
         } else {
