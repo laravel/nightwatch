@@ -251,6 +251,7 @@ class UserSensorTest extends TestCase
 
     public function test_it_does_not_actively_resolve_guards(): void
     {
+        $this->fakeIngest();
         Route::get('/test', fn () => 'ok');
 
         $response = $this->get('/test');
