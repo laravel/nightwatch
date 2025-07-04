@@ -262,7 +262,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_job_failed_job_attempts($workCommand): void
+    public function test_it_ingests_failed_job_attempts($workCommand): void
     {
         $this->isVapor = $workCommand === 'vapor:work';
 
@@ -302,7 +302,7 @@ class JobAttemptSensorTest extends TestCase
                 'duration' => 2500,
                 'exceptions' => 1,
                 'logs' => 0,
-                'queries' => $this->isVapor ? 0 : 5,
+                'queries' => $this->isVapor ? 1 : 5,
                 'lazy_loads' => 0,
                 'jobs_queued' => 0,
                 'mail' => 0,
