@@ -28,9 +28,11 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Vapor\Console\Commands\VaporWorkCommand;
 use Laravel\Vapor\Events\LambdaEvent;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
+use ReflectionClass;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -71,6 +73,11 @@ class JobAttemptSensorTest extends TestCase
 
         if ($this->isVapor) {
             putenv('VAPOR_SSM_PATH');
+
+            $reflection = new ReflectionClass(VaporWorkCommand::class);
+            $property = $reflection->getProperty('listeningForEvents');
+            $property->setAccessible(true);
+            $property->setValue(null, false);
         }
     }
 
