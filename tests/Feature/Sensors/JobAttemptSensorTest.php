@@ -38,7 +38,6 @@ use Tests\TestCase;
 
 use function app;
 use function array_keys;
-use function class_exists;
 use function dispatch;
 use function hash;
 use function json_encode;
@@ -75,12 +74,10 @@ class JobAttemptSensorTest extends TestCase
         if ($this->isVapor) {
             putenv('VAPOR_SSM_PATH');
 
-            if (class_exists(VaporWorkCommand::class)) {
-                $reflection = new ReflectionClass(VaporWorkCommand::class);
-                $property = $reflection->getProperty('listeningForEvents');
-                $property->setAccessible(true);
-                $property->setValue(null, false);
-            }
+            $reflection = new ReflectionClass(VaporWorkCommand::class);
+            $property = $reflection->getProperty('listeningForEvents');
+            $property->setAccessible(true);
+            $property->setValue(null, false);
         }
     }
 
