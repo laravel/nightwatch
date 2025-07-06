@@ -27,6 +27,7 @@ use PHPUnit\Framework\ExpectationFailedException;
 use function array_combine;
 use function array_intersect_key;
 use function collect;
+use function dd;
 use function env;
 use function fopen;
 use function method_exists;
@@ -47,11 +48,12 @@ abstract class TestCase extends OrchestraTestCase
     {
         $_ENV['APP_BASE_PATH'] = realpath(__DIR__.'/../workbench/').'/';
 
+        Nightwatch::handleUnrecoverableExceptionsUsing(fn ($e) => dd($e));
+
         parent::setUp();
 
         Http::preventStrayRequests();
 
-        Nightwatch::handleUnrecoverableExceptionsUsing(fn ($e) => throw $e);
         Compatibility::$context = [];
 
         $this->core = $this->app->make(Core::class);
