@@ -24,12 +24,12 @@ final class UserProvider
     /**
      * @var (callable(callable(AuthManager): mixed): mixed)
      */
-    public $withAuth;
+    private $withAuth;
 
     /**
      * @var (callable(): (callable(Throwable, bool): void))
      */
-    public $reportResolver;
+    private $reportResolver;
 
     private bool $alreadyReportedResolvingUserIdException = false;
 
