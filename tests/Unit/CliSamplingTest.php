@@ -24,7 +24,7 @@ class CliSamplingTest extends TestCase
     {
         $ingest = $this->fakeIngest();
         $this->core->config['sampling']['exceptions'] = 0.0;
-        Compatibility::addHiddenContext('nightwatch_should_sample', false);
+        Compatibility::addSamplingToContext(false);
 
         for ($i = 0; $i < 10; $i++) {
             MyJob::dispatch();
@@ -39,7 +39,7 @@ class CliSamplingTest extends TestCase
         $ingest->assertWrittenTimes(0);
         $this->assertCount(0, $this->core->ingest->buffer);
 
-        Compatibility::addHiddenContext('nightwatch_should_sample', true);
+        Compatibility::addSamplingToContext(true);
 
         for ($i = 0; $i < 10; $i++) {
             MyJob::dispatch();
@@ -64,7 +64,7 @@ class CliSamplingTest extends TestCase
     {
         $ingest = $this->fakeIngest();
         $this->core->config['sampling']['exceptions'] = 0.0;
-        Compatibility::addHiddenContext('nightwatch_should_sample', false);
+        Compatibility::addSamplingToContext(false);
 
         for ($i = 0; $i < 100; $i++) {
             SampledJob::dispatch(0.0);

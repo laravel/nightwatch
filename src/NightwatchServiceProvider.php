@@ -352,8 +352,8 @@ final class NightwatchServiceProvider extends ServiceProvider
         Queue::createPayloadUsing(static fn ($c, $q, array $payload) => [
             ...$payload,
             'nightwatch' => [
-                'job_id' => $core->uuid->make(),
                 ...($payload['nightwatch'] ?? []),
+                'job_id' => $core->uuid->make(),
             ],
         ]);
 
@@ -497,7 +497,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function executionState(string $trace): RequestState|CommandState
     {
-        Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
+        Compatibility::addTraceIdToContext($trace);
 
         if ($this->isRequest) {
             /** @var AuthManager */
@@ -520,10 +520,10 @@ final class NightwatchServiceProvider extends ServiceProvider
             return new CommandState(
                 timestamp: $this->timestamp,
                 trace: new LazyValue(function () {
-                    return (string) Compatibility::getHiddenContext('nightwatch_trace_id', function () { // @phpstan-ignore cast.string
+                    return (string) Compatibility::getTraceIdFromContext(function () { // @phpstan-ignore cast.string
                         $trace = $this->core->uuid->make();
 
-                        Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
+                        Compatibility::addTraceIdToContext($trace);
 
                         return $trace;
                     });

@@ -71,7 +71,7 @@ class OctaneTest extends TestCase
 
         $this->assertSame('8B4F773A-81AB-4273-97D5-C7BECBC173BE', $this->core->executionState->id()->jsonSerialize());
         $this->assertSame('8B4F773A-81AB-4273-97D5-C7BECBC173BE', $this->core->executionState->trace);
-        $this->assertSame('8B4F773A-81AB-4273-97D5-C7BECBC173BE', Compatibility::getHiddenContext('nightwatch_trace_id'));
+        $this->assertSame('8B4F773A-81AB-4273-97D5-C7BECBC173BE', Compatibility::getTraceIdFromContext());
         $this->assertFalse($this->core->paused());
         $this->assertSame(0, array_sum($this->core->executionState->stageDurations));
         $this->assertSame(0, $this->core->executionState->queries);
