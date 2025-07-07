@@ -12,7 +12,6 @@ use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
-use Laravel\Nightwatch\Types\Str;
 use Tests\TestCase;
 
 use function dirname;
@@ -34,7 +33,7 @@ class ScheduledTaskSensorTest extends TestCase
         $this->setPeakMemory(1234);
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
         // --- //
-        Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000000');
+        $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-000000000000';
         $this->app->setBasePath(dirname($this->app->basePath()));
     }
 
@@ -188,14 +187,14 @@ class ScheduledTaskSensorTest extends TestCase
         $ingest = $this->fakeIngest();
         $this->app[Schedule::class]->call(fn () => $this->travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
 
-        Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000001');
+        $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-000000000001';
         Artisan::call('schedule:run');
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('scheduled-task:0.trace_id', '00000000-0000-0000-0000-000000000001');
         $ingest->assertLatestWrite('scheduled-task:0.timestamp', 946688523.456789);
 
-        Str::createUuidsUsing(fn () => '00000000-0000-0000-0000-000000000002');
+        $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-000000000002';
         Artisan::call('schedule:run');
 
         $ingest->assertWrittenTimes(2);

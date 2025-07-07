@@ -97,7 +97,10 @@ final class Compatibility
         if (! self::$contextExists) {
             Queue::createPayloadUsing(static fn ($c, $q, array $payload) => [
                 ...$payload,
-                'nightwatch' => self::$context,
+                'nightwatch' => [
+                    ...($payload['nightwatch'] ?? []),
+                    ...self::$context,
+                ],
             ]);
 
             /** @var Dispatcher */

@@ -38,7 +38,6 @@ use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Env;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\AgentCommand;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Factories\Logger;
@@ -67,9 +66,11 @@ use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Http\Middleware\Sample;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Support\Uuid;
 use Laravel\Octane\Events\RequestReceived;
 use Livewire\Livewire;
 use Livewire\LivewireManager;
+use Ramsey\Uuid\Uuid as BaseUuid;
 use Throwable;
 
 use function class_exists;
@@ -219,7 +220,8 @@ final class NightwatchServiceProvider extends ServiceProvider
     private function buildAndRegisterCore(): void
     {
         $clock = new Clock;
-        $executionState = $this->executionState();
+        $uuid = new Uuid(static fn () => BaseUuid::uuid4()->toString());
+        $executionState = $this->executionState($uuid);
 
         $this->app->instance(Core::class, $this->core = new Core(
             ingest: new Ingest(
@@ -238,10 +240,12 @@ final class NightwatchServiceProvider extends ServiceProvider
                     basePath: $this->app->basePath(),
                     publicPath: $this->app->publicPath(),
                 ),
+                uuid: $uuid,
                 config: $this->config,
             ),
             executionState: $executionState,
             clock: $clock,
+            uuid: $uuid,
             config: [
                 'enabled' => $this->nightwatchConfig['enabled'] ?? true,
                 'sampling' => [
@@ -343,6 +347,14 @@ final class NightwatchServiceProvider extends ServiceProvider
         ], (new CacheEventListener($core))(...));
 
         $events->listen(RequestReceived::class, (new OctaneListener($core))(...)); // @phpstan-ignore class.notFound
+
+        Queue::createPayloadUsing(static fn ($c, $q, array $payload) => [
+            ...$payload,
+            'nightwatch' => [
+                'job_id' => $core->uuid->make(),
+                ...($payload['nightwatch'] ?? []),
+            ],
+        ]);
 
         //
         // -------------------------------------------------------------------------
@@ -482,10 +494,9 @@ final class NightwatchServiceProvider extends ServiceProvider
         });
     }
 
-    private function executionState(): RequestState|CommandState
+    private function executionState(Uuid $uuid): RequestState|CommandState
     {
-        $trace = (string) Str::uuid();
-
+        $trace = $uuid->make();
         Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
 
         if ($this->isRequest) {
@@ -508,9 +519,9 @@ final class NightwatchServiceProvider extends ServiceProvider
         } else {
             return new CommandState(
                 timestamp: $this->timestamp,
-                trace: new LazyValue(static function () {
-                    return (string) Compatibility::getHiddenContext('nightwatch_trace_id', static function () { // @phpstan-ignore cast.string
-                        $trace = (string) Str::uuid();
+                trace: new LazyValue(static function () use ($uuid) {
+                    return (string) Compatibility::getHiddenContext('nightwatch_trace_id', static function () use ($uuid) { // @phpstan-ignore cast.string
+                        $trace = $uuid->make();
 
                         Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
 

@@ -54,7 +54,7 @@ final class JobAttemptSensor
             'trace_id' => $this->commandState->trace,
             'user' => $this->commandState->user->id(),
             // --- //
-            'job_id' => $event->job->uuid(),
+            'job_id' => $event->job->payload()['nightwatch']['job_id'] ?? $event->job->uuid(),
             'attempt_id' => $this->commandState->id(),
             'attempt' => $event->job->attempts(),
             'name' => $name,

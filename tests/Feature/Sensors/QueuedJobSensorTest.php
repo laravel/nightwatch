@@ -20,7 +20,6 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
 use Laravel\Nightwatch\Compatibility;
 use Ramsey\Uuid\Uuid;
 use Tests\TestCase;
@@ -57,7 +56,7 @@ class QueuedJobSensorTest extends TestCase
             $this->travelTo(now()->addMicroseconds(5200));
         });
         Route::post('/users', function (): void {
-            Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
+            $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-000000000000';
             MyJob::dispatch();
         });
 
@@ -161,9 +160,7 @@ class QueuedJobSensorTest extends TestCase
         });
 
         Route::post('/users', function (): void {
-            Str::createUuidsUsingSequence([
-                Uuid::fromString('00000000-0000-0000-0000-000000000002'),
-            ]);
+            $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-000000000002';
             Mail::to('tim@laravel.com')->queue(new MyQueuedMail);
         });
 
@@ -214,7 +211,7 @@ class QueuedJobSensorTest extends TestCase
         $this->core->ingest->write($this->core->sensor->queuedJob(new JobQueued(
             connectionName: 'my-sqs-queue',
             queue: 'https://sqs.us-east-1.amazonaws.com/your-account-id/queue-name-production',
-            id: Str::uuid()->toString(),
+            id: Uuid::uuid4()->toString(),
             job: 'Tests\Feature\Sensors\MyJobClass',
             payload: '{"uuid":"00000000-0000-0000-0000-000000000000"}',
             delay: 0,

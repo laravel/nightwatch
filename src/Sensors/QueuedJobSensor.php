@@ -62,7 +62,7 @@ final class QueuedJobSensor
 
         return [
             $record = new QueuedJob(
-                jobId: $event->payload()['uuid'],
+                jobId: $event->payload()['nightwatch']['job_id'] ?? $event->payload()['uuid'],
                 name: $name,
                 connection: $event->connectionName,
                 queue: $this->normalizeQueue($event->connectionName, $this->resolveQueue($event)),

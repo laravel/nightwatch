@@ -487,7 +487,7 @@ trait CapturesState
 
         $this->waitingForJob = false;
         $this->executionState->timestamp = $this->clock->microtime();
-        $this->executionState->setId((string) Str::uuid());
+        $this->executionState->setId($this->uuid->make());
         $this->executionState->executionPreview = Str::tinyText($job->resolveName());
     }
 
@@ -555,7 +555,7 @@ trait CapturesState
         $this->resume();
         memory_reset_peak_usage();
 
-        $trace = (string) Str::uuid();
+        $trace = $this->uuid->make();
         Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
@@ -589,7 +589,7 @@ trait CapturesState
         $this->executionState->timestamp = $timestamp;
         $this->executionState->currentExecutionStageStartedAtMicrotime = $timestamp;
 
-        $trace = (string) Str::uuid();
+        $trace = $this->uuid->make();
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
         Compatibility::addHiddenContext('nightwatch_trace_id', $trace);

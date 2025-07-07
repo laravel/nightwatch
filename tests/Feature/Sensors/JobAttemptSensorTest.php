@@ -20,13 +20,13 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
-use Illuminate\Support\Str;
 use Laravel\Nightwatch\Compatibility;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Tests\TestCase;
 
 use function array_keys;
+use function array_shift;
 use function dispatch;
 use function hash;
 use function now;
@@ -55,10 +55,13 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_ingests_processed_job_attempts($workCommand): void
     {
         $ingest = $this->fakeIngest();
-        Str::createUuidsUsingSequence([
+        $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
-        ]);
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
         ProcessedJob::dispatch();
 
         Artisan::call($workCommand, $this->workOptions());
@@ -104,10 +107,13 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_ingests_released_job_attempts($workCommand): void
     {
         $ingest = $this->fakeIngest();
-        Str::createUuidsUsingSequence([
+        $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
-        ]);
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
         FailedJob::dispatch();
 
         Artisan::call($workCommand, $this->workOptions(['--tries' => 2]));
@@ -153,10 +159,13 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_ingests_manually_released_job_attempts($workCommand): void
     {
         $ingest = $this->fakeIngest();
-        Str::createUuidsUsingSequence([
+        $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
-        ]);
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
         ReleasedJob::dispatch();
 
         Artisan::call($workCommand, $this->workOptions());
@@ -202,10 +211,13 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_ingests_job_failed_job_attempts($workCommand): void
     {
         $ingest = $this->fakeIngest();
-        Str::createUuidsUsingSequence([
+        $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
-        ]);
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
         FailedJob::dispatch();
 
         Artisan::call($workCommand, $this->workOptions());
@@ -259,10 +271,13 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_captures_closure_job($workCommand): void
     {
         $ingest = $this->fakeIngest();
-        Str::createUuidsUsingSequence([
+        $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
-        ]);
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
         $line = __LINE__ + 1;
         dispatch(function (): void {
             Date::setTestNow(now()->addMicroseconds(2500));
@@ -311,10 +326,13 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_captures_queued_event_listener($workCommand): void
     {
         $ingest = $this->fakeIngest();
-        Str::createUuidsUsingSequence([
+        $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
-        ]);
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
         Event::listen(MyJobAttemptEvent::class, MyEventListener::class);
         Event::dispatch(new MyJobAttemptEvent);
 
@@ -361,10 +379,13 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_captures_queued_mail($workCommand): void
     {
         $ingest = $this->fakeIngest();
-        Str::createUuidsUsingSequence([
+        $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
-        ]);
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
         Mail::to('tim@laravel.com')->queue(new JobAttemptMail);
 
         Artisan::call($workCommand, $this->workOptions());
@@ -450,10 +471,13 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_captures_manually_reported_exceptions($workCommand): void
     {
         $ingest = $this->fakeIngest();
-        Str::createUuidsUsingSequence([
+        $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
-        ]);
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
         $line = __LINE__ + 1;
         dispatch(function (): void {
             Date::setTestNow(now()->addMicroseconds(2500));
@@ -547,10 +571,13 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_captures_all_queue_events_for_a_job($workCommand): void
     {
         $ingest = $this->fakeIngest();
-        Str::createUuidsUsingSequence([
+        $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
-        ]);
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
         $this->prependListener(QueryExecuted::class, function (QueryExecuted $event): void {
             $event->time = 1;
 
@@ -623,10 +650,13 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_captures_counts_occuring_outside_job_execution($workCommand): void
     {
         $ingest = $this->fakeIngest();
-        Str::createUuidsUsingSequence([
+        $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
             $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
-        ]);
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
         Http::fake(['https://laravel.com' => Http::response()]);
         Event::listen(function (CacheMissed $event): void {
             if ($event->key !== 'illuminate:queue:restart') {
