@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 use MongoDB\Laravel\Connection as MongoDbConnection;
 use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
+use SingleStore\Laravel\Connect\Connection as LegacySingleStoreConnection;
 use SingleStore\Laravel\Connect\SingleStoreConnection;
 use Tests\TestCase;
 
@@ -211,7 +212,10 @@ class QuerySensorTest extends TestCase
         yield 'singlestore' => [
             'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
             hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
-            new SingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
+            match (true) {
+                class_exists(SingleStoreConnection::class) => new SingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
+                class_exists(LegacySingleStoreConnection::class) => new LegacySingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
+            },
         ];
 
         yield 'mongodb' => [
@@ -286,7 +290,10 @@ class QuerySensorTest extends TestCase
         yield 'singlestore' => [
             'insert into `users` (`id`, `name`) values (?, ?)',
             hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
-            new SingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
+            match (true) {
+                class_exists(SingleStoreConnection::class) => new SingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
+                class_exists(LegacySingleStoreConnection::class) => new LegacySingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
+            },
         ];
 
         yield 'mongodb' => [
