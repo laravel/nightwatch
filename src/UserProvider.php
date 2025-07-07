@@ -22,17 +22,23 @@ final class UserProvider
     public $userDetailsResolverResolver;
 
     /**
+     * @var (callable(callable(AuthManager): mixed): mixed)
+     */
+    private $withAuth;
+
+    /**
      * @var (callable(): (callable(Throwable, bool): void))
      */
-    public $reportResolver;
+    private $reportResolver;
 
     private bool $alreadyReportedResolvingUserIdException = false;
 
     public function __construct(
-        private AuthManager $auth,
+        callable $withAuth,
         callable $userDetailsResolverResolver,
         callable $reportResolver,
     ) {
+        $this->withAuth = $withAuth;
         $this->userDetailsResolverResolver = $userDetailsResolverResolver;
         $this->reportResolver = $reportResolver;
     }
@@ -42,11 +48,11 @@ final class UserProvider
      */
     public function id(): LazyValue|string
     {
-        if (! $this->auth->hasResolvedGuards()) {
+        if (! $this->withAuth(static fn ($auth) => $auth->hasResolvedGuards())) {
             return $this->lazyUserId();
         }
 
-        if ($this->auth->hasUser()) {
+        if ($this->withAuth(static fn ($auth) => $auth->hasUser())) {
             return $this->currentUserId();
         }
 
@@ -54,7 +60,7 @@ final class UserProvider
             return $this->rememberedUserId();
         }
 
-        return '';
+        return $this->lazyUserId();
     }
 
     /**
@@ -63,11 +69,11 @@ final class UserProvider
     private function lazyUserId(): LazyValue
     {
         return new LazyValue(function () {
-            if (! $this->auth->hasResolvedGuards()) {
+            if (! $this->withAuth(static fn ($auth) => $auth->hasResolvedGuards())) {
                 return '';
             }
 
-            if ($this->auth->hasUser()) {
+            if ($this->withAuth(static fn ($auth) => $auth->hasUser())) {
                 return $this->currentUserId();
             }
 
@@ -82,7 +88,7 @@ final class UserProvider
     private function currentUserId(): string
     {
         try {
-            return Str::tinyText((string) $this->auth->id());
+            return Str::tinyText((string) $this->withAuth(static fn ($auth) => $auth->id()));
         } catch (Throwable $e) {
             $this->reportResolvingUserIdException($e);
 
@@ -106,9 +112,9 @@ final class UserProvider
      */
     public function details(): ?array
     {
-        $user = $this->auth->hasResolvedGuards()
-            ? $this->auth->user() ?? $this->rememberedUser
-            : $this->rememberedUser;
+        $user = $this->withAuth(fn ($auth) => $auth->hasResolvedGuards()
+            ? $auth->user() ?? $this->rememberedUser
+            : $this->rememberedUser);
 
         if ($user === null) {
             return null;
@@ -160,5 +166,16 @@ final class UserProvider
         $report = call_user_func($this->reportResolver);
 
         $report($e, true);
+    }
+
+    /**
+     * @template TValue
+     *
+     * @param  callable(AuthManager): TValue  $callback
+     * @return TValue
+     */
+    private function withAuth(callable $callback): mixed
+    {
+        return ($this->withAuth)($callback);
     }
 }

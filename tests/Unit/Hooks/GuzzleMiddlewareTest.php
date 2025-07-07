@@ -14,8 +14,10 @@ class GuzzleMiddlewareTest extends TestCase
     public function test_it_gracefully_handles_exceptions_in_the_before_middleware(): void
     {
         $exceptions = [];
-        $this->core->sensor->exceptionSensor = function ($e) use (&$exceptions): void {
+        $this->core->sensor->exceptionSensor = function ($e) use (&$exceptions): array {
             $exceptions[] = $e;
+
+            return [];
         };
         $thrownInMicrotimeResolver = false;
         $this->core->clock->microtimeResolver = function () use (&$thrownInMicrotimeResolver): float {
