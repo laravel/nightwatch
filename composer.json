@@ -42,6 +42,7 @@
         "phpstan/phpstan": "^1.0",
         "phpunit/phpunit": "^10.0|^11.0",
         "ramsey/uuid": "^4.0",
+        "singlestoredb/singlestoredb-laravel": "^1.0|^2.0",
         "spatie/laravel-ignition": "^2.0",
         "symfony/mailer": "^6.0|^7.0",
         "symfony/mime": "^6.0|^7.0",
