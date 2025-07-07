@@ -33,6 +33,7 @@
     },
     "require-dev": {
         "ext-pdo": "*",
+        "aws/aws-sdk-php": "^3.349",
         "guzzlehttp/guzzle": "^7.0",
         "guzzlehttp/psr7": "^2.0",
         "laravel/horizon": "^5.4",
