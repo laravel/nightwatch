@@ -221,7 +221,8 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $clock = new Clock;
         $uuid = new Uuid(static fn () => BaseUuid::uuid4()->toString());
-        $executionState = $this->executionState($uuid);
+
+        $executionState = $this->executionState($uuid->make());
 
         $this->app->instance(Core::class, $this->core = new Core(
             ingest: new Ingest(
@@ -494,9 +495,8 @@ final class NightwatchServiceProvider extends ServiceProvider
         });
     }
 
-    private function executionState(Uuid $uuid): RequestState|CommandState
+    private function executionState(string $trace): RequestState|CommandState
     {
-        $trace = $uuid->make();
         Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
 
         if ($this->isRequest) {
