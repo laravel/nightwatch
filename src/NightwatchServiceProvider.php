@@ -519,8 +519,8 @@ final class NightwatchServiceProvider extends ServiceProvider
         } else {
             return new CommandState(
                 timestamp: $this->timestamp,
-                trace: new LazyValue(static function () {
-                    return (string) Compatibility::getHiddenContext('nightwatch_trace_id', static function () { // @phpstan-ignore cast.string
+                trace: new LazyValue(function () {
+                    return (string) Compatibility::getHiddenContext('nightwatch_trace_id', function () { // @phpstan-ignore cast.string
                         $trace = $this->core->uuid->make();
 
                         Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
