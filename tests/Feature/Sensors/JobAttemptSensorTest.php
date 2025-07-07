@@ -684,6 +684,33 @@ class JobAttemptSensorTest extends TestCase
         });
     }
 
+    #[DataProvider('workCommands')]
+    public function test_jobs_dispatched_from_job_attempt_get_unique_job_id($workCommand): void
+    {
+        $ingest = $this->fakeIngest();
+        JobThatDispatchesAnotherJob::dispatch();
+        $ingest->flush();
+
+        $uuids = [
+            '8c796368-b5ee-49b3-b02c-f883b8c6c6f8', // execution_id
+            'aeadd430-44e6-4b79-a441-02459d797f3a', // job_id
+            '1c10c584-8146-426c-a820-03374466b198', // execution_id
+            '4aabf241-39d0-408f-abbc-2907e100e02f', // job_id
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
+
+        Artisan::call($workCommand, $this->workOptions());
+        Artisan::call($workCommand, $this->workOptions());
+
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'queued-job:0.execution_id', '8c796368-b5ee-49b3-b02c-f883b8c6c6f8');
+        $ingest->assertWrite(0, 'queued-job:0.job_id', 'aeadd430-44e6-4b79-a441-02459d797f3a');
+        $ingest->assertWrite(1, 'queued-job:0.execution_id', '1c10c584-8146-426c-a820-03374466b198');
+        $ingest->assertWrite(1, 'queued-job:0.job_id', '4aabf241-39d0-408f-abbc-2907e100e02f');
+    }
+
     protected function workOptions(array $overrides = []): array
     {
         return [
@@ -770,5 +797,15 @@ class JobAttemptMail extends Mailable
         return new Content(
             view: 'mail',
         );
+    }
+}
+
+class JobThatDispatchesAnotherJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public function handle(): void
+    {
+        JobThatDispatchesAnotherJob::dispatch();
     }
 }
