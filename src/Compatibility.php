@@ -163,7 +163,7 @@ final class Compatibility
     private static function addHiddenContext(string $key, mixed $value): void
     {
         if (! self::$contextExists) {
-            self::$context[$key] = $value;
+            self::$context[$key] = $value; // @phpstan-ignore assign.propertyType, assign.propertyType
 
             return;
         }
