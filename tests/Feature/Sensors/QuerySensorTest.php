@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Route;
 use MongoDB\Laravel\Connection as MongoDbConnection;
 use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
+use SingleStore\Laravel\Connect\Connection as LegacySingleStoreConnection;
+use SingleStore\Laravel\Connect\SingleStoreConnection;
 use Tests\TestCase;
 
 use function base64_encode;
@@ -207,6 +209,15 @@ class QuerySensorTest extends TestCase
             new SqlServerConnection('test', config: ['name' => 'foo', 'driver' => 'sqlsrv']),
         ];
 
+        yield 'singlestore' => [
+            'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
+            hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
+            match (true) {
+                class_exists(SingleStoreConnection::class) => new SingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
+                class_exists(LegacySingleStoreConnection::class) => new LegacySingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
+            },
+        ];
+
         yield 'mongodb' => [
             'some mongo query in (1, 2, 3) and [id] in (?, ?, ?)',
             hash('xxh128', 'foo,some mongo query in (1, 2, 3) and [id] in (?, ?, ?)'),
@@ -274,6 +285,15 @@ class QuerySensorTest extends TestCase
             'insert into [users] ([id], [name]) values (?, ?), (?, ?)',
             hash('xxh128', 'foo,insert into [users] ([id], [name]) values ...'),
             new SqlServerConnection('test', config: ['name' => 'foo', 'driver' => 'sqlsrv']),
+        ];
+
+        yield 'singlestore' => [
+            'insert into `users` (`id`, `name`) values (?, ?)',
+            hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
+            match (true) {
+                class_exists(SingleStoreConnection::class) => new SingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
+                class_exists(LegacySingleStoreConnection::class) => new LegacySingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
+            },
         ];
 
         yield 'mongodb' => [
