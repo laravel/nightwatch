@@ -8,7 +8,7 @@ use function strlen;
 
 class Payload
 {
-    public const AGENT_PAYLOAD_VERSION = 'v1';
+    public const EXPECTED_PAYLOAD_VERSION = 'v1';
 
     public string $value = '';
 
@@ -49,6 +49,6 @@ class Payload
 
     public function versionIsValid(): bool
     {
-        return $this->payloadVersion === self::AGENT_PAYLOAD_VERSION;
+        return $this->payloadVersion === self::EXPECTED_PAYLOAD_VERSION;
     }
 }
