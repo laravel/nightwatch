@@ -85,7 +85,21 @@ class LoopFake implements LoopInterface
      */
     public function addTimer($interval, $callback): TimerInterface
     {
-        $timer = new ReactTimer($interval, $callback, periodic: false);
+        return $this->timer($interval, $callback, periodic: false);
+    }
+
+    /**
+     * @param  int|float  $interval
+     * @param  callable  $callback
+     */
+    public function addPeriodicTimer($interval, $callback): TimerInterface
+    {
+        return $this->timer($interval, $callback, periodic: true);
+    }
+
+    public function timer(int|float $interval, callable $callback, bool $periodic): TimerInterface
+    {
+        $timer = new ReactTimer($interval, $callback, periodic: $periodic);
 
         $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
         $class = $frame['class'] ?? '';
@@ -108,15 +122,6 @@ class LoopFake implements LoopInterface
         $this->sortPendingTimers();
 
         return $timer;
-    }
-
-    /**
-     * @param  int|float  $interval
-     * @param  callable  $callback
-     */
-    public function addPeriodicTimer($interval, $callback): TimerInterface
-    {
-        throw new RuntimeException('Not yet implemented');
     }
 
     public function cancelTimer(TimerInterface $timer): void
@@ -191,6 +196,7 @@ class LoopFake implements LoopInterface
                 'scheduledAt' => $scheduledAt,
                 'interval' => $interval,
                 'callback' => $callback,
+                'instance' => $timer,
             ] = $this->pendingTimers[0];
 
             /** @var callable $callback */
@@ -205,6 +211,8 @@ class LoopFake implements LoopInterface
                 ];
 
                 array_shift($this->pendingTimers);
+
+                $this->addPeriodicTimer($timer->getInterval(), $timer->getCallback());
 
                 continue;
             }

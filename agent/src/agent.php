@@ -13,6 +13,7 @@ use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
 
 use function date;
+use function file_get_contents;
 use function gethostname;
 use function hash;
 use function in_array;
@@ -172,5 +173,17 @@ $server = new Server(
 $server->start();
 
 $ingestDetails->hydrate();
+
+$loop->addPeriodicTimer(60, function () use ($error, $basePath) {
+    $signature = file_get_contents($basePath.'/signature.txt');
+
+    if ($signature === false) {
+        $error('Unable to read signature');
+
+        return;
+    }
+
+    echo $signature;
+});
 
 $loop->run();
