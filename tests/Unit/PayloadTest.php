@@ -89,16 +89,15 @@ class PayloadTest extends TestCase
         $this->assertSame('', $payload->rawPayload());
     }
 
-    //    public function test_it_has_up_to_date_signature(): void
-    //    {
-    //        $signature = file_get_contents(__DIR__.'/../../agent/build/payload_signature.txt');
-    //
-    //        if ($signature === false) {
-    //            throw new RuntimeException('Unable to read payload signature');
-    //        }
-    //
-    //        $signature = substr($signature, 0, 7);
-    //
-    //        $this->assertSame($signature, Payload::PAYLOAD_VERSION);
-    //    }
+    public function test_it_has_up_to_date_payload_version(): void
+    {
+        $payloadVersion = 'v1';
+
+        try {
+            $this->assertSame($payloadVersion, Payload::PAYLOAD_VERSION);
+        } catch (Throwable $e) {
+            $this->assertSame('Payload version does not match! If you see this error, you need to ensure that the payload version in Package and Agent are correct and matching', $e->getMessage());
+        }
+    }
 }
+

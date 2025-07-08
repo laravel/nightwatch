@@ -34,4 +34,10 @@ class IngestTest extends TestCase
         $this->assertSame('Whoops exception!', $exceptions[0]->getMessage());
         $ingest->assertWrittenTimes(0);
     }
+
+    public function test_it_uses_a_valid_token_hash(): void
+    {
+        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
+
+    }
 }

@@ -112,7 +112,7 @@ class PayloadTest extends TestCase
         $this->assertFalse($payload->complete);
     }
 
-    public function test_it_it_can_ingest_empty_strings(): void
+    public function test_it_can_ingest_empty_strings(): void
     {
         $payload = new Payload;
 
@@ -123,7 +123,7 @@ class PayloadTest extends TestCase
         $this->assertFalse($payload->complete);
     }
 
-    public function test_it_can_have_a_payload_version_of_any_length(): void
+    public function test_it_can_have_a_token_hash_of_any_length(): void
     {
         $payload = new Payload;
 
