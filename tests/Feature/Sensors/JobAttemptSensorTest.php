@@ -16,6 +16,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\SendQueuedMailable;
 use Illuminate\Queue\CallQueuedClosure;
 use Illuminate\Queue\Connectors\SqsConnector;
+use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\SqsQueue;
@@ -31,6 +32,7 @@ use Laravel\Vapor\Console\Commands\VaporWorkCommand;
 use Laravel\Vapor\Events\LambdaEvent;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Ramsey\Uuid\Uuid;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -49,8 +51,6 @@ class JobAttemptSensorTest extends TestCase
 {
     use WithConsoleEvents;
 
-    protected $isVapor = false;
-
     protected function setUp(): void
     {
         $this->forceCommandExecutionState();
@@ -62,23 +62,28 @@ class JobAttemptSensorTest extends TestCase
         $this->setPeakMemory(1234);
         $this->setTraceId('0d3ca349-e222-4982-ac23-2343692de258');
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
-        // --- //
-        Redis::command('FLUSHALL');
     }
 
-    protected function tearDown(): void
+    protected function setUpEnvironment(string $workCommand): void
     {
-        parent::tearDown();
+        match ($workCommand) {
+            'vapor:work' => $this->setupVaporEnvironment(),
+            'horizon:work' => $this->setUpHorizonEnvironment(),
+            'queue:work' => null,
+        };
+    }
 
-        if ($this->isVapor) {
-            putenv('VAPOR_SSM_PATH');
-
-            VaporWorkCommand::flushState();
-        }
+    protected function setUpHorizonEnvironment(): void
+    {
+        Redis::command('FLUSHALL');
     }
 
     protected function setupVaporEnvironment(): void
     {
+        Event::listen(function (JobQueued $event) {
+            $this->bindLambdaEventForJob($event->job, $event->payload);
+        });
+
         putenv('VAPOR_SSM_PATH=/vapor');
 
         $mockSqsClient = Mockery::mock(SqsClient::class);
@@ -91,12 +96,18 @@ class JobAttemptSensorTest extends TestCase
             ->andReturn(new SqsQueue($mockSqsClient, 'default'));
 
         $this->app['queue']->extend('sqs', fn () => $mockSqsConnector);
+
+        $this->beforeApplicationDestroyed(function () {
+            putenv('VAPOR_SSM_PATH');
+
+            VaporWorkCommand::flushState();
+        });
     }
 
     #[DataProvider('workCommands')]
     public function test_it_ingests_processed_job_attempts($workCommand): void
     {
-        $this->isVapor = $workCommand === 'vapor:work';
+        $this->setUpEnvironment($workCommand);
 
         $ingest = $this->fakeIngest();
         $uuids = [
@@ -107,12 +118,7 @@ class JobAttemptSensorTest extends TestCase
             return array_shift($uuids) ?? Uuid::uuid4();
         };
 
-        if ($this->isVapor) {
-            $this->setupVaporEnvironment();
-            $this->bindLambdaEventForJob(new ProcessedJob);
-        } else {
-            ProcessedJob::dispatch();
-        }
+        ProcessedJob::dispatch();
 
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
@@ -131,13 +137,13 @@ class JobAttemptSensorTest extends TestCase
                 'attempt_id' => $attemptId,
                 'attempt' => 1,
                 'name' => 'Tests\Feature\Sensors\ProcessedJob',
-                'connection' => $this->isVapor ? 'sqs' : 'database',
+                'connection' => $this->whenVapor($workCommand, then: 'sqs', else: 'database'),
                 'queue' => 'default',
                 'status' => 'processed',
                 'duration' => 2500,
                 'exceptions' => 0,
                 'logs' => 0,
-                'queries' => $this->isVapor ? 0 : 4,
+                'queries' => $this->whenVapor($workCommand, then: 0, else: 4),
                 'lazy_loads' => 0,
                 'jobs_queued' => 0,
                 'mail' => 0,
@@ -145,7 +151,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->isVapor ? 0 : 1,
+                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -156,8 +162,7 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_ingests_released_job_attempts($workCommand): void
     {
-        $this->isVapor = $workCommand === 'vapor:work';
-
+        $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -167,12 +172,7 @@ class JobAttemptSensorTest extends TestCase
             return array_shift($uuids) ?? Uuid::uuid4();
         };
 
-        if ($this->isVapor) {
-            $this->setupVaporEnvironment();
-            $this->bindLambdaEventForJob(new FailedJob);
-        } else {
-            FailedJob::dispatch();
-        }
+        FailedJob::dispatch();
 
         Artisan::call($workCommand, $this->workOptions($workCommand, ['--tries' => 2]));
 
@@ -191,13 +191,13 @@ class JobAttemptSensorTest extends TestCase
                 'attempt_id' => $attemptId,
                 'attempt' => 1,
                 'name' => 'Tests\Feature\Sensors\FailedJob',
-                'connection' => $this->isVapor ? 'sqs' : 'database',
+                'connection' => $this->whenVapor($workCommand, then: 'sqs', else: 'database'),
                 'queue' => 'default',
                 'status' => 'released',
                 'duration' => 2500,
                 'exceptions' => 1,
                 'logs' => 0,
-                'queries' => $this->isVapor ? 0 : 5,
+                'queries' => $this->whenVapor($workCommand, then: 0, else: 5),
                 'lazy_loads' => 0,
                 'jobs_queued' => 0,
                 'mail' => 0,
@@ -205,7 +205,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->isVapor ? 0 : 1,
+                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Job failed',
@@ -216,8 +216,7 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_ingests_manually_released_job_attempts($workCommand): void
     {
-        $this->isVapor = $workCommand === 'vapor:work';
-
+        $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -227,12 +226,7 @@ class JobAttemptSensorTest extends TestCase
             return array_shift($uuids) ?? Uuid::uuid4();
         };
 
-        if ($this->isVapor) {
-            $this->setupVaporEnvironment();
-            $this->bindLambdaEventForJob(new ReleasedJob);
-        } else {
-            ReleasedJob::dispatch();
-        }
+        ReleasedJob::dispatch();
 
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
@@ -251,13 +245,13 @@ class JobAttemptSensorTest extends TestCase
                 'attempt_id' => $attemptId,
                 'attempt' => 1,
                 'name' => 'Tests\Feature\Sensors\ReleasedJob',
-                'connection' => $this->isVapor ? 'sqs' : 'database',
+                'connection' => $this->whenVapor($workCommand, then: 'sqs', else: 'database'),
                 'queue' => 'default',
                 'status' => 'released',
                 'duration' => 2500,
                 'exceptions' => 0,
                 'logs' => 0,
-                'queries' => $this->isVapor ? 0 : 5,
+                'queries' => $this->whenVapor($workCommand, then: 0, else: 5),
                 'lazy_loads' => 0,
                 'jobs_queued' => 0,
                 'mail' => 0,
@@ -265,7 +259,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->isVapor ? 0 : 1,
+                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -276,8 +270,7 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_ingests_failed_job_attempts($workCommand): void
     {
-        $this->isVapor = $workCommand === 'vapor:work';
-
+        $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -287,12 +280,7 @@ class JobAttemptSensorTest extends TestCase
             return array_shift($uuids) ?? Uuid::uuid4();
         };
 
-        if ($this->isVapor) {
-            $this->setupVaporEnvironment();
-            $this->bindLambdaEventForJob(new FailedJob);
-        } else {
             FailedJob::dispatch();
-        }
 
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
@@ -311,13 +299,13 @@ class JobAttemptSensorTest extends TestCase
                 'attempt_id' => $attemptId,
                 'attempt' => 1,
                 'name' => 'Tests\Feature\Sensors\FailedJob',
-                'connection' => $this->isVapor ? 'sqs' : 'database',
+                'connection' => $this->whenVapor($workCommand, then: 'sqs', else: 'database'),
                 'queue' => 'default',
                 'status' => 'failed',
                 'duration' => 2500,
                 'exceptions' => 1,
                 'logs' => 0,
-                'queries' => $this->isVapor ? 1 : 5,
+                'queries' => $this->whenVapor($workCommand, then: 0, else: 4),
                 'lazy_loads' => 0,
                 'jobs_queued' => 0,
                 'mail' => 0,
@@ -325,7 +313,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->isVapor ? 0 : 1,
+                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Job failed',
@@ -344,7 +332,7 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_captures_closure_job($workCommand): void
     {
-        $this->isVapor = $workCommand === 'vapor:work';
+        $this->setUpEnvironment($workCommand);
 
         $ingest = $this->fakeIngest();
         $uuids = [
@@ -383,13 +371,13 @@ class JobAttemptSensorTest extends TestCase
                 'attempt_id' => $attemptId,
                 'attempt' => 1,
                 'name' => "Closure (JobAttemptSensorTest.php:{$line})",
-                'connection' => $this->isVapor ? 'sqs' : 'database',
+                'connection' => $this->whenVapor($workCommand, then: 'sqs', else: 'database'),
                 'queue' => 'default',
                 'status' => 'processed',
                 'duration' => 2500,
                 'exceptions' => 0,
                 'logs' => 0,
-                'queries' => $this->isVapor ? 0 : 4,
+                'queries' => $this->whenVapor($workCommand, then: 0, else: 4),
                 'lazy_loads' => 0,
                 'jobs_queued' => 0,
                 'mail' => 0,
@@ -397,7 +385,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->isVapor ? 0 : 1,
+                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -408,8 +396,7 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_captures_queued_event_listener($workCommand): void
     {
-        $this->isVapor = $workCommand === 'vapor:work';
-
+        $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -444,13 +431,13 @@ class JobAttemptSensorTest extends TestCase
                 'attempt_id' => $attemptId,
                 'attempt' => 1,
                 'name' => 'Tests\Feature\Sensors\MyEventListener',
-                'connection' => $this->isVapor ? 'sqs' : 'database',
+                'connection' => $this->whenVapor($workCommand, then: 'sqs', else: 'database'),
                 'queue' => 'default',
                 'status' => 'processed',
                 'duration' => 2500,
                 'exceptions' => 0,
                 'logs' => 0,
-                'queries' => $this->isVapor ? 0 : 4,
+                'queries' => $this->whenVapor($workCommand, then: 0, else: 4),
                 'lazy_loads' => 0,
                 'jobs_queued' => 0,
                 'mail' => 0,
@@ -458,7 +445,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->isVapor ? 0 : 1,
+                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -469,8 +456,7 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_captures_queued_mail($workCommand): void
     {
-        $this->isVapor = $workCommand === 'vapor:work';
-
+        $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -504,13 +490,13 @@ class JobAttemptSensorTest extends TestCase
                 'attempt_id' => $attemptId,
                 'attempt' => 1,
                 'name' => 'Tests\Feature\Sensors\JobAttemptMail',
-                'connection' => $this->isVapor ? 'sqs' : 'database',
+                'connection' => $this->whenVapor($workCommand, then: 'sqs', else: 'database'),
                 'queue' => 'default',
                 'status' => 'processed',
                 'duration' => 2500,
                 'exceptions' => 0,
                 'logs' => 0,
-                'queries' => $this->isVapor ? 0 : 4,
+                'queries' => $this->whenVapor($workCommand, then: 0, else: 4),
                 'lazy_loads' => 0,
                 'jobs_queued' => 0,
                 'mail' => 1,
@@ -518,7 +504,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->isVapor ? 0 : 1,
+                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -554,7 +540,7 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_captures_multiple_job_attempts($workCommand): void
     {
-        $this->isVapor = $workCommand === 'vapor:work';
+        $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
 
         if ($this->isVapor) {
@@ -580,8 +566,7 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_captures_manually_reported_exceptions($workCommand): void
     {
-        $this->isVapor = $workCommand === 'vapor:work';
-
+        $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -621,13 +606,13 @@ class JobAttemptSensorTest extends TestCase
                 'attempt_id' => $attemptId,
                 'attempt' => 1,
                 'name' => "Closure (JobAttemptSensorTest.php:{$line})",
-                'connection' => $this->isVapor ? 'sqs' : 'database',
+                'connection' => $this->whenVapor($workCommand, then: 'sqs', else: 'database'),
                 'queue' => 'default',
                 'status' => 'processed',
                 'duration' => 2500,
                 'exceptions' => 1,
                 'logs' => 0,
-                'queries' => $this->isVapor ? 0 : 4,
+                'queries' => $this->whenVapor($workCommand, then: 0, else: 4),
                 'lazy_loads' => 0,
                 'jobs_queued' => 0,
                 'mail' => 0,
@@ -635,7 +620,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->isVapor ? 0 : 1,
+                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -659,8 +644,7 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_resets_the_state_between_job_attempts($workCommand): void
     {
-        $this->isVapor = $workCommand === 'vapor:work';
-
+        $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
 
         if ($this->isVapor) {
@@ -708,8 +692,7 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_captures_all_queue_events_for_a_job($workCommand): void
     {
-        $this->isVapor = $workCommand === 'vapor:work';
-
+        $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -805,8 +788,7 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_captures_counts_occuring_outside_job_execution($workCommand): void
     {
-        $this->isVapor = $workCommand === 'vapor:work';
-
+        $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -873,8 +855,8 @@ class JobAttemptSensorTest extends TestCase
             return array_shift($uuids) ?? Uuid::uuid4();
         };
 
-        Artisan::call($workCommand, $this->workOptions());
-        Artisan::call($workCommand, $this->workOptions());
+        Artisan::call($workCommand, $this->workOptions($workCommand));
+        Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'queued-job:0.execution_id', '8c796368-b5ee-49b3-b02c-f883b8c6c6f8');
@@ -910,31 +892,15 @@ class JobAttemptSensorTest extends TestCase
         yield ['vapor:work'];
     }
 
-    protected function bindLambdaEventForJob(mixed $job, int $attempts = 0): void
+    protected function bindLambdaEventForJob(mixed $job, string $payload, int $attempts = 0): void
     {
-        app()->bind(LambdaEvent::class, function () use ($job, $attempts) {
+        app()->bind(LambdaEvent::class, function () use ($payload, $attempts) {
             return new LambdaEvent([
                 'Records' => [
                     [
                         'messageId' => '12345678-abcd-1234-efgh-123456789',
                         'receiptHandle' => 'AQEBwJnKyrHigUMZiWwCK1RjTXJNLtjNt2AbFd12uKxQo/bUIqAfA3LIvT7v8rAB+9LzJkUiKY1YPwULB6FX7Y8Bq3rBPqNhZm8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLBCDEFGH',
-                        'body' => json_encode([
-                            'uuid' => (string) Str::uuid(),
-                            'displayName' => $job instanceof SendQueuedMailable ? $job->mailable::class : $job::class,
-                            'job' => 'Illuminate\\Queue\\CallQueuedHandler@call',
-                            'maxTries' => null,
-                            'maxExceptions' => null,
-                            'failOnTimeout' => false,
-                            'backoff' => null,
-                            'timeout' => null,
-                            'retryUntil' => null,
-                            'data' => [
-                                'commandName' => $job::class,
-                                'command' => serialize($job),
-                            ],
-                            'attempts' => $attempts,
-                            'delay' => null,
-                        ]),
+                        'body' => $payload,
                         'attributes' => [
                             'ApproximateReceiveCount' => (string) ($attempts + 1),
                             'SentTimestamp' => 1751529944619,
@@ -961,7 +927,7 @@ class JobAttemptSensorTest extends TestCase
                         'messageId' => '12345678-abcd-1234-efgh-123456789',
                         'receiptHandle' => 'AQEBwJnKyrHigUMZiWwCK1RjTXJNLtjNt2AbFd12uKxQo/bUIqAfA3LIvT7v8rAB+9LzJkUiKY1YPwULB6FX7Y8Bq3rBPqNhZm8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLBCDEFGH',
                         'body' => json_encode([
-                            'uuid' => (string) Str::uuid(),
+                            'uuid' => $this->core->uuid->make(),
                             'displayName' => "Closure (JobAttemptSensorTest.php:{$line})",
                             'job' => 'Illuminate\\Queue\\CallQueuedHandler@call',
                             'maxTries' => null,
@@ -992,6 +958,15 @@ class JobAttemptSensorTest extends TestCase
                 ],
             ]);
         });
+    }
+
+    protected function whenVapor(string $workCommand, mixed $then, mixed $else = null): mixed
+    {
+        if ($workCommand === 'vapor:work') {
+            return value($then);
+        } else {
+            return value($else);
+        }
     }
 }
 
