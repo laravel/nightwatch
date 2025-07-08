@@ -12,7 +12,6 @@ use function feof;
 use function fread;
 use function fwrite;
 use function gettype;
-use function hash;
 use function intval;
 use function stream_get_meta_data;
 use function stream_set_timeout;
@@ -186,7 +185,7 @@ final class Ingest implements IngestContract
 
         $meta = stream_get_meta_data($stream);
 
-        $uri = $meta['uri'] ?? '';
+        $uri = $meta['uri'] ?? ''; // @phpstan-ignore nullCoalesce.offset
         $timedOut = $meta['timed_out'] ? 'true' : 'false';
         $eof = $meta['eof'] ? 'true' : 'false';
         $blocked = $meta['blocked'] ? 'true' : 'false';

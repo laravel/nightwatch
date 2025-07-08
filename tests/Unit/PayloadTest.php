@@ -91,6 +91,6 @@ class PayloadTest extends TestCase
     public function test_it_has_up_to_date_payload_version(): void
     {
         $payloadVersion = 'v1';
-        $this->assertSame($payloadVersion, Payload::PAYLOAD_VERSION, "Payload version has changed! this indicates that a new major version must be tagged");
+        $this->assertSame($payloadVersion, Payload::PAYLOAD_VERSION, 'Payload version has changed! this indicates that a new major version must be tagged');
     }
 }

@@ -73,7 +73,9 @@ use Throwable;
 
 use function class_exists;
 use function defined;
+use function hash;
 use function microtime;
+use function substr;
 
 /**
  * @internal

@@ -57,7 +57,7 @@ class Server
                     return;
                 }
 
-                if (!$payload->versionIsValid()) {
+                if (! $payload->versionIsValid()) {
                     $server->close();
 
                     call_user_func($this->onInvalidPayloadVersion);
