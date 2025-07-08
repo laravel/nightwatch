@@ -185,7 +185,7 @@ final class Ingest implements IngestContract
 
         $meta = stream_get_meta_data($stream);
 
-        $uri = $meta['uri'] ?? ''; // @phpstan-ignore nullCoalesce.offset
+        $uri = $meta['uri'] ?? '';
         $timedOut = $meta['timed_out'] ? 'true' : 'false';
         $eof = $meta['eof'] ? 'true' : 'false';
         $blocked = $meta['blocked'] ? 'true' : 'false';

@@ -2,3 +2,9 @@ parameters:
   paths:
     - src
   level: max
+  ignoreErrors:
+    -
+      identifier: "nullCoalesce.offset"
+      path: src/Ingest.php
+      count: 1
+      reportUnmatched: false
