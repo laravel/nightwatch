@@ -15,9 +15,9 @@ use function substr;
 class PayloadTest extends TestCase
 {
     #[DataProvider('jsonPayloads')]
-    public function test_it_can_determine_if_a_jso_n_payload_is_empty(mixed $value, bool $empty): void
+    public function test_it_can_determine_if_a_json_payload_is_empty(mixed $value, bool $empty): void
     {
-        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
+        $tokenHash = self::tokenHash();
         $payload = Payload::json(json_encode($value, flags: JSON_THROW_ON_ERROR), $tokenHash);
 
         $this->assertSame($empty, $payload->isEmpty());
@@ -57,7 +57,7 @@ class PayloadTest extends TestCase
 
     public function test_it_can_pull_the_bencoded_signed_value(): void
     {
-        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
+        $tokenHash = self::tokenHash();
         $payload = Payload::text('abc123', $tokenHash);
         $encoded = $payload->pull();
 
@@ -66,7 +66,7 @@ class PayloadTest extends TestCase
 
     public function test_it_can_only_pull_the_payload_once(): void
     {
-        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
+        $tokenHash = self::tokenHash();
         $payload = Payload::text('abc123', $tokenHash);
         $payload->pull();
 

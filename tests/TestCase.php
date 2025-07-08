@@ -47,7 +47,6 @@ abstract class TestCase extends OrchestraTestCase
     protected function setUp(): void
     {
         $_ENV['APP_BASE_PATH'] = realpath(__DIR__.'/../workbench/').'/';
-        $_ENV['NIGHTWATCH_TOKEN'] = '12341234';
 
         Nightwatch::handleUnrecoverableExceptionsUsing(fn ($e) => dd($e));
 
@@ -229,5 +228,11 @@ abstract class TestCase extends OrchestraTestCase
         if ($condition) {
             $this->markTestSkipped($message);
         }
+    }
+
+    public static function tokenHash (): string
+    {
+        $refreshToken = $_ENV['NIGHTWATCH_TOKEN'] ?? '';
+        return substr(hash('xxh128', $refreshToken), 0, 7);
     }
 }

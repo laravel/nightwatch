@@ -12,7 +12,7 @@ class Payload
 
     public string $value = '';
 
-    public string $payloadVersion = '';
+    public string $version = '';
 
     public string $tokenHash = '';
 
@@ -26,7 +26,7 @@ class Payload
 
         $this->parsePayload();
 
-        $this->complete = $this->length === (strlen($this->payloadVersion) + 1 + (strlen($this->tokenHash)) + 1 + strlen($this->value));
+        $this->complete = $this->length === (strlen($this->version) + 1 + (strlen($this->tokenHash)) + 1 + strlen($this->value));
     }
 
     private function parsePayload(): void
@@ -42,13 +42,13 @@ class Payload
         }
 
         $this->length = (int) $bits[0];
-        $this->payloadVersion = $bits[1];
+        $this->version = $bits[1];
         $this->tokenHash = $bits[2];
         $this->value = $bits[3];
     }
 
     public function versionIsValid(): bool
     {
-        return $this->payloadVersion === self::EXPECTED_PAYLOAD_VERSION;
+        return $this->version === self::EXPECTED_PAYLOAD_VERSION;
     }
 }

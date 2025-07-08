@@ -27,11 +27,7 @@ class TcpServerFake extends EventEmitter implements ServerInterface
      */
     public function pendingConnection(array|string $records): PendingConnection
     {
-        $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
-        if (! is_string($refreshToken)) {
-            $refreshToken = '';
-        }
-        $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
+        $tokenHash = self::tokenHash();
 
         if (is_string($records)) {
             return new PendingConnection($this, $records);

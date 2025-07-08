@@ -116,4 +116,10 @@ abstract class TestCase extends BaseTestCase
 
         return $this;
     }
+
+    public static function tokenHash (): string
+    {
+        $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
+        return substr(hash('xxh128', $refreshToken), 0, 7);
+    }
 }

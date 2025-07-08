@@ -59,11 +59,7 @@ class ServerTest extends TestCase
 
     public function test_it_can_be_pinged(): void
     {
-        $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
-        if (! is_string($refreshToken)) {
-            $refreshToken = '';
-        }
-        $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
+        $tokenHash = self::tokenHash();
 
         $loop = new LoopFake(runForSeconds: 1);
         $server = new TcpServerFake;
@@ -104,11 +100,7 @@ class ServerTest extends TestCase
 
     public function test_it_stops_loop_when_an_incorrect_payload_version_is_received(): void
     {
-        $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
-        if (! is_string($refreshToken)) {
-            $refreshToken = '';
-        }
-        $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
+        $tokenHash = self::tokenHash();
 
         $loop = new LoopFake(runForSeconds: 2);
         $server = new TcpServerFake;

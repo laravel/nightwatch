@@ -969,11 +969,7 @@ class IngestTest extends TestCase
 
     public function test_it_handles_incomplete_payloads(): void
     {
-        $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
-        if (! is_string($refreshToken)) {
-            $refreshToken = '';
-        }
-        $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
+        $tokenHash = self::tokenHash();
         $tokenHashPart = substr($tokenHash, 0, 2);
 
         $loop = new LoopFake(runForSeconds: 9);

@@ -118,7 +118,7 @@ class IngestTest extends TestCase
 
     public function test_it_can_write_the_payload_in_one_write(): void
     {
-        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
+        $tokenHash = self::tokenHash();
         StreamWrapper::intercept('stream_write', fn (string $value) => 35);
 
         $this->core->ingest->write(FakeRecord::make());
@@ -168,7 +168,7 @@ class IngestTest extends TestCase
 
     public function test_it_can_write_the_payload_in_multiple_write(): void
     {
-        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
+        $tokenHash = self::tokenHash();
         $writes = [3, 2, 8, 3, 5, 14];
         StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
             return array_shift($writes);
@@ -518,7 +518,7 @@ class IngestTest extends TestCase
 
     public function test_it_triggers_ingest_after_exceeding_threshold(): void
     {
-        $tokenHash = substr(hash('xxh128', $_ENV['NIGHTWATCH_TOKEN']), 0, 7);
+        $tokenHash = self::tokenHash();
         $writes = [];
         StreamWrapper::intercept('stream_write', function (string $value) use (&$writes) {
             $writes[] = $value;
