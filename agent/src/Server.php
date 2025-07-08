@@ -22,7 +22,6 @@ class Server
      */
     public function __construct(
         private Closure $serverResolver,
-        private string $payloadVersion,
         private string $tokenHash,
         private Closure $onServerStarted,
         private Closure $onServerError,
@@ -58,7 +57,7 @@ class Server
                     return;
                 }
 
-                if ($payload->payloadVersion !== $this->payloadVersion) {
+                if (!$payload->versionIsValid()) {
                     $server->close();
 
                     call_user_func($this->onInvalidPayloadVersion);

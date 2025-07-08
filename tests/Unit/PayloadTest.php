@@ -91,11 +91,6 @@ class PayloadTest extends TestCase
     public function test_it_has_up_to_date_payload_version(): void
     {
         $payloadVersion = 'v1';
-
-        try {
-            $this->assertSame($payloadVersion, Payload::PAYLOAD_VERSION);
-        } catch (Throwable $e) {
-            $this->assertSame('Payload version does not match! If you see this error, you need to ensure that the payload version in Package and Agent are correct and matching', $e->getMessage());
-        }
+        $this->assertSame($payloadVersion, Payload::PAYLOAD_VERSION, "Payload version has changed! this indicates that a new major version must be tagged");
     }
 }

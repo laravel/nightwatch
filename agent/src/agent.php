@@ -76,7 +76,6 @@ $error = static function (string $message): void {
 $debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
 /** @var ?string $basePath */
 $basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
-$payloadVersion = 'v1';
 $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 
 /*
@@ -141,7 +140,6 @@ $ingest = new Ingest(
 
 $server = new Server(
     serverResolver: $serverResolver ?? static fn (): ServerInterface => new TcpServer($listenOn),
-    payloadVersion: $payloadVersion,
     tokenHash: $tokenHash,
     onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]"),
     onServerError: static fn (string $message) => $error("Server error: {$message}"),

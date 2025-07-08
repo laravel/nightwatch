@@ -8,6 +8,8 @@ use function strlen;
 
 class Payload
 {
+    public const AGENT_PAYLOAD_VERSION = 'v1';
+
     public string $value = '';
 
     public string $payloadVersion = '';
@@ -43,5 +45,10 @@ class Payload
         $this->payloadVersion = $bits[1];
         $this->tokenHash = $bits[2];
         $this->value = $bits[3];
+    }
+
+    public function versionIsValid(): bool
+    {
+        return $this->payloadVersion === self::AGENT_PAYLOAD_VERSION;
     }
 }
