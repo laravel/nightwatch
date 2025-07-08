@@ -15,14 +15,12 @@ use function array_shift;
 use function call_user_func_array;
 use function fclose;
 use function fopen;
-use function hash;
 use function implode;
 use function json_encode;
 use function str_repeat;
 use function stream_wrapper_register;
 use function stream_wrapper_unregister;
 use function strlen;
-use function substr;
 
 class IngestTest extends TestCase
 {

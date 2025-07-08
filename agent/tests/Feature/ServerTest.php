@@ -11,10 +11,6 @@ use Tests\TcpServerFake;
 use Tests\TestCase;
 use Tests\Timer;
 
-use function hash;
-use function is_string;
-use function substr;
-
 class ServerTest extends TestCase
 {
     public function test_it_responds_with_ok(): void

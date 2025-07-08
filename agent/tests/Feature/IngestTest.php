@@ -14,8 +14,6 @@ use Tests\Timer;
 
 use function array_fill;
 use function gethostname;
-use function hash;
-use function is_string;
 use function str_repeat;
 use function substr;
 

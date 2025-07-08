@@ -11,11 +11,14 @@ use Throwable;
 use function debug_backtrace;
 use function file_get_contents;
 use function file_put_contents;
+use function hash;
 use function is_array;
 use function is_file;
+use function is_string;
 use function rand;
 use function serialize;
 use function str_replace;
+use function substr;
 use function unlink;
 use function unserialize;
 
@@ -117,9 +120,13 @@ abstract class TestCase extends BaseTestCase
         return $this;
     }
 
-    public static function tokenHash (): string
+    public static function tokenHash(): string
     {
         $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
+        if (! is_string($refreshToken)) {
+            throw new RuntimeException('NIGHTWATCH_TOKEN invalid');
+        }
+
         return substr(hash('xxh128', $refreshToken), 0, 7);
     }
 }

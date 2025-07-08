@@ -8,9 +8,7 @@ use RuntimeException;
 use Tests\TestCase;
 use Throwable;
 
-use function hash;
 use function json_encode;
-use function substr;
 
 class PayloadTest extends TestCase
 {

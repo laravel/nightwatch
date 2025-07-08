@@ -7,11 +7,9 @@ use PHPUnit\Framework\Assert;
 use React\Socket\ServerInterface;
 use RuntimeException;
 
-use function hash;
 use function is_string;
 use function json_encode;
 use function strlen;
-use function substr;
 
 class TcpServerFake extends EventEmitter implements ServerInterface
 {
@@ -27,7 +25,7 @@ class TcpServerFake extends EventEmitter implements ServerInterface
      */
     public function pendingConnection(array|string $records): PendingConnection
     {
-        $tokenHash = self::tokenHash();
+        $tokenHash = TestCase::tokenHash();
 
         if (is_string($records)) {
             return new PendingConnection($this, $records);
