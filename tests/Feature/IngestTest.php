@@ -7,6 +7,9 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use RuntimeException;
 use Tests\TestCase;
 
+use function hash;
+use function substr;
+
 class IngestTest extends TestCase
 {
     protected function setUp(): void
