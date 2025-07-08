@@ -4,9 +4,9 @@ namespace Laravel\Nightwatch;
 
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Log\Context\Repository as Context;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Queue;
+use Illuminate\Support\Facades\Context;
 use ReflectionProperty;
 use Symfony\Component\Console\Input\ArgvInput;
 
@@ -17,8 +17,6 @@ use function version_compare;
 
 final class Compatibility
 {
-    public static Application $app;
-
     public static bool $terminatingEventExists = false;
 
     public static bool $cacheDurationCapturable = false;
@@ -47,7 +45,6 @@ final class Compatibility
 
     public static function boot(Application $app): void
     {
-        self::$app = $app;
         $version = $app->version();
 
         /**
@@ -168,10 +165,7 @@ final class Compatibility
             return;
         }
 
-        /** @var Context */
-        $context = self::$app->make(Context::class);
-
-        $context->addHidden($key, $value);
+        Context::addHidden($key, $value);
     }
 
     /**
@@ -186,9 +180,6 @@ final class Compatibility
             return self::$context[$key] ?? value($default);
         }
 
-        /** @var Context */
-        $context = self::$app->make(Context::class);
-
-        return $context->getHidden($key) ?? value($default);
+        return Context::getHidden($key) ?? value($default);
     }
 }

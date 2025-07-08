@@ -41,6 +41,7 @@ use WeakMap;
 use function array_shift;
 use function array_unshift;
 use function debug_backtrace;
+use function env;
 use function memory_reset_peak_usage;
 use function random_int;
 
@@ -481,6 +482,10 @@ trait CapturesState
      */
     public function prepareForJob(Job $job): void
     {
+        if ($this->isVapor()) {
+            $this->prepareForNextJob();
+        }
+
         $this->sample(
             Compatibility::getSamplingFromContext(default: true) ? 1.0 : 0.0
         );
@@ -610,5 +615,10 @@ trait CapturesState
     {
         $this->executionState->flush();
         $this->ingest->flush();
+    }
+
+    private function isVapor(): bool
+    {
+        return env('VAPOR_SSM_PATH') !== null;
     }
 }

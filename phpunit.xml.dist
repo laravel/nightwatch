@@ -20,5 +20,6 @@
         <env name="DB_DATABASE" value="tests/database.sqlite" />
         <env name="MAIL_MAILER" value="array" />
         <env name="QUEUE_CONNECTION" value="database" />
+        <env name="SQS_PREFIX" value="https://sqs.us-east-1.amazonaws.com/123456789" />
     </php>
 </phpunit>
