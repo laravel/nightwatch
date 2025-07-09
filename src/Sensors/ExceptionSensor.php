@@ -16,13 +16,21 @@ use function array_keys;
 use function array_map;
 use function count;
 use function debug_backtrace;
+use function file_exists;
+use function file_get_contents;
 use function gettype;
 use function hash;
 use function implode;
 use function is_array;
 use function is_int;
+use function is_readable;
 use function is_string;
 use function json_encode;
+use function max;
+use function min;
+use function preg_split;
+use function rtrim;
+use function str_starts_with;
 
 /**
  * @internal
@@ -61,6 +69,8 @@ final class ExceptionSensor
 
         $this->executionState->exceptions++;
 
+        $sourceLines = $this->collectSourceCodeLines($file, $line);
+
         return [
             'v' => 1,
             't' => 'exception',
@@ -81,6 +91,7 @@ final class ExceptionSensor
             'code' => (string) $normalizedException->getCode(),
             'trace' => Str::mediumText($this->serializeTrace($normalizedException)),
             'handled' => $handled,
+            'source_lines' => $sourceLines,
             'php_version' => $this->executionState->phpVersion,
             'laravel_version' => $this->executionState->laravelVersion,
         ];
@@ -95,6 +106,67 @@ final class ExceptionSensor
         }
 
         return false;
+    }
+
+    /**
+     * Collect source code lines around the exception location.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function collectSourceCodeLines(string $file, ?int $line, int $contextLines = 5): ?array
+    {
+        if ($line === null) {
+            return null;
+        }
+
+        // Convert normalized file path back to full path for reading
+        $fullPath = $file;
+        if (! str_starts_with($file, DIRECTORY_SEPARATOR)) {
+            // The file is normalized (relative to base path), so we need to add the base path back
+            $basePath = rtrim($this->location->getBasePath(), DIRECTORY_SEPARATOR);
+            $fullPath = $basePath.DIRECTORY_SEPARATOR.$file;
+        }
+
+        if (! file_exists($fullPath) || ! is_readable($fullPath)) {
+            return null;
+        }
+
+        try {
+            $contents = file_get_contents($fullPath);
+            if ($contents === false) {
+                return null;
+            }
+
+            $lines = preg_split('/\r\n|\r|\n/', $contents);
+            if ($lines === false) {
+                return null;
+            }
+
+            $totalLines = count($lines);
+            $startLine = max(1, $line - $contextLines);
+            $endLine = min($totalLines, $line + $contextLines);
+
+            $sourceLines = [];
+            for ($i = $startLine; $i <= $endLine; $i++) {
+                $sourceLines[] = [
+                    'line' => $i,
+                    'code' => $lines[$i - 1] ?? '',
+                    'is_exception_line' => $i === $line,
+                ];
+            }
+
+            return [
+                'file' => $file,
+                'line' => $line,
+                'start_line' => $startLine,
+                'end_line' => $endLine,
+                'total_lines' => $totalLines,
+                'lines' => $sourceLines,
+            ];
+        } catch (Throwable $e) {
+            // If we can't read the file for any reason, return null
+            return null;
+        }
     }
 
     /**

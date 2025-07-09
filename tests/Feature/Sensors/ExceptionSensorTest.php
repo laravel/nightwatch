@@ -214,6 +214,78 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.exceptions', 3);
     }
 
+    public function test_it_captures_source_code_lines(): void
+    {
+        $ingest = $this->fakeIngest();
+        $trace = null;
+        $line = null;
+        Route::get('/users', function () use (&$trace, &$line): void {
+            $line = __LINE__ + 1;
+            $e = new MyException('Whoops!');
+
+            $trace = $e->getTrace();
+
+            report($e);
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:*', [
+            [
+                'v' => 1,
+                't' => 'exception',
+                'timestamp' => 946688523.456789,
+                'deploy' => 'v1.2.3',
+                'server' => 'web-01',
+                '_group' => hash('xxh128', "Tests\Feature\Sensors\MyException,0,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"),
+                'trace_id' => '00000000-0000-0000-0000-000000000000',
+                'execution_source' => 'request',
+                'execution_id' => '00000000-0000-0000-0000-000000000001',
+                'execution_preview' => 'GET /users',
+                'execution_stage' => 'action',
+                'user' => '',
+                'class' => 'Tests\Feature\Sensors\MyException',
+                'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
+                'line' => $line,
+                'message' => 'Whoops!',
+                'code' => '0',
+                'trace' => json_encode(array_map(fn ($frame) => [
+                    'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
+                    'source' => ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'].'('.implode(', ', array_map(fn ($arg) => match (gettype($arg)) {
+                        'object' => $arg::class,
+                        'string' => 'string',
+                        'array' => 'array',
+                    }, $frame['args'])).')',
+                ], $trace)),
+                'handled' => true,
+                'source_lines' => [
+                    'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
+                    'line' => $line,
+                    'start_line' => $line - 5,
+                    'end_line' => $line + 5,
+                    'total_lines' => 783,
+                    'lines' => [
+                        ['line' => $line - 5, 'code' => '        $ingest = $this->fakeIngest();', 'is_exception_line' => false],
+                        ['line' => $line - 4, 'code' => '        $trace = null;', 'is_exception_line' => false],
+                        ['line' => $line - 3, 'code' => '        $line = null;', 'is_exception_line' => false],
+                        ['line' => $line - 2, 'code' => '        Route::get(\'/users\', function () use (&$trace, &$line): void {', 'is_exception_line' => false],
+                        ['line' => $line - 1, 'code' => '            $line = __LINE__ + 1;', 'is_exception_line' => false],
+                        ['line' => $line, 'code' => '            $e = new MyException(\'Whoops!\');', 'is_exception_line' => true],
+                        ['line' => $line + 1, 'code' => '', 'is_exception_line' => false],
+                        ['line' => $line + 2, 'code' => '            $trace = $e->getTrace();', 'is_exception_line' => false],
+                        ['line' => $line + 3, 'code' => '', 'is_exception_line' => false],
+                        ['line' => $line + 4, 'code' => '            report($e);', 'is_exception_line' => false],
+                        ['line' => $line + 5, 'code' => '        });', 'is_exception_line' => false],
+                    ],
+                ],
+                'php_version' => '8.4.1',
+                'laravel_version' => '11.33.0',
+            ],
+        ]);
+    }
+
     public function test_it_handles_view_exceptions(): void
     {
         $this->assertFalse(App::providerIsLoaded(IgnitionServiceProvider::class));

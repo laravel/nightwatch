@@ -220,6 +220,11 @@ final class Location
         return $this;
     }
 
+    public function getBasePath(): string
+    {
+        return $this->basePath;
+    }
+
     private function joinPaths(string $basePath, string ...$paths): string
     {
         foreach ($paths as $index => $path) {
