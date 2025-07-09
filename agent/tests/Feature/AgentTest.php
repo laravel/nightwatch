@@ -16,6 +16,11 @@ class AgentTest extends TestCase
         file_put_contents(__DIR__.'/../../build/signature.txt', 'abcd');
     }
 
+    public static function touch_signature(): void
+    {
+        file_put_contents(__DIR__.'/../../build/signature.txt', 'C8DB9D7EE8A6DB35E416926A3FDE38AA5913E0637CB7D833DA0ABA38E5C1A1F7E6FB927AC4CA67C658BC6B5ED819DDBD99B1C9B29A7B74E10D138D73FFAA03FC');
+    }
+
     public function test_it_works(): void
     {
         // Start the agent
@@ -32,7 +37,7 @@ class AgentTest extends TestCase
             loop: $loop,
         );
 
-        file_put_contents(__DIR__.'/../../build/signature.txt', 'C8DB9D7EE8A6DB35E416926A3FDE38AA5913E0637CB7D833DA0ABA38E5C1A1F7E6FB927AC4CA67C658BC6B5ED819DDBD99B1C9B29A7B74E10D138D73FFAA03FC');
+        self::touch_signature();
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $loop->assertCanceled([
@@ -73,6 +78,21 @@ class AgentTest extends TestCase
     public function test_it_does_not_restart_unless_signature_changes(): void
     {
         // touch the file.
+        $loop = new LoopFake(runForSeconds: 60 * 20);
+        $loop->addTimer(1, [self::class, 'touch_signature']);
+        $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
+
+        [$output, $e] = $this->runAgent(
+            via: 'source',
+            ingestDetailsBrowser: $ingestDetailsBrowser,
+            loop: $loop,
+        );
+
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $this->assertLogMatches(<<<'OUTPUT'
+            {date} {info} Authentication successful {duration}
+            OUTPUT, $output);
+
     }
 }
 
