@@ -238,41 +238,23 @@ class ExceptionSensorTest extends TestCase
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertWrittenTimes(1);
         $records = $ingest->decodedWrites()->last();
         $record = collect($records)->where('t', 'exception')->first();
 
-        // Verify basic exception details
         $this->assertSame('Tests\Feature\Sensors\MyException', $record['class']);
         $this->assertSame('tests/Feature/Sensors/ExceptionSensorTest.php', $record['file']);
         $this->assertSame($line, $record['line']);
         $this->assertSame('Whoops!', $record['message']);
         $this->assertTrue($record['handled']);
 
-        // Verify source lines are captured for the main exception
-        $sourceLines = $record['source_lines'];
-        $this->assertNotNull($sourceLines);
-        $this->assertSame('tests/Feature/Sensors/ExceptionSensorTest.php', $sourceLines['file']);
-        $this->assertSame($line, $sourceLines['line']);
-        $this->assertArrayHasKey('lines', $sourceLines);
-
-        // Verify the exception line is marked correctly
-        $foundExceptionLine = false;
-        foreach ($sourceLines['lines'] as $lineData) {
-            if ($lineData['line'] === $line) {
-                $this->assertTrue($lineData['is_exception_line']);
-                $this->assertStringContainsString('MyException', $lineData['code']);
-                $foundExceptionLine = true;
-                break;
-            }
-        }
-        $this->assertTrue($foundExceptionLine, 'Exception line not found or not marked correctly');
+        // Verify that there is NO top-level source_lines field
+        $this->assertArrayNotHasKey('source_lines', $record);
 
         // Verify that trace frames include source lines for the first few frames
         $trace = json_decode($record['trace'], true);
         $this->assertIsArray($trace);
 
-        // Check that the first 3 frames
+        // Check that the first few frames have source lines captured
         $framesWithSourceLines = 0;
         foreach ($trace as $index => $frame) {
             if (isset($frame['source_lines'])) {
@@ -281,6 +263,16 @@ class ExceptionSensorTest extends TestCase
                 $this->assertArrayHasKey('line', $frame['source_lines']);
                 $this->assertArrayHasKey('lines', $frame['source_lines']);
                 $this->assertIsArray($frame['source_lines']['lines']);
+
+                // Verify that each line has the expected structure
+                foreach ($frame['source_lines']['lines'] as $lineData) {
+                    $this->assertArrayHasKey('line', $lineData);
+                    $this->assertArrayHasKey('code', $lineData);
+                    $this->assertArrayHasKey('is_exception_line', $lineData);
+                    $this->assertIsInt($lineData['line']);
+                    $this->assertIsString($lineData['code']);
+                    $this->assertIsBool($lineData['is_exception_line']);
+                }
 
                 if ($framesWithSourceLines >= 3) {
                     break;

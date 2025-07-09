@@ -71,9 +71,6 @@ final class ExceptionSensor
 
         $this->executionState->exceptions++;
 
-        $captureSourceLines = $this->config->get('nightwatch.exceptions.capture_source_lines', true);
-        $sourceLines = $captureSourceLines ? $this->collectSourceCodeLines($file, $line) : null;
-
         $payload = [
             'v' => 1,
             't' => 'exception',
@@ -92,15 +89,11 @@ final class ExceptionSensor
             'line' => $line ?? 0,
             'message' => Str::text($normalizedException->getMessage()),
             'code' => (string) $normalizedException->getCode(),
-            'trace' => Str::mediumText($this->serializeTrace($normalizedException, $captureSourceLines)),
+            'trace' => Str::mediumText($this->serializeTrace($normalizedException, $this->config->get('nightwatch.exceptions.capture_source_lines', true))),
             'handled' => $handled,
             'php_version' => $this->executionState->phpVersion,
             'laravel_version' => $this->executionState->laravelVersion,
         ];
-
-        if ($sourceLines !== null) {
-            $payload['source_lines'] = $sourceLines;
-        }
 
         return $payload;
     }
