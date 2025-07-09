@@ -266,11 +266,31 @@ class LoopFake implements LoopInterface
      */
     public function assertPending(array $timers): self
     {
+        $actual = array_values(array_map(fn ($timer) => new Timer(
+            interval: $timer['interval'],
+            runAt: $timer['runAt'],
+            scheduledBy: $timer['scheduledBy'],
+            scheduledAt: $timer['scheduledAt'],
+        ),
+            array_filter($this->pendingTimers, fn ($timer) => $timer['periodic'] === false)
+        ));
+
+        Assert::assertEquals($timers, $actual);
+
+        return $this;
+    }
+
+    /**
+     * @param  list<Timer>  $timers
+     */
+    public function assertPendingWithPeriodic(array $timers): self
+    {
         $actual = array_map(fn ($timer) => new Timer(
             interval: $timer['interval'],
             runAt: $timer['runAt'],
             scheduledBy: $timer['scheduledBy'],
             scheduledAt: $timer['scheduledAt'],
+            periodic: $timer['periodic'],
         ), $this->pendingTimers);
 
         Assert::assertEquals($timers, $actual);
@@ -282,6 +302,25 @@ class LoopFake implements LoopInterface
      * @param  list<Timer>  $timers
      */
     public function assertRun(array $timers): self
+    {
+        $actual = array_values(array_map(fn ($timer) => new Timer(
+            interval: $timer['interval'],
+            runAt: $timer['runAt'],
+            scheduledBy: $timer['scheduledBy'],
+            scheduledAt: $timer['scheduledAt'],
+        ),
+            array_filter($this->timersRun, fn ($timer) => $timer['periodic'] === false)
+        ));
+
+        Assert::assertEquals($timers, $actual);
+
+        return $this;
+    }
+
+    /**
+     * @param  list<Timer>  $timers
+     */
+    public function assertRunWithPeriodic(array $timers): self
     {
         $actual = array_map(fn ($timer) => new Timer(
             interval: $timer['interval'],

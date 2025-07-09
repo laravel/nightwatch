@@ -43,7 +43,6 @@ class ServerTest extends TestCase
         ]);
         $loop->assertPending([
             new Timer(interval: 10, runAt: 11, scheduledAt: 1, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
-            new Timer(interval: 60, runAt: 60, scheduledAt: 0, scheduledBy: 'Agent'),
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
         $ingestDetailsBrowser->assertSent([
@@ -85,7 +84,6 @@ class ServerTest extends TestCase
             new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: $this->functionName()),
         ]);
         $loop->assertPending([
-            new Timer(interval: 60, runAt: 60, scheduledAt: 0, scheduledBy: 'Agent'),
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
         $ingestDetailsBrowser->assertSent([
@@ -129,7 +127,6 @@ class ServerTest extends TestCase
             new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
         ]);
         $loop->assertPending([
-            new Timer(interval: 60, runAt: null, scheduledAt: 0, scheduledBy: 'Agent'),
             new Timer(interval: 3_600, runAt: null, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
         $this->assertTrue($loop->stopped);
@@ -172,7 +169,6 @@ class ServerTest extends TestCase
             new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
         ]);
         $loop->assertPending([
-            new Timer(interval: 60, runAt: null, scheduledAt: 0, scheduledBy: 'Agent'),
             new Timer(interval: 3_600, runAt: null, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
         $this->assertTrue($loop->stopped);

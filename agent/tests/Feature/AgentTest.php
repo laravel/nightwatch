@@ -54,7 +54,7 @@ class AgentTest extends TestCase
             {date} {info} Shutting down
             OUTPUT, $output);
 
-        $loop->assertRun([
+        $loop->assertRunWithPeriodic([
             new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
             new Timer(interval: 60, runAt: 60, scheduledAt: 0, scheduledBy: 'Agent', periodic: true), // see signature changed
             new Timer(interval: 60, runAt: 120, scheduledAt: 0, scheduledBy: 'Agent', periodic: true), // 4 mins left
@@ -65,7 +65,7 @@ class AgentTest extends TestCase
             new Timer(interval: 300, runAt: 360, scheduledAt: 60, scheduledBy: '::Laravel\NightwatchAgent\{closure}'),
         ]);
 
-        $loop->assertPending([
+        $loop->assertPendingWithPeriodic([
             new Timer(interval: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
         $ingestDetailsBrowser->assertSent([

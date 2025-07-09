@@ -234,16 +234,10 @@ class IngestDetailsRepositoryTest extends TestCase
         $loop->assertRun([
             new Timer(interval: 5, runAt: 5, scheduledAt: 0, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 10, runAt: 5 + 10, scheduledAt: 5, scheduledBy: $scheduleRefreshIn),
-            new Timer(interval: 60, runAt: 60, scheduledAt: 0, scheduledBy: 'Agent'),
-            new Timer(interval: 60, runAt: 120, scheduledAt: 60, scheduledBy: 'Agent'),
-            new Timer(interval: 60, runAt: 180, scheduledAt: 120, scheduledBy: 'Agent'),
-            new Timer(interval: 60, runAt: 240, scheduledAt: 180, scheduledBy: 'Agent'),
-            new Timer(interval: 60, runAt: 300, scheduledAt: 240, scheduledBy: 'Agent'),
             new Timer(interval: 300, runAt: 5 + 10 + 300, scheduledAt: 15, scheduledBy: $scheduleRefreshIn),
             new Timer(interval: 3_600, runAt: 5 + 10 + 300 + 3_600, scheduledAt: 5 + 10 + 300, scheduledBy: $scheduleRefreshIn),
         ]);
         $loop->assertPending([
-            new Timer(interval: 60, runAt: 60, scheduledAt: 0, scheduledBy: 'Agent'),
             new Timer(interval: 3_600, runAt: 5 + 10 + 300 + 3_600 + 3_600, scheduledAt: 5 + 10 + 300 + 3_600, scheduledBy: $scheduleRefreshIn),
         ]);
         $browser->assertSent([
