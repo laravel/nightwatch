@@ -482,6 +482,7 @@ trait CapturesState
      */
     public function prepareForJob(Job $job): void
     {
+        /** @var Core<CommandState> $this */
         if ($this->isVapor()) {
             $this->prepareForNextJob();
         }

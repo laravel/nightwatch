@@ -944,25 +944,16 @@ class JobAttemptSensorTest extends TestCase
     {
         $ingest = $this->fakeIngest();
         Queue::addConnector('database', function () {
-            return new class($this->app['db']) extends DatabaseConnector {
+            return new class($this->app['db']) extends DatabaseConnector
+            {
                 public function connect(array $config)
                 {
-                    return new class(
-                        $this->connections->connection($config['connection'] ?? null),
-                        $config['table'],
-                        $config['queue'],
-                        $config['retry_after'] ?? 60,
-                        $config['after_commit'] ?? null
-                    ) extends DatabaseQueue {
+                    return new class($this->connections->connection($config['connection'] ?? null), $config['table'], $config['queue'], $config['retry_after'] ?? 60, $config['after_commit'] ?? null) extends DatabaseQueue
+                    {
                         protected function marshalJob($queue, $job)
                         {
-                            return new class(
-                                $this->container,
-                                $this,
-                                $this->markJobAsReserved($job),
-                                $this->connectionName,
-                                $queue,
-                            ) extends DatabaseJob {
+                            return new class($this->container, $this, $this->markJobAsReserved($job), $this->connectionName, $queue) extends DatabaseJob
+                            {
                                 public function attempts()
                                 {
                                     if ($this->instance?->handled) {
