@@ -182,7 +182,8 @@ $server->start();
 
 $ingestDetails->hydrate();
 
-$loop->addPeriodicTimer(60, function () use ($error, $info, $basePath, $expectedSignature) {
+$restartingIn = null;
+$timer = $loop->addPeriodicTimer(60, function () use ($loop, $ingest, &$restartingIn, $error, $info, $basePath, $expectedSignature) {
     $signature = file_get_contents($basePath.'/signature.txt');
 
     if ($signature === false) {
@@ -192,11 +193,16 @@ $loop->addPeriodicTimer(60, function () use ($error, $info, $basePath, $expected
     }
 
     if ($signature != $expectedSignature) {
-        $info('Agent signature changed: restarting in 5 minutes');
+        if ( $restartingIn == null )
+        {
+            $restartingIn = 5;
+        } else {
+            $restartingIn = $restartingIn - 1;
+        }
 
-        // Schedule a restart in 5 minutes
-        $loop = Loop::get();
-        $loop->addTimer(60 * 5, function () use ($info) {
+        $info('Agent signature changed: restarting in '.$restartingIn.' minutes');
+
+        $loop->addTimer(60 * 5, function () use ($info, $loop, $ingest) {
             $info('Agent signature changed: restarting');
             $ingest->forceDigest()->finally(static function () use ($info, $loop) {
                 $loop->stop();
