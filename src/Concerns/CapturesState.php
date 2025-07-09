@@ -494,6 +494,14 @@ trait CapturesState
         $this->executionState->timestamp = $this->clock->microtime();
         $this->executionState->setId((string) Str::uuid());
         $this->executionState->executionPreview = Str::tinyText($job->resolveName());
+
+        // Beanstalkd throws an exception when attempting to retrieve the job
+        // after it has been processed. Previously, we were retrieving the attempts
+        // when listening for the `JobProcessed|JobReleasedAfterException|JobFailed`
+        // events, however the job has already been removed from beanstalkd
+        // when these events fire. Instead, we will capture it much earlier in
+        // the lifecycle to ensure we can always retrieve the value.
+        $this->executionState->attempts = $job->attempts();
     }
 
     /**
