@@ -940,7 +940,7 @@ class JobAttemptSensorTest extends TestCase
         });
     }
 
-    public function test_it_works(): void
+    public function test_queue_workers_that_remove_successful_jobs_and_make_network_call_to_determine_attempts_like_beanstalkd_can_capture_attempts(): void
     {
         $ingest = $this->fakeIngest();
         Queue::addConnector('database', function () {
