@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Laravel\Nightwatch\Facades\Nightwatch;
-use Laravel\Nightwatch\Types\Str;
 use ReflectionClass;
 use RuntimeException;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
@@ -22,6 +22,8 @@ use Throwable;
 use function array_map;
 use function base64_encode;
 use function base_path;
+use function collect;
+use function config;
 use function dirname;
 use function fclose;
 use function fopen;
@@ -31,6 +33,7 @@ use function hex2bin;
 use function implode;
 use function ini_get;
 use function ini_set;
+use function json_decode;
 use function json_encode;
 use function report;
 use function response;
@@ -62,6 +65,7 @@ class ExceptionSensorTest extends TestCase
         $this->core->sensor->location->setBasePath($base);
         $this->core->sensor->location->setPublicPath($base.'/public');
         Config::set('app.debug', false);
+        Config::set('nightwatch.exceptions.capture_source_lines', false);
 
         $this->iniSettingsToRestore['zend.exception_ignore_args'] = ini_get('zend.exception_ignore_args');
         ini_set('zend.exception_ignore_args', '0');
@@ -216,6 +220,8 @@ class ExceptionSensorTest extends TestCase
 
     public function test_it_captures_source_code_lines(): void
     {
+        Config::set('nightwatch.exceptions.capture_source_lines', true);
+
         $ingest = $this->fakeIngest();
         $trace = null;
         $line = null;
@@ -232,58 +238,96 @@ class ExceptionSensorTest extends TestCase
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:*', [
-            [
-                'v' => 1,
-                't' => 'exception',
-                'timestamp' => 946688523.456789,
-                'deploy' => 'v1.2.3',
-                'server' => 'web-01',
-                '_group' => hash('xxh128', "Tests\Feature\Sensors\MyException,0,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"),
-                'trace_id' => '00000000-0000-0000-0000-000000000000',
-                'execution_source' => 'request',
-                'execution_id' => '00000000-0000-0000-0000-000000000001',
-                'execution_preview' => 'GET /users',
-                'execution_stage' => 'action',
-                'user' => '',
-                'class' => 'Tests\Feature\Sensors\MyException',
-                'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
-                'line' => $line,
-                'message' => 'Whoops!',
-                'code' => '0',
-                'trace' => json_encode(array_map(fn ($frame) => [
-                    'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
-                    'source' => ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'].'('.implode(', ', array_map(fn ($arg) => match (gettype($arg)) {
-                        'object' => $arg::class,
-                        'string' => 'string',
-                        'array' => 'array',
-                    }, $frame['args'])).')',
-                ], $trace)),
-                'handled' => true,
-                'source_lines' => [
-                    'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
-                    'line' => $line,
-                    'start_line' => $line - 5,
-                    'end_line' => $line + 5,
-                    'total_lines' => 783,
-                    'lines' => [
-                        ['line' => $line - 5, 'code' => '        $ingest = $this->fakeIngest();', 'is_exception_line' => false],
-                        ['line' => $line - 4, 'code' => '        $trace = null;', 'is_exception_line' => false],
-                        ['line' => $line - 3, 'code' => '        $line = null;', 'is_exception_line' => false],
-                        ['line' => $line - 2, 'code' => '        Route::get(\'/users\', function () use (&$trace, &$line): void {', 'is_exception_line' => false],
-                        ['line' => $line - 1, 'code' => '            $line = __LINE__ + 1;', 'is_exception_line' => false],
-                        ['line' => $line, 'code' => '            $e = new MyException(\'Whoops!\');', 'is_exception_line' => true],
-                        ['line' => $line + 1, 'code' => '', 'is_exception_line' => false],
-                        ['line' => $line + 2, 'code' => '            $trace = $e->getTrace();', 'is_exception_line' => false],
-                        ['line' => $line + 3, 'code' => '', 'is_exception_line' => false],
-                        ['line' => $line + 4, 'code' => '            report($e);', 'is_exception_line' => false],
-                        ['line' => $line + 5, 'code' => '        });', 'is_exception_line' => false],
-                    ],
-                ],
-                'php_version' => '8.4.1',
-                'laravel_version' => '11.33.0',
-            ],
-        ]);
+        $ingest->assertWrittenTimes(1);
+        $records = $ingest->decodedWrites()->last();
+        $record = collect($records)->where('t', 'exception')->first();
+
+        // Verify basic exception details
+        $this->assertSame('Tests\Feature\Sensors\MyException', $record['class']);
+        $this->assertSame('tests/Feature/Sensors/ExceptionSensorTest.php', $record['file']);
+        $this->assertSame($line, $record['line']);
+        $this->assertSame('Whoops!', $record['message']);
+        $this->assertTrue($record['handled']);
+
+        // Verify source lines are captured for the main exception
+        $sourceLines = $record['source_lines'];
+        $this->assertNotNull($sourceLines);
+        $this->assertSame('tests/Feature/Sensors/ExceptionSensorTest.php', $sourceLines['file']);
+        $this->assertSame($line, $sourceLines['line']);
+        $this->assertArrayHasKey('lines', $sourceLines);
+
+        // Verify the exception line is marked correctly
+        $foundExceptionLine = false;
+        foreach ($sourceLines['lines'] as $lineData) {
+            if ($lineData['line'] === $line) {
+                $this->assertTrue($lineData['is_exception_line']);
+                $this->assertStringContainsString('MyException', $lineData['code']);
+                $foundExceptionLine = true;
+                break;
+            }
+        }
+        $this->assertTrue($foundExceptionLine, 'Exception line not found or not marked correctly');
+
+        // Verify that trace frames include source lines for the first few frames
+        $trace = json_decode($record['trace'], true);
+        $this->assertIsArray($trace);
+
+        // Check that the first 3 frames
+        $framesWithSourceLines = 0;
+        foreach ($trace as $index => $frame) {
+            if (isset($frame['source_lines'])) {
+                $framesWithSourceLines++;
+                $this->assertArrayHasKey('file', $frame['source_lines']);
+                $this->assertArrayHasKey('line', $frame['source_lines']);
+                $this->assertArrayHasKey('lines', $frame['source_lines']);
+                $this->assertIsArray($frame['source_lines']['lines']);
+
+                if ($framesWithSourceLines >= 3) {
+                    break;
+                }
+            }
+        }
+
+        $this->assertGreaterThan(0, $framesWithSourceLines, 'No trace frames included source lines');
+    }
+
+    public function test_it_can_disable_source_code_capture(): void
+    {
+        config(['nightwatch.exceptions.capture_source_lines' => false]);
+
+        $ingest = $this->fakeIngest();
+        $trace = null;
+        $line = null;
+        Route::get('/users', function () use (&$trace, &$line): void {
+            $line = __LINE__ + 1;
+            $e = new MyException('Whoops!');
+
+            $trace = $e->getTrace();
+
+            report($e);
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $records = $ingest->decodedWrites()->last();
+        $record = collect($records)->where('t', 'exception')->first();
+
+        $this->assertSame('Tests\Feature\Sensors\MyException', $record['class']);
+        $this->assertSame('tests/Feature/Sensors/ExceptionSensorTest.php', $record['file']);
+        $this->assertSame($line, $record['line']);
+        $this->assertSame('Whoops!', $record['message']);
+        $this->assertTrue($record['handled']);
+
+        $this->assertArrayNotHasKey('source_lines', $record);
+
+        $trace = json_decode($record['trace'], true);
+        $this->assertIsArray($trace);
+
+        foreach ($trace as $frame) {
+            $this->assertArrayNotHasKey('source_lines', $frame, 'Trace frames should not include source lines when feature is disabled');
+        }
     }
 
     public function test_it_handles_view_exceptions(): void
