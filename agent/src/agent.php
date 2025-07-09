@@ -183,33 +183,37 @@ $server->start();
 $ingestDetails->hydrate();
 
 $restartingIn = null;
-$timer = $loop->addPeriodicTimer(60, function () use ($loop, $ingest, &$restartingIn, $error, $info, $basePath, $expectedSignature) {
+$timer = $loop->addPeriodicTimer(60, function () use ($loop, &$timer, $ingest, &$restartingIn, $error, $info, $basePath, $expectedSignature) {
     $signature = file_get_contents($basePath.'/signature.txt');
 
     if ($signature === false) {
         $error('Unable to read signature');
-
         return;
     }
 
+    if ($restartingIn != null && $restartingIn != 0) {
+        $info('Agent signature changed: restarting in '.$restartingIn.' minutes');
+        $restartingIn--;
+    }
+
     if ($signature != $expectedSignature) {
-        if ( $restartingIn == null )
-        {
-            $restartingIn = 5;
-        } else {
-            $restartingIn = $restartingIn - 1;
+        // Set restart countdown if not already set
+        if ($restartingIn === null) {
+            $restartingIn = 4;
+            $info('Agent signature changed: restarting in 5 minutes');
+
+            // Schedule the actual restart
+            $loop->addTimer(60 * 5, function () use ($info, $loop, $ingest, &$timer) {
+                $info('Agent signature changed: restarting');
+                $ingest->forceDigest()->finally(static function () use ($info, $loop) {
+                    $loop->stop();
+                    $info('Shutting down');
+                });
+                $loop->cancelTimer($timer);
+            });
         }
 
-        $info('Agent signature changed: restarting in '.$restartingIn.' minutes');
-
-        $loop->addTimer(60 * 5, function () use ($info, $loop, $ingest) {
-            $info('Agent signature changed: restarting');
-            $ingest->forceDigest()->finally(static function () use ($info, $loop) {
-                $loop->stop();
-
-                $info('Shutting down');
-            });
-        });
+        return;
     }
 });
 

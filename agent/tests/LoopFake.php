@@ -145,7 +145,7 @@ class LoopFake implements LoopInterface
     {
         foreach ($this->pendingTimers as $index => $pendingTimer) {
             if ($pendingTimer['instance'] !== $timer) {
-                throw(new RuntimeException('Timer not found in pending timers: '.print_r($pendingTimer['instance'], true)));
+
                 continue;
             }
 
@@ -231,10 +231,11 @@ class LoopFake implements LoopInterface
                     'periodic' => $periodic,
                 ];
 
-                array_shift($this->pendingTimers);
-
                 if($periodic){
-                    $this->addPeriodicTimer($timer->getInterval(), $timer->getCallback(), $scheduledBy);
+                    $this->pendingTimers[0]['runAt'] = $this->now + $interval;
+                    $this->sortPendingTimers();
+                } else {
+                    array_shift($this->pendingTimers);
                 }
 
                 continue;

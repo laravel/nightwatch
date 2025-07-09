@@ -35,6 +35,9 @@ class AgentTest extends TestCase
         file_put_contents(__DIR__.'/../../build/signature.txt', 'C8DB9D7EE8A6DB35E416926A3FDE38AA5913E0637CB7D833DA0ABA38E5C1A1F7E6FB927AC4CA67C658BC6B5ED819DDBD99B1C9B29A7B74E10D138D73FFAA03FC');
 
         $this->assertNull($e, $e?->getMessage() ?? '');
+        $loop->assertCanceled([
+            new Timer(interval: 60, canceledAt: 360, scheduledAt: 0, scheduledBy: 'Agent'),
+        ]);
         $this->assertLogMatches(<<<'OUTPUT'
             {date} {info} Authentication successful {duration}
             {date} {info} Agent signature changed: restarting in 5 minutes
@@ -48,16 +51,17 @@ class AgentTest extends TestCase
 
         $loop->assertRun([
             new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
-            new Timer(interval: 60, runAt: 60, scheduledAt: 0, scheduledBy: 'Agent', periodic: true),
-            new Timer(interval: 60, runAt: 120, scheduledAt: 60, scheduledBy: 'Agent', periodic: true),
-            new Timer(interval: 60, runAt: 180, scheduledAt: 120, scheduledBy: 'Agent', periodic: true),
-            new Timer(interval: 60, runAt: 240, scheduledAt: 180, scheduledBy: 'Agent', periodic: true),
-            new Timer(interval: 60, runAt: 300, scheduledAt: 240, scheduledBy: 'Agent', periodic: true),
+            new Timer(interval: 60, runAt: 60, scheduledAt: 0, scheduledBy: 'Agent', periodic: true), // see signature changed
+            new Timer(interval: 60, runAt: 120, scheduledAt: 0, scheduledBy: 'Agent', periodic: true), // 4 mins left
+            new Timer(interval: 60, runAt: 180, scheduledAt: 0, scheduledBy: 'Agent', periodic: true), // 3 mins left
+            new Timer(interval: 60, runAt: 240, scheduledAt: 0, scheduledBy: 'Agent', periodic: true), // 2 mins left
+            new Timer(interval: 60, runAt: 300, scheduledAt: 0, scheduledBy: 'Agent', periodic: true), // 1 min left
+            new Timer(interval: 60, runAt: 360, scheduledAt: 0, scheduledBy: 'Agent', periodic: true), // shutting down
             new Timer(interval: 300, runAt: 360, scheduledAt: 60, scheduledBy: '::Laravel\NightwatchAgent\{closure}'),
         ]);
 
         $loop->assertPending([
-            new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+            new Timer(interval: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
         $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),
