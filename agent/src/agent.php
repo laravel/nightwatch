@@ -43,6 +43,14 @@ $loop ??= null;
 /** @var ?string $refreshToken */
 $refreshToken ??= $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
 /** @var string $refreshToken */
+/** @var ?string $expectedSignature */
+$expectedSignature = file_get_contents($basePath.'/signature.txt');
+if ($expectedSignature === false) {
+    $error("Unable to read the agent's signature");
+
+    return;
+}
+/** @var string $expectedSignature */
 /** @var ?string $baseUrl */
 $baseUrl ??= $_SERVER['NIGHTWATCH_BASE_URL'] ?? 'https://nightwatch.laravel.com';
 /** @var string $baseUrl */
@@ -174,7 +182,7 @@ $server->start();
 
 $ingestDetails->hydrate();
 
-$loop->addPeriodicTimer(60, function () use ($error, $basePath) {
+$loop->addPeriodicTimer(60, function () use ($error, $info, $basePath, $expectedSignature) {
     $signature = file_get_contents($basePath.'/signature.txt');
 
     if ($signature === false) {
@@ -183,7 +191,20 @@ $loop->addPeriodicTimer(60, function () use ($error, $basePath) {
         return;
     }
 
-    echo $signature;
+    if ($signature != $expectedSignature) {
+        $info('Agent signature changed: restarting in 5 minutes');
+
+        // Schedule a restart in 5 minutes
+        $loop = Loop::get();
+        $loop->addTimer(60 * 5, function () use ($info) {
+            $info('Agent signature changed: restarting');
+            $ingest->forceDigest()->finally(static function () use ($info, $loop) {
+                $loop->stop();
+
+                $info('Shutting down');
+            });
+        });
+    }
 });
 
 $loop->run();
