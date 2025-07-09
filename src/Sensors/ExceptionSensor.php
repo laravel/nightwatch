@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Location;
@@ -41,6 +42,7 @@ final class ExceptionSensor
         private RequestState|CommandState $executionState,
         private Clock $clock,
         private Location $location,
+        private Repository $config,
     ) {
         //
     }
@@ -69,9 +71,10 @@ final class ExceptionSensor
 
         $this->executionState->exceptions++;
 
-        $sourceLines = $this->collectSourceCodeLines($file, $line);
+        $captureSourceLines = $this->config->get('nightwatch.exceptions.capture_source_lines', true);
+        $sourceLines = $captureSourceLines ? $this->collectSourceCodeLines($file, $line) : null;
 
-        return [
+        $payload = [
             'v' => 1,
             't' => 'exception',
             'timestamp' => $nowMicrotime,
@@ -89,12 +92,17 @@ final class ExceptionSensor
             'line' => $line ?? 0,
             'message' => Str::text($normalizedException->getMessage()),
             'code' => (string) $normalizedException->getCode(),
-            'trace' => Str::mediumText($this->serializeTrace($normalizedException)),
+            'trace' => Str::mediumText($this->serializeTrace($normalizedException, $captureSourceLines)),
             'handled' => $handled,
-            'source_lines' => $sourceLines,
             'php_version' => $this->executionState->phpVersion,
             'laravel_version' => $this->executionState->laravelVersion,
         ];
+
+        if ($sourceLines !== null) {
+            $payload['source_lines'] = $sourceLines;
+        }
+
+        return $payload;
     }
 
     private function wasManuallyReported(Throwable $e): bool
@@ -172,9 +180,10 @@ final class ExceptionSensor
     /**
      * @see https://github.com/php/php-src/blob/f17c2203883ddf53adfcb33d85523d11429729ab/Zend/zend_exceptions.c
      */
-    private function serializeTrace(Throwable $e): string
+    private function serializeTrace(Throwable $e, bool $captureSourceLines = true): string
     {
         $trace = [];
+        $frameIndex = 0;
 
         foreach ($e->getTrace() as $frame) {
             $file = match (true) {
@@ -183,8 +192,12 @@ final class ExceptionSensor
                 default => $this->location->normalizeFile($frame['file']),
             };
 
+            $originalFile = $file;
+            $frameLine = null;
+
             if (isset($frame['line']) && is_int($frame['line'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
                 $file .= ':'.$frame['line'];
+                $frameLine = $frame['line'];
             }
 
             $source = '';
@@ -226,7 +239,18 @@ final class ExceptionSensor
 
             $source .= ')';
 
-            $trace[] = ['file' => $file, 'source' => $source];
+            $traceFrame = ['file' => $file, 'source' => $source];
+
+            // Add source code lines for the first few frames if feature is enabled
+            if ($captureSourceLines && $frameIndex < 3 && $originalFile !== '[internal function]' && $originalFile !== '[unknown file]') {
+                $sourceLines = $this->collectSourceCodeLines($originalFile, $frameLine);
+                if ($sourceLines !== null) {
+                    $traceFrame['source_lines'] = $sourceLines;
+                }
+            }
+
+            $trace[] = $traceFrame;
+            $frameIndex++;
         }
 
         return json_encode($trace, flags: JSON_THROW_ON_ERROR);

@@ -21,6 +21,10 @@ return [
         'log_level' => env('NIGHTWATCH_LOG_LEVEL', env('LOG_LEVEL', 'debug')),
     ],
 
+    'exceptions' => [
+        'capture_source_lines' => env('NIGHTWATCH_EXCEPTION_CAPTURE_SOURCE_LINES', true),
+    ],
+
     'ingest' => [
         'uri' => env('NIGHTWATCH_INGEST_URI', '127.0.0.1:2407'),
         'timeout' => env('NIGHTWATCH_INGEST_TIMEOUT', 0.5),

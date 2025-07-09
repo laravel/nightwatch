@@ -259,6 +259,9 @@ final class NightwatchServiceProvider extends ServiceProvider
                     'ignore_outgoing_requests' => (bool) ($this->nightwatchConfig['filtering']['ignore_outgoing_requests'] ?? false),
                     'ignore_queries' => (bool) ($this->nightwatchConfig['filtering']['ignore_queries'] ?? false),
                 ],
+                'exceptions' => [
+                    'capture_source_lines' => (bool) ($this->nightwatchConfig['exceptions']['capture_source_lines'] ?? true),
+                ],
             ],
         ));
     }

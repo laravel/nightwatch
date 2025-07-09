@@ -242,6 +242,7 @@ final class SensorManager
             executionState: $this->executionState,
             clock: $this->clock,
             location: $this->location,
+            config: $this->config,
         );
 
         return $sensor($e, $handled);
