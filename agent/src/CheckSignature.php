@@ -12,6 +12,8 @@ class CheckSignature
 {
     private TimerInterface $signatureCheckTimer;
 
+    private TimerInterface $shutdownTimer;
+
     /**
      * @param  LoopInterface  $loop
      * @param  (Closure(int $shuttingDownIn): void)  $onShutdownInitiated
@@ -19,8 +21,9 @@ class CheckSignature
      */
     public function __construct(
         private $loop,
-        private string $expectedSignature,
         private string $basePath,
+        private string $expectedSignature,
+        private int $shutdownDelayInMinutes,
         private Closure $onShutdownInitiated,
         private Closure $onShutdown,
     ) {
@@ -49,18 +52,16 @@ class CheckSignature
     {
         $this->loop->cancelTimer($this->signatureCheckTimer);
 
-        $shuttingDownIn = 5;
+        $shuttingDownIn = $this->shutdownDelayInMinutes;
         ($this->onShutdownInitiated)($shuttingDownIn);
-        $shuttingDownIn--;
 
-        $shutdownTimer = $this->loop->addPeriodicTimer(60, function () use (&$shutdownTimer, &$shuttingDownIn) {
+        $this->shutdownTimer = $this->loop->addPeriodicTimer(60, function () use (&$shuttingDownIn) {
             if ($shuttingDownIn <= 0) {
-                /** @var TimerInterface $shutdownTimer */
-                $this->loop->cancelTimer($shutdownTimer);
+                $this->loop->cancelTimer($this->shutdownTimer);
                 ($this->onShutdown)();
             } else {
-                ($this->onShutdownInitiated)($shuttingDownIn);
                 $shuttingDownIn--;
+                ($this->onShutdownInitiated)($shuttingDownIn);
             }
         });
     }

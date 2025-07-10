@@ -176,6 +176,7 @@ $checkSignature = new CheckSignature(
     loop: $loop,
     basePath: $basePath,
     expectedSignature: $expectedSignature,
+    shutdownDelayInMinutes: 5,
     onShutdownInitiated: static function ($shuttingDownIn) use ($info) {
         $info('Agent signature changed: shutting down in '.$shuttingDownIn.' minutes');
     },
