@@ -240,6 +240,7 @@ final class ExceptionSensor
                 if ($sourceLines !== null) {
                     $traceFrame['source_lines'] = $sourceLines;
                 }
+
             }
 
             $trace[] = $traceFrame;

@@ -218,71 +218,6 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.exceptions', 3);
     }
 
-    public function test_it_captures_source_code_lines(): void
-    {
-        Config::set('nightwatch.exceptions.capture_source_lines', true);
-
-        $ingest = $this->fakeIngest();
-        $trace = null;
-        $line = null;
-        Route::get('/users', function () use (&$trace, &$line): void {
-            $line = __LINE__ + 1;
-            $e = new MyException('Whoops!');
-
-            $trace = $e->getTrace();
-
-            report($e);
-        });
-
-        $response = $this->get('/users');
-
-        $response->assertOk();
-        $ingest->assertWrittenTimes(1);
-        $records = $ingest->decodedWrites()->last();
-        $record = collect($records)->where('t', 'exception')->first();
-
-        $this->assertSame('Tests\Feature\Sensors\MyException', $record['class']);
-        $this->assertSame('tests/Feature/Sensors/ExceptionSensorTest.php', $record['file']);
-        $this->assertSame($line, $record['line']);
-        $this->assertSame('Whoops!', $record['message']);
-        $this->assertTrue($record['handled']);
-
-        // Verify that there is NO top-level source_lines field
-        $this->assertArrayNotHasKey('source_lines', $record);
-
-        // Verify that trace frames include source lines for the first few frames
-        $trace = json_decode($record['trace'], true);
-        $this->assertIsArray($trace);
-
-        // Check that the first few frames have source lines captured
-        $framesWithSourceLines = 0;
-        foreach ($trace as $index => $frame) {
-            if (isset($frame['source_lines'])) {
-                $framesWithSourceLines++;
-                $this->assertArrayHasKey('file', $frame['source_lines']);
-                $this->assertArrayHasKey('line', $frame['source_lines']);
-                $this->assertArrayHasKey('lines', $frame['source_lines']);
-                $this->assertIsArray($frame['source_lines']['lines']);
-
-                // Verify that each line has the expected structure
-                foreach ($frame['source_lines']['lines'] as $lineData) {
-                    $this->assertArrayHasKey('line', $lineData);
-                    $this->assertArrayHasKey('code', $lineData);
-                    $this->assertArrayHasKey('is_exception_line', $lineData);
-                    $this->assertIsInt($lineData['line']);
-                    $this->assertIsString($lineData['code']);
-                    $this->assertIsBool($lineData['is_exception_line']);
-                }
-
-                if ($framesWithSourceLines >= 3) {
-                    break;
-                }
-            }
-        }
-
-        $this->assertGreaterThan(0, $framesWithSourceLines, 'No trace frames included source lines');
-    }
-
     public function test_it_can_disable_source_code_capture(): void
     {
         config(['nightwatch.exceptions.capture_source_lines' => false]);
@@ -801,6 +736,355 @@ class ExceptionSensorTest extends TestCase
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('exception:0.handled', true);
+    }
+
+    public function test_it_captures_source_code_lines(): void
+    {
+        Config::set('nightwatch.exceptions.capture_source_lines', false);
+
+        $ingest = $this->fakeIngest();
+
+        $response = $this->get('/test-exception');
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:*', [
+            [
+                'v' => 1,
+                't' => 'exception',
+                'timestamp' => 946688523.456789,
+                'deploy' => 'v1.2.3',
+                'server' => 'web-01',
+                '_group' => hash('xxh128', 'TypeError,0,workbench/app/Mail/MyMail.php,28'),
+                'trace_id' => '00000000-0000-0000-0000-000000000000',
+                'execution_source' => 'request',
+                'execution_id' => '00000000-0000-0000-0000-000000000001',
+                'execution_preview' => 'GET /test-exception',
+                'execution_stage' => 'action',
+                'user' => '',
+                'class' => 'TypeError',
+                'file' => 'workbench/app/Mail/MyMail.php',
+                'line' => 28,
+                'message' => 'Illuminate\Mail\Mailables\Envelope::__construct(): Argument #6 ($subject) must be of type ?string, array given, called in /Users/philliphartin/Development/nightwatch/workbench/app/Mail/MyMail.php on line 28',
+                'code' => '0',
+                'trace' => json_encode([
+                    [
+                        'file' => 'workbench/app/Mail/MyMail.php:28',
+                        'source' => 'Illuminate\\Mail\\Mailables\\Envelope->__construct(null, array, array, array, array, array)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Mail/Mailable.php:1728',
+                        'source' => 'App\\Mail\\MyMail->envelope()',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Mail/Mailable.php:1684',
+                        'source' => 'Illuminate\\Mail\\Mailable->ensureEnvelopeIsHydrated()',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Mail/Mailable.php:201',
+                        'source' => 'Illuminate\\Mail\\Mailable->prepareMailableForDelivery()',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Support/Traits/Localizable.php:19',
+                        'source' => 'Illuminate\\Mail\\Mailable->{closure:Illuminate\\Mail\\Mailable::send():200}()',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Mail/Mailable.php:200',
+                        'source' => 'Illuminate\\Mail\\Mailable->withLocale(null, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Mail/Mailer.php:353',
+                        'source' => 'Illuminate\\Mail\\Mailable->send(Illuminate\\Mail\\Mailer)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Mail/Mailer.php:300',
+                        'source' => 'Illuminate\\Mail\\Mailer->sendMailable(App\\Mail\\MyMail)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Mail/PendingMail.php:123',
+                        'source' => 'Illuminate\\Mail\\Mailer->send(App\\Mail\\MyMail)',
+                    ],
+                    [
+                        'file' => 'workbench/app/Http/ExceptionTestController.php:12',
+                        'source' => 'Illuminate\\Mail\\PendingMail->send(App\\Mail\\MyMail)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:46',
+                        'source' => 'App\\Http\\ExceptionTestController->__invoke()',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Routing/Route.php:265',
+                        'source' => 'Illuminate\\Routing\\ControllerDispatcher->dispatch(Illuminate\\Routing\\Route, App\\Http\\ExceptionTestController, string)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Routing/Route.php:211',
+                        'source' => 'Illuminate\\Routing\\Route->runController()',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Routing/Router.php:808',
+                        'source' => 'Illuminate\\Routing\\Route->run()',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:169',
+                        'source' => 'Illuminate\\Routing\\Router->{closure:Illuminate\\Routing\\Router::runRouteWithinStack():807}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'src/Hooks/RouteMiddleware.php:34',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:Illuminate\\Pipeline\\Pipeline::prepareDestination():167}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Laravel\\Nightwatch\\Hooks\\RouteMiddleware->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php:50',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Routing\\Middleware\\SubstituteBindings->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php:87',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php:48',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\View\\Middleware\\ShareErrorsFromSession->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php:120',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php:63',
+                        'source' => 'Illuminate\\Session\\Middleware\\StartSession->handleStatefulRequest(Illuminate\\Http\\Request, Illuminate\\Session\\Store, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Session\\Middleware\\StartSession->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php:36',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php:74',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Cookie\\Middleware\\EncryptCookies->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:126',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Routing/Router.php:807',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->then(Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Routing/Router.php:786',
+                        'source' => 'Illuminate\\Routing\\Router->runRouteWithinStack(Illuminate\\Routing\\Route, Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Routing/Router.php:750',
+                        'source' => 'Illuminate\\Routing\\Router->runRoute(Illuminate\\Http\\Request, Illuminate\\Routing\\Route)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Routing/Router.php:739',
+                        'source' => 'Illuminate\\Routing\\Router->dispatchToRoute(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:200',
+                        'source' => 'Illuminate\\Routing\\Router->dispatch(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:169',
+                        'source' => 'Illuminate\\Foundation\\Http\\Kernel->{closure:Illuminate\\Foundation\\Http\\Kernel::dispatchToRouter():197}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/livewire/livewire/src/Features/SupportDisablingBackButtonCache/DisableBackButtonCacheMiddleware.php:19',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:Illuminate\\Pipeline\\Pipeline::prepareDestination():167}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Livewire\\Features\\SupportDisablingBackButtonCache\\DisableBackButtonCacheMiddleware->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/vapor-core/src/Http/Middleware/ServeStaticAssets.php:21',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Laravel\\Vapor\\Http\\Middleware\\ServeStaticAssets->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php:21',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php:31',
+                        'source' => 'Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php:21',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php:51',
+                        'source' => 'Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php:27',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Http\\Middleware\\ValidatePostSize->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php:109',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php:48',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Http\\Middleware\\HandleCors->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php:58',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Http\\Middleware\\TrustProxies->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php:22',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php:26',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Illuminate\\Http\\Middleware\\ValidatePathEncoding->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'src/Hooks/GlobalMiddleware.php:53',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
+                        'source' => 'Laravel\\Nightwatch\\Hooks\\GlobalMiddleware->handle(Illuminate\\Http\\Request, Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:126',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:175',
+                        'source' => 'Illuminate\\Pipeline\\Pipeline->then(Closure)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:144',
+                        'source' => 'Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php:607',
+                        'source' => 'Illuminate\\Foundation\\Http\\Kernel->handle(Illuminate\\Http\\Request)',
+                    ],
+                    [
+                        'file' => 'vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php:368',
+                        'source' => 'Orchestra\\Testbench\\TestCase->call(string, string, array, array, array, array)',
+                    ],
+                    [
+                        'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php:747',
+                        'source' => 'Orchestra\\Testbench\\TestCase->get(string)',
+                    ],
+                    [
+                        'file' => 'vendor/phpunit/phpunit/src/Framework/TestCase.php:1656',
+                        'source' => 'Tests\\Feature\\Sensors\\ExceptionSensorTest->test_it_captures_source_code_lines()',
+                    ],
+                    [
+                        'file' => 'vendor/phpunit/phpunit/src/Framework/TestCase.php:514',
+                        'source' => 'PHPUnit\\Framework\\TestCase->runTest()',
+                    ],
+                    [
+                        'file' => 'vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php:87',
+                        'source' => 'PHPUnit\\Framework\\TestCase->runBare()',
+                    ],
+                    [
+                        'file' => 'vendor/phpunit/phpunit/src/Framework/TestCase.php:361',
+                        'source' => 'PHPUnit\\Framework\\TestRunner->run(Tests\\Feature\\Sensors\\ExceptionSensorTest)',
+                    ],
+                    [
+                        'file' => 'vendor/phpunit/phpunit/src/Framework/TestSuite.php:369',
+                        'source' => 'PHPUnit\\Framework\\TestCase->run()',
+                    ],
+                    [
+                        'file' => 'vendor/phpunit/phpunit/src/Framework/TestSuite.php:369',
+                        'source' => 'PHPUnit\\Framework\\TestSuite->run()',
+                    ],
+                    [
+                        'file' => 'vendor/phpunit/phpunit/src/Framework/TestSuite.php:369',
+                        'source' => 'PHPUnit\\Framework\\TestSuite->run()',
+                    ],
+                    [
+                        'file' => 'vendor/phpunit/phpunit/src/TextUI/TestRunner.php:64',
+                        'source' => 'PHPUnit\\Framework\\TestSuite->run()',
+                    ],
+                    [
+                        'file' => 'vendor/phpunit/phpunit/src/TextUI/Application.php:210',
+                        'source' => 'PHPUnit\\TextUI\\TestRunner->run(PHPUnit\\TextUI\\Configuration\\Configuration, PHPUnit\\Runner\\ResultCache\\DefaultResultCache, PHPUnit\\Framework\\TestSuite)',
+                    ],
+                    [
+                        'file' => 'vendor/phpunit/phpunit/phpunit:104',
+                        'source' => 'PHPUnit\\TextUI\\Application->run(array)',
+                    ],
+                    [
+                        'file' => 'vendor/bin/phpunit:122',
+                        'source' => 'include(string)',
+                    ],
+                ]),
+                'handled' => false,
+                'php_version' => '8.4.1',
+                'laravel_version' => '11.33.0',
+            ],
+        ]);
     }
 }
 
