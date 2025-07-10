@@ -115,12 +115,12 @@ class AgentTest extends TestCase
 
     public static function writeSignature(string $content = 'abcd'): void
     {
-        file_put_contents(__DIR__ . '/../../build/signature.txt', $content);
+        file_put_contents(__DIR__.'/../../build/signature.txt', $content);
     }
 
     public static function getSignature(): string
     {
-        return file_get_contents(__DIR__ . '/../../build/signature.txt') ?: '';
+        return file_get_contents(__DIR__.'/../../build/signature.txt') ?: '';
     }
 
     public static function touchSignature(): void
