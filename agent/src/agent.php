@@ -77,12 +77,16 @@ $error = static function (string $message): void {
 $debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
 /** @var ?string $basePath */
 $basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
-$expectedSignature = file_get_contents($basePath.'/signature.txt');
+
+$signaturePath = $basePath.'/signature.txt';
+$expectedSignature = file_get_contents($signaturePath);
+
 if ($expectedSignature === false) {
     $error("Unable to read the agent's signature");
 
     return;
 }
+
 $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 
 /*
@@ -174,7 +178,7 @@ $server = new Server(
 
 $checkSignature = new CheckSignature(
     loop: $loop,
-    basePath: $basePath,
+    signaturePath: $signaturePath,
     expectedSignature: $expectedSignature,
     shutdownDelayInMinutes: 5,
     onShutdownInitiated: static function ($shuttingDownIn) use ($info) {

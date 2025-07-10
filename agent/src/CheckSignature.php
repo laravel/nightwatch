@@ -21,7 +21,7 @@ class CheckSignature
      */
     public function __construct(
         private $loop,
-        private string $basePath,
+        private string $signaturePath,
         private string $expectedSignature,
         private int $shutdownDelayInMinutes,
         private Closure $onShutdownInitiated,
@@ -32,14 +32,12 @@ class CheckSignature
 
     public function start(): void
     {
-        $this->signatureCheckTimer = $this->loop->addPeriodicTimer(60, function () {
-            $this->signatureCheck();
-        });
+        $this->signatureCheckTimer = $this->loop->addPeriodicTimer(60, $this->signatureCheck(...));
     }
 
     private function signatureCheck(): void
     {
-        $signature = @file_get_contents($this->basePath.'/signature.txt');
+        $signature = @file_get_contents($this->signaturePath);
 
         if ($signature === $this->expectedSignature) {
             return;
