@@ -183,7 +183,7 @@ $server->start();
 $ingestDetails->hydrate();
 
 $restartingIn = null;
-$timer = $loop->addPeriodicTimer(60, static function () use ($loop, &$timer, $ingest, &$restartingIn, $error, $info, $basePath, $expectedSignature) {
+$signatureCheckTimer = $loop->addPeriodicTimer(60, static function () use ($loop, &$signatureCheckTimer, $ingest, &$restartingIn, $error, $info, $basePath, $expectedSignature) {
     $signature = file_get_contents($basePath.'/signature.txt');
 
     if ($signature === false) {
@@ -198,21 +198,19 @@ $timer = $loop->addPeriodicTimer(60, static function () use ($loop, &$timer, $in
     }
 
     if ($signature !== $expectedSignature) {
-        // Set restart countdown if not already set
         if ($restartingIn === null) {
             $restartingIn = 4;
             $info('Agent signature changed: restarting in 5 minutes');
 
-            // Schedule the actual restart
-            $loop->addTimer(60 * 5, static function () use ($info, $loop, $ingest, &$timer) {
+            $loop->addTimer(60 * 5, static function () use ($info, $loop, $ingest, &$signatureCheckTimer) {
                 $info('Agent signature changed: restarting');
+                if ($signatureCheckTimer instanceof \React\EventLoop\TimerInterface) {
+                    $loop->cancelTimer($signatureCheckTimer);
+                }
                 $ingest->forceDigest()->finally(static function () use ($info, $loop) {
                     $loop->stop();
                     $info('Shutting down');
                 });
-                if ($timer instanceof \React\EventLoop\TimerInterface) {
-                    $loop->cancelTimer($timer);
-                }
             });
         }
 
