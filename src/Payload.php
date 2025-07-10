@@ -50,7 +50,7 @@ final class Payload
 
         $length = strlen(self::PAYLOAD_VERSION) + 1 + strlen($this->tokenHash) + 1 + strlen($payload);
 
-        return $length . ':' . self::PAYLOAD_VERSION . ':' . $this->tokenHash . ':' . $payload;
+        return $length.':'.self::PAYLOAD_VERSION.':'.$this->tokenHash.':'.$payload;
     }
 
     public function rawPayload(): string
