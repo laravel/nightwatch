@@ -15,9 +15,12 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\SendQueuedMailable;
 use Illuminate\Queue\CallQueuedClosure;
+use Illuminate\Queue\Connectors\DatabaseConnector;
 use Illuminate\Queue\Connectors\SqsConnector;
 use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Queue\DatabaseQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Jobs\DatabaseJob;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\SqsQueue;
 use Illuminate\Support\Facades\Artisan;
@@ -960,6 +963,44 @@ class JobAttemptSensorTest extends TestCase
         });
     }
 
+    public function test_queue_workers_that_remove_successful_jobs_and_make_network_call_to_determine_attempts_like_beanstalkd_can_capture_attempts(): void
+    {
+        $ingest = $this->fakeIngest();
+        Queue::addConnector('database', function () {
+            return new class($this->app['db']) extends DatabaseConnector
+            {
+                public function connect(array $config)
+                {
+                    return new class($this->connections->connection($config['connection'] ?? null), $config['table'], $config['queue'], $config['retry_after'] ?? 60, $config['after_commit'] ?? null) extends DatabaseQueue
+                    {
+                        protected function marshalJob($queue, $job)
+                        {
+                            return new class($this->container, $this, $this->markJobAsReserved($job), $this->connectionName, $queue) extends DatabaseJob
+                            {
+                                public function attempts()
+                                {
+                                    if ($this->instance?->handled) {
+                                        throw new RuntimeException('Job has been deleted');
+                                    }
+
+                                    return 1;
+                                }
+                            };
+                        }
+                    };
+                }
+            };
+        });
+
+        JobThatMarksItselfAsHandled::dispatch();
+
+        Artisan::call('queue:work', $this->workOptions('queue:work'));
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:*', []);
+        $ingest->assertLatestWrite('job-attempt:0.attempt', 1);
+    }
+
     protected function whenVapor(string $workCommand, mixed $then, mixed $else = null): mixed
     {
         if ($workCommand === 'vapor:work') {
@@ -967,7 +1008,7 @@ class JobAttemptSensorTest extends TestCase
         } else {
             return value($else);
         }
-    }
+}
 }
 
 final class ProcessedJob implements ShouldQueue
@@ -1048,5 +1089,17 @@ class JobThatDispatchesAnotherJob implements ShouldQueue
     public function handle(): void
     {
         JobThatDispatchesAnotherJob::dispatch();
+    }
+}
+
+class JobThatMarksItselfAsHandled implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public $handled = false;
+
+    public function handle(): void
+    {
+        $this->handled = true;
     }
 }

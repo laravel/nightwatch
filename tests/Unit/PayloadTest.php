@@ -8,16 +8,15 @@ use RuntimeException;
 use Tests\TestCase;
 use Throwable;
 
-use function file_get_contents;
 use function json_encode;
-use function substr;
 
 class PayloadTest extends TestCase
 {
     #[DataProvider('jsonPayloads')]
-    public function test_it_can_determine_if_a_jso_n_payload_is_empty(mixed $value, bool $empty): void
+    public function test_it_can_determine_if_a_json_payload_is_empty(mixed $value, bool $empty): void
     {
-        $payload = Payload::json(json_encode($value, flags: JSON_THROW_ON_ERROR));
+        $tokenHash = self::tokenHash();
+        $payload = Payload::json(json_encode($value, flags: JSON_THROW_ON_ERROR), $tokenHash);
 
         $this->assertSame($empty, $payload->isEmpty());
     }
@@ -42,7 +41,7 @@ class PayloadTest extends TestCase
     #[DataProvider('textPayloads')]
     public function test_it_can_determine_if_a_text_payload_is_empty(string $value, bool $empty): void
     {
-        $payload = Payload::text($value);
+        $payload = Payload::text($value, 'tokenHash');
 
         $this->assertSame($empty, $payload->isEmpty());
     }
@@ -56,15 +55,17 @@ class PayloadTest extends TestCase
 
     public function test_it_can_pull_the_bencoded_signed_value(): void
     {
-        $payload = Payload::text('abc123');
+        $tokenHash = self::tokenHash();
+        $payload = Payload::text('abc123', $tokenHash);
         $encoded = $payload->pull();
 
-        $this->assertSame('14:'.Payload::SIGNATURE.':abc123', $encoded);
+        $this->assertSame('17:'.Payload::PAYLOAD_VERSION.':'.$tokenHash.':abc123', $encoded);
     }
 
     public function test_it_can_only_pull_the_payload_once(): void
     {
-        $payload = Payload::text('abc123');
+        $tokenHash = self::tokenHash();
+        $payload = Payload::text('abc123', $tokenHash);
         $payload->pull();
 
         try {
@@ -77,7 +78,7 @@ class PayloadTest extends TestCase
 
     public function test_it_frees_memory_after_pulling_the_payload(): void
     {
-        $payload = Payload::text('abc123');
+        $payload = Payload::text('abc123', 'tokenHash');
 
         $this->assertSame('abc123', $payload->rawPayload());
 
@@ -85,16 +86,9 @@ class PayloadTest extends TestCase
         $this->assertSame('', $payload->rawPayload());
     }
 
-    public function test_it_has_up_to_date_signature(): void
+    public function test_it_has_up_to_date_payload_version(): void
     {
-        $signature = file_get_contents(__DIR__.'/../../agent/build/signature.txt');
-
-        if ($signature === false) {
-            throw new RuntimeException('Unable to read signature');
-        }
-
-        $signature = substr($signature, 0, 7);
-
-        $this->assertSame($signature, Payload::SIGNATURE);
+        $payloadVersion = 'v1';
+        $this->assertSame($payloadVersion, Payload::PAYLOAD_VERSION, 'Payload version has changed! this indicates that a new major version must be tagged');
     }
 }

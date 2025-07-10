@@ -8,9 +8,13 @@ use function strlen;
 
 class Payload
 {
+    public const EXPECTED_PAYLOAD_VERSION = 'v1';
+
     public string $value = '';
 
-    public string $signature = '';
+    public string $version = '';
+
+    public string $tokenHash = '';
 
     public ?int $length = null;
 
@@ -22,7 +26,7 @@ class Payload
 
         $this->parsePayload();
 
-        $this->complete = $this->length === (strlen($this->signature) + 1 + strlen($this->value));
+        $this->complete = $this->length === (strlen($this->version) + 1 + (strlen($this->tokenHash)) + 1 + strlen($this->value));
     }
 
     private function parsePayload(): void
@@ -31,14 +35,20 @@ class Payload
             return;
         }
 
-        $bits = explode(':', $this->value, 3);
+        $bits = explode(':', $this->value, 4);
 
-        if (count($bits) !== 3) {
+        if (count($bits) !== 4) {
             return;
         }
 
         $this->length = (int) $bits[0];
-        $this->signature = $bits[1];
-        $this->value = $bits[2];
+        $this->version = $bits[1];
+        $this->tokenHash = $bits[2];
+        $this->value = $bits[3];
+    }
+
+    public function versionIsValid(): bool
+    {
+        return $this->version === self::EXPECTED_PAYLOAD_VERSION;
     }
 }

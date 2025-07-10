@@ -17,7 +17,7 @@ final class Payload
      *
      * Do not modify or re-locate this constant.
      */
-    public const SIGNATURE = '76D218F';
+    public const PAYLOAD_VERSION = 'v1';
 
     private bool $pulled = false;
 
@@ -27,18 +27,19 @@ final class Payload
     public function __construct(
         private string $type,
         private string $payload,
+        private string $tokenHash,
     ) {
         //
     }
 
-    public static function text(string $payload): self
+    public static function text(string $payload, string $tokenHash): self
     {
-        return new self('TEXT', $payload);
+        return new self('TEXT', $payload, $tokenHash);
     }
 
-    public static function json(string $payload): self
+    public static function json(string $payload, string $tokenHash): self
     {
-        return new self('JSON', $payload);
+        return new self('JSON', $payload, $tokenHash);
     }
 
     public function pull(): string
@@ -52,9 +53,9 @@ final class Payload
 
         $this->payload = '';
 
-        $length = strlen(self::SIGNATURE) + 1 + strlen($payload);
+        $length = strlen(self::PAYLOAD_VERSION) + 1 + strlen($this->tokenHash) + 1 + strlen($payload);
 
-        return $length.':'.self::SIGNATURE.':'.$payload;
+        return $length.':'.self::PAYLOAD_VERSION.':'.$this->tokenHash.':'.$payload;
     }
 
     public function rawPayload(): string

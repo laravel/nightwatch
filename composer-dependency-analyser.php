@@ -10,4 +10,4 @@ return (new Configuration)
     ->ignoreErrorsOnPackageAndPath('livewire/livewire', __DIR__.'/src/NightwatchServiceProvider.php', [ErrorType::DEV_DEPENDENCY_IN_PROD])
     ->ignoreErrorsOnPackageAndPath('livewire/livewire', __DIR__.'/src/Hooks/LivewireListener.php', [ErrorType::DEV_DEPENDENCY_IN_PROD])
     ->ignoreErrorsOnPath(__DIR__.'/tests/Feature/Sensors/QuerySensorTest.php', [ErrorType::UNKNOWN_CLASS])
-    ->ignoreUnknownClasses(['Laravel\Octane\Events\RequestReceived']);
+    ->ignoreUnknownClasses(['Laravel\Octane\Events\RequestReceived', 'Laravel\NightwatchAgent\Payload']);

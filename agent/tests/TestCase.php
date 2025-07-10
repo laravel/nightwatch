@@ -11,8 +11,10 @@ use Throwable;
 use function debug_backtrace;
 use function file_get_contents;
 use function file_put_contents;
+use function hash;
 use function is_array;
 use function is_file;
+use function is_string;
 use function rand;
 use function serialize;
 use function str_replace;
@@ -100,17 +102,6 @@ abstract class TestCase extends BaseTestCase
         return [$output, null];
     }
 
-    public static function agentSignature(): string
-    {
-        $signature = file_get_contents(__DIR__.'./../build/signature.txt');
-
-        if ($signature === false) {
-            throw new RuntimeException('Unable to read signature');
-        }
-
-        return substr($signature, 0, 7);
-    }
-
     protected function functionName(): string
     {
         return static::class.'::'.debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 2)[1]['function'];
@@ -127,5 +118,15 @@ abstract class TestCase extends BaseTestCase
         $this->assertMatchesRegularExpression("#^{$expected}$#", $actual);
 
         return $this;
+    }
+
+    public static function tokenHash(): string
+    {
+        $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
+        if (! is_string($refreshToken)) {
+            throw new RuntimeException('NIGHTWATCH_TOKEN invalid');
+        }
+
+        return substr(hash('xxh128', $refreshToken), 0, 7);
     }
 }

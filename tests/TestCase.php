@@ -30,12 +30,15 @@ use function collect;
 use function dd;
 use function env;
 use function fopen;
+use function hash;
+use function is_string;
 use function method_exists;
 use function now;
 use function realpath;
 use function sprintf;
 use function stream_wrapper_register;
 use function stream_wrapper_unregister;
+use function substr;
 use function touch;
 
 abstract class TestCase extends OrchestraTestCase
@@ -228,5 +231,16 @@ abstract class TestCase extends OrchestraTestCase
         if ($condition) {
             $this->markTestSkipped($message);
         }
+    }
+
+    public static function tokenHash(): string
+    {
+        $refreshToken = $_ENV['NIGHTWATCH_TOKEN'] ?? '';
+
+        if (! is_string($refreshToken)) {
+            throw new RuntimeException('NIGHTWATCH_TOKEN invalid');
+        }
+
+        return substr(hash('xxh128', $refreshToken), 0, 7);
     }
 }

@@ -41,6 +41,7 @@ final class Ingest implements IngestContract
         float $timeout,
         public $streamFactory,
         public RecordsBuffer $buffer,
+        private string $tokenHash,
     ) {
         $this->transmitTo = "tcp://{$transmitTo}";
 
@@ -66,7 +67,7 @@ final class Ingest implements IngestContract
 
     public function ping(): void
     {
-        $this->transmit(Payload::text('PING'));
+        $this->transmit(Payload::text('PING', $this->tokenHash));
     }
 
     public function shouldDigest(bool $bool): void
@@ -77,7 +78,7 @@ final class Ingest implements IngestContract
     public function digest(): void
     {
         if ($this->shouldDigest) {
-            $this->transmit($this->buffer->pull());
+            $this->transmit($this->buffer->pull($this->tokenHash));
         } else {
             $this->flush();
         }
