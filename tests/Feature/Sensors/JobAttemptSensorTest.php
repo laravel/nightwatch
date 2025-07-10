@@ -16,7 +16,6 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Queue\Connectors\DatabaseConnector;
 use Illuminate\Queue\Connectors\SqsConnector;
 use Illuminate\Queue\DatabaseQueue;
-use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Queue\InteractsWithQueue;
@@ -531,7 +530,7 @@ class JobAttemptSensorTest extends TestCase
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $options = $this->whenVapor($workCommand, then: $this->workOptions($workCommand, [
-            '--tries' => 2
+            '--tries' => 2,
         ]), else: $this->workOptions($workCommand, [
             '--tries' => 2,
             '--max-jobs' => 2,
@@ -631,7 +630,7 @@ class JobAttemptSensorTest extends TestCase
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $options = $this->whenVapor($workCommand, then: $this->workOptions($workCommand, [
-            '--tries' => 2
+            '--tries' => 2,
         ]), else: $this->workOptions($workCommand, [
             '--tries' => 2,
             '--max-jobs' => 2,
