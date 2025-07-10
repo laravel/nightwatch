@@ -182,8 +182,7 @@ $server->start();
 
 $ingestDetails->hydrate();
 
-$restartingIn = null;
-$signatureCheckTimer = $loop->addPeriodicTimer(60, static function () use ($loop, &$signatureCheckTimer, $ingest, &$restartingIn, $error, $info, $basePath, $expectedSignature) {
+$signatureCheckTimer = $loop->addPeriodicTimer(60, static function () use ($loop, &$signatureCheckTimer, $ingest, $error, $info, $basePath, $expectedSignature) {
     $signature = file_get_contents($basePath.'/signature.txt');
 
     if ($signature === false) {
@@ -192,30 +191,32 @@ $signatureCheckTimer = $loop->addPeriodicTimer(60, static function () use ($loop
         return;
     }
 
-    if ($restartingIn !== null && $restartingIn !== 0) {
-        $info('Agent signature changed: restarting in '.$restartingIn.' minutes');
-        $restartingIn--;
-    }
-
     if ($signature !== $expectedSignature) {
-        if ($restartingIn === null) {
-            $restartingIn = 4;
-            $info('Agent signature changed: restarting in 5 minutes');
+        if ($signatureCheckTimer instanceof \React\EventLoop\TimerInterface) {
+            $loop->cancelTimer($signatureCheckTimer);
 
-            $loop->addTimer(60 * 5, static function () use ($info, $loop, $ingest, &$signatureCheckTimer) {
-                $info('Agent signature changed: restarting');
-                if ($signatureCheckTimer instanceof \React\EventLoop\TimerInterface) {
-                    $loop->cancelTimer($signatureCheckTimer);
+            $shuttingDownIn = 5;
+            $info('Agent signature changed: shutting down in '.$shuttingDownIn.' minutes');
+            $shuttingDownIn--;
+
+            $appShutdownNotifier = $loop->addPeriodicTimer(60, static function () use ($info, &$shuttingDownIn) {
+                if ($shuttingDownIn <= 0) {
+                    return;
                 }
+                $info('Agent signature changed: shutting down in '.$shuttingDownIn.' minutes');
+                $shuttingDownIn--;
+            });
+
+            $loop->addTimer(60 * 5, static function () use ($info, $loop, $ingest, $appShutdownNotifier) {
+                $loop->cancelTimer($appShutdownNotifier);
                 $ingest->forceDigest()->finally(static function () use ($info, $loop) {
                     $loop->stop();
                     $info('Shutting down');
                 });
             });
         }
-
-        return;
     }
+
 });
 
 $loop->run();
