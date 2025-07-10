@@ -16,6 +16,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Queue\Connectors\DatabaseConnector;
 use Illuminate\Queue\Connectors\SqsConnector;
 use Illuminate\Queue\DatabaseQueue;
+use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Queue\InteractsWithQueue;
@@ -83,6 +84,7 @@ class JobAttemptSensorTest extends TestCase
     protected function setupVaporEnvironment(): void
     {
         $this->app->afterResolving(LambdaEvent::class, function ($lamdaEvent) {
+            unset($this->app[LambdaEvent::class]);
             $this->app->bind(LambdaEvent::class, fn () => throw new RuntimeException('No jobs available for processing'));
         });
 
@@ -528,10 +530,21 @@ class JobAttemptSensorTest extends TestCase
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
+        $options = $this->whenVapor($workCommand, then: $this->workOptions($workCommand, [
+            '--tries' => 2
+        ]), else: $this->workOptions($workCommand, [
+            '--tries' => 2,
+            '--max-jobs' => 2,
+        ]));
 
         FailedJob::dispatch();
-        Artisan::call($workCommand, $this->workOptions($workCommand, ['--tries' => 2]));
-        Artisan::call($workCommand, $this->workOptions($workCommand, ['--tries' => 2]));
+
+        $this->whenVapor($workCommand, then: function () use ($workCommand, $options) {
+            Artisan::call($workCommand, $options);
+            Artisan::call($workCommand, $options);
+        }, else: function () use ($workCommand, $options) {
+            Artisan::call($workCommand, $options);
+        });
 
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'job-attempt:0.attempt', 1);
@@ -617,11 +630,23 @@ class JobAttemptSensorTest extends TestCase
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
+        $options = $this->whenVapor($workCommand, then: $this->workOptions($workCommand, [
+            '--tries' => 2
+        ]), else: $this->workOptions($workCommand, [
+            '--tries' => 2,
+            '--max-jobs' => 2,
+        ]));
 
-        FailedJob::dispatch();
-        Artisan::call($workCommand, $this->workOptions($workCommand));
-        ProcessedJob::dispatch();
-        Artisan::call($workCommand, $this->workOptions($workCommand));
+        $this->whenVapor($workCommand, then: function () use ($workCommand, $options) {
+            FailedJob::dispatch();
+            Artisan::call($workCommand, $options);
+            ProcessedJob::dispatch();
+            Artisan::call($workCommand, $options);
+        }, else: function () use ($workCommand, $options) {
+            FailedJob::dispatch();
+            ProcessedJob::dispatch();
+            Artisan::call($workCommand, $options);
+        });
 
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'job-attempt:0.exception_preview', 'Job failed');
@@ -881,6 +906,8 @@ class JobAttemptSensorTest extends TestCase
 
     protected function bindLambdaEventForJob(array $payload, int $attempts): void
     {
+        unset($this->app[LambdaEvent::class]);
+
         app()->bind(LambdaEvent::class, function () use ($payload, $attempts) {
             return new LambdaEvent([
                 'Records' => [
