@@ -13,13 +13,10 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\SendQueuedMailable;
-use Illuminate\Queue\CallQueuedClosure;
 use Illuminate\Queue\Connectors\DatabaseConnector;
 use Illuminate\Queue\Connectors\SqsConnector;
-use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\DatabaseQueue;
-use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Jobs\DatabaseJob;
@@ -32,7 +29,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
-use Laravel\Horizon\Events\JobReleased;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Vapor\Console\Commands\VaporWorkCommand;
 use Laravel\Vapor\Events\LambdaEvent;
@@ -40,7 +36,6 @@ use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Ramsey\Uuid\Uuid;
 use RuntimeException;
-use Tests\FakeJob;
 use Tests\TestCase;
 
 use function app;
@@ -52,7 +47,7 @@ use function json_encode;
 use function now;
 use function putenv;
 use function report;
-use function serialize;
+use function value;
 
 class JobAttemptSensorTest extends TestCase
 {
