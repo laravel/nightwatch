@@ -93,6 +93,8 @@ class LoopFake implements LoopInterface
 
         if (str_starts_with($class, 'P\\Tests\\Feature')) {
             $scheduledBy = $class;
+        } elseif ($class === '') {
+            $scheduledBy = 'Agent';
         } else {
             $scheduledBy = "{$class}::{$frame['function']}";
         }

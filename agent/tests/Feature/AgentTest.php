@@ -67,7 +67,7 @@ class AgentTest extends TestCase
                 new Timer(interval: 60, runAt: 240, scheduledAt: 60, scheduledBy: 'Agent', periodic: true), // app shutdown: 2 mins left
                 new Timer(interval: 60, runAt: 300, scheduledAt: 60, scheduledBy: 'Agent', periodic: true), // app shutdown: 1 min left
                 new Timer(interval: 60, runAt: 360, scheduledAt: 60, scheduledBy: 'Agent', periodic: true), // app shutdown: 0 min left
-                new Timer(interval: 300, runAt: 360, scheduledAt: 60, scheduledBy: '::Laravel\NightwatchAgent\{closure}'), // Signature mismatch shutdown
+                new Timer(interval: 300, runAt: 360, scheduledAt: 60, scheduledBy: 'Agent'), // Signature mismatch shutdown
             ]);
 
             $loop->assertPendingWithPeriodic([
