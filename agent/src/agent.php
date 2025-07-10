@@ -48,6 +48,7 @@ $baseUrl ??= $_SERVER['NIGHTWATCH_BASE_URL'] ?? 'https://nightwatch.laravel.com'
 /** @var string $baseUrl */
 /** @var ?string $listenOn */
 $listenOn ??= $_SERVER['NIGHTWATCH_INGEST_URI'] ?? '127.0.0.1:2407';
+/** @var string $listenOn */
 /** @var ?float $authenticationConnectionTimeout */
 $authenticationConnectionTimeout ??= 5;
 /** @var ?float $authenticationTimeout */
