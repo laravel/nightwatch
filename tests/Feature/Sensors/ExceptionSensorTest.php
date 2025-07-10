@@ -861,7 +861,7 @@ class ExceptionSensorTest extends TestCase
                         'source' => 'Illuminate\\Mail\\Mailer->send(App\\Mail\\MyMail)',
                     ],
                     [
-                        'file' => 'workbench/app/Http/ExceptionTestController.php:12',
+                        'file' => 'workbench/app/Http/ExceptionTestController.php:18',
                         'source' => 'Illuminate\\Mail\\PendingMail->send(App\\Mail\\MyMail)',
                     ],
                     [
@@ -1089,7 +1089,7 @@ class ExceptionSensorTest extends TestCase
                         'source' => 'Orchestra\\Testbench\\TestCase->call(string, string, array, array, array, array)',
                     ],
                     [
-                        'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php:745',
+                        'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php:747',
                         'source' => 'Orchestra\\Testbench\\TestCase->get(string)',
                     ],
                     [
