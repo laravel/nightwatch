@@ -19,6 +19,8 @@ use Illuminate\Queue\Connectors\DatabaseConnector;
 use Illuminate\Queue\Connectors\SqsConnector;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\DatabaseQueue;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Jobs\DatabaseJob;
 use Illuminate\Queue\SerializesModels;
@@ -30,6 +32,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
+use Laravel\Horizon\Events\JobReleased;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Vapor\Console\Commands\VaporWorkCommand;
 use Laravel\Vapor\Events\LambdaEvent;
@@ -37,6 +40,7 @@ use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Ramsey\Uuid\Uuid;
 use RuntimeException;
+use Tests\FakeJob;
 use Tests\TestCase;
 
 use function app;
@@ -83,8 +87,15 @@ class JobAttemptSensorTest extends TestCase
 
     protected function setupVaporEnvironment(): void
     {
-        Event::listen(function (JobQueued $event) {
-            $this->bindLambdaEventForJob($event->job, $event->payload);
+        $this->app->afterResolving(LambdaEvent::class, function ($lamdaEvent) {
+            $this->app->bind(LambdaEvent::class, fn () => throw new RuntimeException('No jobs available for processing'));
+        });
+
+        $this->app['events']->listen(function (JobQueued $event) {
+            $this->bindLambdaEventForJob($event->payload(), 0);
+        });
+        $this->app['events']->listen(function (JobReleasedAfterException $event) {
+            $this->bindLambdaEventForJob($event->job->payload(), $event->job->attempts());
         });
 
         putenv('VAPOR_SSM_PATH=/vapor');
@@ -283,7 +294,7 @@ class JobAttemptSensorTest extends TestCase
             return array_shift($uuids) ?? Uuid::uuid4();
         };
 
-            FailedJob::dispatch();
+        FailedJob::dispatch();
 
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
@@ -308,7 +319,7 @@ class JobAttemptSensorTest extends TestCase
                 'duration' => 2500,
                 'exceptions' => 1,
                 'logs' => 0,
-                'queries' => $this->whenVapor($workCommand, then: 0, else: 4),
+                'queries' => $this->whenVapor($workCommand, then: 1, else: 5),
                 'lazy_loads' => 0,
                 'jobs_queued' => 0,
                 'mail' => 0,
@@ -336,7 +347,6 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_captures_closure_job($workCommand): void
     {
         $this->setUpEnvironment($workCommand);
-
         $ingest = $this->fakeIngest();
         $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -350,12 +360,7 @@ class JobAttemptSensorTest extends TestCase
             Date::setTestNow(now()->addMicroseconds(2500));
         };
 
-        if ($this->isVapor) {
-            $this->setupVaporEnvironment();
-            $this->bindLambdaEventForClosure($closure, $line);
-        } else {
-            dispatch($closure);
-        }
+        dispatch($closure);
 
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
@@ -410,12 +415,7 @@ class JobAttemptSensorTest extends TestCase
         };
         Event::listen(MyJobAttemptEvent::class, MyEventListener::class);
 
-        if ($this->isVapor) {
-            $this->setupVaporEnvironment();
-            $this->bindLambdaEventForJob(new MyEventListener);
-        } else {
-            Event::dispatch(new MyJobAttemptEvent);
-        }
+        Event::dispatch(new MyJobAttemptEvent);
 
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
@@ -469,12 +469,7 @@ class JobAttemptSensorTest extends TestCase
             return array_shift($uuids) ?? Uuid::uuid4();
         };
 
-        if ($this->isVapor) {
-            $this->setupVaporEnvironment();
-            $this->bindLambdaEventForJob(new SendQueuedMailable((new JobAttemptMail)->to('tim@laravel.com')));
-        } else {
-            Mail::to('tim@laravel.com')->queue(new JobAttemptMail);
-        }
+        Mail::to('tim@laravel.com')->queue(new JobAttemptMail);
 
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
@@ -546,18 +541,9 @@ class JobAttemptSensorTest extends TestCase
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
 
-        if ($this->isVapor) {
-            $this->setupVaporEnvironment();
-
-            $this->bindLambdaEventForJob(new FailedJob, attempts: 0);
-            Artisan::call($workCommand, $this->workOptions($workCommand, ['--tries' => 2]));
-
-            $this->bindLambdaEventForJob(new FailedJob, attempts: 1);
-            Artisan::call($workCommand, $this->workOptions($workCommand, ['--tries' => 2]));
-        } else {
-            FailedJob::dispatch();
-            Artisan::call($workCommand, $this->workOptions($workCommand, ['--max-jobs' => 2, '--tries' => 2]));
-        }
+        FailedJob::dispatch();
+        Artisan::call($workCommand, $this->workOptions($workCommand, ['--tries' => 2]));
+        Artisan::call($workCommand, $this->workOptions($workCommand, ['--tries' => 2]));
 
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'job-attempt:0.attempt', 1);
@@ -585,12 +571,7 @@ class JobAttemptSensorTest extends TestCase
             report('Whoops!');
         };
 
-        if ($this->isVapor) {
-            $this->setupVaporEnvironment();
-            $this->bindLambdaEventForClosure($closure, $line);
-        } else {
-            dispatch($closure);
-        }
+        dispatch($closure);
 
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
@@ -650,19 +631,10 @@ class JobAttemptSensorTest extends TestCase
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
 
-        if ($this->isVapor) {
-            $this->setupVaporEnvironment();
-
-            $this->bindLambdaEventForJob(new FailedJob);
-            Artisan::call($workCommand, $this->workOptions($workCommand));
-
-            $this->bindLambdaEventForJob(new ProcessedJob);
-            Artisan::call($workCommand, $this->workOptions($workCommand));
-        } else {
-            FailedJob::dispatch();
-            ProcessedJob::dispatch();
-            Artisan::call($workCommand, $this->workOptions($workCommand, ['--max-jobs' => 2]));
-        }
+        FailedJob::dispatch();
+        Artisan::call($workCommand, $this->workOptions($workCommand));
+        ProcessedJob::dispatch();
+        Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'job-attempt:0.exception_preview', 'Job failed');
@@ -710,18 +682,13 @@ class JobAttemptSensorTest extends TestCase
             $this->travelTo(now()->addMicroseconds(1000));
         });
 
-        if ($this->isVapor) {
-            $this->setupVaporEnvironment();
-            $this->bindLambdaEventForJob(new ProcessedJob);
-        } else {
-            ProcessedJob::dispatch();
-        }
+        ProcessedJob::dispatch();
 
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite(function ($write) {
-            if ($this->isVapor) {
+        $ingest->assertLatestWrite(function ($write) use ($workCommand) {
+            $this->whenVapor($workCommand, then: function () use ($write) {
                 // For Vapor, we only get the job-attempt record since there are no database queries
                 $this->assertCount(1, $write);
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
@@ -729,7 +696,7 @@ class JobAttemptSensorTest extends TestCase
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
                     'name' => 'Tests\Feature\Sensors\ProcessedJob',
                 ], $write[0], array_keys($expected));
-            } else {
+            }, else: function () use ($write) {
                 $this->assertCount(6, $write);
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
@@ -782,7 +749,7 @@ class JobAttemptSensorTest extends TestCase
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
                     'key' => 'illuminate:queue:restart',
                 ], $write[5], array_keys($expected));
-            }
+            });
 
             return true;
         });
@@ -809,24 +776,19 @@ class JobAttemptSensorTest extends TestCase
             Http::get('https://laravel.com');
         });
 
-        if ($this->isVapor) {
-            $this->setupVaporEnvironment();
-            $this->bindLambdaEventForJob(new ProcessedJob);
-        } else {
-            ProcessedJob::dispatch();
-        }
+        ProcessedJob::dispatch();
 
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite(function ($write) {
-            if ($this->isVapor) {
+        $ingest->assertLatestWrite(function ($write) use ($workCommand) {
+            $this->whenVapor($workCommand, then: function () use ($write) {
                 $this->assertCount(1, $write);
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'job-attempt',
                     'outgoing_requests' => 0,
                 ], $write[0], array_keys($expected));
-            } else {
+            }, else: function () use ($write) {
                 $this->assertCount(7, $write);
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'job-attempt',
@@ -835,7 +797,7 @@ class JobAttemptSensorTest extends TestCase
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'outgoing-request',
                 ], $write[6], array_keys($expected));
-            }
+            });
 
             return true;
         });
@@ -844,6 +806,7 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_jobs_dispatched_from_job_attempt_get_unique_job_id($workCommand): void
     {
+        $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         JobThatDispatchesAnotherJob::dispatch();
         $ingest->flush();
@@ -866,101 +829,6 @@ class JobAttemptSensorTest extends TestCase
         $ingest->assertWrite(0, 'queued-job:0.job_id', 'aeadd430-44e6-4b79-a441-02459d797f3a');
         $ingest->assertWrite(1, 'queued-job:0.execution_id', '1c10c584-8146-426c-a820-03374466b198');
         $ingest->assertWrite(1, 'queued-job:0.job_id', '4aabf241-39d0-408f-abbc-2907e100e02f');
-    }
-
-    protected function workOptions(string $workCommand, array $overrides = []): array
-    {
-        if ($workCommand === 'vapor:work') {
-            return [
-                '--tries' => 1,
-                '--timeout' => 0,
-                '--delay' => 0,
-                ...$overrides,
-            ];
-        }
-
-        return [
-            '--max-jobs' => 1,
-            '--sleep' => 0,
-            '--stop-when-empty' => true,
-            '--tries' => 1,
-            ...$overrides,
-        ];
-    }
-
-    public static function workCommands(): iterable
-    {
-        yield ['queue:work'];
-        yield ['horizon:work'];
-        yield ['vapor:work'];
-    }
-
-    protected function bindLambdaEventForJob(mixed $job, string $payload, int $attempts = 0): void
-    {
-        app()->bind(LambdaEvent::class, function () use ($payload, $attempts) {
-            return new LambdaEvent([
-                'Records' => [
-                    [
-                        'messageId' => '12345678-abcd-1234-efgh-123456789',
-                        'receiptHandle' => 'AQEBwJnKyrHigUMZiWwCK1RjTXJNLtjNt2AbFd12uKxQo/bUIqAfA3LIvT7v8rAB+9LzJkUiKY1YPwULB6FX7Y8Bq3rBPqNhZm8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLBCDEFGH',
-                        'body' => $payload,
-                        'attributes' => [
-                            'ApproximateReceiveCount' => (string) ($attempts + 1),
-                            'SentTimestamp' => 1751529944619,
-                            'SenderId' => 'AIDACKCEVSQ6C2EXAMPLE',
-                            'ApproximateFirstReceiveTimestamp' => 1751529944619,
-                        ],
-                        'messageAttributes' => [],
-                        'md5OfBody' => 'd41d8cd98f00b204e9800998ecf8427e',
-                        'eventSource' => 'aws:sqs',
-                        'eventSourceARN' => 'arn:aws:sqs:us-east-1:123456789:default',
-                        'awsRegion' => 'us-east-1',
-                    ],
-                ],
-            ]);
-        });
-    }
-
-    protected function bindLambdaEventForClosure(callable $closure, int $line): void
-    {
-        app()->bind(LambdaEvent::class, function () use ($closure, $line) {
-            return new LambdaEvent([
-                'Records' => [
-                    [
-                        'messageId' => '12345678-abcd-1234-efgh-123456789',
-                        'receiptHandle' => 'AQEBwJnKyrHigUMZiWwCK1RjTXJNLtjNt2AbFd12uKxQo/bUIqAfA3LIvT7v8rAB+9LzJkUiKY1YPwULB6FX7Y8Bq3rBPqNhZm8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLBCDEFGH',
-                        'body' => json_encode([
-                            'uuid' => $this->core->uuid->make(),
-                            'displayName' => "Closure (JobAttemptSensorTest.php:{$line})",
-                            'job' => 'Illuminate\\Queue\\CallQueuedHandler@call',
-                            'maxTries' => null,
-                            'maxExceptions' => null,
-                            'failOnTimeout' => false,
-                            'backoff' => null,
-                            'timeout' => null,
-                            'retryUntil' => null,
-                            'data' => [
-                                'commandName' => 'Illuminate\\Queue\\CallQueuedClosure',
-                                'command' => serialize(CallQueuedClosure::create($closure)),
-                            ],
-                            'attempts' => 0,
-                            'delay' => null,
-                        ]),
-                        'attributes' => [
-                            'ApproximateReceiveCount' => '1',
-                            'SentTimestamp' => 1751529944619,
-                            'SenderId' => 'AIDACKCEVSQ6C2EXAMPLE',
-                            'ApproximateFirstReceiveTimestamp' => 1751529944619,
-                        ],
-                        'messageAttributes' => [],
-                        'md5OfBody' => 'd41d8cd98f00b204e9800998ecf8427e',
-                        'eventSource' => 'aws:sqs',
-                        'eventSourceARN' => 'arn:aws:sqs:us-east-1:123456789:default',
-                        'awsRegion' => 'us-east-1',
-                    ],
-                ],
-            ]);
-        });
     }
 
     public function test_queue_workers_that_remove_successful_jobs_and_make_network_call_to_determine_attempts_like_beanstalkd_can_capture_attempts(): void
@@ -1001,6 +869,63 @@ class JobAttemptSensorTest extends TestCase
         $ingest->assertLatestWrite('job-attempt:0.attempt', 1);
     }
 
+    public static function workCommands(): iterable
+    {
+        yield ['queue:work'];
+        yield ['horizon:work'];
+        yield ['vapor:work'];
+    }
+
+    protected function workOptions(string $workCommand, array $overrides = []): array
+    {
+        if ($workCommand === 'vapor:work') {
+            return [
+                '--tries' => 1,
+                '--timeout' => 0,
+                '--delay' => 0,
+                ...$overrides,
+            ];
+        }
+
+        return [
+            '--max-jobs' => 1,
+            '--sleep' => 0,
+            '--stop-when-empty' => true,
+            '--tries' => 1,
+            ...$overrides,
+        ];
+    }
+
+    protected function bindLambdaEventForJob(array $payload, int $attempts): void
+    {
+        app()->bind(LambdaEvent::class, function () use ($payload, $attempts) {
+            return new LambdaEvent([
+                'Records' => [
+                    [
+                        'messageId' => '12345678-abcd-1234-efgh-123456789',
+                        'receiptHandle' => 'AQEBwJnKyrHigUMZiWwCK1RjTXJNLtjNt2AbFd12uKxQo/bUIqAfA3LIvT7v8rAB+9LzJkUiKY1YPwULB6FX7Y8Bq3rBPqNhZm8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLNmV8xJKL5g8VwA/5X2r9EzUHgGjTLBCDEFGH',
+                        'body' => json_encode([
+                            ...$payload,
+                            'attempts' => $attempts,
+                        ]),
+                        'attributes' => [
+                            'ApproximateReceiveCount' => (string) ($attempts + 1),
+                            'SentTimestamp' => 1751529944619,
+                            'SenderId' => 'AIDACKCEVSQ6C2EXAMPLE',
+                            'ApproximateFirstReceiveTimestamp' => 1751529944619,
+                        ],
+                        'messageAttributes' => [],
+                        'md5OfBody' => 'd41d8cd98f00b204e9800998ecf8427e',
+                        'eventSource' => 'aws:sqs',
+                        'eventSourceARN' => 'arn:aws:sqs:us-east-1:123456789:default',
+                        'awsRegion' => 'us-east-1',
+                    ],
+                ],
+            ]);
+        });
+
+    }
+
     protected function whenVapor(string $workCommand, mixed $then, mixed $else = null): mixed
     {
         if ($workCommand === 'vapor:work') {
@@ -1008,7 +933,7 @@ class JobAttemptSensorTest extends TestCase
         } else {
             return value($else);
         }
-}
+    }
 }
 
 final class ProcessedJob implements ShouldQueue
