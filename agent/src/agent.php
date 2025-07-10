@@ -187,6 +187,7 @@ $checkSignature = new CheckSignature(
     onShutdown: static function () use ($info, $loop, $ingest) {
         $ingest->forceDigest()->finally(static function () use ($info, $loop) {
             $loop->stop();
+
             $info('Shutting down');
         });
     },
