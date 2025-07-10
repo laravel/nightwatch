@@ -22,8 +22,8 @@ use function rtrim;
 use function str_replace;
 use function substr;
 
-require __DIR__.'/../vendor/react/promise/src/functions_include.php';
-require __DIR__.'/../vendor/autoload.php';
+require __DIR__ . '/../vendor/react/promise/src/functions_include.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 /*
  * Testing...
@@ -47,7 +47,7 @@ $refreshToken ??= $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
 $baseUrl ??= $_SERVER['NIGHTWATCH_BASE_URL'] ?? 'https://nightwatch.laravel.com';
 /** @var string $baseUrl */
 /** @var ?string $listenOn */
-$listenOn ??= '127.0.0.1:2407';
+$listenOn ??= $_SERVER['NIGHTWATCH_INGEST_URI'] ?? '127.0.0.1:2407';
 /** @var ?float $authenticationConnectionTimeout */
 $authenticationConnectionTimeout ??= 5;
 /** @var ?float $authenticationTimeout */
@@ -64,10 +64,10 @@ $server ??= (string) gethostname();
  */
 
 $info = static function (string $message): void {
-    echo date('Y-m-d H:i:s').' [INFO] '.$message.PHP_EOL;
+    echo date('Y-m-d H:i:s') . ' [INFO] ' . $message . PHP_EOL;
 };
 $error = static function (string $message): void {
-    echo date('Y-m-d H:i:s').' [ERROR] '.$message.PHP_EOL;
+    echo date('Y-m-d H:i:s') . ' [ERROR] ' . $message . PHP_EOL;
 };
 
 /*
@@ -78,7 +78,7 @@ $debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
 /** @var ?string $basePath */
 $basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
 
-$signaturePath = $basePath.'/signature.txt';
+$signaturePath = $basePath . '/signature.txt';
 $expectedSignature = file_get_contents($signaturePath);
 
 if ($expectedSignature === false) {
@@ -96,7 +96,7 @@ $loop ??= new StreamSelectLoop;
 Loop::set($loop);
 
 $packageVersion = new PackageVersionRepository(
-    path: $basePath.'/../../version.txt',
+    path: $basePath . '/../../version.txt',
 );
 
 $browserFactory ??= new BrowserFactory($packageVersion);
@@ -117,8 +117,8 @@ $ingestDetailsBrowser = $browserFactory(
 $ingestDetails = new IngestDetailsRepository(
     loop: $loop,
     browser: $ingestDetailsBrowser,
-    onAuthenticationSuccess: static fn (IngestDetails $ingestDetails, float $duration) => $info('Authentication successful ['.round($duration, 3).'s]'),
-    onAuthenticationError: static fn (string $message, float $duration) => $info('Authentication failed ['.round($duration, 3).'s]: '.$message),
+    onAuthenticationSuccess: static fn(IngestDetails $ingestDetails, float $duration) => $info('Authentication successful [' . round($duration, 3) . 's]'),
+    onAuthenticationError: static fn(string $message, float $duration) => $info('Authentication failed [' . round($duration, 3) . 's]: ' . $message),
     onUnderQuota: static function () use (&$ingest) {
         /** @var Ingest $ingest */
         $ingest->resumeIngestion();
@@ -144,17 +144,17 @@ $ingest = new Ingest(
     buffer: new StreamBuffer(6_000_000),
     concurrentRequestLimit: 2,
     maxBufferDurationInSeconds: $debug ? 1 : 10,
-    onIngestSuccess: static fn (ResponseInterface $response, float $duration) => $info('Ingest successful ['.round($duration, 3).'s]'),
-    onIngestError: static fn (string $message, float $duration) => $info('Ingest failed ['.round($duration, 3).'s]: '.$message),
-    onOverQuota: static fn (string $message, float $duration) => $info('Ingest attempted ['.round($duration, 3).'s]: '.$message),
+    onIngestSuccess: static fn(ResponseInterface $response, float $duration) => $info('Ingest successful [' . round($duration, 3) . 's]'),
+    onIngestError: static fn(string $message, float $duration) => $info('Ingest failed [' . round($duration, 3) . 's]: ' . $message),
+    onOverQuota: static fn(string $message, float $duration) => $info('Ingest attempted [' . round($duration, 3) . 's]: ' . $message),
 );
 
 $server = new Server(
-    serverResolver: $serverResolver ?? static fn (): ServerInterface => new TcpServer($listenOn),
+    serverResolver: $serverResolver ?? static fn(): ServerInterface => new TcpServer($listenOn),
     tokenHash: $tokenHash,
-    onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]"),
-    onServerError: static fn (string $message) => $error("Server error: {$message}"),
-    onConnectionError: static fn (string $message) => $error("Connection error: {$message}"),
+    onServerStarted: static fn() => $info("Nightwatch agent initiated: Listening on [{$listenOn}]"),
+    onServerError: static fn(string $message) => $error("Server error: {$message}"),
+    onConnectionError: static fn(string $message) => $error("Connection error: {$message}"),
     onPayloadReceived: $ingest->write(...),
     onInvalidPayloadVersion: static function () use ($info, $loop, $ingest) {
         $info('Incoming payload version has changed');
@@ -182,7 +182,7 @@ $checkSignature = new CheckSignature(
     expectedSignature: $expectedSignature,
     shutdownDelayInMinutes: 5,
     onShutdownInitiated: static function ($shuttingDownIn) use ($info) {
-        $info('Agent signature changed: shutting down in '.$shuttingDownIn.' minutes');
+        $info('Agent signature changed: shutting down in ' . $shuttingDownIn . ' minutes');
     },
     onShutdown: static function () use ($info, $loop, $ingest) {
         $ingest->forceDigest()->finally(static function () use ($info, $loop) {
