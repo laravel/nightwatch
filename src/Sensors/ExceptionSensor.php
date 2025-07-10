@@ -10,11 +10,13 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
+use stdClass;
 use Throwable;
 
 use function array_is_list;
 use function array_keys;
 use function array_map;
+use function array_push;
 use function count;
 use function debug_backtrace;
 use function file_exists;
@@ -110,20 +112,39 @@ final class ExceptionSensor
     }
 
     /**
-     * Collect source code lines around the exception location.
-     *
-     * @return array<string, mixed>|null
+     * Collect source code lines around the provided line.
      */
-    private function collectSourceCodeLines(string $file, ?int $line, int $contextLines = 5): ?array
+    private function collectSourceCodeLines(string $contents, ?int $line, int $contextLines = 5): ?stdClass
     {
         if ($line === null) {
             return null;
         }
 
-        // Convert normalized file path back to full path for reading
+        $lines = preg_split('/\r\n|\r|\n/', $contents);
+        if ($lines === false) {
+            return null;
+        }
+
+        $totalLines = count($lines);
+        $startLine = max(1, $line - $contextLines);
+        $endLine = min($totalLines, $line + $contextLines);
+
+        $sourceCodeLines = new stdClass;
+        for ($i = $startLine; $i <= $endLine; $i++) {
+            $sourceCodeLines->{$i} = $lines[$i - 1] ?? '';
+        }
+
+        return $sourceCodeLines;
+
+    }
+
+    /**
+     * Load the source code for the provided file.
+     */
+    private function loadSourceCode(string $file): ?string
+    {
         $fullPath = $file;
         if (! str_starts_with($file, DIRECTORY_SEPARATOR)) {
-            // The file is normalized (relative to base path), so we need to add the base path back
             $basePath = rtrim($this->location->getBasePath(), DIRECTORY_SEPARATOR);
             $fullPath = $basePath.DIRECTORY_SEPARATOR.$file;
         }
@@ -138,29 +159,9 @@ final class ExceptionSensor
                 return null;
             }
 
-            $lines = preg_split('/\r\n|\r|\n/', $contents);
-            if ($lines === false) {
-                return null;
-            }
+            return $contents;
 
-            $totalLines = count($lines);
-            $startLine = max(1, $line - $contextLines);
-            $endLine = min($totalLines, $line + $contextLines);
-
-            $sourceLines = [];
-            for ($i = $startLine; $i <= $endLine; $i++) {
-                $sourceLines[] = $lines[$i - 1] ?? '';
-            }
-
-            return [
-                'file' => $file,
-                'line' => $line,
-                'lines' => $sourceLines,
-                'start_line' => $startLine,
-                'end_line' => $endLine,
-            ];
         } catch (Throwable $e) {
-            // If we can't read the file for any reason, return null
             return null;
         }
     }
@@ -171,9 +172,10 @@ final class ExceptionSensor
     private function serializeTrace(Throwable $e, bool $captureSourceLines = true): string
     {
         $trace = [];
-        $frameIndex = 0;
+        $userFiles = [];
 
-        foreach ($e->getTrace() as $frame) {
+        foreach ($e->getTrace() as $index => $frame) {
+
             $file = match (true) {
                 ! isset($frame['file']) => '[internal function]',
                 ! is_string($frame['file']) => '[unknown file]', // @phpstan-ignore booleanNot.alwaysFalse
@@ -181,11 +183,9 @@ final class ExceptionSensor
             };
 
             $originalFile = $file;
-            $frameLine = null;
 
             if (isset($frame['line']) && is_int($frame['line'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
                 $file .= ':'.$frame['line'];
-                $frameLine = $frame['line'];
             }
 
             $source = '';
@@ -229,17 +229,30 @@ final class ExceptionSensor
 
             $traceFrame = ['file' => $file, 'source' => $source];
 
-            // Add source code lines for the first few frames if feature is enabled
-            if ($captureSourceLines && $frameIndex < 3 && $originalFile !== '[internal function]' && $originalFile !== '[unknown file]') {
-                $sourceLines = $this->collectSourceCodeLines($originalFile, $frameLine);
-                if ($sourceLines !== null) {
-                    $traceFrame['source_lines'] = $sourceLines;
-                }
-
+            if (
+                ! $this->location->isVendorFile($frame['file']) &&
+                ! $this->location->isInternalFile($frame['file']) &&
+                $originalFile !== '[internal function]' &&
+                $originalFile !== '[unknown file]') {
+                $userFiles[$originalFile] = $userFiles[$originalFile] ?? [];
+                array_push($userFiles[$originalFile], ['frameIndex' => $index, 'frameLine' => $frame['line']]);
             }
 
             $trace[] = $traceFrame;
-            $frameIndex++;
+        }
+
+        if ($captureSourceLines) {
+            foreach ($userFiles as $file => $frames) {
+                $fileContents = $this->loadSourceCode($file);
+                foreach ($frames as $frame) {
+                    $sourceCodeLines = $this->collectSourceCodeLines($fileContents, $frame['frameLine']);
+                    if ($sourceCodeLines === null) {
+                        continue;
+                    }
+
+                    $trace[$frame['frameIndex']]['code'] = $sourceCodeLines;
+                }
+            }
         }
 
         return json_encode($trace, flags: JSON_THROW_ON_ERROR);
