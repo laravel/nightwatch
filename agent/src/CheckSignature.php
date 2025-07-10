@@ -10,6 +10,8 @@ use function file_get_contents;
 
 class CheckSignature
 {
+    private TimerInterface $signatureCheckTimer;
+
     /**
      * @param  LoopInterface  $loop
      * @param  (Closure(int $shuttingDownIn): void)  $onShutdownInitiated
@@ -27,11 +29,10 @@ class CheckSignature
 
     public function start(): void
     {
-        $signatureCheckTimer = $this->loop->addPeriodicTimer(60, function () use (&$signatureCheckTimer) {
+        $this->signatureCheckTimer = $this->loop->addPeriodicTimer(60, function () {
             /** @var TimerInterface $signatureCheckTimer */
             $this->signatureCheck(
                 loop: $this->loop,
-                signatureCheckTimer: $signatureCheckTimer,
                 basePath: $this->basePath,
                 expectedSignature: $this->expectedSignature,
                 onShutdownInitiated: $this->onShutdownInitiated,
@@ -44,12 +45,12 @@ class CheckSignature
      * @param  (Closure(int $shuttingDownIn): void)  $onShutdownInitiated
      * @param  (Closure(): void)  $onShutdown
      */
-    private function signatureCheck(LoopInterface $loop, TimerInterface $signatureCheckTimer, string $basePath, string $expectedSignature, Closure $onShutdownInitiated, Closure $onShutdown): void
+    private function signatureCheck(LoopInterface $loop, string $basePath, string $expectedSignature, Closure $onShutdownInitiated, Closure $onShutdown): void
     {
         $signature = @file_get_contents($basePath.'/signature.txt');
 
         if ($signature !== $expectedSignature) {
-            $loop->cancelTimer($signatureCheckTimer);
+            $loop->cancelTimer($this->signatureCheckTimer);
 
             $shuttingDownIn = 5;
             $onShutdownInitiated($shuttingDownIn);
