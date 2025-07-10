@@ -30,7 +30,6 @@ class CheckSignature
     public function start(): void
     {
         $this->signatureCheckTimer = $this->loop->addPeriodicTimer(60, function () {
-            /** @var TimerInterface $signatureCheckTimer */
             $this->signatureCheck(
                 loop: $this->loop,
                 basePath: $this->basePath,
