@@ -178,14 +178,14 @@ final class Location
         return null;
     }
 
-    private function isVendorFile(string $file): bool
+    public function isVendorFile(string $file): bool
     {
         return str_starts_with($file, $this->vendorPath) ||
             $file === $this->artisanPath ||
             $file === $this->publicIndexPath;
     }
 
-    private function isInternalFile(string $file): bool
+    public function isInternalFile(string $file): bool
     {
         return str_starts_with($file, $this->frameworkPath) ||
             str_starts_with($file, $this->nightwatchPath) ||
