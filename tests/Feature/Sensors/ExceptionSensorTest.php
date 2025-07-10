@@ -780,6 +780,8 @@ class ExceptionSensorTest extends TestCase
                             29 => '            subject: $this->subject,',
                             30 => '        );',
                             31 => '    }',
+                            32 => '',
+                            33 => '    /**',
                         ],
                     ],
                     [
@@ -817,6 +819,19 @@ class ExceptionSensorTest extends TestCase
                     [
                         'file' => 'workbench/app/Http/ExceptionTestController.php:18',
                         'source' => 'Illuminate\\Mail\\PendingMail->send(App\\Mail\\MyMail)',
+                        'code' => [
+                            13 => 'final class ExceptionTestController',
+                            14 => '{',
+                            15 => '    public function __invoke()',
+                            16 => '    {',
+                            17 => '        try {',
+                            18 => '            Mail::to(\'test@test.com\')->send(new MyMail([\'effect\' => \'This explodes\']));',
+                            19 => '        } catch (Exception $e) {',
+                            20 => '            report($e);',
+                            21 => '',
+                            22 => '            abort(500, \'Exploding as expected\');',
+                            23 => '        }',
+                        ],
                     ],
                     [
                         'file' => 'vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:46',
@@ -841,6 +856,17 @@ class ExceptionSensorTest extends TestCase
                     [
                         'file' => 'src/Hooks/RouteMiddleware.php:34',
                         'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:Illuminate\\Pipeline\\Pipeline::prepareDestination():167}(Illuminate\\Http\\Request)',
+                        'code' => [
+                            29 => '            $this->nightwatch->stage(ExecutionStage::Action);',
+                            30 => '        } catch (Throwable $e) {',
+                            31 => '            $this->nightwatch->report($e, handled: true);',
+                            32 => '        }',
+                            33 => '',
+                            34 => '        return $next($request);',
+                            35 => '    }',
+                            36 => '}',
+                            37 => '',
+                        ],
                     ],
                     [
                         'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
@@ -1017,6 +1043,19 @@ class ExceptionSensorTest extends TestCase
                     [
                         'file' => 'src/Hooks/GlobalMiddleware.php:53',
                         'source' => 'Illuminate\\Pipeline\\Pipeline->{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():183}:184}(Illuminate\\Http\\Request)',
+                        'code' => [
+                            48 => '            $this->nightwatch->captureRequestPreview($request);',
+                            49 => '        } catch (Throwable $e) {',
+                            50 => '            $this->nightwatch->report($e, handled: true);',
+                            51 => '        }',
+                            52 => '',
+                            53 => '        return $next($request);',
+                            54 => '    }',
+                            55 => '',
+                            56 => '    public function terminate(Request $request, Response $response): void',
+                            57 => '    {',
+                            58 => '        if ($this->hasTerminated || Compatibility::$terminatingEventExists) {',
+                        ],
                     ],
                     [
                         'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:208',
@@ -1045,6 +1084,19 @@ class ExceptionSensorTest extends TestCase
                     [
                         'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php:747',
                         'source' => 'Orchestra\\Testbench\\TestCase->get(string)',
+                        'code' => [
+                            742 => '    {',
+                            743 => '        Config::set(\'nightwatch.exceptions.capture_source_lines\', true);',
+                            744 => '',
+                            745 => '        $ingest = $this->fakeIngest();',
+                            746 => '',
+                            747 => '        $response = $this->get(\'/test-exception\');',
+                            748 => '        $response->assertServerError();',
+                            749 => '        $ingest->assertWrittenTimes(1);',
+                            750 => '        $ingest->assertLatestWrite(\'exception:*\', [',
+                            751 => '            [',
+                            752 => '                \'v\' => 1,',
+                        ],
                     ],
                     [
                         'file' => 'vendor/phpunit/phpunit/src/Framework/TestCase.php:1656',
