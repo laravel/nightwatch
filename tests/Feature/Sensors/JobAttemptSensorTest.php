@@ -117,7 +117,6 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_ingests_processed_job_attempts($workCommand): void
     {
         $this->setUpEnvironment($workCommand);
-
         $ingest = $this->fakeIngest();
         $uuids = [
             $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
@@ -128,7 +127,6 @@ class JobAttemptSensorTest extends TestCase
         };
 
         ProcessedJob::dispatch();
-
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(1);
@@ -182,7 +180,6 @@ class JobAttemptSensorTest extends TestCase
         };
 
         FailedJob::dispatch();
-
         Artisan::call($workCommand, $this->workOptions($workCommand, ['--tries' => 2]));
 
         $ingest->assertWrittenTimes(1);
@@ -236,7 +233,6 @@ class JobAttemptSensorTest extends TestCase
         };
 
         ReleasedJob::dispatch();
-
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(1);
@@ -290,7 +286,6 @@ class JobAttemptSensorTest extends TestCase
         };
 
         FailedJob::dispatch();
-
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(1);
@@ -333,6 +328,7 @@ class JobAttemptSensorTest extends TestCase
     public function test_it_does_not_ingest_jobs_dispatched_on_the_sync_queue(): void
     {
         $ingest = $this->fakeIngest();
+
         ProcessedJob::dispatchSync();
 
         $ingest->assertWrittenTimes(0);
@@ -356,7 +352,6 @@ class JobAttemptSensorTest extends TestCase
         };
 
         dispatch($closure);
-
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(1);
@@ -408,10 +403,9 @@ class JobAttemptSensorTest extends TestCase
         $this->core->uuid->uuidResolver = function () use (&$uuids) {
             return array_shift($uuids) ?? Uuid::uuid4();
         };
+
         Event::listen(MyJobAttemptEvent::class, MyEventListener::class);
-
         Event::dispatch(new MyJobAttemptEvent);
-
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(1);
@@ -465,7 +459,6 @@ class JobAttemptSensorTest extends TestCase
         };
 
         Mail::to('tim@laravel.com')->queue(new JobAttemptMail);
-
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(1);
@@ -567,7 +560,6 @@ class JobAttemptSensorTest extends TestCase
         };
 
         dispatch($closure);
-
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(1);
@@ -645,13 +637,12 @@ class JobAttemptSensorTest extends TestCase
 
             return;
         }
-
         $ingest = $this->fakeIngest();
         $loops = 0;
+
         Queue::looping(function () use (&$loops): void {
             $loops++;
         });
-
         Artisan::call($workCommand, ['--max-time' => 0.05, '--sleep' => 0]);
 
         $this->assertGreaterThan(50, $loops);
@@ -678,7 +669,6 @@ class JobAttemptSensorTest extends TestCase
         });
 
         ProcessedJob::dispatch();
-
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(1);
@@ -772,7 +762,6 @@ class JobAttemptSensorTest extends TestCase
         });
 
         ProcessedJob::dispatch();
-
         Artisan::call($workCommand, $this->workOptions($workCommand));
 
         $ingest->assertWrittenTimes(1);
@@ -856,7 +845,6 @@ class JobAttemptSensorTest extends TestCase
         });
 
         JobThatMarksItselfAsHandled::dispatch();
-
         Artisan::call('queue:work', $this->workOptions('queue:work'));
 
         $ingest->assertWrittenTimes(1);
@@ -918,7 +906,6 @@ class JobAttemptSensorTest extends TestCase
                 ],
             ]);
         });
-
     }
 
     protected function whenVapor(string $workCommand, mixed $then, mixed $else = null): mixed
