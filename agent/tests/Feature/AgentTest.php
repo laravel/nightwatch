@@ -14,28 +14,28 @@ use function file_put_contents;
 
 class AgentTest extends TestCase
 {
-    public static function write_signature(string $content = 'abcd'): void
+    public static function writeSignature(string $content = 'abcd'): void
     {
         file_put_contents(__DIR__.'/../../build/signature.txt', $content);
     }
 
-    public static function get_signature(): string
+    public static function getSignature(): string
     {
         return file_get_contents(__DIR__.'/../../build/signature.txt') ?: '';
     }
 
-    public static function touch_signature(): void
+    public static function touchSignature(): void
     {
-        $signature = self::get_signature();
-        self::write_signature($signature);
+        $signature = self::getSignature();
+        self::writeSignature($signature);
     }
 
     public function test_it_works(): void
     {
-        $originalSignature = self::get_signature();
+        $originalSignature = self::getSignature();
         try {
             $loop = new LoopFake(runForSeconds: 60 * 20);
-            $loop->addTimer(1, [self::class, 'write_signature']);
+            $loop->addTimer(1, [self::class, 'writeSignature']);
             $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
 
             [$output, $e] = $this->runAgent(
@@ -107,7 +107,7 @@ class AgentTest extends TestCase
             $ingestDetailsBrowser->assertProcessing([]);
             $ingestDetailsBrowser->assertPending([]);
         } finally {
-            self::write_signature($originalSignature);
+            self::writeSignature($originalSignature);
         }
     }
 
@@ -115,7 +115,7 @@ class AgentTest extends TestCase
     {
         // touch the file.
         $loop = new LoopFake(runForSeconds: 60 * 20);
-        $loop->addTimer(1, [self::class, 'touch_signature']);
+        $loop->addTimer(1, [self::class, 'touchSignature']);
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
 
         [$output, $e] = $this->runAgent(
