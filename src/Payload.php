@@ -12,11 +12,6 @@ use function strlen;
  */
 final class Payload
 {
-    /**
-     * This value is automatically updated in CI.
-     *
-     * Do not modify or re-locate this constant.
-     */
     public const PAYLOAD_VERSION = 'v1';
 
     private bool $pulled = false;
@@ -55,7 +50,7 @@ final class Payload
 
         $length = strlen(self::PAYLOAD_VERSION) + 1 + strlen($this->tokenHash) + 1 + strlen($payload);
 
-        return $length.':'.self::PAYLOAD_VERSION.':'.$this->tokenHash.':'.$payload;
+        return $length . ':' . self::PAYLOAD_VERSION . ':' . $this->tokenHash . ':' . $payload;
     }
 
     public function rawPayload(): string
