@@ -172,6 +172,21 @@ $server = new Server(
     },
 );
 
+$checkSignature = new CheckSignature(
+    loop: $loop,
+    basePath: $basePath,
+    expectedSignature: $expectedSignature,
+    onShutdownInitiated: static function ($shuttingDownIn) use ($info) {
+        $info('Agent signature changed: shutting down in '.$shuttingDownIn.' minutes');
+    },
+    onShutdown: static function () use ($info, $loop, $ingest) {
+        $ingest->forceDigest()->finally(static function () use ($info, $loop) {
+            $loop->stop();
+            $info('Shutting down');
+        });
+    },
+);
+
 /*
  * Get things rolling...
  */
@@ -180,41 +195,6 @@ $server->start();
 
 $ingestDetails->hydrate();
 
-$signatureCheckTimer = $loop->addPeriodicTimer(60, static function () use ($loop, &$signatureCheckTimer, $ingest, $error, $info, $basePath, $expectedSignature) {
-    $signature = file_get_contents($basePath.'/signature.txt');
-
-    if ($signature === false) {
-        $error('Unable to read signature');
-
-        return;
-    }
-
-    if ($signature !== $expectedSignature) {
-        if ($signatureCheckTimer instanceof \React\EventLoop\TimerInterface) {
-            $loop->cancelTimer($signatureCheckTimer);
-
-            $shuttingDownIn = 5;
-            $info('Agent signature changed: shutting down in '.$shuttingDownIn.' minutes');
-            $shuttingDownIn--;
-
-            $appShutdownNotifier = $loop->addPeriodicTimer(60, static function () use ($info, &$shuttingDownIn) {
-                if ($shuttingDownIn <= 0) {
-                    return;
-                }
-                $info('Agent signature changed: shutting down in '.$shuttingDownIn.' minutes');
-                $shuttingDownIn--;
-            });
-
-            $loop->addTimer(60 * 5, static function () use ($info, $loop, $ingest, $appShutdownNotifier) {
-                $loop->cancelTimer($appShutdownNotifier);
-                $ingest->forceDigest()->finally(static function () use ($info, $loop) {
-                    $loop->stop();
-                    $info('Shutting down');
-                });
-            });
-        }
-    }
-
-});
+$checkSignature->start();
 
 $loop->run();

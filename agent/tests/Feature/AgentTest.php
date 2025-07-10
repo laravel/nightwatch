@@ -46,8 +46,8 @@ class AgentTest extends TestCase
 
             $this->assertNull($e, $e?->getMessage() ?? '');
             $loop->assertCanceled([
-                new Timer(interval: 60, canceledAt: 60, scheduledAt: 0, scheduledBy: 'Agent'), // signature check
-                new Timer(interval: 60, canceledAt: 360, scheduledAt: 60, scheduledBy: 'Agent'), // app shutdown
+                new Timer(interval: 60, canceledAt: 60, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::start'), // signature check
+                new Timer(interval: 60, canceledAt: 360, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::signatureCheck'), // app shutdown
             ]);
             $this->assertLogMatches(<<<'OUTPUT'
                 {date} {info} Authentication successful {duration}
@@ -61,13 +61,12 @@ class AgentTest extends TestCase
 
             $loop->assertRunWithPeriodic([
                 new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
-                new Timer(interval: 60, runAt: 60, scheduledAt: 0, scheduledBy: 'Agent', periodic: true), // signature check: (see signature changed)
-                new Timer(interval: 60, runAt: 120, scheduledAt: 60, scheduledBy: 'Agent', periodic: true), // app shutdown: 4 mins left
-                new Timer(interval: 60, runAt: 180, scheduledAt: 60, scheduledBy: 'Agent', periodic: true), // app shutdown: 3 mins left
-                new Timer(interval: 60, runAt: 240, scheduledAt: 60, scheduledBy: 'Agent', periodic: true), // app shutdown: 2 mins left
-                new Timer(interval: 60, runAt: 300, scheduledAt: 60, scheduledBy: 'Agent', periodic: true), // app shutdown: 1 min left
-                new Timer(interval: 60, runAt: 360, scheduledAt: 60, scheduledBy: 'Agent', periodic: true), // app shutdown: 0 min left
-                new Timer(interval: 300, runAt: 360, scheduledAt: 60, scheduledBy: 'Agent'), // Signature mismatch shutdown
+                new Timer(interval: 60, runAt: 60, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::start', periodic: true), // signature check: (see signature changed)
+                new Timer(interval: 60, runAt: 120, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::signatureCheck', periodic: true), // agent shutdown: 4 mins left
+                new Timer(interval: 60, runAt: 180, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::signatureCheck', periodic: true), // agent shutdown: 3 mins left
+                new Timer(interval: 60, runAt: 240, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::signatureCheck', periodic: true), // agent shutdown: 2 mins left
+                new Timer(interval: 60, runAt: 300, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::signatureCheck', periodic: true), // agent shutdown: 1 min left
+                new Timer(interval: 60, runAt: 360, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::signatureCheck', periodic: true), // agent shutdown
             ]);
 
             $loop->assertPendingWithPeriodic([
@@ -95,11 +94,11 @@ class AgentTest extends TestCase
                 OUTPUT, $output);
 
             $loop->assertRunWithPeriodic([
-                new Timer(interval: 60, runAt: 60, scheduledAt: 0, scheduledBy: 'Agent', periodic: true),
-                new Timer(interval: 60, runAt: 120, scheduledAt: 0, scheduledBy: 'Agent', periodic: true),
+                new Timer(interval: 60, runAt: 60, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::start', periodic: true),
+                new Timer(interval: 60, runAt: 120, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::start', periodic: true),
             ]);
             $loop->assertPendingWithPeriodic([
-                new Timer(interval: 60, runAt: 180, scheduledAt: 0, scheduledBy: 'Agent', periodic: true),
+                new Timer(interval: 60, runAt: 180, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::start', periodic: true),
                 new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
             ]);
             $ingestDetailsBrowser->assertSent([
@@ -129,6 +128,5 @@ class AgentTest extends TestCase
         $this->assertLogMatches(<<<'OUTPUT'
             {date} {info} Authentication successful {duration}
             OUTPUT, $output);
-
     }
 }
