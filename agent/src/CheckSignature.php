@@ -30,38 +30,28 @@ class CheckSignature
     public function start(): void
     {
         $this->signatureCheckTimer = $this->loop->addPeriodicTimer(60, function () {
-            $this->signatureCheck(
-                loop: $this->loop,
-                basePath: $this->basePath,
-                expectedSignature: $this->expectedSignature,
-                onShutdownInitiated: $this->onShutdownInitiated,
-                onShutdown: $this->onShutdown
-            );
+            $this->signatureCheck();
         });
     }
 
-    /**
-     * @param  (Closure(int $shuttingDownIn): void)  $onShutdownInitiated
-     * @param  (Closure(): void)  $onShutdown
-     */
-    private function signatureCheck(LoopInterface $loop, string $basePath, string $expectedSignature, Closure $onShutdownInitiated, Closure $onShutdown): void
+    private function signatureCheck(): void
     {
-        $signature = @file_get_contents($basePath.'/signature.txt');
+        $signature = @file_get_contents($this->basePath.'/signature.txt');
 
-        if ($signature !== $expectedSignature) {
-            $loop->cancelTimer($this->signatureCheckTimer);
+        if ($signature !== $this->expectedSignature) {
+            $this->loop->cancelTimer($this->signatureCheckTimer);
 
             $shuttingDownIn = 5;
-            $onShutdownInitiated($shuttingDownIn);
+            ($this->onShutdownInitiated)($shuttingDownIn);
             $shuttingDownIn--;
 
-            $shutdownTimer = $loop->addPeriodicTimer(60, static function () use ($loop, &$shutdownTimer, $onShutdownInitiated, $onShutdown, &$shuttingDownIn) {
+            $shutdownTimer = $this->loop->addPeriodicTimer(60, function () use (&$shutdownTimer, &$shuttingDownIn) {
                 if ($shuttingDownIn <= 0) {
                     /** @var TimerInterface $shutdownTimer */
-                    $loop->cancelTimer($shutdownTimer);
-                    $onShutdown();
+                    $this->loop->cancelTimer($shutdownTimer);
+                    ($this->onShutdown)();
                 } else {
-                    $onShutdownInitiated($shuttingDownIn);
+                    ($this->onShutdownInitiated)($shuttingDownIn);
                     $shuttingDownIn--;
                 }
             });
