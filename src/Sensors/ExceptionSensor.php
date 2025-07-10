@@ -149,20 +149,15 @@ final class ExceptionSensor
 
             $sourceLines = [];
             for ($i = $startLine; $i <= $endLine; $i++) {
-                $sourceLines[] = [
-                    'line' => $i,
-                    'code' => $lines[$i - 1] ?? '',
-                    'is_exception_line' => $i === $line,
-                ];
+                $sourceLines[] = $lines[$i - 1] ?? '';
             }
 
             return [
                 'file' => $file,
                 'line' => $line,
+                'lines' => $sourceLines,
                 'start_line' => $startLine,
                 'end_line' => $endLine,
-                'total_lines' => $totalLines,
-                'lines' => $sourceLines,
             ];
         } catch (Throwable $e) {
             // If we can't read the file for any reason, return null

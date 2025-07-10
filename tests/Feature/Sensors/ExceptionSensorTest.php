@@ -740,7 +740,7 @@ class ExceptionSensorTest extends TestCase
 
     public function test_it_captures_source_code_lines(): void
     {
-        Config::set('nightwatch.exceptions.capture_source_lines', false);
+        Config::set('nightwatch.exceptions.capture_source_lines', true);
 
         $ingest = $this->fakeIngest();
 
@@ -770,14 +770,71 @@ class ExceptionSensorTest extends TestCase
                     [
                         'file' => 'workbench/app/Mail/MyMail.php:28',
                         'source' => 'Illuminate\\Mail\\Mailables\\Envelope->__construct(null, array, array, array, array, array)',
+                        'source_lines' => [
+                            'file' => 'workbench/app/Mail/MyMail.php',
+                            'line' => 28,
+                            'lines' => [
+                                '    /**',
+                                '     * Get the message envelope.',
+                                '     */',
+                                '    public function envelope(): Envelope',
+                                '    {',
+                                '        return new Envelope(',
+                                '            subject: $this->subject,',
+                                '        );',
+                                '    }',
+                                '',
+                                '    /**',
+                            ],
+                            'start_line' => 23,
+                            'end_line' => 33,
+                        ],
                     ],
                     [
                         'file' => 'vendor/laravel/framework/src/Illuminate/Mail/Mailable.php:1728',
                         'source' => 'App\\Mail\\MyMail->envelope()',
+                        'source_lines' => [
+                            'file' => 'vendor/laravel/framework/src/Illuminate/Mail/Mailable.php',
+                            'line' => 1728,
+                            'lines' => [
+                                '    {',
+                                '        if (! method_exists($this, \'envelope\')) {',
+                                '            return;',
+                                '        }',
+                                '',
+                                '        $envelope = $this->envelope();',
+                                '',
+                                '        if (isset($envelope->from)) {',
+                                '            $this->from($envelope->from->address, $envelope->from->name);',
+                                '        }',
+                                '',
+                            ],
+                            'start_line' => 1723,
+                            'end_line' => 1733,
+                        ],
                     ],
                     [
                         'file' => 'vendor/laravel/framework/src/Illuminate/Mail/Mailable.php:1684',
                         'source' => 'Illuminate\\Mail\\Mailable->ensureEnvelopeIsHydrated()',
+                        'source_lines' => [
+                            'file' => 'vendor/laravel/framework/src/Illuminate/Mail/Mailable.php',
+                            'line' => 1684,
+                            'lines' => [
+                                '        if (method_exists($this, \'build\')) {',
+                                '            Container::getInstance()->call([$this, \'build\']);',
+                                '        }',
+                                '',
+                                '        $this->ensureHeadersAreHydrated();',
+                                '        $this->ensureEnvelopeIsHydrated();',
+                                '        $this->ensureContentIsHydrated();',
+                                '        $this->ensureAttachmentsAreHydrated();',
+                                '    }',
+                                '',
+                                '    /**',
+                            ],
+                            'start_line' => 1679,
+                            'end_line' => 1689,
+                        ],
                     ],
                     [
                         'file' => 'vendor/laravel/framework/src/Illuminate/Mail/Mailable.php:201',
@@ -1032,7 +1089,7 @@ class ExceptionSensorTest extends TestCase
                         'source' => 'Orchestra\\Testbench\\TestCase->call(string, string, array, array, array, array)',
                     ],
                     [
-                        'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php:747',
+                        'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php:745',
                         'source' => 'Orchestra\\Testbench\\TestCase->get(string)',
                     ],
                     [
