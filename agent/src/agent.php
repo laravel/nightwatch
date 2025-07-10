@@ -43,14 +43,6 @@ $loop ??= null;
 /** @var ?string $refreshToken */
 $refreshToken ??= $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
 /** @var string $refreshToken */
-/** @var ?string $expectedSignature */
-$expectedSignature = file_get_contents($basePath.'/signature.txt');
-if ($expectedSignature === false) {
-    $error("Unable to read the agent's signature");
-
-    return;
-}
-/** @var string $expectedSignature */
 /** @var ?string $baseUrl */
 $baseUrl ??= $_SERVER['NIGHTWATCH_BASE_URL'] ?? 'https://nightwatch.laravel.com';
 /** @var string $baseUrl */
@@ -85,6 +77,14 @@ $error = static function (string $message): void {
 $debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
 /** @var ?string $basePath */
 $basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
+/** @var string|false $expectedSignature */
+$expectedSignature = file_get_contents($basePath.'/signature.txt');
+if ($expectedSignature === false) {
+    $error("Unable to read the agent's signature");
+
+    return;
+}
+/** @var string $expectedSignature */
 $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 
 /*
@@ -183,33 +183,36 @@ $server->start();
 $ingestDetails->hydrate();
 
 $restartingIn = null;
-$timer = $loop->addPeriodicTimer(60, function () use ($loop, &$timer, $ingest, &$restartingIn, $error, $info, $basePath, $expectedSignature) {
+$timer = $loop->addPeriodicTimer(60, static function () use ($loop, &$timer, $ingest, &$restartingIn, $error, $info, $basePath, $expectedSignature) {
     $signature = file_get_contents($basePath.'/signature.txt');
 
     if ($signature === false) {
         $error('Unable to read signature');
+
         return;
     }
 
-    if ($restartingIn != null && $restartingIn != 0) {
+    if ($restartingIn !== null && $restartingIn !== 0) {
         $info('Agent signature changed: restarting in '.$restartingIn.' minutes');
         $restartingIn--;
     }
 
-    if ($signature != $expectedSignature) {
+    if ($signature !== $expectedSignature) {
         // Set restart countdown if not already set
         if ($restartingIn === null) {
             $restartingIn = 4;
             $info('Agent signature changed: restarting in 5 minutes');
 
             // Schedule the actual restart
-            $loop->addTimer(60 * 5, function () use ($info, $loop, $ingest, &$timer) {
+            $loop->addTimer(60 * 5, static function () use ($info, $loop, $ingest, &$timer) {
                 $info('Agent signature changed: restarting');
                 $ingest->forceDigest()->finally(static function () use ($info, $loop) {
                     $loop->stop();
                     $info('Shutting down');
                 });
-                $loop->cancelTimer($timer);
+                if ($timer instanceof \React\EventLoop\TimerInterface) {
+                    $loop->cancelTimer($timer);
+                }
             });
         }
 

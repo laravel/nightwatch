@@ -2,6 +2,7 @@
 /.phpunit.result.cache
 /.pint.cache
 /.pint.ci.cache
+/.phpactor.json
 /composer.lock
 /node_modules
 /phpunit.xml

@@ -8,8 +8,10 @@ use React\EventLoop\Timer\Timer as ReactTimer;
 use React\EventLoop\TimerInterface;
 use RuntimeException;
 
+use function array_filter;
 use function array_map;
 use function array_shift;
+use function array_values;
 use function count;
 use function debug_backtrace;
 use function microtime;
@@ -19,7 +21,7 @@ use function usort;
 class LoopFake implements LoopInterface
 {
     /**
-     * @var list<array{runAt: float, scheduledAt: float, scheduledBy: string, interval: float, callback: ?callable, instance: ?TimerInterface }>
+     * @var list<array{runAt: float, scheduledAt: float, scheduledBy: string, interval: float, callback: ?callable, instance: ?TimerInterface, periodic: bool }>
      */
     public array $pendingTimers = [];
 
@@ -29,7 +31,7 @@ class LoopFake implements LoopInterface
     public array $canceledTimers = [];
 
     /**
-     * @var list<array{interval: float, runAt: float, scheduledAt: float, scheduledBy: string}>
+     * @var list<array{interval: float, runAt: float, scheduledAt: float, scheduledBy: string, periodic: bool }>
      */
     public array $timersRun = [];
 
@@ -111,9 +113,9 @@ class LoopFake implements LoopInterface
 
         if ($calledBy !== null) {
             $scheduledBy = $calledBy;
-        } elseif ($class == null) {
-            $scheduledBy = "Agent";
-        } else if (str_starts_with($class, 'P\\Tests\\Feature')) {
+        } elseif ($class === '') {
+            $scheduledBy = 'Agent';
+        } elseif (str_starts_with($class, 'P\\Tests\\Feature')) {
             $scheduledBy = $class;
         } else {
             $scheduledBy = "{$class}::{$frame['function']}";
@@ -231,7 +233,7 @@ class LoopFake implements LoopInterface
                     'periodic' => $periodic,
                 ];
 
-                if($periodic){
+                if ($periodic) {
                     $this->pendingTimers[0]['runAt'] = $this->now + $interval;
                     $this->sortPendingTimers();
                 } else {

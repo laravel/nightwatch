@@ -9,6 +9,8 @@ use Tests\Response;
 use Tests\TestCase;
 use Tests\Timer;
 
+use function file_put_contents;
+
 class AgentTest extends TestCase
 {
     public static function write_signature(): void
@@ -95,4 +97,3 @@ class AgentTest extends TestCase
 
     }
 }
-
