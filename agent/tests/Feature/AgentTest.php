@@ -14,23 +14,7 @@ use function file_put_contents;
 
 class AgentTest extends TestCase
 {
-    public static function writeSignature(string $content = 'abcd'): void
-    {
-        file_put_contents(__DIR__.'/../../build/signature.txt', $content);
-    }
-
-    public static function getSignature(): string
-    {
-        return file_get_contents(__DIR__.'/../../build/signature.txt') ?: '';
-    }
-
-    public static function touchSignature(): void
-    {
-        $signature = self::getSignature();
-        self::writeSignature($signature);
-    }
-
-    public function test_it_works(): void
+    public function test_it_restarts_on_signature_changed(): void
     {
         $originalSignature = self::getSignature();
         try {
@@ -47,7 +31,7 @@ class AgentTest extends TestCase
             $this->assertNull($e, $e?->getMessage() ?? '');
             $loop->assertCanceled([
                 new Timer(interval: 60, canceledAt: 60, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::start'), // signature check
-                new Timer(interval: 60, canceledAt: 360, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::signatureCheck'), // app shutdown
+                new Timer(interval: 60, canceledAt: 360, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::scheduledShutdown'), // app shutdown
             ]);
             $this->assertLogMatches(<<<'OUTPUT'
                 {date} {info} Authentication successful {duration}
@@ -62,11 +46,11 @@ class AgentTest extends TestCase
             $loop->assertRunWithPeriodic([
                 new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
                 new Timer(interval: 60, runAt: 60, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::start', periodic: true), // signature check: (see signature changed)
-                new Timer(interval: 60, runAt: 120, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::signatureCheck', periodic: true), // agent shutdown: 4 mins left
-                new Timer(interval: 60, runAt: 180, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::signatureCheck', periodic: true), // agent shutdown: 3 mins left
-                new Timer(interval: 60, runAt: 240, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::signatureCheck', periodic: true), // agent shutdown: 2 mins left
-                new Timer(interval: 60, runAt: 300, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::signatureCheck', periodic: true), // agent shutdown: 1 min left
-                new Timer(interval: 60, runAt: 360, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::signatureCheck', periodic: true), // agent shutdown
+                new Timer(interval: 60, runAt: 120, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::scheduledShutdown', periodic: true), // agent shutdown: 4 mins left
+                new Timer(interval: 60, runAt: 180, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::scheduledShutdown', periodic: true), // agent shutdown: 3 mins left
+                new Timer(interval: 60, runAt: 240, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::scheduledShutdown', periodic: true), // agent shutdown: 2 mins left
+                new Timer(interval: 60, runAt: 300, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::scheduledShutdown', periodic: true), // agent shutdown: 1 min left
+                new Timer(interval: 60, runAt: 360, scheduledAt: 60, scheduledBy: 'Laravel\NightwatchAgent\CheckSignature::scheduledShutdown', periodic: true), // agent shutdown
             ]);
 
             $loop->assertPendingWithPeriodic([
@@ -113,7 +97,6 @@ class AgentTest extends TestCase
 
     public function test_it_does_not_restart_unless_signature_changes(): void
     {
-        // touch the file.
         $loop = new LoopFake(runForSeconds: 60 * 20);
         $loop->addTimer(1, [self::class, 'touchSignature']);
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
@@ -128,5 +111,21 @@ class AgentTest extends TestCase
         $this->assertLogMatches(<<<'OUTPUT'
             {date} {info} Authentication successful {duration}
             OUTPUT, $output);
+    }
+
+    public static function writeSignature(string $content = 'abcd'): void
+    {
+        file_put_contents(__DIR__ . '/../../build/signature.txt', $content);
+    }
+
+    public static function getSignature(): string
+    {
+        return file_get_contents(__DIR__ . '/../../build/signature.txt') ?: '';
+    }
+
+    public static function touchSignature(): void
+    {
+        $signature = self::getSignature();
+        self::writeSignature($signature);
     }
 }

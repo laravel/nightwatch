@@ -10,7 +10,7 @@ use function file_get_contents;
 
 class CheckSignature
 {
-    private TimerInterface $signatureCheckTimer;
+    private TimerInterface $checkTimer;
 
     private TimerInterface $shutdownTimer;
 
@@ -32,10 +32,10 @@ class CheckSignature
 
     public function start(): void
     {
-        $this->signatureCheckTimer = $this->loop->addPeriodicTimer(60, $this->signatureCheck(...));
+        $this->checkTimer = $this->loop->addPeriodicTimer(60, $this->check(...));
     }
 
-    private function signatureCheck(): void
+    private function check(): void
     {
         $signature = @file_get_contents($this->signaturePath);
 
@@ -48,17 +48,17 @@ class CheckSignature
 
     private function scheduledShutdown(): void
     {
-        $this->loop->cancelTimer($this->signatureCheckTimer);
+        $this->loop->cancelTimer($this->checkTimer);
 
         $shuttingDownIn = $this->shutdownDelayInMinutes;
         ($this->onShutdownInitiated)($shuttingDownIn);
 
         $this->shutdownTimer = $this->loop->addPeriodicTimer(60, function () use (&$shuttingDownIn) {
+            $shuttingDownIn--;
             if ($shuttingDownIn <= 0) {
                 $this->loop->cancelTimer($this->shutdownTimer);
                 ($this->onShutdown)();
             } else {
-                $shuttingDownIn--;
                 ($this->onShutdownInitiated)($shuttingDownIn);
             }
         });
