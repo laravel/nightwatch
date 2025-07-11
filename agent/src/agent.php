@@ -166,9 +166,7 @@ $server = new Server(
             $info('Shutting down');
         });
     },
-    onInvalidTokenHash: static function () use ($error) {
-        $error('Incoming token hash mismatch! Check your application/agent configuration.');
-    },
+    onInvalidTokenHash: static fn () => $error('Incoming token hash mismatch! Check your application/agent configuration.'),
 );
 
 $checkSignature = new CheckSignature(
