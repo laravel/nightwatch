@@ -166,14 +166,8 @@ $server = new Server(
             $info('Shutting down');
         });
     },
-    onInvalidTokenHash: static function () use ($info, $loop, $ingest) {
-        $info('Incoming token hash mismatch! Check your application/agent configuration.');
-
-        $ingest->forceDigest()->finally(static function () use ($info, $loop) {
-            $loop->stop();
-
-            $info('Shutting down');
-        });
+    onInvalidTokenHash: static function () use ($error) {
+        $error('Incoming token hash mismatch! Check your application/agent configuration.');
     },
 );
 
