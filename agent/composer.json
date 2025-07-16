@@ -69,8 +69,9 @@
         ]
     },
     "config": {
-        "sort-packages": true,
-        "autoloader-suffix": "zUjV6thn8dELeOw6"
+        "autoloader-suffix": "zUjV6thn8dELeOw6",
+        "classmap-authoritative": true,
+        "sort-packages": true
     },
     "minimum-stability": "stable",
     "prefer-stable": true
