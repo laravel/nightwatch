@@ -62,7 +62,7 @@ class ServerTest extends TestCase
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake;
 
-        $loop->addTimer(0, $server->pendingConnection('15:v1:' . $tokenHash . ':PING'));
+        $loop->addTimer(0, $server->pendingConnection('15:v1:'.$tokenHash.':PING'));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -103,7 +103,7 @@ class ServerTest extends TestCase
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake([]);
 
-        $loop->addTimer(1, $server->pendingConnection('20:INVALID:' . $tokenHash . ':[{}]'));
+        $loop->addTimer(1, $server->pendingConnection('20:INVALID:'.$tokenHash.':[{}]'));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
