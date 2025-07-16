@@ -62,7 +62,7 @@ class ServerTest extends TestCase
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake;
 
-        $loop->addTimer(0, $server->pendingConnection('15:v1:'.$tokenHash.':PING'));
+        $loop->addTimer(0, $server->pendingConnection('15:v1:' . $tokenHash . ':PING'));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -103,7 +103,7 @@ class ServerTest extends TestCase
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake([]);
 
-        $loop->addTimer(1, $server->pendingConnection('20:INVALID:'.$tokenHash.':[{}]'));
+        $loop->addTimer(1, $server->pendingConnection('20:INVALID:' . $tokenHash . ':[{}]'));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -149,7 +149,7 @@ class ServerTest extends TestCase
         ]);
 
         $loop->addTimer(1, $server->pendingConnection('15:v1:INVALID:[{}]'));
-        $loop->addTimer(20, $server->pendingConnection('15:v1:'.$tokenHash.':[{}]'));
+        $loop->addTimer(20, $server->pendingConnection([['t' => 'request']]));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -160,6 +160,7 @@ class ServerTest extends TestCase
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
+        $server->assertOpen();
         $server->assertHandled([
             Connection::ok(),
             Connection::ok(),
@@ -177,8 +178,12 @@ class ServerTest extends TestCase
         $loop->assertPending([
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
+        $this->assertFalse($loop->stopped);
         $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),
+        ]);
+        $ingestBrowser->assertSent([
+            Request::ingest([['t' => 'request']]),
         ]);
         $ingestDetailsBrowser->assertPending([]);
         $ingestBrowser->assertPending([]);
