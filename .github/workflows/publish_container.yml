@@ -39,11 +39,11 @@ jobs:
           file: agent/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          platforms:
-            - linux/arm64
-            - linux/amd64
-          tags:
-            - laravelphp/nightwatch-agent:v${{ steps.get-version.outputs.full_version }}
-            - laravelphp/nightwatch-agent:v${{ steps.get-version.outputs.major_version }}
-            - laravelphp/nightwatch-agent:v${{ steps.get-version.outputs.minor_version }}
-            - laravelphp/nightwatch-agent:latest
+          platforms: |
+            linux/arm64
+            linux/amd64
+          tags: |
+            laravelphp/nightwatch-agent:v${{ steps.get-version.outputs.full_version }}
+            laravelphp/nightwatch-agent:v${{ steps.get-version.outputs.major_version }}
+            laravelphp/nightwatch-agent:v${{ steps.get-version.outputs.minor_version }}
+            laravelphp/nightwatch-agent:latest
