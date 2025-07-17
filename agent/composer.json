@@ -39,7 +39,10 @@
     "autoload": {
         "psr-4": {
             "Laravel\\NightwatchAgent\\": "src/"
-        }
+        },
+        "files": [
+            "vendor/react/promise/src/functions_include.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
