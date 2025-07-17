@@ -6,4 +6,4 @@ box compile
 
 SIGNATURE=$(box info:signature build/agent.phar)
 
-echo $SIGNATURE >build/signature.txt
+echo $SIGNATURE > build/signature.txt
