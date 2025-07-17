@@ -139,3 +139,4 @@ jobs:
           make_latest: true
           name: "v${{ steps.bump-version.outputs.version }}"
           tag_name: "v${{ steps.bump-version.outputs.version }}"
+          token: ${{ steps.app-token.outputs.token }}
