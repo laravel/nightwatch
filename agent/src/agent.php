@@ -22,8 +22,7 @@ use function rtrim;
 use function str_replace;
 use function substr;
 
-require __DIR__.'/../vendor/react/promise/src/functions_include.php';
-require __DIR__.'/../vendor/autoload.php';
+require __DIR__.'/bootstrap.php';
 
 /*
  * Testing...
