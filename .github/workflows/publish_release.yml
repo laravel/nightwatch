@@ -62,7 +62,7 @@ jobs:
         run: |
           echo "Current: ${{ steps.current_version.outputs.version }}"
           echo "Release: ${{ steps.release_version.outputs.version }}"
-          if [ "${{ steps.current_version.outputs.version }}" != "${{ steps.release_version.outputs.version }}" ]; then
+          if [ "${{ steps.current_version.outputs.version }}" != "${{ steps.release_version.outputs.version }}" ] && [ "${{ steps.current_version.outputs.version }}" != "" ]; then
             echo "PAYLOAD_VERSION has changed."
             exit 1
           else
