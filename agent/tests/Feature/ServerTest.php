@@ -101,7 +101,7 @@ class ServerTest extends TestCase
         $loop = new LoopFake(runForSeconds: 2);
         $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
-        $ingestBrowser = new BrowserFake;
+        $ingestBrowser = new BrowserFake([]);
 
         $loop->addTimer(1, $server->pendingConnection('20:INVALID:'.$tokenHash.':[{}]'));
 
@@ -138,14 +138,18 @@ class ServerTest extends TestCase
         $ingestBrowser->assertPending([]);
     }
 
-    public function test_it_stops_loop_when_an_incorrect_token_hash_is_received(): void
+    public function test_it_errors_when_an_incorrect_token_hash_is_received(): void
     {
-        $loop = new LoopFake(runForSeconds: 2);
+        $tokenHash = self::tokenHash();
+        $loop = new LoopFake(runForSeconds: 40);
         $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
-        $ingestBrowser = new BrowserFake;
+        $ingestBrowser = new BrowserFake([
+            Response::ingested(),
+        ]);
 
         $loop->addTimer(1, $server->pendingConnection('15:v1:INVALID:[{}]'));
+        $loop->addTimer(20, $server->pendingConnection([['t' => 'request']]));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -156,27 +160,32 @@ class ServerTest extends TestCase
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
+        $server->assertOpen();
         $server->assertHandled([
             Connection::ok(),
+            Connection::ok(),
         ]);
-        $server->assertClosed();
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Incoming token hash mismatch! Check your application/agent configuration.
-        {date} {info} Shutting down
+        {date} {error} Incoming token hash mismatch! Check your application/agent configuration.
+        {date} {info} Ingest successful {duration}
         OUTPUT, $output);
         $loop->assertRun([
             new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
+            new Timer(interval: 20, runAt: 20, scheduledAt: 0, scheduledBy: $this->functionName()),
+            new Timer(interval: 10, runAt: 30, scheduledAt: 20, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
         ]);
         $loop->assertPending([
-            new Timer(interval: 3_600, runAt: null, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+            new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
-        $this->assertTrue($loop->stopped);
+        $this->assertFalse($loop->stopped);
         $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
+        $ingestBrowser->assertSent([
+            Request::ingest([['t' => 'request']]),
+        ]);
         $ingestDetailsBrowser->assertPending([]);
-        $ingestBrowser->assertSent([]);
         $ingestBrowser->assertPending([]);
     }
 }

@@ -66,8 +66,6 @@ class Server
                 }
 
                 if ($payload->tokenHash !== $this->tokenHash) {
-                    $server->close();
-
                     call_user_func($this->onInvalidTokenHash);
 
                     return;

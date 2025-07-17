@@ -17,12 +17,33 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Compute version
+        shell: bash
+        id: get-version
+        run: |
+          IFS="."
+          full_version=$(cat version.txt)
+          if [[ $full_version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            major=${BASH_REMATCH[1]}
+            minor=${BASH_REMATCH[2]}
+          fi
+
+          echo "major_version=${major}" >> $GITHUB_OUTPUT
+          echo "minor_version=${major}.${minor}" >> $GITHUB_OUTPUT
+          echo "full_version=${full_version}" >> $GITHUB_OUTPUT
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           push: true
           file: agent/Dockerfile
-          tags: laravelphp/nightwatch-agent:${{ github.ref_name }},laravelphp/nightwatch-agent:latest
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          platforms: linux/arm64, linux/amd64
+          platforms:
+            - linux/arm64
+            - linux/amd64
+          tags:
+            - laravelphp/nightwatch-agent:v${{ steps.get-version.outputs.full_version }}
+            - laravelphp/nightwatch-agent:v${{ steps.get-version.outputs.major_version }}
+            - laravelphp/nightwatch-agent:v${{ steps.get-version.outputs.minor_version }}
+            - laravelphp/nightwatch-agent:latest
