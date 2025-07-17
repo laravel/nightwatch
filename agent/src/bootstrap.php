@@ -1,7 +1,8 @@
 <?php
 
-require __DIR__.'/../vendor/autoload.php';
+/** @var \Composer\Autoload\ClassLoader $autoloader */
+$autoloader = require __DIR__.'/../vendor/autoload.php';
 
-foreach (require __DIR__.'/../vendor/composer/autoload_classmap.php' as $class => $path) {
-    class_exists($class, autoload: true);
+foreach ($autoloader->getClassMap() as $path) {
+    require_once $path;
 }
