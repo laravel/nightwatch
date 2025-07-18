@@ -12,11 +12,11 @@ $payload = 'PING';
 $payloadToSend = null;
 
 $payloadLength = strlen($payloadVersion) + 1 + strlen($tokenHash) + 1 + strlen($payload);
-$payloadToSend = $payloadLength . ':' . $payloadVersion . ':' . $tokenHash . ':' . $payload;
+$payloadToSend = $payloadLength.':'.$payloadVersion.':'.$tokenHash.':'.$payload;
 
 $stream = @stream_socket_client($address, $errno, $errstr, $timeout);
-if (!$stream) {
-    fwrite(STDERR, "Unable to connect to agent: $errstr\n");
+if (! $stream) {
+    fwrite(STDERR, "Unable to connect to agent: {$errstr}\n");
     exit(1);
 }
 
@@ -34,6 +34,6 @@ if ($response === '2:OK') {
     echo "Agent is healthy\n";
     exit(0);
 } else {
-    fwrite(STDERR, "Agent health check failed, response: [$response]\n");
+    fwrite(STDERR, "Agent health check failed, response: [{$response}]\n");
     exit(1);
 }
