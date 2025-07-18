@@ -18,7 +18,7 @@ $autoloader = require __DIR__.'/../vendor/autoload.php';
 // `$GLOBALS['__composer_autoload_files']`, based on the file's hash. If the
 // agent and the consuming package require the same dependencies it is entirely
 // possible that the agent's autoloader will mistakely think it has already
-// autloaded the shared dependencies files.
+// autoloaded the shared dependencies files.
 //
 // To get around this, we manually require each of the files. It is possible
 // that adding additional dependencies to the agent will result in requiring
