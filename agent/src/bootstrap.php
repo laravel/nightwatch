@@ -1,8 +1,5 @@
 <?php
 
-/** @var \Composer\Autoload\ClassLoader $autoloader */
-$autoloader = require __DIR__.'/../vendor/autoload.php';
-
 // When we run the agent within a Laravel application, the consuming Laravel
 // application will have run its own autoloader. When this happens, Composer
 // fills the `$GLOBALS['__composer_autoload_files']` variable with all
@@ -20,12 +17,17 @@ $autoloader = require __DIR__.'/../vendor/autoload.php';
 // possible that the agent's autoloader will mistakely think it has already
 // autoloaded the shared dependencies files.
 //
-// To get around this, we manually require each of the files. It is possible
-// that adding additional dependencies to the agent will result in requiring
-// files that cannot be included twice. We can handle that when it happens.
-foreach (require __DIR__.'/../vendor/composer/autoload_files.php' as $hash => $path) {
-    require $path;
-}
+// To get around this, we temporarily empty the composer autoload files from
+// from `$GLOBALS`, require the agent's autoloader, and then restore the global
+// scope's autoloaded files in the `$GLOBALS` variable. This allows composer to
+// autoload our depedencies files again.
+$composerAutoloadFiles = $GLOBALS['__composer_autoload_files'];
+$GLOBALS['__composer_autoload_files'] = [];
+
+/** @var \Composer\Autoload\ClassLoader $autoloader */
+$autoloader = require __DIR__.'/../vendor/autoload.php';
+
+$GLOBALS['__composer_autoload_files'] = $composerAutoloadFiles;
 
 // PHP lazily autoloads classes as they are encountered. A PHAR contains a
 // virtual file system, to some degree, where each file exists as a line
