@@ -13,7 +13,7 @@ $autoloader = require __DIR__.'/../vendor/autoload.php';
 // application we inherit the `$GLOBALS` variable from the outer scope. The
 // PHAR is not an isolated environment.
 //
-// As Composer encouters each file to autoload it checks to ensure that
+// As Composer encounters each file to autoload it checks to ensure that
 // Composer has not already required the file, by checking
 // `$GLOBALS['__composer_autoload_files']`, based on the file's hash. If the
 // agent and the consuming package require the same dependencies it is entirely
