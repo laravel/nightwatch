@@ -21,7 +21,7 @@
 // from `$GLOBALS`, require the agent's autoloader, and then restore the global
 // scope's autoloaded files in the `$GLOBALS` variable. This allows composer to
 // autoload our depedencies files again.
-$composerAutoloadFiles = $GLOBALS['__composer_autoload_files'];
+$composerAutoloadFiles = $GLOBALS['__composer_autoload_files'] ?? [];
 $GLOBALS['__composer_autoload_files'] = [];
 
 /** @var \Composer\Autoload\ClassLoader $autoloader */
