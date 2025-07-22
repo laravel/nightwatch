@@ -10,6 +10,7 @@ use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
+use SplFileObject;
 use stdClass;
 use Throwable;
 
@@ -20,7 +21,6 @@ use function array_push;
 use function count;
 use function debug_backtrace;
 use function file_exists;
-use function file_get_contents;
 use function gettype;
 use function hash;
 use function implode;
@@ -30,8 +30,6 @@ use function is_readable;
 use function is_string;
 use function json_encode;
 use function max;
-use function min;
-use function preg_split;
 use function rtrim;
 use function str_starts_with;
 
@@ -91,7 +89,7 @@ final class ExceptionSensor
             'line' => $line ?? 0,
             'message' => Str::text($normalizedException->getMessage()),
             'code' => (string) $normalizedException->getCode(),
-            'trace' => Str::mediumText($this->serializeTrace($normalizedException, $this->config->get('nightwatch.exceptions.capture_source_lines', true))),
+            'trace' => Str::mediumText($this->serializeTrace($normalizedException, (bool) $this->config->get('nightwatch.exceptions.capture_source_lines', true))),
             'handled' => $handled,
             'php_version' => $this->executionState->phpVersion,
             'laravel_version' => $this->executionState->laravelVersion,
@@ -114,34 +112,27 @@ final class ExceptionSensor
     /**
      * Collect source code lines around the provided line.
      */
-    private function collectSourceCodeLines(string $contents, ?int $line, int $contextLines = 5): ?stdClass
+    private function collectSourceCodeLines(SplFileObject $contents, ?int $line, int $contextLines = 5): ?stdClass
     {
         if ($line === null) {
             return null;
         }
 
-        $lines = preg_split('/\r\n|\r|\n/', $contents);
-        if ($lines === false) {
-            return null;
-        }
-
-        $totalLines = count($lines);
-        $startLine = max(1, $line - $contextLines);
-        $endLine = min($totalLines, $line + $contextLines);
-
         $sourceCodeLines = new stdClass;
-        for ($i = $startLine; $i <= $endLine; $i++) {
-            $sourceCodeLines->{$i} = $lines[$i - 1] ?? '';
+
+        $contents->seek(max(0, $line - 1 - $contextLines));
+
+        while ($contents->key() <= $line - 1 + $contextLines && ! $contents->eof()) {
+            $sourceCodeLines->{$contents->key() + 1} = rtrim($contents->fgets(), "\r\n");
         }
 
         return $sourceCodeLines;
-
     }
 
     /**
      * Load the source code for the provided file.
      */
-    private function loadSourceCode(string $file): ?string
+    private function loadSourceCode(string $file): ?SplFileObject
     {
         $fullPath = $file;
         if (! str_starts_with($file, DIRECTORY_SEPARATOR)) {
@@ -154,13 +145,7 @@ final class ExceptionSensor
         }
 
         try {
-            $contents = file_get_contents($fullPath);
-            if ($contents === false) {
-                return null;
-            }
-
-            return $contents;
-
+            return new SplFileObject($fullPath);
         } catch (Throwable $e) {
             return null;
         }
@@ -230,6 +215,7 @@ final class ExceptionSensor
             $traceFrame = ['file' => $file, 'source' => $source];
 
             if (
+                isset($frame['file'], $frame['line']) &&
                 ! $this->location->isVendorFile($frame['file']) &&
                 ! $this->location->isInternalFile($frame['file']) &&
                 $originalFile !== '[internal function]' &&
@@ -244,7 +230,10 @@ final class ExceptionSensor
         if ($captureSourceLines) {
             foreach ($userFiles as $file => $frames) {
                 $fileContents = $this->loadSourceCode($file);
-                foreach ($frames as $frame) {
+                if ($fileContents === null) {
+                    continue;
+                }
+                foreach ($frames as $frame) { // @phpstan-ignore foreach.emptyArray
                     $sourceCodeLines = $this->collectSourceCodeLines($fileContents, $frame['frameLine']);
                     if ($sourceCodeLines === null) {
                         continue;

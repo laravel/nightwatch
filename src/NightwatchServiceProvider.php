@@ -113,6 +113,9 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     deployment?: string,
      *     server?: string,
      *     ingest?: array{ uri?: string, timeout?: float|int, connection_timeout?: float|int, event_buffer?: int },
+     *     exceptions?: array{
+     *         capture_source_lines?: bool,
+     *     }
      *  }
      */
     private array $nightwatchConfig;
