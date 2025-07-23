@@ -36,7 +36,10 @@ final class Compatibility
     public static bool $queuedJobDurationCapturable = false;
 
     /**
-     * @var array<string, mixed>
+     * @var array{
+     *   nightwatch_should_sample?: bool|null,
+     *   nightwatch_trace_id?: string|null,
+     * }
      */
     public static array $context = [];
 
@@ -94,13 +97,22 @@ final class Compatibility
         if (! self::$contextExists) {
             Queue::createPayloadUsing(static fn ($c, $q, array $payload) => [
                 ...$payload,
-                'nightwatch' => self::$context,
+                'nightwatch' => [
+                    ...($payload['nightwatch'] ?? []),
+                    'nightwatch_trace_id' => self::$context['nightwatch_trace_id'] ?? null,
+                    'nightwatch_should_sample' => self::$context['nightwatch_should_sample'] ?? null,
+                ],
             ]);
 
             /** @var Dispatcher */
             $events = $app->make(Dispatcher::class);
             $events->listen(static function (JobProcessing $event) {
-                self::$context = $event->job->payload()['nightwatch'] ?? [];
+                $nightwatch = $event->job->payload()['nightwatch'] ?? [];
+
+                self::$context = [
+                    'nightwatch_trace_id' => $nightwatch['nightwatch_trace_id'] ?? null,
+                    'nightwatch_should_sample' => $nightwatch['nightwatch_should_sample'] ?? null,
+                ];
             });
         }
     }
@@ -119,14 +131,36 @@ final class Compatibility
         return implode(' ', $tokens);
     }
 
+    public static function addSamplingToContext(bool $sample): void
+    {
+        self::addHiddenContext('nightwatch_should_sample', $sample);
+    }
+
+    public static function getSamplingFromContext(mixed $default = null): mixed
+    {
+        return self::getHiddenContext('nightwatch_should_sample', $default);
+    }
+
+    public static function addTraceIdToContext(string $trace): void
+    {
+        self::addHiddenContext('nightwatch_trace_id', $trace);
+    }
+
+    public static function getTraceIdFromContext(mixed $default = null): mixed
+    {
+        return self::getHiddenContext('nightwatch_trace_id', $default);
+    }
+
     /**
      * @see https://github.com/laravel/framework/pull/49730
      * @see https://github.com/laravel/framework/releases/tag/v11.0.0
+     *
+     * @param  'nightwatch_trace_id'|'nightwatch_should_sample'  $key
      */
-    public static function addHiddenContext(string $key, mixed $value): void
+    private static function addHiddenContext(string $key, mixed $value): void
     {
         if (! self::$contextExists) {
-            self::$context[$key] = $value;
+            self::$context[$key] = $value; // @phpstan-ignore assign.propertyType
 
             return;
         }
@@ -137,8 +171,10 @@ final class Compatibility
     /**
      * @see https://github.com/laravel/framework/pull/49730
      * @see https://github.com/laravel/framework/releases/tag/v11.0.0
+     *
+     * @param  'nightwatch_trace_id'|'nightwatch_should_sample'  $key
      */
-    public static function getHiddenContext(string $key, mixed $default = null): mixed
+    private static function getHiddenContext(string $key, mixed $default = null): mixed
     {
         if (! self::$contextExists) {
             return self::$context[$key] ?? value($default);

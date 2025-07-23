@@ -156,7 +156,7 @@ abstract class TestCase extends OrchestraTestCase
     {
         $this->core->executionState->trace = $traceId;
 
-        Compatibility::addHiddenContext('nightwatch_trace_id', $traceId);
+        Compatibility::addTraceIdToContext($traceId);
     }
 
     protected function setExecutionStart(CarbonImmutable $timestamp): void

@@ -8,6 +8,7 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Support\Uuid;
 use Throwable;
 use WeakMap;
 
@@ -50,6 +51,7 @@ final class Core
         public SensorManager $sensor,
         public RequestState|CommandState $executionState,
         public Clock $clock,
+        public Uuid $uuid,
         public array $config,
     ) {
         $this->routesWithMiddlewareRegistered = new WeakMap;

@@ -4,8 +4,9 @@ namespace Tests;
 
 use Illuminate\Contracts\Queue\Job as JobContract;
 use Illuminate\Queue\Jobs\Job;
-use Illuminate\Support\Str;
+use Laravel\Nightwatch\Core;
 
+use function app;
 use function once;
 
 class FakeJob extends Job implements JobContract
@@ -17,7 +18,7 @@ class FakeJob extends Job implements JobContract
      */
     public function getJobId()
     {
-        return once(fn () => (string) Str::uuid());
+        return once(fn () => app(Core::class)->uuid->make());
     }
 
     /**

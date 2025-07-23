@@ -17,15 +17,17 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
 use Laravel\Nightwatch\Compatibility;
 use Ramsey\Uuid\Uuid;
 use Tests\TestCase;
 
+use function array_shift;
 use function hash;
+use function json_decode;
 use function now;
 
 class QueuedJobSensorTest extends TestCase
@@ -57,7 +59,7 @@ class QueuedJobSensorTest extends TestCase
             $this->travelTo(now()->addMicroseconds(5200));
         });
         Route::post('/users', function (): void {
-            Str::createUuidsUsingSequence(['00000000-0000-0000-0000-000000000000']);
+            $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-000000000000';
             MyJob::dispatch();
         });
 
@@ -161,9 +163,7 @@ class QueuedJobSensorTest extends TestCase
         });
 
         Route::post('/users', function (): void {
-            Str::createUuidsUsingSequence([
-                Uuid::fromString('00000000-0000-0000-0000-000000000002'),
-            ]);
+            $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-000000000002';
             Mail::to('tim@laravel.com')->queue(new MyQueuedMail);
         });
 
@@ -214,7 +214,7 @@ class QueuedJobSensorTest extends TestCase
         $this->core->ingest->write($this->core->sensor->queuedJob(new JobQueued(
             connectionName: 'my-sqs-queue',
             queue: 'https://sqs.us-east-1.amazonaws.com/your-account-id/queue-name-production',
-            id: Str::uuid()->toString(),
+            id: Uuid::uuid4()->toString(),
             job: 'Tests\Feature\Sensors\MyJobClass',
             payload: '{"uuid":"00000000-0000-0000-0000-000000000000"}',
             delay: 0,
@@ -245,6 +245,38 @@ class QueuedJobSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('queued-job:0.queue', 'default');
         $ingest->assertLatestWrite('queued-job:1.queue', 'foobar');
+    }
+
+    public function test_it_gives_unique_job_ids_to_each_dispatched_job_with_a_request(): void
+    {
+        $ingest = $this->fakeIngest();
+        $uuids = [
+            'e49c749c-4f1a-42c3-a5de-3a7a36a2f730',
+            '8c796368-b5ee-49b3-b02c-f883b8c6c6f8',
+            'aeadd430-44e6-4b79-a441-02459d797f3a',
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
+        Route::get('/test', function () {
+            MyJob::dispatch();
+            MyJob::dispatch();
+            MyJob::dispatch();
+        });
+
+        $response = $this->get('/test');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('queued-job:0.job_id', 'e49c749c-4f1a-42c3-a5de-3a7a36a2f730');
+        $ingest->assertLatestWrite('queued-job:1.job_id', '8c796368-b5ee-49b3-b02c-f883b8c6c6f8');
+        $ingest->assertLatestWrite('queued-job:2.job_id', 'aeadd430-44e6-4b79-a441-02459d797f3a');
+        $jobIdsInDatabase = DB::table('jobs')->orderBy('id')->get()->map(fn ($job) => json_decode($job->payload)->nightwatch->job_id)->all();
+        $this->assertSame([
+            'e49c749c-4f1a-42c3-a5de-3a7a36a2f730',
+            '8c796368-b5ee-49b3-b02c-f883b8c6c6f8',
+            'aeadd430-44e6-4b79-a441-02459d797f3a',
+        ], $jobIdsInDatabase);
     }
 }
 

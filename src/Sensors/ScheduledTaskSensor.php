@@ -12,6 +12,7 @@ use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\State\CommandState;
+use Laravel\Nightwatch\Support\Uuid;
 use Laravel\Nightwatch\Types\Str;
 use ReflectionClass;
 use ReflectionFunction;
@@ -33,6 +34,7 @@ final class ScheduledTaskSensor
 {
     public function __construct(
         private CommandState $commandState,
+        private Uuid $uuid,
         private Clock $clock,
     ) {
         //
@@ -158,7 +160,7 @@ final class ScheduledTaskSensor
             'deploy' => $this->commandState->deploy,
             'server' => $this->commandState->server,
             '_group' => hash('xxh128', "{$name},{$event->task->expression},{$timezone}"),
-            'trace_id' => (string) Str::uuid(),
+            'trace_id' => $this->uuid->make(),
             // --- //
             'name' => $name,
             'cron' => $event->task->expression,

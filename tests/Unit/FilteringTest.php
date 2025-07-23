@@ -389,18 +389,18 @@ class FilteringTest extends TestCase
     {
         $ingest = $this->fakeIngest();
         Route::get('/test', function () {
-            $this->assertTrue(Compatibility::getHiddenContext('nightwatch_should_sample'));
+            $this->assertTrue(Compatibility::getSamplingFromContext());
             MyJob::dispatch();
 
             $response = $this->core->ignore(function () {
                 MyJob::dispatch();
-                $this->assertFalse(Compatibility::getHiddenContext('nightwatch_should_sample'));
+                $this->assertFalse(Compatibility::getSamplingFromContext());
 
                 return 'ok';
             });
 
             MyJob::dispatch();
-            $this->assertTrue(Compatibility::getHiddenContext('nightwatch_should_sample'));
+            $this->assertTrue(Compatibility::getSamplingFromContext());
 
             return $response;
         });

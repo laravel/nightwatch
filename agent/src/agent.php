@@ -13,6 +13,7 @@ use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
 
 use function date;
+use function file_get_contents;
 use function gethostname;
 use function hash;
 use function in_array;
@@ -21,8 +22,7 @@ use function rtrim;
 use function str_replace;
 use function substr;
 
-require __DIR__.'/../vendor/react/promise/src/functions_include.php';
-require __DIR__.'/../vendor/autoload.php';
+require __DIR__.'/bootstrap.php';
 
 /*
  * Testing...
@@ -46,7 +46,8 @@ $refreshToken ??= $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
 $baseUrl ??= $_SERVER['NIGHTWATCH_BASE_URL'] ?? 'https://nightwatch.laravel.com';
 /** @var string $baseUrl */
 /** @var ?string $listenOn */
-$listenOn ??= '127.0.0.1:2407';
+$listenOn ??= $_SERVER['NIGHTWATCH_INGEST_URI'] ?? '127.0.0.1:2407';
+/** @var string $listenOn */
 /** @var ?float $authenticationConnectionTimeout */
 $authenticationConnectionTimeout ??= 5;
 /** @var ?float $authenticationTimeout */
@@ -76,6 +77,16 @@ $error = static function (string $message): void {
 $debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
 /** @var ?string $basePath */
 $basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
+
+$signaturePath = $basePath.'/signature.txt';
+$expectedSignature = file_get_contents($signaturePath);
+
+if ($expectedSignature === false) {
+    $error("Unable to read the agent's signature");
+
+    return;
+}
+
 $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 
 /*
@@ -154,9 +165,18 @@ $server = new Server(
             $info('Shutting down');
         });
     },
-    onInvalidTokenHash: static function () use ($info, $loop, $ingest) {
-        $info('Incoming token hash mismatch! Check your application/agent configuration.');
+    onInvalidTokenHash: static fn () => $error('Incoming token hash mismatch! Check your application/agent configuration.'),
+);
 
+$checkSignature = new CheckSignature(
+    loop: $loop,
+    signaturePath: $signaturePath,
+    expectedSignature: $expectedSignature,
+    shutdownDelayInMinutes: 5,
+    onShutdownInitiated: static function ($shuttingDownIn) use ($info) {
+        $info('Agent signature changed: shutting down in '.$shuttingDownIn.' minutes');
+    },
+    onShutdown: static function () use ($info, $loop, $ingest) {
         $ingest->forceDigest()->finally(static function () use ($info, $loop) {
             $loop->stop();
 
@@ -172,5 +192,7 @@ $server = new Server(
 $server->start();
 
 $ingestDetails->hydrate();
+
+$checkSignature->start();
 
 $loop->run();

@@ -67,6 +67,7 @@ final class CommandState
         public NullUserProvider $user = new NullUserProvider,
         public string $executionPreview = '',
         public string $exceptionPreview = '',
+        public int $attempts = 0,
     ) {
         $this->deploy = Str::tinyText($this->deploy);
         $this->server = Str::tinyText($this->server);

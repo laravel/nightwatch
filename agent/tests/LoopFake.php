@@ -8,8 +8,10 @@ use React\EventLoop\Timer\Timer as ReactTimer;
 use React\EventLoop\TimerInterface;
 use RuntimeException;
 
+use function array_filter;
 use function array_map;
 use function array_shift;
+use function array_values;
 use function count;
 use function debug_backtrace;
 use function microtime;
@@ -19,7 +21,7 @@ use function usort;
 class LoopFake implements LoopInterface
 {
     /**
-     * @var list<array{runAt: float, scheduledAt: float, scheduledBy: string, interval: float, callback: ?callable, instance: ?TimerInterface }>
+     * @var list<array{runAt: float, scheduledAt: float, scheduledBy: string, interval: float, callback: ?callable, instance: ?TimerInterface, periodic: bool }>
      */
     public array $pendingTimers = [];
 
@@ -29,7 +31,7 @@ class LoopFake implements LoopInterface
     public array $canceledTimers = [];
 
     /**
-     * @var list<array{interval: float, runAt: float, scheduledAt: float, scheduledBy: string}>
+     * @var list<array{interval: float, runAt: float, scheduledAt: float, scheduledBy: string, periodic: bool }>
      */
     public array $timersRun = [];
 
@@ -85,16 +87,48 @@ class LoopFake implements LoopInterface
      */
     public function addTimer($interval, $callback): TimerInterface
     {
-        $timer = new ReactTimer($interval, $callback, periodic: false);
 
         $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
         $class = $frame['class'] ?? '';
 
         if (str_starts_with($class, 'P\\Tests\\Feature')) {
             $scheduledBy = $class;
+        } elseif ($class === '') {
+            $scheduledBy = 'Agent';
         } else {
             $scheduledBy = "{$class}::{$frame['function']}";
         }
+
+        return $this->timer($interval, $callback, $scheduledBy, periodic: false);
+    }
+
+    /**
+     * @param  int|float  $interval
+     * @param  callable  $callback
+     * @param  string|null  $calledBy
+     */
+    public function addPeriodicTimer($interval, $callback, $calledBy = null): TimerInterface
+    {
+
+        $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+        $class = $frame['class'] ?? '';
+
+        if ($calledBy !== null) {
+            $scheduledBy = $calledBy;
+        } elseif ($class === '') {
+            $scheduledBy = 'Agent';
+        } elseif (str_starts_with($class, 'P\\Tests\\Feature')) {
+            $scheduledBy = $class;
+        } else {
+            $scheduledBy = "{$class}::{$frame['function']}";
+        }
+
+        return $this->timer($interval, $callback, $scheduledBy, periodic: true);
+    }
+
+    public function timer(int|float $interval, callable $callback, string $scheduledBy, bool $periodic): TimerInterface
+    {
+        $timer = new ReactTimer($interval, $callback, periodic: $periodic);
 
         $this->pendingTimers[] = [
             'runAt' => $this->now + $interval,
@@ -103,6 +137,7 @@ class LoopFake implements LoopInterface
             'interval' => $interval,
             'callback' => $callback,
             'instance' => $timer,
+            'periodic' => $periodic,
         ];
 
         $this->sortPendingTimers();
@@ -110,19 +145,11 @@ class LoopFake implements LoopInterface
         return $timer;
     }
 
-    /**
-     * @param  int|float  $interval
-     * @param  callable  $callback
-     */
-    public function addPeriodicTimer($interval, $callback): TimerInterface
-    {
-        throw new RuntimeException('Not yet implemented');
-    }
-
     public function cancelTimer(TimerInterface $timer): void
     {
         foreach ($this->pendingTimers as $index => $pendingTimer) {
             if ($pendingTimer['instance'] !== $timer) {
+
                 continue;
             }
 
@@ -180,6 +207,7 @@ class LoopFake implements LoopInterface
                     'scheduledBy' => $pendingTimer['scheduledBy'],
                     'callback' => null,
                     'instance' => null,
+                    'periodic' => $pendingTimer['periodic'],
                 ], $this->pendingTimers);
 
                 return;
@@ -191,6 +219,8 @@ class LoopFake implements LoopInterface
                 'scheduledAt' => $scheduledAt,
                 'interval' => $interval,
                 'callback' => $callback,
+                'instance' => $timer,
+                'periodic' => $periodic,
             ] = $this->pendingTimers[0];
 
             /** @var callable $callback */
@@ -202,9 +232,15 @@ class LoopFake implements LoopInterface
                     'runAt' => $this->now - $this->startedAt,
                     'scheduledBy' => $scheduledBy,
                     'scheduledAt' => $scheduledAt,
+                    'periodic' => $periodic,
                 ];
 
-                array_shift($this->pendingTimers);
+                if ($periodic) {
+                    $this->pendingTimers[0]['runAt'] = $this->now + $interval;
+                    $this->sortPendingTimers();
+                } else {
+                    array_shift($this->pendingTimers);
+                }
 
                 continue;
             }
@@ -234,11 +270,31 @@ class LoopFake implements LoopInterface
      */
     public function assertPending(array $timers): self
     {
+        $actual = array_values(array_map(fn ($timer) => new Timer(
+            interval: $timer['interval'],
+            runAt: $timer['runAt'],
+            scheduledBy: $timer['scheduledBy'],
+            scheduledAt: $timer['scheduledAt'],
+        ),
+            array_filter($this->pendingTimers, fn ($timer) => $timer['periodic'] === false)
+        ));
+
+        Assert::assertEquals($timers, $actual);
+
+        return $this;
+    }
+
+    /**
+     * @param  list<Timer>  $timers
+     */
+    public function assertPendingWithPeriodic(array $timers): self
+    {
         $actual = array_map(fn ($timer) => new Timer(
             interval: $timer['interval'],
             runAt: $timer['runAt'],
             scheduledBy: $timer['scheduledBy'],
             scheduledAt: $timer['scheduledAt'],
+            periodic: $timer['periodic'],
         ), $this->pendingTimers);
 
         Assert::assertEquals($timers, $actual);
@@ -251,11 +307,31 @@ class LoopFake implements LoopInterface
      */
     public function assertRun(array $timers): self
     {
+        $actual = array_values(array_map(fn ($timer) => new Timer(
+            interval: $timer['interval'],
+            runAt: $timer['runAt'],
+            scheduledBy: $timer['scheduledBy'],
+            scheduledAt: $timer['scheduledAt'],
+        ),
+            array_filter($this->timersRun, fn ($timer) => $timer['periodic'] === false)
+        ));
+
+        Assert::assertEquals($timers, $actual);
+
+        return $this;
+    }
+
+    /**
+     * @param  list<Timer>  $timers
+     */
+    public function assertRunWithPeriodic(array $timers): self
+    {
         $actual = array_map(fn ($timer) => new Timer(
             interval: $timer['interval'],
             runAt: $timer['runAt'],
             scheduledBy: $timer['scheduledBy'],
             scheduledAt: $timer['scheduledAt'],
+            periodic: $timer['periodic'],
         ), $this->timersRun);
 
         Assert::assertEquals($timers, $actual);

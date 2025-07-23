@@ -32,12 +32,12 @@ use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
+use Illuminate\Queue\Queue;
 use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Env;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
 use Laravel\Nightwatch\Console\AgentCommand;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Factories\Logger;
@@ -66,9 +66,11 @@ use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Http\Middleware\Sample;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
+use Laravel\Nightwatch\Support\Uuid;
 use Laravel\Octane\Events\RequestReceived;
 use Livewire\Livewire;
 use Livewire\LivewireManager;
+use Ramsey\Uuid\Uuid as BaseUuid;
 use Throwable;
 
 use function class_exists;
@@ -223,7 +225,8 @@ final class NightwatchServiceProvider extends ServiceProvider
     private function buildAndRegisterCore(): void
     {
         $clock = new Clock;
-        $executionState = $this->executionState();
+        $uuid = new Uuid(static fn () => BaseUuid::uuid4()->toString());
+        $executionState = $this->executionState($uuid->make());
         $tokenHash = substr(hash('xxh128', $this->nightwatchConfig['token'] ?? ''), 0, 7);
 
         $this->app->instance(Core::class, $this->core = new Core(
@@ -244,10 +247,12 @@ final class NightwatchServiceProvider extends ServiceProvider
                     basePath: $this->app->basePath(),
                     publicPath: $this->app->publicPath(),
                 ),
+                uuid: $uuid,
                 config: $this->config,
             ),
             executionState: $executionState,
             clock: $clock,
+            uuid: $uuid,
             config: [
                 'enabled' => $this->nightwatchConfig['enabled'] ?? true,
                 'sampling' => [
@@ -352,6 +357,14 @@ final class NightwatchServiceProvider extends ServiceProvider
         ], (new CacheEventListener($core))(...));
 
         $events->listen(RequestReceived::class, (new OctaneListener($core))(...)); // @phpstan-ignore class.notFound
+
+        Queue::createPayloadUsing(static fn ($c, $q, array $payload) => [
+            ...$payload,
+            'nightwatch' => [
+                ...($payload['nightwatch'] ?? []),
+                'job_id' => $core->uuid->make(),
+            ],
+        ]);
 
         //
         // -------------------------------------------------------------------------
@@ -491,11 +504,9 @@ final class NightwatchServiceProvider extends ServiceProvider
         });
     }
 
-    private function executionState(): RequestState|CommandState
+    private function executionState(string $trace): RequestState|CommandState
     {
-        $trace = (string) Str::uuid();
-
-        Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
+        Compatibility::addTraceIdToContext($trace);
 
         if ($this->isRequest) {
             /** @var AuthManager */
@@ -517,11 +528,11 @@ final class NightwatchServiceProvider extends ServiceProvider
         } else {
             return new CommandState(
                 timestamp: $this->timestamp,
-                trace: new LazyValue(static function () {
-                    return (string) Compatibility::getHiddenContext('nightwatch_trace_id', static function () { // @phpstan-ignore cast.string
-                        $trace = (string) Str::uuid();
+                trace: new LazyValue(function () {
+                    return (string) Compatibility::getTraceIdFromContext(function () { // @phpstan-ignore cast.string
+                        $trace = $this->core->uuid->make();
 
-                        Compatibility::addHiddenContext('nightwatch_trace_id', $trace);
+                        Compatibility::addTraceIdToContext($trace);
 
                         return $trace;
                     });

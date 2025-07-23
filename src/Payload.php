@@ -12,11 +12,6 @@ use function strlen;
  */
 final class Payload
 {
-    /**
-     * This value is automatically updated in CI.
-     *
-     * Do not modify or re-locate this constant.
-     */
     public const PAYLOAD_VERSION = 'v1';
 
     private bool $pulled = false;
