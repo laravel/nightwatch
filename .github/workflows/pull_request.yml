@@ -323,6 +323,8 @@ jobs:
         run: vendor/bin/phpunit --order-by=random --coverage-text --show-uncovered-for-coverage-text
 
       - name: Build and test container
+        env:
+          NIGHTWATCH_TOKEN: "fakepkxoLBIOgPE0PZWadR0Ge1zHBh31ATOzXN9bBboZ"
         run: |
           # Build and run the container
           docker build -f Dockerfile -t agent ../
