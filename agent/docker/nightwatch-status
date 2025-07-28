@@ -151,7 +151,7 @@ try {
     $connectionTimeout = $_SERVER['NIGHTWATCH_INGEST_CONNECTION_TIMEOUT'] ?? 0.5;
 
     if ($refreshToken === '') {
-        $bail('THe NIGHTWATCH_TOKEN environment variable has not been configured');
+        $bail('The NIGHTWATCH_TOKEN environment variable has not been configured');
     }
 
     /*

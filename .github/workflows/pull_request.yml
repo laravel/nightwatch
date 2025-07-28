@@ -323,18 +323,16 @@ jobs:
         run: vendor/bin/phpunit --order-by=random --coverage-text --show-uncovered-for-coverage-text
 
       - name: Build and test container
-        env:
-          NIGHTWATCH_TOKEN: "fakepkxoLBIOgPE0PZWadR0Ge1zHBh31ATOzXN9bBboZ"
         run: |
           # Build and run the container
           docker build -f Dockerfile -t agent ../
           docker run --rm -d --name agent agent:latest
 
           # Test health check passes
-          docker exec agent php nightwatch-status || exit 1
+          docker exec --env NIGHTWATCH_TOKEN=fakepkxoLBIOgPE0PZWadR0Ge1zHBh31ATOzXN9bBboZ agent php nightwatch-status || exit 1
 
           # Test health check fails
-          ! docker exec -e NIGHTWATCH_INGEST_URI=127.0.0.1:1234 agent php nightwatch-status || exit 1
+          ! docker exec --env NIGHTWATCH_TOKEN=fakepkxoLBIOgPE0PZWadR0Ge1zHBh31ATOzXN9bBboZ --env NIGHTWATCH_INGEST_URI=127.0.0.1:1234 agent php nightwatch-status || exit 1
 
           # Stop the container
           docker stop agent
