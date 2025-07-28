@@ -10,11 +10,11 @@ RUN ./install-composer.sh \
 
 WORKDIR /nightwatch-agent
 
-COPY version.txt agent/entrypoint.sh agent/health-check.php ./
+COPY version.txt agent/docker/entrypoint.sh agent/docker/nightwatch-status ./
 COPY agent/build ./agent/build/
 
 ENV NIGHTWATCH_INGEST_URI=0.0.0.0:2407
 
 WORKDIR /nightwatch-agent
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD [ "php", "health-check.php" ]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD [ "php", "nightwatch-status" ]
 ENTRYPOINT ["./entrypoint.sh"]

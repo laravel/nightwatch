@@ -329,10 +329,10 @@ jobs:
           docker run --rm -d --name agent agent:latest
 
           # Test health check passes
-          docker exec agent php health-check.php || exit 1
+          docker exec agent php nightwatch-status || exit 1
 
           # Test health check fails
-          ! docker exec -e NIGHTWATCH_INGEST_URI=127.0.0.1:1234 agent php health-check.php || exit 1
+          ! docker exec -e NIGHTWATCH_INGEST_URI=127.0.0.1:1234 agent php nightwatch-status || exit 1
 
           # Stop the container
           docker stop agent
