@@ -1,6 +1,6 @@
 FROM php:8.4-alpine
 
-COPY agent/composer.lock agent/composer.json agent/install-composer.sh /
+COPY agent/composer.lock agent/composer.json agent/docker/install-composer.sh /
 
 # install composer and check platform reqs
 RUN ./install-composer.sh \
