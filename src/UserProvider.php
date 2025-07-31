@@ -88,7 +88,7 @@ final class UserProvider
     private function currentUserId(): string
     {
         try {
-            return Str::tinyText((string) $this->withAuth(static fn ($auth) => $auth->id()));
+            return Str::tinyText((string) $this->withAuth(fn ($auth) => $this->idFromAuthOrProvider($auth->id())                ));
         } catch (Throwable $e) {
             $this->reportResolvingUserIdException($e);
 
@@ -99,12 +99,23 @@ final class UserProvider
     private function rememberedUserId(): string
     {
         try {
-            return Str::tinyText((string) $this->rememberedUser?->getAuthIdentifier());  // @phpstan-ignore cast.string
+            return Str::tinyText($this->idFromAuthOrProvider($this->rememberedUser?->getAuthIdentifier()));
         } catch (Throwable $e) {
             $this->reportResolvingUserIdException($e);
 
             return '';
         }
+    }
+
+    private function idFromAuthOrProvider(int|string|null $id): string
+    {
+        // If we have an ID from the details, use that.
+        $details = $this->details();
+        if (isset($details['id'])) {
+            $id = (string) $details['id'];
+        }
+
+        return $id;
     }
 
     /**
