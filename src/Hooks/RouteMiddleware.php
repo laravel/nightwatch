@@ -31,6 +31,17 @@ final class RouteMiddleware
             $this->nightwatch->report($e, handled: true);
         }
 
-        return $next($request);
+        $response = $next($request);
+
+        // If an exception occurs in the render phase, the usual
+        // ResponsePrepared event is not fired. This fallback
+        // ensures that we go to the AfterMiddleware stage.
+        try {
+            $this->nightwatch->stage(ExecutionStage::AfterMiddleware);
+        } catch (Throwable $e) {
+            $this->nightwatch->report($e, handled: true);
+        }
+
+        return $response;
     }
 }
