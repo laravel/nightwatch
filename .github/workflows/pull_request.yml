@@ -232,7 +232,7 @@ jobs:
       matrix:
         php: [8.2, 8.3, 8.4]
         laravel: [10, 11, 12]
-        prefer-lowest: ['0', '1']
+        prefer-lowest: ["0", "1"]
 
     name: Test package [PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }}${{ matrix.prefer-lowest == '1' && ', prefer lowest' || '' }}]
 
@@ -321,3 +321,18 @@ jobs:
           NIGHTWATCH_TOKEN: ${{ secrets.NIGHTWATCH_TOKEN }}
           NIGHTWATCH_BASE_URL: ${{ secrets.NIGHTWATCH_BASE_URL }}
         run: vendor/bin/phpunit --order-by=random --coverage-text --show-uncovered-for-coverage-text
+
+      - name: Build and test container
+        run: |
+          # Build and run the container
+          docker build -f Dockerfile -t agent ../
+          docker run --rm -d --name agent agent:latest
+
+          # Test health check passes
+          docker exec --env NIGHTWATCH_TOKEN=fakepkxoLBIOgPE0PZWadR0Ge1zHBh31ATOzXN9bBboZ agent php nightwatch-status || exit 1
+
+          # Test health check fails
+          ! docker exec --env NIGHTWATCH_TOKEN=fakepkxoLBIOgPE0PZWadR0Ge1zHBh31ATOzXN9bBboZ --env NIGHTWATCH_INGEST_URI=127.0.0.1:1234 agent php nightwatch-status || exit 1
+
+          # Stop the container
+          docker stop agent
