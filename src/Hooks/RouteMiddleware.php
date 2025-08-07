@@ -33,7 +33,7 @@ final class RouteMiddleware
 
         $response = $next($request);
 
-        // If an exception occurs in the render phase, the usual
+        // If an exception occurs in the action phase, the usual
         // ResponsePrepared event is not fired. This fallback
         // ensures that we go to the AfterMiddleware stage.
         try {
