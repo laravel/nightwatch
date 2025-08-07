@@ -65,7 +65,7 @@ class ExceptionSensorTest extends TestCase
         $this->core->sensor->location->setBasePath($base);
         $this->core->sensor->location->setPublicPath($base.'/public');
         Config::set('app.debug', false);
-        Config::set('nightwatch.exceptions.capture_source_lines', false);
+        Config::set('nightwatch.exceptions.capture_source_code', false);
 
         $this->iniSettingsToRestore['zend.exception_ignore_args'] = ini_get('zend.exception_ignore_args');
         ini_set('zend.exception_ignore_args', '0');
@@ -220,7 +220,7 @@ class ExceptionSensorTest extends TestCase
 
     public function test_it_can_disable_source_code_capture(): void
     {
-        config(['nightwatch.exceptions.capture_source_lines' => false]);
+        config(['nightwatch.exceptions.capture_source_code' => false]);
 
         $ingest = $this->fakeIngest();
         $trace = null;
@@ -740,7 +740,7 @@ class ExceptionSensorTest extends TestCase
 
     public function test_it_captures_source_code_lines(): void
     {
-        Config::set('nightwatch.exceptions.capture_source_lines', true);
+        Config::set('nightwatch.exceptions.capture_source_code', true);
 
         $ingest = $this->fakeIngest();
 

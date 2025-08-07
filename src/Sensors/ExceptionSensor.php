@@ -89,7 +89,7 @@ final class ExceptionSensor
             'line' => $line ?? 0,
             'message' => Str::text($normalizedException->getMessage()),
             'code' => (string) $normalizedException->getCode(),
-            'trace' => Str::mediumText($this->serializeTrace($normalizedException, (bool) $this->config->get('nightwatch.exceptions.capture_source_lines', true))),
+            'trace' => Str::mediumText($this->serializeTrace($normalizedException, (bool) $this->config->get('nightwatch.exceptions.capture_source_code', true))),
             'handled' => $handled,
             'php_version' => $this->executionState->phpVersion,
             'laravel_version' => $this->executionState->laravelVersion,

@@ -116,7 +116,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     server?: string,
      *     ingest?: array{ uri?: string, timeout?: float|int, connection_timeout?: float|int, event_buffer?: int },
      *     exceptions?: array{
-     *         capture_source_lines?: bool,
+     *         capture_source_code?: bool,
      *     }
      *  }
      */
@@ -268,7 +268,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                     'ignore_queries' => (bool) ($this->nightwatchConfig['filtering']['ignore_queries'] ?? false),
                 ],
                 'exceptions' => [
-                    'capture_source_lines' => (bool) ($this->nightwatchConfig['exceptions']['capture_source_lines'] ?? true),
+                    'capture_source_code' => (bool) ($this->nightwatchConfig['exceptions']['capture_source_code'] ?? true),
                 ],
             ],
         ));

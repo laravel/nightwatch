@@ -22,7 +22,7 @@ return [
     ],
 
     'exceptions' => [
-        'capture_source_lines' => env('NIGHTWATCH_EXCEPTION_CAPTURE_SOURCE_LINES', true),
+        'capture_source_code' => env('NIGHTWATCH_EXCEPTIONS_CAPTURE_SOURCE_CODE', true),
     ],
 
     'ingest' => [
