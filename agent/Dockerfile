@@ -1,6 +1,6 @@
 FROM php:8.4-alpine
 
-COPY agent/composer.lock agent/composer.json agent/install-composer.sh /
+COPY agent/composer.lock agent/composer.json agent/docker/install-composer.sh /
 
 # install composer and check platform reqs
 RUN ./install-composer.sh \
@@ -10,10 +10,11 @@ RUN ./install-composer.sh \
 
 WORKDIR /nightwatch-agent
 
-COPY version.txt agent/entrypoint.sh ./
+COPY version.txt agent/docker/entrypoint.sh agent/docker/nightwatch-status ./
 COPY agent/build ./agent/build/
 
 ENV NIGHTWATCH_INGEST_URI=0.0.0.0:2407
 
 WORKDIR /nightwatch-agent
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD ["php", "nightwatch-status"]
 ENTRYPOINT ["./entrypoint.sh"]
