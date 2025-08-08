@@ -102,7 +102,12 @@ final class ExceptionSensor
      */
     private function serializeTrace(Throwable $e): string
     {
-        $trace = [];
+        $trace = [
+            [
+                'file' => $this->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                'source' => '',
+            ],
+        ];
 
         foreach ($e->getTrace() as $frame) {
             $file = match (true) {
