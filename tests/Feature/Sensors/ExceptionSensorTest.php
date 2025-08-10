@@ -31,6 +31,7 @@ use function hex2bin;
 use function implode;
 use function ini_get;
 use function ini_set;
+use function json_decode;
 use function json_encode;
 use function report;
 use function response;
@@ -264,6 +265,37 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
         $ingest->assertLatestWrite('exception:0.code', '999');
         $ingest->assertLatestWrite('exception:0._group', hash('xxh128', 'Exception,999,workbench/resources/views/exception.blade.php,6'));
+    }
+
+    public function test_it_skips_internal_frames_on_php_errors(): void
+    {
+        $ingest = $this->fakeIngest();
+        $line = __LINE__ + 3;
+        Route::get('/users', function (): void {
+            $foo = [];
+            $foo[0];
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.message', 'Undefined array key 0');
+        $ingest->assertLatestWrite('exception:0.class', 'ErrorException');
+        $ingest->assertLatestWrite('exception:0.file', 'tests/Feature/Sensors/ExceptionSensorTest.php');
+        $ingest->assertLatestWrite('exception:0.line', $line);
+        $ingest->assertLatestWrite('exception:0.trace', function ($trace) use ($line) {
+            $trace = json_decode($trace, associative: true);
+
+            $this->assertSame('tests/Feature/Sensors/ExceptionSensorTest.php:'.$line, $trace[0]['file']);
+
+            foreach ($trace as $frame) {
+                $this->assertStringNotContainsString('HandleExceptions', $frame['file']);
+                $this->assertStringNotContainsString('HandleExceptions', $frame['source']);
+            }
+
+            return true;
+        });
     }
 
     public function test_it_handles_unknown_lines_for_internal_locations(): void

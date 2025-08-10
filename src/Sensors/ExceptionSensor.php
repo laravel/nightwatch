@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Illuminate\Foundation\Bootstrap\HandleExceptions;
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Location;
@@ -103,13 +104,21 @@ final class ExceptionSensor
     private function serializeTrace(Throwable $e): string
     {
         $trace = [
+            // Insert the exception location as the first frame.
+            // This matches the behavior of Symfony's exception renderer.
             [
                 'file' => $this->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
             ],
         ];
 
-        foreach ($e->getTrace() as $frame) {
+        foreach ($e->getTrace() as $i => $frame) {
+            if (($i === 0 || $i === 1) && ($frame['class'] ?? '') === HandleExceptions::class) {
+                // Skip internal frames when a PHP error has been converted to an ErrorException
+                // This matches the behavior of Laravel's exception renderer.
+                continue;
+            }
+
             $file = match (true) {
                 ! isset($frame['file']) => '[internal function]',
                 ! is_string($frame['file']) => '[unknown file]', // @phpstan-ignore booleanNot.alwaysFalse
