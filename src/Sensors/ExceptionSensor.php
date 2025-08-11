@@ -63,7 +63,7 @@ final class ExceptionSensor
         $this->executionState->exceptions++;
 
         return [
-            'v' => 1,
+            'v' => 2,
             't' => 'exception',
             'timestamp' => $nowMicrotime,
             'deploy' => $this->executionState->deploy,
