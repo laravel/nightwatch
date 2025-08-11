@@ -816,8 +816,6 @@ class ExceptionSensorTest extends TestCase
     #[WithEnv('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', '1')]
     public function test_it_captures_source_code_lines(): void
     {
-        Config::set('nightwatch.capture_exception_source_code', true);
-
         $ingest = $this->fakeIngest();
 
         $response = $this->get('/test-exception');
