@@ -34,6 +34,7 @@ use function hex2bin;
 use function implode;
 use function ini_get;
 use function ini_set;
+use function is_array;
 use function json_decode;
 use function json_encode;
 use function report;
@@ -906,6 +907,76 @@ class ExceptionSensorTest extends TestCase
                 57 => '    {',
                 58 => '        if ($this->hasTerminated || Compatibility::$terminatingEventExists) {',
             ], $frames->firstWhere('file', 'src/Hooks/GlobalMiddleware.php:53')['code']);
+
+            return true;
+        });
+    }
+
+    #[WithEnv('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', '1')]
+    public function test_it_captures_code_from_a_maximum_of_ten_frames(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function (): void {
+            $e = new Exception('Whoops!');
+            $reflectedException = new ReflectionClass($e);
+            $reflectedException->getProperty('trace')->setValue($e, [
+                [
+                    'file' => __FILE__,
+                    'line' => 1,
+                ],
+                [
+                    'file' => __FILE__,
+                    'line' => 1,
+                ],
+                [
+                    'file' => __FILE__,
+                    'line' => 1,
+                ],
+                [
+                    'file' => __FILE__,
+                    'line' => 1,
+                ],
+                [
+                    'file' => __FILE__,
+                    'line' => 1,
+                ],
+                [
+                    'file' => __FILE__,
+                    'line' => 1,
+                ],
+                [
+                    'file' => __FILE__,
+                    'line' => 1,
+                ],
+                [
+                    'file' => __FILE__,
+                    'line' => 1,
+                ],
+                [
+                    'file' => __FILE__,
+                    'line' => 1,
+                ],
+                [
+                    'file' => __FILE__,
+                    'line' => 1,
+                ],
+                [
+                    'file' => __FILE__,
+                    'line' => 1,
+                ],
+            ]);
+
+            throw $e;
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', function ($trace) {
+            $trace = collect(json_decode($trace, associative: true));
+
+            $this->assertCount(10, $trace->where(fn ($frame) => is_array($frame['code'])));
 
             return true;
         });
