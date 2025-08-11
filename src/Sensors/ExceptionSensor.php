@@ -35,6 +35,9 @@ use function rtrim;
  */
 final class ExceptionSensor
 {
+    /**
+     * @var array<string, SplFileObject|null>
+     */
     private array $fileObjects = [];
 
     private int $capturedCodeFrames = 0;
