@@ -160,10 +160,15 @@ final class ExceptionSensor
             // Insert the exception location as the first frame.
             // This matches the behavior of Symfony's exception renderer.
             [
-                'file' => $this->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                'file' => ($file = $this->location->normalizeFile($e->getFile())).':'.$e->getLine(),
                 'source' => '',
             ],
         ];
+
+        if (! $this->location->isVendorFile($file) && ! $this->location->isInternalFile($file)) {
+            $userFiles[$file] = [];
+            array_push($userFiles[$file], ['frameIndex' => 0, 'frameLine' => $e->getLine()]);
+        }
 
         foreach ($e->getTrace() as $i => $frame) {
             if ($i < 2 && ($frame['class'] ?? '') === HandleExceptions::class) {
@@ -232,7 +237,7 @@ final class ExceptionSensor
                 $originalFile !== '[internal function]' &&
                 $originalFile !== '[unknown file]') {
                 $userFiles[$originalFile] = $userFiles[$originalFile] ?? [];
-                array_push($userFiles[$originalFile], ['frameIndex' => $i, 'frameLine' => $frame['line']]);
+                array_push($userFiles[$originalFile], ['frameIndex' => $i + 1, 'frameLine' => $frame['line']]);
             }
 
             $trace[] = $traceFrame;
