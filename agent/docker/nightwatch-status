@@ -1,0 +1,200 @@
+<?php
+
+namespace NightwatchAgent;
+
+use RuntimeException;
+use Throwable;
+
+use function date;
+use function fclose;
+use function feof;
+use function fread;
+use function fwrite;
+use function gettype;
+use function hash;
+use function intval;
+use function stream_get_meta_data;
+use function stream_set_timeout;
+use function stream_socket_client;
+use function strlen;
+use function substr;
+
+/*
+ * Helpers...
+ */
+
+/**
+ * @param  resource  $stream
+ */
+$closed = function ($stream) {
+    return gettype($stream) === 'resource (closed)';
+};
+
+/**
+ * @param  resource  $stream
+ * @return ($previous is null ? void : never)
+ */
+$close = function ($stream, ?Throwable $previous = null) use ($closed) {
+    if (! $closed($stream) && fclose($stream) === false) {
+        throw new RuntimeException('Unable to close connection to agent', previous: $previous);
+    }
+
+    if ($previous !== null) {
+        throw $previous;
+    }
+};
+
+/**
+ * @param  resource  $stream
+ */
+$closeStreamAfterError = function (string $message, $stream) use ($closed, $close): never {
+    if ($closed($stream)) {
+        throw new RuntimeException($message.<<<'MESSAGE'
+
+
+        Stream already closed
+        MESSAGE);
+    }
+
+    $meta = stream_get_meta_data($stream);
+
+    $uri = $meta['uri'] ?? '';
+    $timedOut = $meta['timed_out'] ? 'true' : 'false';
+    $eof = $meta['eof'] ? 'true' : 'false';
+    $blocked = $meta['blocked'] ? 'true' : 'false';
+
+    $close($stream, new RuntimeException($message.<<<MESSAGE
+
+
+        Timed out: {$timedOut}
+        EOF: {$eof}
+        Blocked: {$blocked}
+        URI: {$uri}
+        Unread bytes: {$meta['unread_bytes']}
+        MESSAGE));
+};
+
+/**
+ * @param  resource  $stream
+ */
+$writeToStream = function ($stream, string $payload) use ($closeStreamAfterError): void {
+    $written = 0;
+    $payloadLength = strlen($payload);
+
+    while (true) {
+        $thisWrite = fwrite($stream, $payload);
+
+        if ($thisWrite === false) {
+            $closeStreamAfterError("Unable to write to the stream. Written [{$written}] Expected [{$payloadLength}]", $stream);
+        }
+
+        $written += $thisWrite;
+
+        if ($written >= $payloadLength) {
+            return;
+        }
+
+        $payload = substr($payload, $thisWrite);
+    }
+};
+
+/**
+ * @param  resource  $stream
+ */
+$waitForAcknowledgment = function ($stream) use ($closeStreamAfterError) {
+    $response = '';
+    $attempts = 0;
+
+    do {
+        // We are expecting a 4-byte response of "2:OK"...
+        $part = fread($stream, 4);
+
+        if ($part === false) {
+            $closeStreamAfterError('Failed reading from the agent', $stream);
+        }
+
+        $response .= $part;
+        $attempts++;
+    } while (strlen($response) < 4 && ! feof($stream) && $attempts < 5);
+
+    if ($response !== '2:OK') {
+        $closeStreamAfterError('Failed reading from the agent', $stream);
+    }
+};
+
+$info = function (string $message) use ($writeToStream): void {
+    $writeToStream(STDOUT, date('Y-m-d H:i:s').' [INFO] '.$message.PHP_EOL);
+};
+
+$error = function (string $message) use ($writeToStream): void {
+    $writeToStream(STDERR, date('Y-m-d H:i:s').' [ERROR] '.$message.PHP_EOL);
+};
+
+$bail = function (string $message) use ($error): never {
+    $error($message);
+
+    exit(1);
+};
+
+try {
+    /*
+     * Input...
+     */
+
+    $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
+    $ingestUri = $_SERVER['NIGHTWATCH_INGEST_URI'] ?? '127.0.0.1:2407';
+    $timeout = $_SERVER['NIGHTWATCH_INGEST_TIMEOUT'] ?? 0.5;
+    $timeout = [
+        'seconds' => $seconds = (int) $timeout,
+        'microseconds' => intval(($timeout - $seconds) * 1_000_000),
+    ];
+    $connectionTimeout = $_SERVER['NIGHTWATCH_INGEST_CONNECTION_TIMEOUT'] ?? 0.5;
+
+    if ($refreshToken === '') {
+        $bail('The NIGHTWATCH_TOKEN environment variable has not been configured');
+    }
+
+    /*
+     * Connect to the agent...
+     */
+
+    $stream = @stream_socket_client(
+        address: "tcp://{$ingestUri}",
+        error_code: $errorCode,
+        error_message: $errorMessage,
+        timeout: $connectionTimeout,
+    );
+
+    if ($stream === false) {
+        $bail("Failed connecting to the agent: {$errorMessage} [{$errorCode}]");
+    }
+
+    /*
+     * Set read timeout...
+     */
+
+    $timeoutConfigured = stream_set_timeout(
+        $stream,
+        $timeout['seconds'],
+        $timeout['microseconds'],
+    );
+
+    if ($timeoutConfigured === false) {
+        $closeStreamAfterError('Failed configuring agent read timeout', $stream);
+    }
+
+    /*
+     * PING the agent...
+     */
+
+    $payload = 'v1:'.substr(hash('xxh128', $refreshToken), 0, 7).':PING';
+    $payload = strlen($payload).':'.$payload;
+
+    $writeToStream($stream, $payload);
+    $waitForAcknowledgment($stream);
+    $close($stream);
+
+    $info('The Nightwatch agent is running and accepting connections');
+} catch (Throwable $e) {
+    $bail($e->getMessage());
+}

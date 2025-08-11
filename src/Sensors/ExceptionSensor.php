@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Foundation\Bootstrap\HandleExceptions;
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Location;
@@ -71,8 +72,8 @@ final class ExceptionSensor
 
         $this->executionState->exceptions++;
 
-        $payload = [
-            'v' => 1,
+        return [
+            'v' => 2,
             't' => 'exception',
             'timestamp' => $nowMicrotime,
             'deploy' => $this->executionState->deploy,
@@ -94,8 +95,6 @@ final class ExceptionSensor
             'php_version' => $this->executionState->phpVersion,
             'laravel_version' => $this->executionState->laravelVersion,
         ];
-
-        return $payload;
     }
 
     private function wasManuallyReported(Throwable $e): bool
@@ -156,10 +155,22 @@ final class ExceptionSensor
      */
     private function serializeTrace(Throwable $e, bool $captureSourceLines = true): string
     {
-        $trace = [];
         $userFiles = [];
+        $trace = [
+            // Insert the exception location as the first frame.
+            // This matches the behavior of Symfony's exception renderer.
+            [
+                'file' => $this->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                'source' => '',
+            ],
+        ];
 
-        foreach ($e->getTrace() as $index => $frame) {
+        foreach ($e->getTrace() as $i => $frame) {
+            if ($i < 2 && ($frame['class'] ?? '') === HandleExceptions::class) {
+                // Skip internal frames when a PHP error has been converted to an ErrorException
+                // This matches the behavior of Laravel's exception renderer.
+                continue;
+            }
 
             $file = match (true) {
                 ! isset($frame['file']) => '[internal function]',
@@ -221,7 +232,7 @@ final class ExceptionSensor
                 $originalFile !== '[internal function]' &&
                 $originalFile !== '[unknown file]') {
                 $userFiles[$originalFile] = $userFiles[$originalFile] ?? [];
-                array_push($userFiles[$originalFile], ['frameIndex' => $index, 'frameLine' => $frame['line']]);
+                array_push($userFiles[$originalFile], ['frameIndex' => $i, 'frameLine' => $frame['line']]);
             }
 
             $trace[] = $traceFrame;
