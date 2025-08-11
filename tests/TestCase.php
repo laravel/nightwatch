@@ -120,13 +120,13 @@ abstract class TestCase extends OrchestraTestCase
             foreach ($currentTest->getAttributes('Orchestra\Testbench\Attributes\WithEnv') as $attribute) {
                 [$name, $value] = $attribute->getArguments();
 
-                $undefined = 'oIBoRSROqxviiL9pZOu0mtrlU0QtfZoP';
-                $previousValue = Env::getRepository()->get($name) ?? $undefined;
+                $clear = Env::getRepository()->has($name);
+                $previousValue = Env::getRepository()->get($name);
 
                 Env::getRepository()->set($name, $value);
 
-                $this->beforeApplicationDestroyed(function () use ($name, $previousValue, $undefined) {
-                    if (Env::getRepository()->get($name) === $undefined) {
+                $this->beforeApplicationDestroyed(function () use ($name, $clear, $previousValue) {
+                    if ($clear) {
                         Env::getRepository()->clear($name);
                     } else {
                         Env::getRepository()->set($name, $previousValue);
