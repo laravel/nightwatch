@@ -178,14 +178,14 @@ final class Location
         return null;
     }
 
-    public function isVendorFile(string $file): bool
+    private function isVendorFile(string $file): bool
     {
         return str_starts_with($file, $this->vendorPath) ||
             $file === $this->artisanPath ||
             $file === $this->publicIndexPath;
     }
 
-    public function isInternalFile(string $file): bool
+    private function isInternalFile(string $file): bool
     {
         return str_starts_with($file, $this->frameworkPath) ||
             str_starts_with($file, $this->nightwatchPath) ||
@@ -223,11 +223,6 @@ final class Location
         $this->publicIndexPath = $this->joinPaths($path, 'index.php');
 
         return $this;
-    }
-
-    public function getBasePath(): string
-    {
-        return $this->basePath;
     }
 
     private function joinPaths(string $basePath, string ...$paths): string
