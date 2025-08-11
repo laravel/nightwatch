@@ -113,7 +113,7 @@ final class ExceptionSensor
         ];
 
         foreach ($e->getTrace() as $i => $frame) {
-            if (($i === 0 || $i === 1) && ($frame['class'] ?? '') === HandleExceptions::class) {
+            if ($i < 2 && ($frame['class'] ?? '') === HandleExceptions::class) {
                 // Skip internal frames when a PHP error has been converted to an ErrorException
                 // This matches the behavior of Laravel's exception renderer.
                 continue;
