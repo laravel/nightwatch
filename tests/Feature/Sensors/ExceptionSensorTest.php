@@ -5,6 +5,7 @@ namespace Tests\Feature\Sensors;
 use Carbon\CarbonImmutable;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Orchestra\Testbench\Attributes\WithEnv;
 use ReflectionClass;
 use RuntimeException;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
@@ -23,7 +25,6 @@ use function array_map;
 use function base64_encode;
 use function base_path;
 use function collect;
-use function config;
 use function dirname;
 use function fclose;
 use function fopen;
@@ -49,6 +50,7 @@ class ExceptionSensorTest extends TestCase
     protected function setUp(): void
     {
         $this->forceRequestExecutionState();
+        Env::getRepository()->set('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', '0');
 
         parent::setUp();
 
@@ -65,7 +67,6 @@ class ExceptionSensorTest extends TestCase
         $this->core->sensor->location->setBasePath($base);
         $this->core->sensor->location->setPublicPath($base.'/public');
         Config::set('app.debug', false);
-        Config::set('nightwatch.exceptions.capture_source_code', false);
 
         $this->iniSettingsToRestore['zend.exception_ignore_args'] = ini_get('zend.exception_ignore_args');
         ini_set('zend.exception_ignore_args', '0');
@@ -231,10 +232,9 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.exceptions', 3);
     }
 
+    #[WithEnv('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', '0')]
     public function test_it_can_disable_source_code_capture(): void
     {
-        config(['nightwatch.exceptions.capture_source_code' => false]);
-
         $ingest = $this->fakeIngest();
         $trace = null;
         $line = null;
@@ -813,9 +813,10 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('exception:0.handled', true);
     }
 
+    #[WithEnv('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', '1')]
     public function test_it_captures_source_code_lines(): void
     {
-        Config::set('nightwatch.exceptions.capture_source_code', true);
+        Config::set('nightwatch.capture_exception_source_code', true);
 
         $ingest = $this->fakeIngest();
 

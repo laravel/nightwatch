@@ -5,6 +5,7 @@ return [
     'token' => env('NIGHTWATCH_TOKEN'),
     'deployment' => env('NIGHTWATCH_DEPLOY'),
     'server' => env('NIGHTWATCH_SERVER', (string) gethostname()),
+    'capture_exception_source_code' => env('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', true),
 
     'sampling' => [
         'requests' => env('NIGHTWATCH_REQUEST_SAMPLE_RATE', 1.0),
@@ -19,10 +20,6 @@ return [
         'ignore_outgoing_requests' => env('NIGHTWATCH_IGNORE_OUTGOING_REQUESTS', false),
         'ignore_queries' => env('NIGHTWATCH_IGNORE_QUERIES', false),
         'log_level' => env('NIGHTWATCH_LOG_LEVEL', env('LOG_LEVEL', 'debug')),
-    ],
-
-    'exceptions' => [
-        'capture_source_code' => env('NIGHTWATCH_EXCEPTIONS_CAPTURE_SOURCE_CODE', true),
     ],
 
     'ingest' => [

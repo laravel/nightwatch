@@ -2,7 +2,6 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
-use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Bootstrap\HandleExceptions;
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
@@ -43,7 +42,7 @@ final class ExceptionSensor
         private RequestState|CommandState $executionState,
         private Clock $clock,
         private Location $location,
-        private Repository $config,
+        private bool $captureSourceCode,
     ) {
         //
     }
@@ -90,7 +89,7 @@ final class ExceptionSensor
             'line' => $line ?? 0,
             'message' => Str::text($normalizedException->getMessage()),
             'code' => (string) $normalizedException->getCode(),
-            'trace' => Str::mediumText($this->serializeTrace($normalizedException, (bool) $this->config->get('nightwatch.exceptions.capture_source_code', true))),
+            'trace' => Str::mediumText($this->serializeTrace($normalizedException)),
             'handled' => $handled,
             'php_version' => $this->executionState->phpVersion,
             'laravel_version' => $this->executionState->laravelVersion,
@@ -153,7 +152,7 @@ final class ExceptionSensor
     /**
      * @see https://github.com/php/php-src/blob/f17c2203883ddf53adfcb33d85523d11429729ab/Zend/zend_exceptions.c
      */
-    private function serializeTrace(Throwable $e, bool $captureSourceLines = true): string
+    private function serializeTrace(Throwable $e): string
     {
         $userFiles = [];
         $trace = [
@@ -243,7 +242,7 @@ final class ExceptionSensor
             $trace[] = $traceFrame;
         }
 
-        if ($captureSourceLines) {
+        if ($this->captureSourceCode) {
             foreach ($userFiles as $file => $frames) {
                 $fileContents = $this->loadSourceCode($file);
                 if ($fileContents === null) {
