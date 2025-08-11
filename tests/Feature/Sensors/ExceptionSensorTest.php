@@ -122,6 +122,7 @@ class ExceptionSensorTest extends TestCase
                     [
                         'file' => $this->core->sensor->location->normalizeFile(__FILE__).':'.$line,
                         'source' => '',
+                        'code' => null,
                     ],
                     ...array_map(fn ($frame) => [
                         'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
@@ -131,6 +132,7 @@ class ExceptionSensorTest extends TestCase
                             'string' => 'string',
                             'array' => 'array',
                         }, $frame['args'])).')',
+                        'code' => null,
                     ], $trace),
                 ]),
                 'handled' => false,
@@ -198,6 +200,7 @@ class ExceptionSensorTest extends TestCase
                     [
                         'file' => $this->core->sensor->location->normalizeFile(__FILE__).':'.$line,
                         'source' => '',
+                        'code' => null,
                     ],
                     ...array_map(fn ($frame) => [
                         'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
@@ -207,6 +210,7 @@ class ExceptionSensorTest extends TestCase
                             'string' => 'string',
                             'array' => 'array',
                         }, $frame['args'])).')',
+                        'code' => null,
                     ], $trace),
                 ]),
                 'handled' => true,
@@ -409,18 +413,22 @@ class ExceptionSensorTest extends TestCase
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => '()',
+                'code' => null,
             ],
             [
                 'file' => '[unknown file]',
                 'source' => '()',
+                'code' => null,
             ],
             [
                 'file' => 'the/file.php',
                 'source' => '()',
+                'code' => null,
             ],
         ]));
     }
@@ -453,18 +461,22 @@ class ExceptionSensorTest extends TestCase
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => '()',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => '()',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]:5',
                 'source' => '()',
+                'code' => null,
             ],
         ]));
     }
@@ -497,18 +509,22 @@ class ExceptionSensorTest extends TestCase
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => '()',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => '()',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => 'TheClass()',
+                'code' => null,
             ],
         ]));
     }
@@ -541,18 +557,22 @@ class ExceptionSensorTest extends TestCase
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => '()',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => '()',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => 'the_function()',
+                'code' => null,
             ],
         ]));
     }
@@ -600,22 +620,27 @@ class ExceptionSensorTest extends TestCase
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => '()',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => '()',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => '()',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => '(null, bool, int, float, string, array, stdClass, Tests\Feature\Sensors\MyEnum, Closure, resource, resource (closed))',
+                'code' => null,
             ],
         ]));
 
@@ -650,10 +675,12 @@ class ExceptionSensorTest extends TestCase
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
+                'code' => null,
             ],
             [
                 'file' => '[internal function]',
                 'source' => '(foo: int, bar: int)',
+                'code' => null,
             ],
         ]));
     }
@@ -743,6 +770,7 @@ class ExceptionSensorTest extends TestCase
                     [
                         'file' => $this->core->sensor->location->normalizeFile(__FILE__).':'.$line,
                         'source' => '',
+                        'code' => null,
                     ],
                     ...array_map(fn ($frame) => [
                         'file' => Str::after($frame['file'] ?? '[internal function]', base_path().DIRECTORY_SEPARATOR).(isset($frame['line']) ? ':'.$frame['line'] : ''),
@@ -752,6 +780,7 @@ class ExceptionSensorTest extends TestCase
                             'string' => 'string',
                             'array' => 'array',
                         }, $frame['args'])).')',
+                        'code' => null,
                     ], $trace),
                 ]),
                 'handled' => false,

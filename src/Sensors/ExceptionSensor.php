@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Foundation\Bootstrap\HandleExceptions;
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -17,27 +18,27 @@ use Throwable;
 use function array_is_list;
 use function array_keys;
 use function array_map;
-use function array_push;
 use function count;
 use function debug_backtrace;
-use function file_exists;
 use function gettype;
 use function hash;
 use function implode;
 use function is_array;
 use function is_int;
-use function is_readable;
 use function is_string;
 use function json_encode;
 use function max;
 use function rtrim;
-use function str_starts_with;
 
 /**
  * @internal
  */
 final class ExceptionSensor
 {
+    private array $fileObjects = [];
+
+    private int $capturedCodeFrames = 0;
+
     public function __construct(
         private RequestState|CommandState $executionState,
         private Clock $clock,
@@ -108,66 +109,19 @@ final class ExceptionSensor
     }
 
     /**
-     * Collect source code lines around the provided line.
-     */
-    private function collectSourceCodeLines(SplFileObject $contents, ?int $line, int $contextLines = 5): ?stdClass
-    {
-        if ($line === null) {
-            return null;
-        }
-
-        $sourceCodeLines = new stdClass;
-
-        $contents->seek(max(0, $line - 1 - $contextLines));
-
-        while ($contents->key() <= $line - 1 + $contextLines && ! $contents->eof()) {
-            $sourceCodeLines->{$contents->key() + 1} = rtrim($contents->fgets(), "\r\n");
-        }
-
-        return $sourceCodeLines;
-    }
-
-    /**
-     * Load the source code for the provided file.
-     */
-    private function loadSourceCode(string $file): ?SplFileObject
-    {
-        $fullPath = $file;
-        if (! str_starts_with($file, DIRECTORY_SEPARATOR)) {
-            $basePath = rtrim($this->location->getBasePath(), DIRECTORY_SEPARATOR);
-            $fullPath = $basePath.DIRECTORY_SEPARATOR.$file;
-        }
-
-        if (! file_exists($fullPath) || ! is_readable($fullPath)) {
-            return null;
-        }
-
-        try {
-            return new SplFileObject($fullPath);
-        } catch (Throwable $e) {
-            return null;
-        }
-    }
-
-    /**
      * @see https://github.com/php/php-src/blob/f17c2203883ddf53adfcb33d85523d11429729ab/Zend/zend_exceptions.c
      */
     private function serializeTrace(Throwable $e): string
     {
-        $userFiles = [];
         $trace = [
             // Insert the exception location as the first frame.
             // This matches the behavior of Symfony's exception renderer.
             [
-                'file' => ($file = $this->location->normalizeFile($e->getFile())).':'.$e->getLine(),
+                'file' => $this->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
+                'code' => $this->fetchSourceCode($e->getFile(), $e->getLine()),
             ],
         ];
-
-        if (! $this->location->isVendorFile($file) && ! $this->location->isInternalFile($file)) {
-            $userFiles[$file] = [];
-            array_push($userFiles[$file], ['frameIndex' => 0, 'frameLine' => $e->getLine()]);
-        }
 
         foreach ($e->getTrace() as $i => $frame) {
             if ($i < 2 && ($frame['class'] ?? '') === HandleExceptions::class) {
@@ -181,8 +135,6 @@ final class ExceptionSensor
                 ! is_string($frame['file']) => '[unknown file]', // @phpstan-ignore booleanNot.alwaysFalse
                 default => $this->location->normalizeFile($frame['file']),
             };
-
-            $originalFile = $file;
 
             if (isset($frame['line']) && is_int($frame['line'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
                 $file .= ':'.$frame['line'];
@@ -227,38 +179,69 @@ final class ExceptionSensor
 
             $source .= ')';
 
-            $traceFrame = ['file' => $file, 'source' => $source];
-
-            if (
-                isset($frame['file'], $frame['line']) &&
-                ! $this->location->isVendorFile($frame['file']) &&
-                ! $this->location->isInternalFile($frame['file']) &&
-                $originalFile !== '[internal function]' &&
-                $originalFile !== '[unknown file]') {
-                $userFiles[$originalFile] = $userFiles[$originalFile] ?? [];
-                array_push($userFiles[$originalFile], ['frameIndex' => $i + 1, 'frameLine' => $frame['line']]);
-            }
-
-            $trace[] = $traceFrame;
+            $trace[] = [
+                'file' => $file,
+                'source' => $source,
+                'code' => $this->fetchSourceCode($frame['file'] ?? null, $frame['line'] ?? null),
+            ];
         }
 
-        if ($this->captureSourceCode) {
-            foreach ($userFiles as $file => $frames) {
-                $fileContents = $this->loadSourceCode($file);
-                if ($fileContents === null) {
-                    continue;
-                }
-                foreach ($frames as $frame) { // @phpstan-ignore foreach.emptyArray
-                    $sourceCodeLines = $this->collectSourceCodeLines($fileContents, $frame['frameLine']);
-                    if ($sourceCodeLines === null) {
-                        continue;
-                    }
-
-                    $trace[$frame['frameIndex']]['code'] = $sourceCodeLines;
-                }
-            }
-        }
+        $this->fileObjects = [];
+        $this->capturedCodeFrames = 0;
 
         return json_encode($trace, flags: JSON_THROW_ON_ERROR);
+    }
+
+    private function fetchSourceCode(mixed $file, mixed $line, int $context = 5): ?stdClass
+    {
+        if (! $this->captureSourceCode || $this->capturedCodeFrames >= 10) {
+            return null;
+        }
+
+        if (! is_string($file) || ! is_int($line)) {
+            return null;
+        }
+
+        if (! $this->location->isApplicationFile($file)) {
+            return null;
+        }
+
+        $fileObject = $this->fileObjects[$file] ??= $this->getFileObject($file);
+
+        if ($fileObject === null) {
+            return null;
+        }
+
+        try {
+            $fileObject->seek(max(0, $line - 1 - $context));
+
+            $code = new stdClass;
+
+            while ($fileObject->key() <= $line - 1 + $context && ! $fileObject->eof()) {
+                $code->{$fileObject->key() + 1} = rtrim($fileObject->fgets(), "\r\n");
+            }
+
+            $this->capturedCodeFrames++;
+
+            return $code;
+        } catch (Throwable $e) {
+            Nightwatch::unrecoverableExceptionOccurred($e);
+
+            return null;
+        }
+    }
+
+    /**
+     * Get a file object for the given file path.
+     */
+    private function getFileObject(string $file): ?SplFileObject
+    {
+        try {
+            return new SplFileObject($file);
+        } catch (Throwable $e) {
+            Nightwatch::unrecoverableExceptionOccurred($e);
+
+            return null;
+        }
     }
 }
