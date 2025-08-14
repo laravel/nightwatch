@@ -130,6 +130,7 @@ final class SensorManager
         private Clock $clock,
         public Location $location,
         private Uuid $uuid,
+        private bool $captureExceptionSourceCode,
         private Repository $config,
     ) {
         //
@@ -244,6 +245,7 @@ final class SensorManager
             executionState: $this->executionState,
             clock: $this->clock,
             location: $this->location,
+            captureSourceCode: $this->captureExceptionSourceCode,
         );
 
         return $sensor($e, $handled);

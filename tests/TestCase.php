@@ -23,9 +23,11 @@ use Laravel\Nightwatch\State\RequestState;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use PHPUnit\Framework\ExpectationFailedException;
+use ReflectionFunction;
 
 use function array_combine;
 use function array_intersect_key;
+use function class_exists;
 use function collect;
 use function dd;
 use function env;
@@ -49,7 +51,7 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function setUp(): void
     {
-        $_ENV['APP_BASE_PATH'] = realpath(__DIR__.'/../workbench/').'/';
+        $this->configureEnvironmentForCurrentTest();
 
         Nightwatch::handleUnrecoverableExceptionsUsing(fn ($e) => dd($e));
 
@@ -106,6 +108,32 @@ abstract class TestCase extends OrchestraTestCase
     {
         Env::getRepository()->set('NIGHTWATCH_FORCE_COMMAND', '1');
         Env::getRepository()->clear('NIGHTWATCH_FORCE_REQUEST');
+    }
+
+    protected function configureEnvironmentForCurrentTest()
+    {
+        $_ENV['APP_BASE_PATH'] = realpath(__DIR__.'/../workbench/').'/';
+
+        $currentTest = new ReflectionFunction($this->{$this->name()}(...));
+
+        if (! class_exists('Orchestra\Testbench\Attributes\WithEnv')) {
+            foreach ($currentTest->getAttributes('Orchestra\Testbench\Attributes\WithEnv') as $attribute) {
+                [$name, $value] = $attribute->getArguments();
+
+                $clear = Env::getRepository()->has($name);
+                $previousValue = Env::getRepository()->get($name);
+
+                Env::getRepository()->set($name, $value);
+
+                $this->beforeApplicationDestroyed(function () use ($name, $clear, $previousValue) {
+                    if ($clear) {
+                        Env::getRepository()->clear($name);
+                    } else {
+                        Env::getRepository()->set($name, $previousValue);
+                    }
+                });
+            }
+        }
     }
 
     /**

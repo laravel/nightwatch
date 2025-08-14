@@ -50,3 +50,5 @@ Route::get('/sampled-or-throw', static fn () => [])->middleware([
     'throwing-middleware',
     Sample::rate(0),
 ]);
+
+Route::get('/test-exception', App\Http\ExceptionTestController::class);

@@ -2,13 +2,17 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Illuminate\Foundation\Bootstrap\HandleExceptions;
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
+use SplFileObject;
+use stdClass;
 use Throwable;
 
 use function array_is_list;
@@ -23,16 +27,26 @@ use function is_array;
 use function is_int;
 use function is_string;
 use function json_encode;
+use function max;
+use function rtrim;
 
 /**
  * @internal
  */
 final class ExceptionSensor
 {
+    /**
+     * @var array<string, SplFileObject|null>
+     */
+    private array $fileObjects = [];
+
+    private int $capturedCodeFrames = 0;
+
     public function __construct(
         private RequestState|CommandState $executionState,
         private Clock $clock,
         private Location $location,
+        private bool $captureSourceCode,
     ) {
         //
     }
@@ -62,7 +76,7 @@ final class ExceptionSensor
         $this->executionState->exceptions++;
 
         return [
-            'v' => 1,
+            'v' => 2,
             't' => 'exception',
             'timestamp' => $nowMicrotime,
             'deploy' => $this->executionState->deploy,
@@ -102,9 +116,23 @@ final class ExceptionSensor
      */
     private function serializeTrace(Throwable $e): string
     {
-        $trace = [];
+        $trace = [
+            // Insert the exception location as the first frame.
+            // This matches the behavior of Symfony's exception renderer.
+            [
+                'file' => $this->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                'source' => '',
+                'code' => $this->fetchSourceCode($e->getFile(), $e->getLine()),
+            ],
+        ];
 
-        foreach ($e->getTrace() as $frame) {
+        foreach ($e->getTrace() as $i => $frame) {
+            if ($i < 2 && ($frame['class'] ?? '') === HandleExceptions::class) {
+                // Skip internal frames when a PHP error has been converted to an ErrorException
+                // This matches the behavior of Laravel's exception renderer.
+                continue;
+            }
+
             $file = match (true) {
                 ! isset($frame['file']) => '[internal function]',
                 ! is_string($frame['file']) => '[unknown file]', // @phpstan-ignore booleanNot.alwaysFalse
@@ -154,9 +182,69 @@ final class ExceptionSensor
 
             $source .= ')';
 
-            $trace[] = ['file' => $file, 'source' => $source];
+            $trace[] = [
+                'file' => $file,
+                'source' => $source,
+                'code' => $this->fetchSourceCode($frame['file'] ?? null, $frame['line'] ?? null),
+            ];
         }
 
+        $this->fileObjects = [];
+        $this->capturedCodeFrames = 0;
+
         return json_encode($trace, flags: JSON_THROW_ON_ERROR);
+    }
+
+    private function fetchSourceCode(mixed $file, mixed $line, int $context = 5): ?stdClass
+    {
+        if (! $this->captureSourceCode || $this->capturedCodeFrames >= 10) {
+            return null;
+        }
+
+        if (! is_string($file) || ! is_int($line)) {
+            return null;
+        }
+
+        if (! $this->location->isApplicationFile($file)) {
+            return null;
+        }
+
+        $fileObject = $this->fileObjects[$file] ??= $this->getFileObject($file);
+
+        if ($fileObject === null) {
+            return null;
+        }
+
+        try {
+            $fileObject->seek(max(0, $line - 1 - $context));
+
+            $code = new stdClass;
+
+            while ($fileObject->key() <= $line - 1 + $context && ! $fileObject->eof()) {
+                $code->{$fileObject->key() + 1} = rtrim($fileObject->fgets(), "\r\n");
+            }
+
+            $this->capturedCodeFrames++;
+
+            return $code;
+        } catch (Throwable $e) {
+            Nightwatch::unrecoverableExceptionOccurred($e);
+
+            return null;
+        }
+    }
+
+    /**
+     * Get a file object for the given file path.
+     */
+    private function getFileObject(string $file): ?SplFileObject
+    {
+        try {
+            return new SplFileObject($file);
+        } catch (Throwable $e) {
+            Nightwatch::unrecoverableExceptionOccurred($e);
+
+            return null;
+        }
     }
 }

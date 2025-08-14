@@ -193,6 +193,11 @@ final class Location
             $file === $this->publicIndexPath;
     }
 
+    public function isApplicationFile(string $file): bool
+    {
+        return str_starts_with($file, $this->basePath) && ! $this->isVendorFile($file) && ! $this->isInternalFile($file);
+    }
+
     public function normalizeFile(string $file): string
     {
         if (! str_starts_with($file, $this->basePath)) {

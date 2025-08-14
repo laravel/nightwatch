@@ -115,6 +115,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     deployment?: string,
      *     server?: string,
      *     ingest?: array{ uri?: string, timeout?: float|int, connection_timeout?: float|int, event_buffer?: int },
+     *     capture_exception_source_code?: bool,
      *  }
      */
     private array $nightwatchConfig;
@@ -245,6 +246,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                     publicPath: $this->app->publicPath(),
                 ),
                 uuid: $uuid,
+                captureExceptionSourceCode: (bool) ($this->nightwatchConfig['capture_exception_source_code'] ?? true),
                 config: $this->config,
             ),
             executionState: $executionState,
