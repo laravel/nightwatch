@@ -888,10 +888,12 @@ class ExceptionSensorTest extends TestCase
                 31 => '            $this->nightwatch->report($e, handled: true);',
                 32 => '        }',
                 33 => '',
-                34 => '        return $next($request);',
-                35 => '    }',
-                36 => '}',
-                37 => '',
+                34 => '        $response = $next($request);',
+                35 => '',
+                36 => '        // If an exception occurs in the action phase, the usual',
+                37 => '        // ResponsePrepared event is not fired. This fallback',
+                38 => '        // ensures that we go to the AfterMiddleware stage.',
+                39 => '        try {',
             ], $frames->firstWhere('file', 'src/Hooks/RouteMiddleware.php:34')['code']);
 
             $this->assertEquals([
