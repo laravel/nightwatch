@@ -11,6 +11,7 @@ use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Concerns\RecordsContext;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Support\Uuid;
 use Laravel\Nightwatch\Types\Str;
@@ -32,6 +33,8 @@ use function str_replace;
  */
 final class ScheduledTaskSensor
 {
+    use RecordsContext;
+
     public function __construct(
         private CommandState $commandState,
         private Uuid $uuid,
@@ -89,6 +92,7 @@ final class ScheduledTaskSensor
             'hydrated_models' => $this->commandState->hydratedModels,
             'peak_memory_usage' => $this->commandState->peakMemory(),
             'exception_preview' => Str::tinyText($this->commandState->exceptionPreview),
+            'context' => $this->serializedContext(),
         ];
     }
 
@@ -186,6 +190,7 @@ final class ScheduledTaskSensor
             'hydrated_models' => 0,
             'peak_memory_usage' => 0,
             'exception_preview' => '',
+            'context' => '',
         ];
     }
 }

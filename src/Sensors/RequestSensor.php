@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
+use Laravel\Nightwatch\Concerns\RecordsContext;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
@@ -26,6 +27,8 @@ use function strlen;
  */
 final class RequestSensor
 {
+    use RecordsContext;
+
     public function __construct(
         private RequestState $requestState,
     ) {
@@ -121,6 +124,7 @@ final class RequestSensor
                     'hydrated_models' => $this->requestState->hydratedModels,
                     'peak_memory_usage' => $this->requestState->peakMemory(),
                     'exception_preview' => Str::tinyText($this->requestState->exceptionPreview),
+                    'context' => $this->serializedContext(),
                 ];
             },
         ];

@@ -7,6 +7,7 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
+use Laravel\Nightwatch\Concerns\RecordsContext;
 use Laravel\Nightwatch\LazyValue;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
@@ -20,6 +21,7 @@ use function round;
 final class JobAttemptSensor
 {
     use NormalizesQueue;
+    use RecordsContext;
 
     /**
      * @param  array<string, array{ queue?: string, driver?: string, prefix?: string, suffix?: string }>  $connectionConfig
@@ -81,6 +83,7 @@ final class JobAttemptSensor
             'hydrated_models' => new LazyValue(fn () => $this->commandState->hydratedModels),
             'peak_memory_usage' => new LazyValue(fn () => $this->commandState->peakMemory()),
             'exception_preview' => new LazyValue(fn () => Str::tinyText($this->commandState->exceptionPreview)),
+            'context' => new LazyValue(fn () => $this->serializedContext()),
         ];
     }
 }

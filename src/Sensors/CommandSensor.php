@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\Concerns\RecordsContext;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\State\CommandState;
@@ -18,6 +19,8 @@ use function hash;
  */
 final class CommandSensor
 {
+    use RecordsContext;
+
     public function __construct(
         private CommandState $commandState,
     ) {
@@ -84,6 +87,7 @@ final class CommandSensor
                     'hydrated_models' => $this->commandState->hydratedModels,
                     'peak_memory_usage' => $this->commandState->peakMemory(),
                     'exception_preview' => Str::tinyText($this->commandState->exceptionPreview),
+                    'context' => $this->serializedContext(),
                 ];
             },
         ];
