@@ -62,6 +62,9 @@ abstract class TestCase extends BaseTestCase
             }
 
             $process = Process::fromShellCommandline('php '.__DIR__.'/agent-wrapper.php')
+                ->setEnv([
+                    'NIGHTWATCH_TESTING' => '1',
+                ])
                 ->setTimeout($timeout);
 
             $process->mustRun(function (string $type, string $o) use ($until, $process, &$output) {

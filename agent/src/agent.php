@@ -58,6 +58,7 @@ $ingestConnectionTimeout ??= 5;
 $ingestTimeout ??= 10;
 /** @var ?string $server */
 $server ??= (string) gethostname();
+$testing = (bool) ($_SERVER['NIGHTWATCH_TESTING'] ?? false);
 
 /*
  * Logging helpers...
@@ -84,7 +85,11 @@ $expectedSignature = file_get_contents($signaturePath);
 if ($expectedSignature === false) {
     $error("Unable to read the agent's signature");
 
-    return;
+    if ($testing) {
+        return;
+    } else {
+        exit(1);
+    }
 }
 
 $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
@@ -196,3 +201,7 @@ $ingestDetails->hydrate();
 $checkSignature->start();
 
 $loop->run();
+
+if (! $testing) {
+    exit(0);
+}
