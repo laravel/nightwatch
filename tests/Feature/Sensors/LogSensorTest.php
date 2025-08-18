@@ -334,4 +334,24 @@ class LogSensorTest extends TestCase
         $ingest->assertLatestWrite('log:3.level', 'alert');
         $ingest->assertLatestWrite('log:4.level', 'emergency');
     }
+
+    public function test_it_preserves_zero_fractions_for_context_and_extra()
+    {
+        $ingest = $this->fakeIngest();
+        Log::channel('nightwatch')->pushProcessor(fn (LogRecord $record) => $record->with(extra: [
+            'extra' => 2.0,
+        ]));
+        Route::get('/users', function (): void {
+            Log::channel('nightwatch')->info('Hello world!', [
+                'context' => 1.0,
+            ]);
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('log:0.context', '{"context":1.0}');
+        $ingest->assertLatestWrite('log:0.extra', '{"extra":2.0}');
+    }
 }
