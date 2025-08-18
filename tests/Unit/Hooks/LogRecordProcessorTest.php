@@ -31,4 +31,27 @@ class LogRecordProcessorTest extends TestCase
         $this->assertTrue($record->thrownInWith);
         $this->assertSame(1, $this->core->executionState->exceptions);
     }
+
+    public function test_it_respects_enabled(): void
+    {
+        $this->core->config['enabled'] = false;
+
+        $record = new class(new DateTimeImmutable, 'single', Level::Debug, 'Hello world') extends LogRecord
+        {
+            public bool $thrownInWith = false;
+
+            public function with(mixed ...$args): self
+            {
+                $this->thrownInWith = true;
+
+                throw new RuntimeException('Whoops!');
+            }
+        };
+
+        $processor = new LogRecordProcessor($this->core, 'Y-m-d H:i:s');
+        $processor($record);
+
+        $this->assertFalse($record->thrownInWith);
+        $this->assertSame(0, $this->core->executionState->exceptions);
+    }
 }

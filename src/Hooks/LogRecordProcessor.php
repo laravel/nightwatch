@@ -33,6 +33,10 @@ final class LogRecordProcessor implements ProcessorInterface
 
     public function __invoke(LogRecord $record): LogRecord
     {
+        if (! $this->nightwatch->enabled()) {
+            return $record;
+        }
+
         try {
             /** @var array<string, mixed> */
             $formatted = $this->formatter()->format($record);

@@ -70,6 +70,16 @@ class LogHandlerTest extends TestCase
         }
     }
 
+    public function test_it_respects_enabled(): void
+    {
+        $this->core->config['enabled'] = false;
+
+        $handler = new LogHandler($this->core, Level::Debug);
+        $record = new LogRecord(CarbonImmutable::now(), 'nightwatch', Level::Debug, 'hello world');
+        $this->assertFalse($handler->isHandling($record));
+        $this->assertFalse($handler->handle($record));
+    }
+
     public static function logLevelProvider(): array
     {
         return [
