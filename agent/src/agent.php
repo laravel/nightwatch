@@ -203,5 +203,14 @@ $checkSignature->start();
 $loop->run();
 
 if (! $testing) {
+    // When the agent is invoked from the artisan command, it is possible that
+    // the Laravel application will attempt to load additional PHP files after
+    // the agent has shut down. These additional PHP files are part of their
+    // application not one of the agent's dependencies. If the application is
+    // using a symlink switch deployment strategy, e.g., Laravel Envoyer, it is
+    // possible the additional files are no longer present, which will trigger
+    // a fatal PHP error. Exiting here ensures that the agent always shuts down
+    // cleanly with the tradeoff that the application's terminating hooks will
+    // not run for the `nightwatch:agent` command.
     exit(0);
 }
