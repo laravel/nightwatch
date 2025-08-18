@@ -166,7 +166,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => '{}',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -220,7 +220,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Job failed',
-                'context' => '{}',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -274,7 +274,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => '{}',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -328,7 +328,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Job failed',
-                'context' => '{}',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -395,7 +395,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => '{}',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -450,7 +450,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => '{}',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -504,7 +504,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => '{}',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
         $ingest->assertLatestWrite('mail:*', [
@@ -617,7 +617,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => '{}',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
         $ingest->assertLatestWrite('exception:0', function ($exception) use ($line) {

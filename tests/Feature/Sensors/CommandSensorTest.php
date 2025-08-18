@@ -85,7 +85,7 @@ class CommandSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => '{}',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
         $ingest->assertLatestWrite('query:0.execution_preview', 'app:build');
@@ -219,7 +219,7 @@ class CommandSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => '{}',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
