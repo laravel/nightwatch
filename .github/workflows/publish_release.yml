@@ -124,11 +124,17 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: "1.x"
 
+      - name: Prepare changelog release notes
+        id: changelog-notes
+        run: |
+          notes="$(echo "${{ steps.notes.outputs.release-notes }}" | sed "s/^## /### /")"
+          echo "release-notes=$notes" >> $GITHUB_OUTPUT
+
       - name: Update Changelog
         uses: stefanzweifel/changelog-updater-action@v1
         with:
-          release-notes: ${{ steps.notes.outputs.release-notes }}
-          latest-version: "v${{ github.event.release.tag_name }}"
+          release-notes: ${{ steps.changelog-notes.outputs.release-notes }}
+          latest-version: "v${{ steps.bump-version.outputs.version }}"
           compare-url-target-revision: "1.x"
           parse-github-usernames: true
 
