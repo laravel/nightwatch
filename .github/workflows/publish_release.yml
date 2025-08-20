@@ -127,8 +127,7 @@ jobs:
       - name: Prepare changelog release notes
         id: changelog-notes
         run: |
-          notes="$(echo "${{ steps.notes.outputs.release-notes }}" | sed "s/^## /### /")"
-          echo "release-notes=$notes" >> $GITHUB_OUTPUT
+          echo "release-notes=#${{ steps.notes.outputs.release-notes }}" >> $GITHUB_OUTPUT
 
       - name: Update Changelog
         uses: stefanzweifel/changelog-updater-action@v1
