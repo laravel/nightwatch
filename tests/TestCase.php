@@ -261,6 +261,13 @@ abstract class TestCase extends OrchestraTestCase
         }
     }
 
+    protected function markTestSkippedUnless($condition, string $message): void
+    {
+        if (! $condition) {
+            $this->markTestSkipped($message);
+        }
+    }
+
     public static function tokenHash(): string
     {
         $refreshToken = $_ENV['NIGHTWATCH_TOKEN'] ?? '';

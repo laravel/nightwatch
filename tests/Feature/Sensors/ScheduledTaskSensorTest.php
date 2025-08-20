@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Sensors;
 
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -12,10 +13,13 @@ use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Context;
+use Laravel\Nightwatch\Compatibility;
 use Tests\TestCase;
 
 use function dirname;
 use function hash;
+use function json_decode;
 use function now;
 
 class ScheduledTaskSensorTest extends TestCase
@@ -79,6 +83,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -127,6 +132,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 0,
                 'exception_preview' => '',
+                'context' => '',
             ],
         ]);
     }
@@ -177,6 +183,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Unhandled error',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
         $ingest->assertLatestWrite('exception:0.message', 'Unhandled error');
@@ -272,6 +279,43 @@ class ScheduledTaskSensorTest extends TestCase
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('scheduled-task:0.name', 'find ./storage/logs -type f -mtime +7 -delete');
+    }
+
+    public function test_it_captures_context(): void
+    {
+        $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
+
+        $ingest = $this->fakeIngest();
+        $model = User::factory()->create();
+        $this->app[Schedule::class]->call(function () use ($model) {
+            Context::add('string', 'value');
+            Context::add('integer', 123);
+            Context::add('float', 123.456);
+            Context::add('boolean', true);
+            Context::add('null', null);
+            Context::add('list', [1, 2.0, 'three']);
+            Context::add('associative', ['key' => 'value']);
+            Context::add('object', (object) ['key' => 'value']);
+            Context::add('model', $model);
+        })->everyMinute();
+
+        Artisan::call('schedule:run');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:0.context', function ($context) use ($model) {
+            $context = json_decode($context, true);
+            $this->assertSame('value', $context['string']);
+            $this->assertSame(123, $context['integer']);
+            $this->assertSame(123.456, $context['float']);
+            $this->assertTrue($context['boolean']);
+            $this->assertNull($context['null']);
+            $this->assertSame([1, 2.0, 'three'], $context['list']);
+            $this->assertSame(['key' => 'value'], $context['associative']);
+            $this->assertSame(['key' => 'value'], $context['object']);
+            $this->assertSame($model->getKey(), $context['model']['id']);
+
+            return true;
+        });
     }
 }
 

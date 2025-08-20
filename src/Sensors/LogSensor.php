@@ -42,8 +42,8 @@ final class LogSensor
             // --- //
             'level' => Str::tinyText($record->level->toPsrLogLevel()),
             'message' => Str::text($record->message),
-            'context' => Str::mediumText(json_encode((object) $record->context, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)),
-            'extra' => Str::mediumText(json_encode((object) $record->extra, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)),
+            'context' => Str::text(json_encode((object) $record->context, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)),
+            'extra' => Str::text(json_encode((object) $record->extra, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)),
         ];
     }
 }

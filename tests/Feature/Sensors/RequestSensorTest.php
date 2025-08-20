@@ -4,6 +4,7 @@ namespace Tests\Feature\Sensors;
 
 use App\Http\UserController;
 use App\Livewire\Counter;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Composer\InstalledVersions;
 use Exception;
@@ -14,9 +15,11 @@ use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Livewire\Livewire;
@@ -106,6 +109,7 @@ class RequestSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -771,6 +775,44 @@ class RequestSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.method', 'BLAH');
         $ingest->assertLatestWrite('request:0.route_methods', ['BLAH']);
+    }
+
+    public function test_it_captures_context(): void
+    {
+        $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
+
+        $ingest = $this->fakeIngest();
+        $model = User::factory()->create();
+        Route::get('/test', function () use ($model) {
+            Context::add('string', 'value');
+            Context::add('integer', 123);
+            Context::add('float', 123.456);
+            Context::add('boolean', true);
+            Context::add('null', null);
+            Context::add('list', [1, 2.0, 'three']);
+            Context::add('associative', ['key' => 'value']);
+            Context::add('object', (object) ['key' => 'value']);
+            Context::add('model', $model);
+        });
+
+        $response = $this->get('/test');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.context', function ($context) use ($model) {
+            $context = json_decode($context, true);
+            $this->assertSame('value', $context['string']);
+            $this->assertSame(123, $context['integer']);
+            $this->assertSame(123.456, $context['float']);
+            $this->assertTrue($context['boolean']);
+            $this->assertNull($context['null']);
+            $this->assertSame([1, 2.0, 'three'], $context['list']);
+            $this->assertSame(['key' => 'value'], $context['associative']);
+            $this->assertSame(['key' => 'value'], $context['object']);
+            $this->assertSame($model->getKey(), $context['model']['id']);
+
+            return true;
+        });
     }
 
     public function test_livewire_2(): void

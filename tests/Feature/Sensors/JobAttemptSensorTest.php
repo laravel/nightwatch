@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Sensors;
 
+use App\Models\User;
 use Aws\Result;
 use Aws\Sqs\SqsClient;
 use Carbon\CarbonImmutable;
@@ -23,6 +24,7 @@ use Illuminate\Queue\Jobs\DatabaseJob;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\SqsQueue;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
@@ -43,6 +45,7 @@ use function array_keys;
 use function array_shift;
 use function dispatch;
 use function hash;
+use function json_decode;
 use function json_encode;
 use function now;
 use function putenv;
@@ -163,6 +166,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -216,6 +220,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Job failed',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -269,6 +274,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -322,6 +328,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Job failed',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -388,6 +395,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -442,6 +450,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -495,6 +504,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
         $ingest->assertLatestWrite('mail:*', [
@@ -607,6 +617,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
         $ingest->assertLatestWrite('exception:0', function ($exception) use ($line) {
@@ -619,6 +630,36 @@ class JobAttemptSensorTest extends TestCase
                 'message' => 'Whoops!',
                 'handled' => true,
             ], $exception, array_keys($expected));
+
+            return true;
+        });
+    }
+
+    #[DataProvider('workCommands')]
+    public function test_it_captures_context($workCommand): void
+    {
+        $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
+
+        $this->setUpEnvironment($workCommand);
+        $ingest = $this->fakeIngest();
+
+        Context::add('entry-from-parent', 'test');
+        JobWithContext::dispatch();
+        Artisan::call($workCommand, $this->workOptions($workCommand));
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('job-attempt:0.context', function ($context) {
+            $context = json_decode($context, true);
+            $this->assertSame('test', $context['entry-from-parent']);
+            $this->assertSame('value', $context['string']);
+            $this->assertSame(123, $context['integer']);
+            $this->assertSame(123.456, $context['float']);
+            $this->assertTrue($context['boolean']);
+            $this->assertNull($context['null']);
+            $this->assertSame([1, 2.0, 'three'], $context['list']);
+            $this->assertSame(['key' => 'value'], $context['associative']);
+            $this->assertSame(['key' => 'value'], $context['object']);
+            $this->assertSame('Test User', $context['model']['name']);
 
             return true;
         });
@@ -1034,5 +1075,25 @@ class JobThatMarksItselfAsHandled implements ShouldQueue
     public function handle(): void
     {
         $this->handled = true;
+    }
+}
+
+class JobWithContext implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public function handle(): void
+    {
+        Context::add('string', 'value');
+        Context::add('integer', 123);
+        Context::add('float', 123.456);
+        Context::add('boolean', true);
+        Context::add('null', null);
+        Context::add('list', [1, 2.0, 'three']);
+        Context::add('associative', ['key' => 'value']);
+        Context::add('object', (object) ['key' => 'value']);
+        Context::add('model', User::factory()->create([
+            'name' => 'Test User',
+        ]));
     }
 }
