@@ -61,6 +61,33 @@ class LogRecordProcessorTest extends TestCase
         [$log, $ingest] = $streams;
 
         $this->assertStringContainsString('{"now":"2000-01-01 11:00:00"}', $log->value);
-        $this->assertStringContainsString('{"now":"2000-01-01 00:00:00.000000+00:00"}', $ingest->value);
+        $this->assertStringContainsString('{\"now\":\"2000-01-01 00:00:00.000000+00:00\"}', $ingest->value);
+    }
+
+    public function test_it_preserves_timezone_for_record(): void
+    {
+        $this->travelTo(Date::parse('2000-01-01 00:00:00'));
+        $streams = $this->fakeTcpStreams();
+        Config::set([
+            'logging.channels.stack.channels' => ['first', 'nightwatch'],
+            'logging.channels.first' => [
+                'driver' => 'monolog',
+                'handler' => \Monolog\Handler\StreamHandler::class,
+                'handler_with' => [
+                    'stream' => 'tcp://first',
+                ],
+            ],
+        ]);
+
+        Log::channel('stack')->info('test', [
+            'now' => now('Australia/Melbourne'),
+        ]);
+        $this->core->digest();
+
+        $this->assertCount(2, $streams);
+        [$log, $ingest] = $streams;
+
+        $this->assertStringContainsString('{"now":"2000-01-01 11:00:00"}', $log->value);
+        $this->assertStringContainsString('{\"now\":\"2000-01-01 00:00:00.000000+00:00\"}', $ingest->value);
     }
 }
