@@ -42,12 +42,12 @@ class LogRecordProcessorTest extends TestCase
         $this->travelTo(Date::parse('2000-01-01 00:00:00'));
         $streams = $this->fakeTcpStreams();
         Config::set([
-            'logging.channels.stack.channels' => ['first', 'nightwatch'],
-            'logging.channels.first' => [
+            'logging.channels.stack.channels' => ['log-stream', 'nightwatch'],
+            'logging.channels.log-stream' => [
                 'driver' => 'monolog',
                 'handler' => \Monolog\Handler\StreamHandler::class,
                 'handler_with' => [
-                    'stream' => 'tcp://first',
+                    'stream' => 'tcp://log-stream',
                 ],
             ],
         ]);
@@ -69,12 +69,12 @@ class LogRecordProcessorTest extends TestCase
         $this->travelTo(Date::parse('2000-01-01 00:00:00'));
         $streams = $this->fakeTcpStreams();
         Config::set([
-            'logging.channels.stack.channels' => ['first', 'nightwatch'],
-            'logging.channels.first' => [
+            'logging.channels.stack.channels' => ['log-stream', 'nightwatch'],
+            'logging.channels.log-stream' => [
                 'driver' => 'monolog',
                 'handler' => \Monolog\Handler\StreamHandler::class,
                 'handler_with' => [
-                    'stream' => 'tcp://first',
+                    'stream' => 'tcp://log-stream',
                 ],
             ],
         ]);
