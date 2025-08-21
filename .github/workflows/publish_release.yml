@@ -109,13 +109,6 @@ jobs:
               exit 1
           fi
 
-      - uses: EndBug/add-and-commit@v9
-        with:
-          default_author: github_actions
-          message: "Bump version to v${{ steps.bump-version.outputs.version }}"
-          tag: "v${{ steps.bump-version.outputs.version }}"
-          push: true
-
       - name: Generate release notes
         id: notes
         uses: RedCrafter07/release-notes-action@main
@@ -131,6 +124,13 @@ jobs:
           latest-version: "v${{ steps.bump-version.outputs.version }}"
           compare-url-target-revision: "1.x"
           parse-github-usernames: true
+
+      - uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
+          message: "Bump version to v${{ steps.bump-version.outputs.version }}"
+          tag: "v${{ steps.bump-version.outputs.version }}"
+          push: true
 
       - uses: softprops/action-gh-release@v2
         with:
