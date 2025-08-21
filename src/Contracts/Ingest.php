@@ -12,6 +12,11 @@ interface Ingest
      */
     public function write(array $record): void;
 
+    /**
+     * @param  array<mixed>  $record
+     */
+    public function writeNow(array $record): void;
+
     public function ping(): void;
 
     public function shouldDigest(bool $bool): void;
