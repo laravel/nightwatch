@@ -36,7 +36,8 @@ final class ScheduledTaskListener
             Compatibility::$firesFinishedAndFailedEventsForScheduledConsoleCommands &&
             $event instanceof ScheduledTaskFinished &&
             $event->task->command !== null &&
-            $event->task->exitCode !== 0
+            $event->task->exitCode !== 0 &&
+            $event->task->exitCode !== null
         ) {
             return;
         }
