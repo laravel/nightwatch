@@ -35,7 +35,7 @@ final class RequestState
     public function __construct(
         public float $timestamp,
         public string $trace,
-        private string $id,
+        public string $id,
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,

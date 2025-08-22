@@ -34,6 +34,7 @@ use Monolog\LogRecord;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\ErrorHandler\Error\FatalError;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 use WeakMap;
@@ -171,7 +172,11 @@ trait CapturesState
         }
 
         try {
-            $this->ingest->write($this->sensor->exception($e, $handled));
+            if ($e instanceof FatalError) {
+                $this->ingest->writeNow($this->sensor->fatalError($e));
+            } else {
+                $this->ingest->write($this->sensor->exception($e, $handled));
+            }
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }

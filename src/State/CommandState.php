@@ -37,7 +37,7 @@ final class CommandState
     public function __construct(
         public float $timestamp,
         public string|LazyValue $trace,
-        private string $id,
+        public string $id,
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,

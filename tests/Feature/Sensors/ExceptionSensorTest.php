@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Sensors;
 
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Exception;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ use ReflectionClass;
 use RuntimeException;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
 use stdClass;
+use Symfony\Component\ErrorHandler\Error\FatalError;
 use Tests\TestCase;
 use Throwable;
 
@@ -979,6 +981,61 @@ class ExceptionSensorTest extends TestCase
             $trace = collect(json_decode($trace, associative: true));
 
             $this->assertCount(10, $trace->where(fn ($frame) => is_array($frame['code'])));
+
+            return true;
+        });
+    }
+
+    public function test_it_ingests_fatal_errors_immediately(): void
+    {
+        $ingest = $this->fakeIngest();
+        $line = null;
+        Route::get('/fatal', function () use (&$line): void {
+            // This is not a perfect simulation as it won't go via Laravel's
+            // shutdown handler, but it does test that the fatal error is
+            // ingested separately.
+            throw new FatalError('Out of memory', 0, ['file' => __FILE__, 'line' => $line = __LINE__], 0);
+        });
+
+        $response = $this
+            ->actingAs($user = User::factory()->create())
+            ->get('/fatal');
+
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, function ($records) use ($user, $line) {
+            $this->assertCount(1, $records);
+            $this->assertSame([
+                'v' => 2,
+                't' => 'exception',
+                'timestamp' => 946688523.456789,
+                'deploy' => 'v1.2.3',
+                'server' => 'web-01',
+                '_group' => hash('xxh128', "Symfony\Component\ErrorHandler\Error\FatalError,0,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"),
+                'trace_id' => '00000000-0000-0000-0000-000000000000',
+                'execution_source' => 'request',
+                'execution_id' => '00000000-0000-0000-0000-000000000001',
+                'execution_preview' => 'GET /fatal',
+                'execution_stage' => 'action',
+                'user' => (string) $user->id,
+                'class' => 'Symfony\Component\ErrorHandler\Error\FatalError',
+                'file' => 'tests/Feature/Sensors/ExceptionSensorTest.php',
+                'line' => $line,
+                'message' => 'Out of memory',
+                'code' => '0',
+                'trace' => '',
+                'handled' => false,
+                'php_version' => '8.4.1',
+                'laravel_version' => '11.33.0',
+            ], $records[0]);
+
+            return true;
+        });
+        $ingest->assertWrite(1, function ($records) {
+            $this->assertCount(3, $records);
+            $this->assertSame('query', $records[0]['t']);
+            $this->assertSame('user', $records[1]['t']);
+            $this->assertSame('request', $records[2]['t']);
 
             return true;
         });

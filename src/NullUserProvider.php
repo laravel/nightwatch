@@ -14,6 +14,11 @@ final class NullUserProvider
         return '';
     }
 
+    public function resolvedUserId(): string
+    {
+        return '';
+    }
+
     public function remember(Authenticatable $user): void
     {
         //

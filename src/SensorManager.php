@@ -43,12 +43,16 @@ use Laravel\Nightwatch\Sensors\UserSensor;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Support\Uuid;
+use Laravel\Nightwatch\Types\Str;
 use Monolog\LogRecord;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\ErrorHandler\Error\FatalError;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
+
+use function hash;
 
 /**
  * @internal
@@ -249,6 +253,38 @@ final class SensorManager
         );
 
         return $sensor($e, $handled);
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    public function fatalError(FatalError $e): array
+    {
+        $file = $this->location->normalizeFile($e->getFile());
+
+        return [
+            'v' => 2,
+            't' => 'exception',
+            'timestamp' => $this->clock->microtime(),
+            'deploy' => $this->executionState->deploy,
+            'server' => $this->executionState->server,
+            '_group' => hash('xxh128', $e::class.','.$e->getCode().','.$file.','.$e->getLine()),
+            'trace_id' => $this->executionState->trace,
+            'execution_source' => $this->executionState->source,
+            'execution_id' => $this->executionState->id,
+            'execution_preview' => $this->executionState->executionPreview,
+            'execution_stage' => $this->executionState->stage,
+            'user' => $this->executionState->user->resolvedUserId(),
+            'class' => $e::class,
+            'file' => Str::tinyText($file),
+            'line' => $e->getLine(),
+            'message' => Str::text($e->getMessage()),
+            'code' => (string) $e->getCode(),
+            'trace' => '',
+            'handled' => false,
+            'php_version' => $this->executionState->phpVersion,
+            'laravel_version' => $this->executionState->laravelVersion,
+        ];
     }
 
     /**
