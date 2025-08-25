@@ -48,7 +48,6 @@ use Monolog\LogRecord;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\ErrorHandler\Error\FatalError;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -258,7 +257,7 @@ final class SensorManager
     /**
      * @return array<mixed>
      */
-    public function fatalError(FatalError $e): array
+    public function fatalError(Throwable $e): array
     {
         $file = $this->location->normalizeFile($e->getFile());
 
