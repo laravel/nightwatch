@@ -34,11 +34,22 @@ final class Logger
         return new Monolog(
             name: 'nightwatch',
             handlers: [
-                new LogHandler($this->nightwatch, Monolog::toMonologLevel($config['level'])),
-            ],
-            processors: [
-                new LogRecordProcessor($this->nightwatch, 'Y-m-d H:i:s.uP'),
-                new PsrLogMessageProcessor('Y-m-d H:i:s.uP'),
+                new LogHandler(
+                    nightwatch: $this->nightwatch,
+                    level: Monolog::toMonologLevel($config['level']),
+                    // There is some unexpected behaviour in the framework when
+                    // using a log stack that causes monolog processors to leak
+                    // and apply their side-effects to other log handlers in
+                    // the stack. Instead of passing processors to the monolog
+                    // instance, as you would usually expect, we pass them to
+                    // our handler to apply manually. This allows us to keep
+                    // the side-effects of the processors isolated to
+                    // Nightwatch's handler when used in a stack of handlers.
+                    processors: [
+                        new LogRecordProcessor($this->nightwatch, 'Y-m-d H:i:s.uP'),
+                        new PsrLogMessageProcessor('Y-m-d H:i:s.uP'),
+                    ],
+                ),
             ],
             timezone: new DateTimeZone('UTC'),
         );

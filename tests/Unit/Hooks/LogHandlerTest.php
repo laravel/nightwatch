@@ -24,7 +24,7 @@ class LogHandlerTest extends TestCase
         };
         $record = new LogRecord(CarbonImmutable::now(), 'nightwatch', Level::Debug, 'hello world');
 
-        $handler = new LogHandler($this->core, Level::Debug);
+        $handler = new LogHandler($this->core, Level::Debug, []);
         $handler->handle($record);
 
         $this->assertTrue($thrownInLogSensor);
@@ -59,7 +59,7 @@ class LogHandlerTest extends TestCase
             new LogRecord(CarbonImmutable::now(), 'nightwatch', Level::Emergency, 'hello world'),
         ];
 
-        $handler = new LogHandler($this->core, Level::fromName($level));
+        $handler = new LogHandler($this->core, Level::fromName($level), []);
 
         foreach ($records as $record) {
             if (in_array($record->level->toPsrLogLevel(), $expected, true)) {

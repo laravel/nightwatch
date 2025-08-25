@@ -47,6 +47,7 @@ class FakeTcpStream
             'stream_close' => function (): void {
                 //
             },
+            'stream_seek' => fn () => 0,
             default => throw new RuntimeException("FakeTcpStream method not implemented [{$name}]"),
         };
 
