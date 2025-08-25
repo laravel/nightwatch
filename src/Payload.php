@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch;
 use RuntimeException;
 
 use function in_array;
+use function json_encode;
 use function strlen;
 
 /**
@@ -32,9 +33,16 @@ final class Payload
         return new self('TEXT', $payload, $tokenHash);
     }
 
-    public static function json(string $payload, string $tokenHash): self
+    /**
+     * @param  list<array<string, mixed>>  $payload
+     */
+    public static function json(array $payload, string $tokenHash): self
     {
-        return new self('JSON', $payload, $tokenHash);
+        return new self(
+            'JSON',
+            json_encode($payload, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE),
+            $tokenHash
+        );
     }
 
     public function pull(): string

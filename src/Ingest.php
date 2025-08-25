@@ -13,7 +13,6 @@ use function fread;
 use function fwrite;
 use function gettype;
 use function intval;
-use function json_encode;
 use function stream_get_meta_data;
 use function stream_set_timeout;
 use function strlen;
@@ -67,10 +66,7 @@ final class Ingest implements IngestContract
             return;
         }
 
-        $this->transmit(Payload::json(
-            json_encode([$record], flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE),
-            $this->tokenHash
-        ));
+        $this->transmit(Payload::json([$record], $this->tokenHash));
     }
 
     public function flush(): void

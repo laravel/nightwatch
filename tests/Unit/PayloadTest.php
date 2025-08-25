@@ -8,34 +8,14 @@ use RuntimeException;
 use Tests\TestCase;
 use Throwable;
 
-use function json_encode;
-
 class PayloadTest extends TestCase
 {
-    #[DataProvider('jsonPayloads')]
-    public function test_it_can_determine_if_a_json_payload_is_empty(mixed $value, bool $empty): void
+    public function test_it_can_determine_if_a_json_payload_is_empty(): void
     {
         $tokenHash = self::tokenHash();
-        $payload = Payload::json(json_encode($value, flags: JSON_THROW_ON_ERROR), $tokenHash);
+        $payload = Payload::json([], $tokenHash);
 
-        $this->assertSame($empty, $payload->isEmpty());
-    }
-
-    public static function jsonPayloads(): iterable
-    {
-        yield [null, true];
-        yield [true, false];
-        yield [false, false];
-        yield [0, false];
-        yield [1, false];
-        yield [-1, false];
-        yield ['', true];
-        yield [' ', false];
-        yield ['a', false];
-        yield [[], true];
-        yield [[1], false];
-        yield [(object) [], true];
-        yield [(object) ['a' => 1], false];
+        $this->assertTrue($payload->isEmpty());
     }
 
     #[DataProvider('textPayloads')]

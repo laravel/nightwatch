@@ -6,7 +6,6 @@ use Countable;
 
 use function array_shift;
 use function count;
-use function json_encode;
 
 /**
  * @internal
@@ -47,10 +46,10 @@ class RecordsBuffer implements Countable
     public function pull(string $tokenHash): Payload
     {
         if ($this->records === []) {
-            return Payload::json('[]', $tokenHash);
+            return Payload::json([], $tokenHash);
         }
 
-        $records = json_encode($this->records, flags: JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
+        $records = $this->records;
 
         $this->flush();
 
