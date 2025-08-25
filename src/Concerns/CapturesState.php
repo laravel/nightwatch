@@ -588,6 +588,10 @@ trait CapturesState
     {
         $scheduledTask = $this->sensor->scheduledTask($event);
 
+        if ($scheduledTask !== null && $this->rejectScheduledTaskCallback && $this->ignore(fn () => ($this->rejectScheduledTaskCallback)($scheduledTask))) {
+            return;
+        }
+
         if ($scheduledTask !== null) {
             $this->ingest->write($scheduledTask);
         }

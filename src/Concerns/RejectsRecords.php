@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Concerns;
 
 use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\OutgoingRequest;
@@ -40,6 +41,11 @@ trait RejectsRecords
      * @var ?callable(QueuedJob): bool
      */
     private $rejectQueuedJobCallback = null;
+
+    /**
+     * @var ?callable(mixed[]): bool
+     */
+    private $rejectScheduledTaskCallback = null;
 
     /**
      * @api
@@ -99,5 +105,15 @@ trait RejectsRecords
     public function rejectQueuedJobs(callable $callback): void
     {
         $this->rejectQueuedJobCallback = $callback;
+    }
+
+    /**
+     * @api
+     *
+     * @param  callable(mixed[]): bool  $callback
+     */
+    public function rejectScheduledTasks(callable $callback): void
+    {
+        $this->rejectScheduledTaskCallback = $callback;
     }
 }

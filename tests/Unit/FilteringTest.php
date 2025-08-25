@@ -6,6 +6,7 @@ use App\Jobs\MyJob;
 use App\Jobs\SampledJob;
 use App\Mail\MyMail;
 use App\Notifications\MyNotification;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -287,6 +288,37 @@ class FilteringTest extends TestCase
             return true;
         });
         $ingest->assertLatestWrite('queued-job:0.name', SampledJob::class);
+    }
+
+    public function test_it_can_filter_scheduled_tasks(): void
+    {
+        $this->forceCommandExecutionState();
+        $this->refreshApplication();
+        parent::setUp();
+        $this->app[ConsoleKernel::class]->rerouteSymfonyCommandEvents();
+
+        $ingest = $this->fakeIngest();
+        Nightwatch::rejectScheduledTasks(function ($scheduledTask) {
+            return data_get($scheduledTask, 'name') === 'engine:start';
+        });
+
+        $this->app[Schedule::class]->call(fn () => 0)
+            ->name('engine:start')
+            ->everyMinute();
+
+        $this->app[Schedule::class]->call(fn () => 0)
+            ->name('engine:stop')
+            ->everyMinute();
+
+        Artisan::call('schedule:run');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('scheduled-task:0.name', 'engine:stop');
     }
 
     public function test_it_does_not_trigger_recursion_while_filtering()
