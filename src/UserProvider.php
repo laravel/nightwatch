@@ -87,15 +87,21 @@ final class UserProvider
 
     public function resolvedUserId(): string
     {
-        if ($this->withAuth(static fn ($auth) => $auth->hasUser())) {
-            return $this->currentUserId();
-        }
+        return $this->withAuth(function ($auth) {
+            if (! $auth->hasResolvedGuards()) {
+                return '';
+            }
 
-        if ($this->rememberedUser) {
-            return $this->rememberedUserId();
-        }
+            if ($auth->hasUser()) {
+                return $this->currentUserId();
+            }
 
-        return '';
+            if ($this->rememberedUser) {
+                return $this->rememberedUserId();
+            }
+
+            return '';
+        });
     }
 
     private function currentUserId(): string
