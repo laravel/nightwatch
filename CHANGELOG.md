@@ -11,6 +11,259 @@
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.13.1...v1.13.2
 
+## [v1.13.1](https://github.com/laravel/nightwatch/compare/v1.13.0...v1.13.1) - 2025-08-21
+
+### What's Changed
+
+* Fix log processors applying side-effects to other handlers when used in a stack by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/249
+* Fix changelog generation by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/250
+* Fix changelog generation by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/251
+* Fix changelog generation by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/252
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.13.0...v1.13.1
+
+## [v1.13.0](https://github.com/laravel/nightwatch/compare/v1.12.0...v1.13.0) - 2025-08-20
+
+### What's Changed
+
+* Preserve zero fractions for log context and extra by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/247
+* Laravel Context by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/245
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.12.0...v1.13.0
+
+## [v1.12.0](https://github.com/laravel/nightwatch/compare/v1.11.5...v1.12.0) - 2025-08-14
+
+### What's Changed
+
+* Ignore build file by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/241
+* Improve exception traces by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/243
+* Add source code capture for exception traces by [@philliphartin](https://github.com/philliphartin) in https://github.com/laravel/nightwatch/pull/229
+* Fix execution stage not being updated correctly after an unhandled exception in the action stage by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/242
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.11.5...v1.12.0
+
+## [v1.11.5](https://github.com/laravel/nightwatch/compare/v1.11.4...v1.11.5) - 2025-08-04
+
+### What's Changed
+
+* Add docker health check by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/239
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.11.4...v1.11.5
+
+## [v1.11.4](https://github.com/laravel/nightwatch/compare/v1.11.3...v1.11.4) - 2025-07-18
+
+### What's Changed
+
+* Fix autoloading files by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/238
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.11.3...v1.11.4
+
+## [v1.11.3](https://github.com/laravel/nightwatch/compare/v1.11.2...v1.11.3) - 2025-07-17
+
+### What's Changed
+
+* fix: checkout the code by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/236
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.11.2...v1.11.3
+
+## [v1.11.2](https://github.com/laravel/nightwatch/compare/v1.11.1...v1.11.2) - 2025-07-17
+
+### What's Changed
+
+* fix: docker build syntax by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/235
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.11.1...v1.11.2
+
+## [v1.11.1](https://github.com/laravel/nightwatch/compare/v1.11.0...v1.11.1) - 2025-07-17
+
+### What's Changed
+
+* fix: correctly trigger docker publish by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/234
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.11.0...v1.11.1
+
+## [v1.11.0](https://github.com/laravel/nightwatch/compare/v1.10.6...v1.11.0) - 2025-07-17
+
+### What's Changed
+
+* Improve agent payload validation by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/202
+* Fix Beanstalkd job monitoring by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/227
+* Control UUID generation by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/224
+* Improve/reinstate restart on signature change behaviour by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/228
+* Publish official Docker image by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/226
+* Fix: docker build, token mismatch handling by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/230
+* Eager load classes by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/231
+* fix: don't force a major version for the first payload version by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/232
+* Fix/version validation by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/233
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.10.6...v1.11.0
+
+## [v1.10.6](https://github.com/laravel/nightwatch/compare/v1.10.5...v1.10.6) - 2025-07-08
+
+### What's Changed
+
+* Normalize group hashes for singlestore connections by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/225
+* Capture job attempts in Vapor by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/199
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.10.5...v1.10.6
+
+## [v1.10.5](https://github.com/laravel/nightwatch/compare/v1.10.4...v1.10.5) - 2025-07-07
+
+### What's Changed
+
+* Ignore events while interacting with the auth manager by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/218
+* Change visibility of internal properties by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/223
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.10.4...v1.10.5
+
+## [v1.10.4](https://github.com/laravel/nightwatch/compare/v1.10.3...v1.10.4) - 2025-07-06
+
+### What's Changed
+
+* Improve user guard resolution by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/217
+* Capture Livewire component name on Livewire update requests by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/208
+* Fix tests not showing exceptions by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/219
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.10.3...v1.10.4
+
+## [v1.10.3](https://github.com/laravel/nightwatch/compare/v1.10.2...v1.10.3) - 2025-07-02
+
+### What's Changed
+
+* Gracefully handle exceptions while resolving user ids by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/216
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.10.2...v1.10.3
+
+## [v1.10.2](https://github.com/laravel/nightwatch/compare/v1.10.1...v1.10.2) - 2025-07-01
+
+### What's Changed
+
+* Fix miscellaneous errors with old Laravel versions by @jessarcher in https://github.com/laravel/nightwatch/pull/212
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.10.1...v1.10.2
+
+## [v1.10.1](https://github.com/laravel/nightwatch/compare/v1.10.0...v1.10.1) - 2025-06-30
+
+### What's Changed
+
+* Allow navigating to same stage by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/213
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.10.0...v1.10.1
+
+## [v1.10.0](https://github.com/laravel/nightwatch/compare/v1.9.1...v1.10.0) - 2025-06-30
+
+### What's Changed
+
+* Fix test cleanup by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/207
+* Fix sampling at zero with Nova by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/211
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.9.1...v1.10.0
+
+## [v1.9.1](https://github.com/laravel/nightwatch/compare/v1.9.0...v1.9.1) - 2025-06-27
+
+### What's Changed
+
+* Ensure jobs are tracked correctly with Octane by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/204
+* Remove internal API from facade by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/205
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.9.0...v1.9.1
+
+## [v1.9.0](https://github.com/laravel/nightwatch/compare/v1.8.4...v1.9.0) - 2025-06-26
+
+### What's Changed
+
+* fix: version calculation in release workflow by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/200
+* Filtering improvements by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/197
+* Octane support by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/201
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.8.4...v1.9.0
+
+## [v1.8.4](https://github.com/laravel/nightwatch/compare/v1.7.4...v1.8.4) - 2025-06-19
+
+### What's Changed
+
+* Sampling improvements by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/185
+* Add support for log levels by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/198
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.7.4...v1.8.4
+
+## [v1.7.4](https://github.com/laravel/nightwatch/compare/v1.7.3...v1.7.4) - 2025-06-19
+
+### What's Changed
+
+* Force stream select loop by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/193
+* Ensure internal composer class only included once by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/188
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.7.3...v1.7.4
+
+## [v1.7.3](https://github.com/laravel/nightwatch/compare/v1.7.2...v1.7.3) - 2025-06-18
+
+### What's Changed
+
+* Handle `null` cache keys by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/189
+* Handle `null` connection name by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/191
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.7.2...v1.7.3
+
+## [v1.7.2](https://github.com/laravel/nightwatch/compare/v1.7.1...v1.7.2) - 2025-06-17
+
+### What's Changed
+
+* Report internal exceptions as handled by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/187
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.7.1...v1.7.2
+
+## [v1.7.1](https://github.com/laravel/nightwatch/compare/v1.7.0...v1.7.1) - 2025-06-17
+
+### What's Changed
+
+* Allow capturing of log context and extra that contain binary by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/186
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.7.0...v1.7.1
+
+## [v1.7.0](https://github.com/laravel/nightwatch/compare/v1.6.0...v1.7.0) - 2025-06-16
+
+### What's Changed
+* Respect ingest uri by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/179
+* Extract sampling helper by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/180
+* Add description to `AsCommand` attribute by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/181
+* Extract execution stage helper by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/182
+* Encapsulate state with command name helper by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/183
+* Update version by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/184
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.6.0...v1.7.0
+
+## [v1.6.0](https://github.com/laravel/nightwatch/compare/v1.5.1...v1.6.0) - 2025-06-12
+
+### What's Changed
+* Add PHP 8.4 to CI by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/173
+* Configuration based event ignores by type by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/175
+* Fix scheduled tasks being collected twice by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/177
+* Fake ingest at the TCP stream layer by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/176
+* Configurable unsampled execution exception sample rate by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/178
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.5.1...v1.6.0
+
+## [v1.5.1](https://github.com/laravel/nightwatch/compare/v1.5.0...v1.5.1) - 2025-05-21
+
+### What's Changed
+
+* Update changlog on release by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/162
+* Refactor agent tests to PHPUnit classes by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/158
+* Migrate to PHPUnit by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/163
+* Fix exception preview sticking between executions by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/164
+* Support job attempts for Laravel < v11.23.0 by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/154
+* Silence exceptions occurring while handling exceptions by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/166
+* Fix user-agent string by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/165
+* Ingest at threshold by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/161
+* Improve codebase consistency by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/167
+* Migrate to PHPUnit by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/168
+* Respect `retry_in` from app response  by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/171
+* Migrate to assertions by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/170
+* Handle binary and unicode characters by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/172
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.5.0...v1.5.1
+
 ## [v1.5.0](https://github.com/laravel/nightwatch/compare/v1.4.0...v1.5.0) - 2025-05-07
 
 ### What's Changed
@@ -182,7 +435,3 @@
 * Initial release
 
 **Full Changelog**: https://github.com/laravel/nightwatch/commits/v1.0.0
-
-## v0.1.0 (202x-xx-xx)
-
-Initial pre-release.
