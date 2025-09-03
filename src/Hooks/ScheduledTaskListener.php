@@ -32,12 +32,7 @@ final class ScheduledTaskListener
             $this->nightwatch->report($event->exception);
         }
 
-        if (
-            Compatibility::$firesFinishedAndFailedEventsForScheduledConsoleCommands &&
-            $event instanceof ScheduledTaskFinished &&
-            $event->task->command !== null &&
-            $event->task->exitCode !== 0
-        ) {
+        if ($this->isFinishedEventForFailedTask($event)) {
             return;
         }
 
@@ -48,5 +43,14 @@ final class ScheduledTaskListener
         }
 
         $this->nightwatch->digest();
+    }
+
+    private function isFinishedEventForFailedTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): bool
+    {
+        return Compatibility::$firesFinishedAndFailedEventsForScheduledConsoleCommands &&
+            $event instanceof ScheduledTaskFinished &&
+            $event->task->command !== null &&
+            $event->task->exitCode !== 0 &&
+            ! $event->task->runInBackground;
     }
 }
