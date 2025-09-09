@@ -69,19 +69,7 @@ final class UserProvider
     private function lazyUserId(): LazyValue
     {
         return new LazyValue(function () {
-            if (! $this->withAuth(static fn ($auth) => $auth->hasResolvedGuards())) {
-                return '';
-            }
-
-            if ($this->withAuth(static fn ($auth) => $auth->hasUser())) {
-                return $this->currentUserId();
-            }
-
-            if ($this->rememberedUser) {
-                return $this->rememberedUserId();
-            }
-
-            return '';
+            return $this->resolvedUserId();
         });
     }
 
