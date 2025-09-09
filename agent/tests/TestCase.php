@@ -42,6 +42,7 @@ abstract class TestCase extends BaseTestCase
         ?BrowserFake &$ingestBrowser = null,
         ?LoopFake &$loop = null,
         ?TcpServerFake &$server = null,
+        bool $quiet = false,
     ): array {
         $output = '';
         $port = rand(9000, 9999);
@@ -55,6 +56,7 @@ abstract class TestCase extends BaseTestCase
                 'ingestBrowser' => $ingestBrowser,
                 'loop' => $loop,
                 'server' => $server,
+                'quiet' => $quiet,
             ]));
 
             if ($write === false) {
@@ -87,11 +89,12 @@ abstract class TestCase extends BaseTestCase
                     $payload = unserialize($payload);
 
                     if (is_array($payload)) {
-                        /** @var array{ingestDetailsBrowser: BrowserFake, ingestBrowser: BrowserFake, loop: LoopFake, server: TcpServerFake }  $payload */
+                        /** @var array{ingestDetailsBrowser: BrowserFake, ingestBrowser: BrowserFake, loop: LoopFake, server: TcpServerFake, quiet: bool }  $payload */
                         $ingestDetailsBrowser = $payload['ingestDetailsBrowser'];
                         $ingestBrowser = $payload['ingestBrowser'];
                         $loop = $payload['loop'];
                         $server = $payload['server'];
+                        $quiet = $payload['quiet'];
                     }
                 }
 
@@ -107,9 +110,11 @@ abstract class TestCase extends BaseTestCase
         return static::class.'::'.debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 2)[1]['function'];
     }
 
-    protected function assertLogMatches(string $expected, string $actual): self
+    protected function assertLogMatches(string $expected, string $actual, bool $quiet = false): self
     {
-        $expected = "{date} {info} Nightwatch agent initiated: Listening on \[127.0.0.1:\d{4}\]\n{$expected}";
+        if (! $quiet) {
+            $expected = "{date} {info} Nightwatch agent initiated: Listening on \[127.0.0.1:\d{4}\]\n{$expected}";
+        }
         $expected = str_replace('{date}', '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', $expected);
         $expected = str_replace('{duration}', '\[\d(\.\d{1,3})?s\]', $expected);
         $expected = str_replace('{info}', '\[INFO\]', $expected);

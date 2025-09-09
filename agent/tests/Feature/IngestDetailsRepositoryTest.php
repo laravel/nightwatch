@@ -39,7 +39,7 @@ class IngestDetailsRepositoryTest extends TestCase
         ]);
         $browser->assertPending([]);
         $this->assertLogMatches(<<<'OUTPUT'
-        {date} {info} Authentication failed {duration}: Whoops!
+        {date} {error} Authentication failed {duration}: Whoops!
         OUTPUT, $output);
         $loop->assertRun([]);
     }
@@ -63,7 +63,7 @@ class IngestDetailsRepositoryTest extends TestCase
         ]);
         $browser->assertPending([]);
         $this->assertLogMatches(<<<'OUTPUT'
-        {date} {info} Authentication failed {duration}: 400 \[Whoops!\]
+        {date} {error} Authentication failed {duration}: 400 \[Whoops!\]
         OUTPUT, $output);
         $loop->assertRun([]);
     }
@@ -87,7 +87,7 @@ class IngestDetailsRepositoryTest extends TestCase
         ]);
         $browser->assertPending([]);
         $this->assertLogMatches(<<<'OUTPUT'
-        {date} {info} Authentication failed {duration}: 500 \[Whoops!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops!\]
         OUTPUT, $output);
         $loop->assertRun([]);
     }
@@ -112,7 +112,7 @@ class IngestDetailsRepositoryTest extends TestCase
         ]);
         $browser->assertPending([]);
         $this->assertLogMatches(<<<'OUTPUT'
-        {date} {info} Authentication failed {duration}: Syntax error
+        {date} {error} Authentication failed {duration}: Syntax error
         OUTPUT, $output);
         $loop->assertRun([]);
     }
@@ -151,7 +151,7 @@ class IngestDetailsRepositoryTest extends TestCase
         $browser->assertPending([]);
         $payload = preg_quote(json_encode($payload, flags: JSON_THROW_ON_ERROR), '#');
         $this->assertLogMatches(<<<OUTPUT
-        {date} {info} Authentication failed {duration}: Invalid authentication response \[{$payload}\]
+        {date} {error} Authentication failed {duration}: Invalid authentication response \[{$payload}\]
         OUTPUT, $output);
         $loop->assertRun([]);
     }
@@ -251,7 +251,7 @@ class IngestDetailsRepositoryTest extends TestCase
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Authentication successful {duration}
-        {date} {info} Authentication failed {duration}: 500 \[\]
+        {date} {error} Authentication failed {duration}: 500 \[\]
         {date} {info} Authentication successful {duration}
         {date} {info} Authentication successful {duration}
         OUTPUT, $output);
@@ -352,30 +352,30 @@ class IngestDetailsRepositoryTest extends TestCase
         ]);
         $browser->assertPending([]);
         $this->assertLogMatches(<<<'OUTPUT'
-        {date} {info} Authentication failed {duration}: Whoops 1!
-        {date} {info} Authentication failed {duration}: Whoops 2!
-        {date} {info} Authentication failed {duration}: Whoops 3!
-        {date} {info} Authentication failed {duration}: Whoops 4!
-        {date} {info} Authentication failed {duration}: Whoops 5!
-        {date} {info} Authentication failed {duration}: Whoops 6!
-        {date} {info} Authentication failed {duration}: Whoops 7!
-        {date} {info} Authentication failed {duration}: Whoops 8!
-        {date} {info} Authentication failed {duration}: Whoops 9!
-        {date} {info} Authentication failed {duration}: Whoops 10!
-        {date} {info} Authentication failed {duration}: Whoops 11!
-        {date} {info} Authentication failed {duration}: Whoops 12!
-        {date} {info} Authentication failed {duration}: Whoops 13!
-        {date} {info} Authentication failed {duration}: Whoops 14!
-        {date} {info} Authentication failed {duration}: Whoops 15!
-        {date} {info} Authentication failed {duration}: Whoops 16!
-        {date} {info} Authentication failed {duration}: Whoops 17!
-        {date} {info} Authentication failed {duration}: Whoops 18!
-        {date} {info} Authentication failed {duration}: Whoops 19!
-        {date} {info} Authentication failed {duration}: Whoops 20!
-        {date} {info} Authentication failed {duration}: Whoops 21!
-        {date} {info} Authentication failed {duration}: Whoops 22!
-        {date} {info} Authentication failed {duration}: Whoops 23!
-        {date} {info} Authentication failed {duration}: Whoops 24!
+        {date} {error} Authentication failed {duration}: Whoops 1!
+        {date} {error} Authentication failed {duration}: Whoops 2!
+        {date} {error} Authentication failed {duration}: Whoops 3!
+        {date} {error} Authentication failed {duration}: Whoops 4!
+        {date} {error} Authentication failed {duration}: Whoops 5!
+        {date} {error} Authentication failed {duration}: Whoops 6!
+        {date} {error} Authentication failed {duration}: Whoops 7!
+        {date} {error} Authentication failed {duration}: Whoops 8!
+        {date} {error} Authentication failed {duration}: Whoops 9!
+        {date} {error} Authentication failed {duration}: Whoops 10!
+        {date} {error} Authentication failed {duration}: Whoops 11!
+        {date} {error} Authentication failed {duration}: Whoops 12!
+        {date} {error} Authentication failed {duration}: Whoops 13!
+        {date} {error} Authentication failed {duration}: Whoops 14!
+        {date} {error} Authentication failed {duration}: Whoops 15!
+        {date} {error} Authentication failed {duration}: Whoops 16!
+        {date} {error} Authentication failed {duration}: Whoops 17!
+        {date} {error} Authentication failed {duration}: Whoops 18!
+        {date} {error} Authentication failed {duration}: Whoops 19!
+        {date} {error} Authentication failed {duration}: Whoops 20!
+        {date} {error} Authentication failed {duration}: Whoops 21!
+        {date} {error} Authentication failed {duration}: Whoops 22!
+        {date} {error} Authentication failed {duration}: Whoops 23!
+        {date} {error} Authentication failed {duration}: Whoops 24!
         OUTPUT, $output);
     }
 
@@ -474,30 +474,30 @@ class IngestDetailsRepositoryTest extends TestCase
             Request::json('/api/agent-auth'),
         ]);
         $this->assertLogMatches(<<<'OUTPUT'
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 1!\]
-        {date} {info} Authentication failed {duration}: 501 \[Whoops 2!\]
-        {date} {info} Authentication failed {duration}: 400 \[Whoops 3!\]
-        {date} {info} Authentication failed {duration}: 402 \[Whoops 4!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 5!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 6!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 7!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 8!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 9!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 10!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 11!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 12!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 13!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 14!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 15!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 16!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 17!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 18!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 19!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 20!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 21!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 22!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 23!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 24!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 1!\]
+        {date} {error} Authentication failed {duration}: 501 \[Whoops 2!\]
+        {date} {error} Authentication failed {duration}: 400 \[Whoops 3!\]
+        {date} {error} Authentication failed {duration}: 402 \[Whoops 4!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 5!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 6!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 7!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 8!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 9!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 10!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 11!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 12!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 13!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 14!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 15!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 16!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 17!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 18!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 19!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 20!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 21!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 22!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 23!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 24!\]
         OUTPUT, $output);
     }
 
@@ -576,22 +576,22 @@ class IngestDetailsRepositoryTest extends TestCase
         $browser->assertPending([]);
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Authentication failed {duration}: Whoops 1!
-        {date} {info} Authentication failed {duration}: Whoops 2!
-        {date} {info} Authentication failed {duration}: Whoops 3!
-        {date} {info} Authentication failed {duration}: Whoops 4!
-        {date} {info} Authentication failed {duration}: Whoops 5!
-        {date} {info} Authentication failed {duration}: Whoops 6!
-        {date} {info} Authentication failed {duration}: Whoops 7!
-        {date} {info} Authentication failed {duration}: Whoops 8!
-        {date} {info} Authentication failed {duration}: Whoops 9!
-        {date} {info} Authentication failed {duration}: Whoops 10!
-        {date} {info} Authentication failed {duration}: Whoops 11!
-        {date} {info} Authentication failed {duration}: Whoops 12!
-        {date} {info} Authentication failed {duration}: Whoops 13!
-        {date} {info} Authentication failed {duration}: Whoops 14!
-        {date} {info} Authentication failed {duration}: Whoops 15!
-        {date} {info} Authentication failed {duration}: Whoops 16!
+        {date} {error} Authentication failed {duration}: Whoops 1!
+        {date} {error} Authentication failed {duration}: Whoops 2!
+        {date} {error} Authentication failed {duration}: Whoops 3!
+        {date} {error} Authentication failed {duration}: Whoops 4!
+        {date} {error} Authentication failed {duration}: Whoops 5!
+        {date} {error} Authentication failed {duration}: Whoops 6!
+        {date} {error} Authentication failed {duration}: Whoops 7!
+        {date} {error} Authentication failed {duration}: Whoops 8!
+        {date} {error} Authentication failed {duration}: Whoops 9!
+        {date} {error} Authentication failed {duration}: Whoops 10!
+        {date} {error} Authentication failed {duration}: Whoops 11!
+        {date} {error} Authentication failed {duration}: Whoops 12!
+        {date} {error} Authentication failed {duration}: Whoops 13!
+        {date} {error} Authentication failed {duration}: Whoops 14!
+        {date} {error} Authentication failed {duration}: Whoops 15!
+        {date} {error} Authentication failed {duration}: Whoops 16!
         OUTPUT, $output);
     }
 
@@ -670,22 +670,22 @@ class IngestDetailsRepositoryTest extends TestCase
         $browser->assertPending([]);
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 1!\]
-        {date} {info} Authentication failed {duration}: 501 \[Whoops 2!\]
-        {date} {info} Authentication failed {duration}: 400 \[Whoops 3!\]
-        {date} {info} Authentication failed {duration}: 402 \[Whoops 4!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 5!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 6!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 7!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 8!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 9!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 10!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 11!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 12!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 13!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 14!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 15!\]
-        {date} {info} Authentication failed {duration}: 500 \[Whoops 16!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 1!\]
+        {date} {error} Authentication failed {duration}: 501 \[Whoops 2!\]
+        {date} {error} Authentication failed {duration}: 400 \[Whoops 3!\]
+        {date} {error} Authentication failed {duration}: 402 \[Whoops 4!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 5!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 6!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 7!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 8!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 9!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 10!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 11!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 12!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 13!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 14!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 15!\]
+        {date} {error} Authentication failed {duration}: 500 \[Whoops 16!\]
         OUTPUT, $output);
     }
 
@@ -719,8 +719,8 @@ class IngestDetailsRepositoryTest extends TestCase
         $firstBody = str_repeat('a', 1005);
         $secondBody = str_repeat('a', 1000);
         $this->assertLogMatches(<<<OUTPUT
-        {date} {info} Authentication failed {duration}: 500 \[{$firstBody}\]
-        {date} {info} Authentication failed {duration}: 500 \[{$secondBody}\[\.\.\.\]\]
+        {date} {error} Authentication failed {duration}: 500 \[{$firstBody}\]
+        {date} {error} Authentication failed {duration}: 500 \[{$secondBody}\[\.\.\.\]\]
         OUTPUT, $output);
     }
 
@@ -741,9 +741,9 @@ class IngestDetailsRepositoryTest extends TestCase
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<OUTPUT
-            {date} {info} Authentication failed {duration}: 401 \[FIRST\]
-            {date} {info} Authentication failed {duration}: 401 \[SECOND\]
-            {date} {info} Authentication failed {duration}: 401 \[THIRD\]
+            {date} {error} Authentication failed {duration}: 401 \[FIRST\]
+            {date} {error} Authentication failed {duration}: 401 \[SECOND\]
+            {date} {error} Authentication failed {duration}: 401 \[THIRD\]
             OUTPUT, $output);
 
         $loop
@@ -785,7 +785,7 @@ class IngestDetailsRepositoryTest extends TestCase
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<OUTPUT
-            {date} {info} Authentication failed {duration}: 403 \["hello world"\]
+            {date} {error} Authentication failed {duration}: 403 \["hello world"\]
             OUTPUT, $output);
 
         $loop
@@ -818,7 +818,7 @@ class IngestDetailsRepositoryTest extends TestCase
         $this->assertNull($e, $e?->getMessage() ?? '');
         $log = preg_quote($log);
         $this->assertLogMatches(<<<OUTPUT
-            {date} {info} Authentication failed {duration}: {$log}
+            {date} {error} Authentication failed {duration}: {$log}
             OUTPUT, $output);
 
         $loop
@@ -884,8 +884,8 @@ class IngestDetailsRepositoryTest extends TestCase
         $this->assertLogMatches(<<<OUTPUT
             {date} {info} Authentication successful {duration}
             {date} {info} Ingest successful {duration}
-            {date} {info} Authentication failed {duration}: 403 \[Exceeded quota\]
-            {date} {info} Ingest failed {duration}: No authentication details
+            {date} {error} Authentication failed {duration}: 403 \[Exceeded quota\]
+            {date} {error} Ingest failed {duration}: No authentication details
             OUTPUT, $output);
 
         $loop

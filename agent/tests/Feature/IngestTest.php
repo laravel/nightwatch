@@ -93,7 +93,7 @@ class IngestTest extends TestCase
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Ingest failed {duration}: 500 \[Whoops!\]
+        {date} {error} Ingest failed {duration}: 500 \[Whoops!\]
         OUTPUT, $output);
         $ingestBrowser->assertSent([
             Request::ingest([['t' => 'request']]),
@@ -135,7 +135,7 @@ class IngestTest extends TestCase
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Ingest failed {duration}: Whoops!
+        {date} {error} Ingest failed {duration}: Whoops!
         OUTPUT, $output);
         $ingestBrowser->assertSent([
             Request::ingest([['t' => 'request']]),
@@ -174,8 +174,8 @@ class IngestTest extends TestCase
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<'OUTPUT'
-        {date} {info} Authentication failed {duration}: 401 \[Invalid environment token\]
-        {date} {info} Ingest failed {duration}: No authentication details
+        {date} {error} Authentication failed {duration}: 401 \[Invalid environment token\]
+        {date} {error} Ingest failed {duration}: No authentication details
         OUTPUT, $output);
         $ingestBrowser->assertSent([]);
         $ingestBrowser->assertPending([]);
@@ -219,8 +219,8 @@ class IngestTest extends TestCase
         $secondBody = str_repeat('a', 1000);
         $this->assertLogMatches(<<<OUTPUT
         {date} {info} Authentication successful {duration}
-        {date} {info} Ingest failed {duration}: 500 \[{$firstBody}\]
-        {date} {info} Ingest failed {duration}: 500 \[{$secondBody}\[\.\.\.\]\]
+        {date} {error} Ingest failed {duration}: 500 \[{$firstBody}\]
+        {date} {error} Ingest failed {duration}: 500 \[{$secondBody}\[\.\.\.\]\]
         OUTPUT, $output);
         $ingestBrowser->assertSent([
             Request::ingest([['t' => 'request']]),
@@ -326,8 +326,8 @@ class IngestTest extends TestCase
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<'OUTPUT'
-        {date} {info} Authentication failed {duration}: Whoops!
-        {date} {info} Ingest failed {duration}: No authentication details
+        {date} {error} Authentication failed {duration}: Whoops!
+        {date} {error} Ingest failed {duration}: No authentication details
         OUTPUT, $output);
         $ingestBrowser->assertSent([]);
         $ingestBrowser->assertPending([]);
@@ -367,8 +367,8 @@ class IngestTest extends TestCase
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<'OUTPUT'
-        {date} {info} Authentication failed {duration}: 500 \[Whoops!\]
-        {date} {info} Ingest failed {duration}: No authentication details
+        {date} {error} Authentication failed {duration}: 500 \[Whoops!\]
+        {date} {error} Ingest failed {duration}: No authentication details
         OUTPUT, $output);
         $ingestBrowser->assertSent([]);
         $ingestBrowser->assertPending([]);
@@ -464,8 +464,8 @@ class IngestTest extends TestCase
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Ingest failed {duration}: Exceeded concurrent request limit\. \[2\] requests are processing
-        {date} {info} Ingest failed {duration}: Exceeded concurrent request limit\. \[2\] requests are processing
+        {date} {error} Ingest failed {duration}: Exceeded concurrent request limit\. \[2\] requests are processing
+        {date} {error} Ingest failed {duration}: Exceeded concurrent request limit\. \[2\] requests are processing
         {date} {info} Ingest successful {duration}
         {date} {info} Ingest successful {duration}
         OUTPUT, $output);
@@ -813,7 +813,7 @@ class IngestTest extends TestCase
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Ingest successful {duration}
-        {date} {info} Ingest attempted {duration}: 200 \[Quota exceeded\]
+        {date} {error} Ingest attempted {duration}: 200 \[Quota exceeded\]
         OUTPUT, $output);
         $ingestBrowser->assertSent([
             Request::ingest([['t' => 'request']]),
@@ -867,7 +867,7 @@ class IngestTest extends TestCase
         $this->assertLogMatches(<<<'OUTPUT'
             {date} {info} Authentication successful {duration}
             {date} {info} Ingest successful {duration}
-            {date} {info} Ingest failed {duration}: 403 \[Quota exceeded\]
+            {date} {error} Ingest failed {duration}: 403 \[Quota exceeded\]
             OUTPUT, $output);
 
         $ingestBrowser
@@ -931,9 +931,9 @@ class IngestTest extends TestCase
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Ingest successful {duration}
-        {date} {info} Ingest attempted {duration}: 200 \[Quota exceeded\]
+        {date} {error} Ingest attempted {duration}: 200 \[Quota exceeded\]
         {date} {info} Authentication successful {duration}
-        {date} {info} Ingest attempted {duration}: 200 \[Quota exceeded\]
+        {date} {error} Ingest attempted {duration}: 200 \[Quota exceeded\]
         OUTPUT, $output);
         $ingestBrowser->assertSent([
             Request::ingest([['t' => 'request 1']]),
