@@ -112,6 +112,7 @@ class UserSensorTest extends TestCase
             'name' => 'Tim',
             'username' => 'timacdonald',
         ]]);
+        $ingest->assertLatestWrite('request:0.user', '123');
     }
 
     public function test_it_handles_authenticatable_objects_without_name_or_email_properties(): void
@@ -173,6 +174,7 @@ class UserSensorTest extends TestCase
             'name' => '',
             'username' => '',
         ]]);
+        $ingest->assertLatestWrite('request:0.user', '123');
     }
 
     public function test_it_can_only_collect_the_user_id(): void
@@ -200,6 +202,7 @@ class UserSensorTest extends TestCase
             'name' => '',
             'username' => '',
         ]]);
+        $ingest->assertLatestWrite('request:0.user', '123');
     }
 
     public function test_it_it_captures_the_user_id_even_when_excluded_from_the_nightwatch_user_return_array(): void
@@ -225,6 +228,7 @@ class UserSensorTest extends TestCase
             'name' => '',
             'username' => '',
         ]]);
+        $ingest->assertLatestWrite('request:0.user', '567');
     }
 
     public function test_it_gracefully_handles_exceptions_while_resolving_user_ids(): void
