@@ -180,35 +180,12 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           ref: ${{ github.head_ref }}
 
-      - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ env.minimum_supported_php_version }}
-          extensions: ${{ env.agent_extensions }}
-          ini-values: error_reporting=E_ALL
-          tools: composer:v2, box:4.6.3
-          coverage: none
-
-      # See: https://github.com/shivammathur/setup-php#cache-composer-dependencies
-      - name: Get composer cache directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-agent-composer-${{ hashFiles('**/composer.lock') }}-no-dev
-          restore-keys: ${{ runner.os }}-agent-composer
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress --no-dev
-
       - name: Build agent
         id: build-agent
         run: |
           composer build
           echo "version=$(cat build/signature.txt)" >> "$GITHUB_OUTPUT"
+
       - id: commit-agent
         uses: EndBug/add-and-commit@v9
         with:

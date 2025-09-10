@@ -10,7 +10,7 @@ if [ "$EXPECTED_CHECKSUM" != "$ACTUAL_CHECKSUM" ]; then
     exit 1
 fi
 
-php composer-setup.php --quiet
+php composer-setup.php --version=2.8.11 --quiet
 RESULT=$?
 rm composer-setup.php
 exit $RESULT
