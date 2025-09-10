@@ -59,11 +59,11 @@ final class UserProvider
             }
 
             if ($auth->hasUser()) {
-                return $this->currentUserId($auth);
+                return $this->userId($auth->user()); // @phpstan-ignore argument.type
             }
 
             if ($this->rememberedUser) {
-                return $this->rememberedUserId();
+                return $this->userId($this->rememberedUser);
             }
 
             return $this->lazyUserId();
@@ -88,32 +88,21 @@ final class UserProvider
             }
 
             if ($auth->hasUser()) {
-                return $this->currentUserId($auth);
+                return $this->userId($auth->user()); // @phpstan-ignore argument.type
             }
 
             if ($this->rememberedUser) {
-                return $this->rememberedUserId();
+                return $this->userId($this->rememberedUser);
             }
 
             return '';
         });
     }
 
-    private function currentUserId(AuthManager $auth): string
+    private function userId(Authenticatable $user): string
     {
         try {
-            return Str::tinyText((string) ($this->resolvedDetails($auth->user())['id'] ?? '')); // @phpstan-ignore cast.string
-        } catch (Throwable $e) {
-            $this->reportResolvingUserIdException($e);
-
-            return '';
-        }
-    }
-
-    private function rememberedUserId(): string
-    {
-        try {
-            return Str::tinyText((string) ($this->resolvedDetails($this->rememberedUser)['id'] ?? '')); // @phpstan-ignore cast.string
+            return Str::tinyText((string) ($this->resolvedDetails($user)['id'] ?? '')); // @phpstan-ignore cast.string
         } catch (Throwable $e) {
             $this->reportResolvingUserIdException($e);
 
