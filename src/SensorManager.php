@@ -270,7 +270,7 @@ final class SensorManager
             '_group' => hash('xxh128', $e::class.','.$e->getCode().','.$file.','.$e->getLine()),
             'trace_id' => $this->executionState->trace,
             'execution_source' => $this->executionState->source,
-            'execution_id' => $this->executionState->id,
+            'execution_id' => '',
             'execution_preview' => $this->executionState->executionPreview,
             'execution_stage' => $this->executionState->stage,
             'user' => $this->executionState->user->resolvedUserId(),
