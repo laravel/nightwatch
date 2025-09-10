@@ -21,6 +21,7 @@ use function in_array;
 use function round;
 use function rtrim;
 use function str_replace;
+use function strtolower;
 use function substr;
 
 require __DIR__.'/bootstrap.php';
@@ -59,20 +60,24 @@ $ingestConnectionTimeout ??= 5;
 $ingestTimeout ??= 10;
 /** @var ?string $server */
 $server ??= (string) gethostname();
+/** @var ?bool $silent */
+$silent ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'critical'; // @phpstan-ignore argument.type
 /** @var ?bool $quiet */
-$quiet ??= false;
+$quiet ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'error'; // @phpstan-ignore argument.type
 
 /*
  * Logging helpers...
  */
 
-$info = static function (string $message) use ($quiet): void {
-    if (! $quiet) {
+$info = static function (string $message) use ($silent, $quiet): void {
+    if (! $quiet && ! $silent) {
         fwrite(STDOUT, date('Y-m-d H:i:s').' [INFO] '.$message.PHP_EOL);
     }
 };
-$error = static function (string $message): void {
-    fwrite(STDERR, date('Y-m-d H:i:s').' [ERROR] '.$message.PHP_EOL);
+$error = static function (string $message) use ($silent): void {
+    if (! $silent) {
+        fwrite(STDERR, date('Y-m-d H:i:s').' [ERROR] '.$message.PHP_EOL);
+    }
 };
 
 /*

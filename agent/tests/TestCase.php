@@ -42,6 +42,7 @@ abstract class TestCase extends BaseTestCase
         ?BrowserFake &$ingestBrowser = null,
         ?LoopFake &$loop = null,
         ?TcpServerFake &$server = null,
+        bool $silent = false,
         bool $quiet = false,
     ): array {
         $output = '';
@@ -56,6 +57,7 @@ abstract class TestCase extends BaseTestCase
                 'ingestBrowser' => $ingestBrowser,
                 'loop' => $loop,
                 'server' => $server,
+                'silent' => $silent,
                 'quiet' => $quiet,
             ]));
 
@@ -89,11 +91,12 @@ abstract class TestCase extends BaseTestCase
                     $payload = unserialize($payload);
 
                     if (is_array($payload)) {
-                        /** @var array{ingestDetailsBrowser: BrowserFake, ingestBrowser: BrowserFake, loop: LoopFake, server: TcpServerFake, quiet: bool }  $payload */
+                        /** @var array{ingestDetailsBrowser: BrowserFake, ingestBrowser: BrowserFake, loop: LoopFake, server: TcpServerFake, silent: bool, quiet: bool }  $payload */
                         $ingestDetailsBrowser = $payload['ingestDetailsBrowser'];
                         $ingestBrowser = $payload['ingestBrowser'];
                         $loop = $payload['loop'];
                         $server = $payload['server'];
+                        $silent = $payload['silent'];
                         $quiet = $payload['quiet'];
                     }
                 }
@@ -110,9 +113,9 @@ abstract class TestCase extends BaseTestCase
         return static::class.'::'.debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 2)[1]['function'];
     }
 
-    protected function assertLogMatches(string $expected, string $actual, bool $quiet = false): self
+    protected function assertLogMatches(string $expected, string $actual, bool $silent = false, bool $quiet = false): self
     {
-        if (! $quiet) {
+        if (! $quiet && ! $silent) {
             $expected = "{date} {info} Nightwatch agent initiated: Listening on \[127.0.0.1:\d{4}\]\n{$expected}";
         }
         $expected = str_replace('{date}', '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', $expected);

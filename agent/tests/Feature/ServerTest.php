@@ -16,9 +16,9 @@ class ServerTest extends TestCase
     public function test_it_responds_with_ok(): void
     {
         $loop = new LoopFake(runForSeconds: 2);
-        $server = new TcpServerFake;
+        $server = new TcpServerFake();
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
-        $ingestBrowser = new BrowserFake;
+        $ingestBrowser = new BrowserFake();
 
         $loop->addTimer(1, $server->pendingConnection([['t' => 'request']]));
 
@@ -58,9 +58,9 @@ class ServerTest extends TestCase
         $tokenHash = self::tokenHash();
 
         $loop = new LoopFake(runForSeconds: 1);
-        $server = new TcpServerFake;
+        $server = new TcpServerFake();
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
-        $ingestBrowser = new BrowserFake;
+        $ingestBrowser = new BrowserFake();
 
         $loop->addTimer(0, $server->pendingConnection('15:v1:'.$tokenHash.':PING'));
 
@@ -99,7 +99,7 @@ class ServerTest extends TestCase
         $tokenHash = self::tokenHash();
 
         $loop = new LoopFake(runForSeconds: 2);
-        $server = new TcpServerFake;
+        $server = new TcpServerFake();
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake([]);
 
@@ -142,7 +142,7 @@ class ServerTest extends TestCase
     {
         $tokenHash = self::tokenHash();
         $loop = new LoopFake(runForSeconds: 40);
-        $server = new TcpServerFake;
+        $server = new TcpServerFake();
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake([
             Response::ingested(),
@@ -193,7 +193,7 @@ class ServerTest extends TestCase
     {
         $tokenHash = self::tokenHash();
         $loop = new LoopFake(runForSeconds: 40);
-        $server = new TcpServerFake;
+        $server = new TcpServerFake();
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake([
             Response::ingested(),
@@ -238,4 +238,53 @@ class ServerTest extends TestCase
         $ingestDetailsBrowser->assertPending([]);
         $ingestBrowser->assertPending([]);
     }
+
+    public function test_it_respects_the_silent_flag(): void
+    {
+        $tokenHash = self::tokenHash();
+        $loop = new LoopFake(runForSeconds: 40);
+        $server = new TcpServerFake();
+        $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
+        $ingestBrowser = new BrowserFake([
+            Response::ingested(),
+        ]);
+
+        $loop->addTimer(1, $server->pendingConnection('15:v1:INVALID:[{}]'));
+        $loop->addTimer(20, $server->pendingConnection([['t' => 'request']]));
+
+        [$output, $e] = $this->runAgent(
+            via: 'source',
+            ingestDetailsBrowser: $ingestDetailsBrowser,
+            ingestBrowser: $ingestBrowser,
+            loop: $loop,
+            server: $server,
+            silent: true,
+        );
+
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $server->assertOpen();
+        $server->assertHandled([
+            Connection::ok(),
+            Connection::ok(),
+        ]);
+        $this->assertLogMatches('', $output, true);
+        $loop->assertRun([
+            new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
+            new Timer(interval: 20, runAt: 20, scheduledAt: 0, scheduledBy: $this->functionName()),
+            new Timer(interval: 10, runAt: 30, scheduledAt: 20, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+        ]);
+        $loop->assertPending([
+            new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+        ]);
+        $this->assertFalse($loop->stopped);
+        $ingestDetailsBrowser->assertSent([
+            Request::json('/api/agent-auth'),
+        ]);
+        $ingestBrowser->assertSent([
+            Request::ingest([['t' => 'request']]),
+        ]);
+        $ingestDetailsBrowser->assertPending([]);
+        $ingestBrowser->assertPending([]);
+    }
+
 }
