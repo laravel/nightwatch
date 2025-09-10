@@ -97,7 +97,19 @@ final class UserProvider
     private function currentUserId(AuthManager $auth): string
     {
         try {
-            return Str::tinyText((string) $auth->id());
+            $user = $auth->user();
+
+            if ($user === null) {
+                return '';
+            }
+
+            $resolver = call_user_func($this->userDetailsResolverResolver);
+
+            if ($resolver === null) {
+                return Str::tinyText((string) $user->getAuthIdentifier()); // @phpstan-ignore cast.string
+            }
+
+            return Str::tinyText($resolver($user)['id'] ?? $user->getAuthIdentifier()); // @phpstan-ignore argument.type
         } catch (Throwable $e) {
             $this->reportResolvingUserIdException($e);
 
