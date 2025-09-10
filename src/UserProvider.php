@@ -24,7 +24,7 @@ final class UserProvider
     /**
      * @var array{id: mixed, name?: mixed, username?: mixed}
      */
-    private ?array $resolvedDetails;
+    private array $resolvedDetails;
 
     /**
      * @var (callable(callable(AuthManager): mixed): mixed)
