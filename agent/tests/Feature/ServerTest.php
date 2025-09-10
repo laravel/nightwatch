@@ -16,9 +16,9 @@ class ServerTest extends TestCase
     public function test_it_responds_with_ok(): void
     {
         $loop = new LoopFake(runForSeconds: 2);
-        $server = new TcpServerFake();
+        $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
-        $ingestBrowser = new BrowserFake();
+        $ingestBrowser = new BrowserFake;
 
         $loop->addTimer(1, $server->pendingConnection([['t' => 'request']]));
 
@@ -58,9 +58,9 @@ class ServerTest extends TestCase
         $tokenHash = self::tokenHash();
 
         $loop = new LoopFake(runForSeconds: 1);
-        $server = new TcpServerFake();
+        $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
-        $ingestBrowser = new BrowserFake();
+        $ingestBrowser = new BrowserFake;
 
         $loop->addTimer(0, $server->pendingConnection('15:v1:'.$tokenHash.':PING'));
 
@@ -99,7 +99,7 @@ class ServerTest extends TestCase
         $tokenHash = self::tokenHash();
 
         $loop = new LoopFake(runForSeconds: 2);
-        $server = new TcpServerFake();
+        $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake([]);
 
@@ -142,7 +142,7 @@ class ServerTest extends TestCase
     {
         $tokenHash = self::tokenHash();
         $loop = new LoopFake(runForSeconds: 40);
-        $server = new TcpServerFake();
+        $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake([
             Response::ingested(),
@@ -193,7 +193,7 @@ class ServerTest extends TestCase
     {
         $tokenHash = self::tokenHash();
         $loop = new LoopFake(runForSeconds: 40);
-        $server = new TcpServerFake();
+        $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake([
             Response::ingested(),
@@ -243,7 +243,7 @@ class ServerTest extends TestCase
     {
         $tokenHash = self::tokenHash();
         $loop = new LoopFake(runForSeconds: 40);
-        $server = new TcpServerFake();
+        $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake([
             Response::ingested(),
@@ -286,5 +286,4 @@ class ServerTest extends TestCase
         $ingestDetailsBrowser->assertPending([]);
         $ingestBrowser->assertPending([]);
     }
-
 }
