@@ -120,7 +120,17 @@ final class UserProvider
     private function rememberedUserId(): string
     {
         try {
-            return Str::tinyText((string) $this->rememberedUser?->getAuthIdentifier());  // @phpstan-ignore cast.string
+            if ($this->rememberedUser === null) {
+                return '';
+            }
+
+            $resolver = call_user_func($this->userDetailsResolverResolver);
+
+            if ($resolver === null) {
+                return Str::tinyText((string) $this->rememberedUser->getAuthIdentifier()); // @phpstan-ignore cast.string
+            }
+
+            return Str::tinyText($resolver($this->rememberedUser)['id'] ?? $this->rememberedUser->getAuthIdentifier()); // @phpstan-ignore argument.type
         } catch (Throwable $e) {
             $this->reportResolvingUserIdException($e);
 

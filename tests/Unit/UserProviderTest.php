@@ -183,4 +183,31 @@ class UserProviderTest extends TestCase
         $ingest->assertLatestWrite('query:0.user', '123-456');
         $ingest->assertLatestWrite('request:0.user', '123-456');
     }
+
+    public function test_the_user_id_can_be_customized_when_the_user_logs_out(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::post('/logout', function () {
+            Auth::logout();
+            User::all();
+        });
+        $user = User::make([
+            'id' => '456',
+            'name' => 'Tim MacDonald',
+            'email' => 'tim@laravel.com',
+        ]);
+        Nightwatch::user(fn (Authenticatable $user) => [
+            'id' => '123-'.$user->getAuthIdentifier(),
+            'name' => $user->name,
+            'username' => $user->email,
+        ]);
+
+        $response = $this->actingAs($user)->post('/logout');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('user:0.id', '123-456');
+        $ingest->assertLatestWrite('query:0.user', '123-456');
+        $ingest->assertLatestWrite('request:0.user', '123-456');
+    }
 }
