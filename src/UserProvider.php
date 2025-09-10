@@ -22,6 +22,11 @@ final class UserProvider
     public $userDetailsResolverResolver;
 
     /**
+     * @var array{id: mixed, name?: mixed, username?: mixed}
+     */
+    private ?array $resolvedDetails;
+
+    /**
      * @var (callable(callable(AuthManager): mixed): mixed)
      */
     private $withAuth;
@@ -103,13 +108,7 @@ final class UserProvider
                 return '';
             }
 
-            $resolver = call_user_func($this->userDetailsResolverResolver);
-
-            if ($resolver === null) {
-                return Str::tinyText((string) $user->getAuthIdentifier()); // @phpstan-ignore cast.string
-            }
-
-            return Str::tinyText($resolver($user)['id'] ?? $user->getAuthIdentifier()); // @phpstan-ignore argument.type
+            return Str::tinyText($this->resolvedDetails($user)['id'] ?? ''); // @phpstan-ignore argument.type
         } catch (Throwable $e) {
             $this->reportResolvingUserIdException($e);
 
@@ -124,13 +123,7 @@ final class UserProvider
                 return '';
             }
 
-            $resolver = call_user_func($this->userDetailsResolverResolver);
-
-            if ($resolver === null) {
-                return Str::tinyText((string) $this->rememberedUser->getAuthIdentifier()); // @phpstan-ignore cast.string
-            }
-
-            return Str::tinyText($resolver($this->rememberedUser)['id'] ?? $this->rememberedUser->getAuthIdentifier()); // @phpstan-ignore argument.type
+            return Str::tinyText($this->resolvedDetails($this->rememberedUser)['id'] ?? ''); // @phpstan-ignore argument.type
         } catch (Throwable $e) {
             $this->reportResolvingUserIdException($e);
 
@@ -151,6 +144,18 @@ final class UserProvider
             return null;
         }
 
+        return $this->resolvedDetails($user);
+    }
+
+    /**
+     * @return array{ id: mixed, name?: mixed, username?: mixed }|null
+     */
+    private function resolvedDetails(Authenticatable $user): ?array
+    {
+        if (isset($this->resolvedDetails)) {
+            return $this->resolvedDetails;
+        }
+
         try {
             $id = $user->getAuthIdentifier();
         } catch (Throwable $e) {
@@ -162,14 +167,14 @@ final class UserProvider
         $resolver = call_user_func($this->userDetailsResolverResolver);
 
         if ($resolver === null) {
-            return [
+            return $this->resolvedDetails = [
                 'id' => $id,
                 'name' => $user->name ?? '',
                 'username' => $user->email ?? '',
             ];
         }
 
-        return [
+        return $this->resolvedDetails = [
             'id' => $id,
             ...$resolver($user),
         ];

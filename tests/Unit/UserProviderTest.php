@@ -259,4 +259,49 @@ class UserProviderTest extends TestCase
         $ingest->assertLatestWrite('query:0.user', '456');
         $ingest->assertLatestWrite('request:0.user', '456');
     }
+
+    public function test_it_doesnt_call_the_resolver_multiple_times(): void
+    {
+        $this->fakeIngest();
+        Route::get('/users', fn () => User::all());
+        $user = User::make();
+        $calls = 0;
+        Nightwatch::user(function (Authenticatable $user) use (&$calls) {
+            $calls++;
+
+            return [
+                'name' => $user->name,
+                'username' => $user->email,
+            ];
+        });
+
+        $response = $this->actingAs($user)->get('/users');
+
+        $response->assertOk();
+        $this->assertSame(1, $calls);
+    }
+
+    public function test_it_doesnt_call_the_resolver_multiple_times_when_logging_out(): void
+    {
+        $this->fakeIngest();
+        Route::post('/logout', function () {
+            Auth::logout();
+            User::all();
+        });
+        $user = User::make();
+        $calls = 0;
+        Nightwatch::user(function (Authenticatable $user) use (&$calls) {
+            $calls++;
+
+            return [
+                'name' => $user->name,
+                'username' => $user->email,
+            ];
+        });
+
+        $response = $this->actingAs($user)->post('/logout');
+
+        $response->assertOk();
+        $this->assertSame(1, $calls);
+    }
 }
