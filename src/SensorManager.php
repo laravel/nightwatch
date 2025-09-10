@@ -262,7 +262,7 @@ final class SensorManager
         $file = $this->location->normalizeFile($e->getFile());
 
         return [
-            'v' => 2,
+            'v' => 3,
             't' => 'exception',
             'timestamp' => $this->clock->microtime(),
             'deploy' => $this->executionState->deploy,

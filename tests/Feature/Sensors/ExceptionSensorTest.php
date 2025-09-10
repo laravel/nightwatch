@@ -102,7 +102,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('exception:*', [
             [
-                'v' => 2,
+                'v' => 3,
                 't' => 'exception',
                 'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
@@ -180,7 +180,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('exception:*', [
             [
-                'v' => 2,
+                'v' => 3,
                 't' => 'exception',
                 'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
@@ -750,7 +750,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('exception:*', [
             [
-                'v' => 2,
+                'v' => 3,
                 't' => 'exception',
                 'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
