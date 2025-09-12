@@ -1,6 +1,20 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.13.3...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.13.4...1.x)
+
+## [v1.13.4](https://github.com/laravel/nightwatch/compare/v1.13.3...v1.13.4) - 2025-09-11
+
+#### What's Changed
+
+* Refactor UserProvider by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/259
+* Update Fatal errors execution id by [@sbourouis](https://github.com/sbourouis) in https://github.com/laravel/nightwatch/pull/260
+* Allow the user ID to be customized by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/261
+
+### New Contributors
+
+* [@sbourouis](https://github.com/sbourouis) made their first contribution in https://github.com/laravel/nightwatch/pull/260
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.13.3...v1.13.4
 
 ## [v1.13.3](https://github.com/laravel/nightwatch/compare/v1.13.2...v1.13.3) - 2025-09-08
 

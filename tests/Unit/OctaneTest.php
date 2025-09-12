@@ -64,10 +64,15 @@ class OctaneTest extends TestCase
         $this->assertSame('Whoops!', $this->core->executionState->exceptionPreview);
         $this->assertSame('GET /test', $this->core->executionState->executionPreview);
         $this->assertSame(ExecutionStage::End, $this->core->executionState->stage);
+        $this->assertSame('5', $this->core->executionState->user->id());
 
         $this->core->uuid->uuidResolver = fn () => '8B4F773A-81AB-4273-97D5-C7BECBC173BE';
         $this->core->clock->microtimeResolver = fn () => 56789;
         $this->core->prepareForNextRequest();
+
+        $this->actingAs(new GenericUser([
+            'id' => 6,
+        ]));
 
         $this->assertSame('8B4F773A-81AB-4273-97D5-C7BECBC173BE', $this->core->executionState->id()->jsonSerialize());
         $this->assertSame('8B4F773A-81AB-4273-97D5-C7BECBC173BE', $this->core->executionState->trace);
@@ -87,5 +92,6 @@ class OctaneTest extends TestCase
         $this->assertSame(56789.0, $this->core->executionState->timestamp);
         $this->assertSame(56789.0, $this->core->executionState->currentExecutionStageStartedAtMicrotime);
         $this->assertSame(ExecutionStage::BeforeMiddleware, $this->core->executionState->stage);
+        $this->assertSame('6', $this->core->executionState->user->id());
     }
 }
