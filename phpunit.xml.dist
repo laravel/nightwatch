@@ -21,6 +21,5 @@
         <env name="MAIL_MAILER" value="array" />
         <env name="QUEUE_CONNECTION" value="database" />
         <env name="SQS_PREFIX" value="https://sqs.us-east-1.amazonaws.com/123456789" />
-        <env name="NIGHTWATCH_TOKEN" value="80fbcc70cec46a6e30d1e3b1b46260ba282c8a0923f8" />
     </php>
 </phpunit>
