@@ -21,7 +21,8 @@ final class AgentCommand extends Command
         {--auth-timeout=}
         {--ingest-connection-timeout=}
         {--ingest-timeout=}
-        {--server=}';
+        {--server=}
+        {--silent : Do not output any message}';
 
     /**
      * @var string
