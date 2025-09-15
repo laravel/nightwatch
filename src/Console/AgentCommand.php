@@ -21,7 +21,9 @@ final class AgentCommand extends Command
         {--auth-timeout=}
         {--ingest-connection-timeout=}
         {--ingest-timeout=}
-        {--server=}';
+        {--server=}
+        {--silent}
+        {--quiet}';
 
     /**
      * @var string
@@ -56,6 +58,6 @@ final class AgentCommand extends Command
 
         $quiet = $this->option('quiet') ?: null;
 
-        require __DIR__.'/../../agent/build/agent.phar';
+        require __DIR__ . '/../../agent/build/agent.phar';
     }
 }
