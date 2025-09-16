@@ -36,6 +36,10 @@ final class ScheduledTaskListener
             return;
         }
 
+        if ($event instanceof ScheduledTaskSkipped) {
+            $this->nightwatch->ingest->shouldDigest(true);
+        }
+
         try {
             $this->nightwatch->scheduledTask($event);
         } catch (Throwable $e) {
