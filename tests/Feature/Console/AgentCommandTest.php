@@ -19,7 +19,7 @@ class AgentCommandTest extends TestCase
                 $output .= $o;
 
                 if ($type === 'out' && str_contains($o, 'Authentication successful')) {
-                    $process->signal(SIGINT);
+                    $process->signal(SIGKILL);
                 }
             });
         } catch (ProcessTimedOutException $e) {
