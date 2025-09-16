@@ -55,8 +55,6 @@ trait CapturesState
 
     private bool $paused = false;
 
-    private bool $waitingForJob = false;
-
     /**
      * @var WeakMap<Route, bool>
      */
@@ -458,9 +456,9 @@ trait CapturesState
     /**
      * @internal
      */
-    public function waitForJob(): void
+    public function waitForExecution(): void
     {
-        $this->waitingForJob = true;
+        $this->ingest->shouldDigest(false);
     }
 
     /**
@@ -469,7 +467,7 @@ trait CapturesState
     public function configureForJobs(): void
     {
         $this->executionState->source = 'job';
-        $this->waitingForJob = true;
+        $this->waitForExecution();
     }
 
     /**
@@ -496,7 +494,6 @@ trait CapturesState
             Compatibility::getSamplingFromContext(default: true) ? 1.0 : 0.0
         );
 
-        $this->waitingForJob = false;
         $this->executionState->timestamp = $this->clock->microtime();
         $this->executionState->setId($this->uuid->make());
         $this->executionState->executionPreview = Str::tinyText($job->resolveName());
@@ -558,6 +555,7 @@ trait CapturesState
     public function configureForScheduledTasks(): void
     {
         $this->executionState->source = 'schedule';
+        $this->waitForExecution();
     }
 
     /**
@@ -579,6 +577,7 @@ trait CapturesState
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
         $this->executionState->timestamp = $this->clock->microtime();
+        $this->ingest->shouldDigest(true);
     }
 
     /**

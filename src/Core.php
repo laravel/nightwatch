@@ -80,10 +80,6 @@ final class Core
      */
     public function digest(): self
     {
-        if ($this->waitingForJob) {
-            return $this;
-        }
-
         try {
             $this->ingest->digest();
         } catch (Throwable $e) {

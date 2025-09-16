@@ -42,7 +42,7 @@ final class ScheduledTaskListener
             $this->nightwatch->report($e, handled: true);
         }
 
-        $this->nightwatch->digest();
+        $this->nightwatch->digest()->waitForExecution();
     }
 
     private function isFinishedEventForFailedTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): bool
