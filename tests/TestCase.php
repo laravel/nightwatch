@@ -270,7 +270,7 @@ abstract class TestCase extends OrchestraTestCase
 
     public static function tokenHash(): string
     {
-        $refreshToken = $_ENV['NIGHTWATCH_TOKEN'] ?? '';
+        $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
 
         if (! is_string($refreshToken)) {
             throw new RuntimeException('NIGHTWATCH_TOKEN invalid');
