@@ -19,8 +19,8 @@ class AgentCommandTest extends TestCase
             $result = $process->wait(function ($type, $o) use (&$output, $process) {
                 $output .= $o;
 
-                if ($type === 'out' && str_contains($o, 'Authentication successful')) {
-                    $process->signal(SIGKILL);
+                if (str_contains($o, 'Authentication successful')) {
+                    $process->signal(SIGTERM);
                 }
             });
         } catch (ProcessTimedOutException $e) {
