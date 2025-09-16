@@ -248,6 +248,9 @@ jobs:
         run: touch tests/database.sqlite
 
       - name: Execute tests
+        env:
+          NIGHTWATCH_TOKEN: ${{ secrets.NIGHTWATCH_TOKEN }}
+          NIGHTWATCH_BASE_URL: ${{ secrets.NIGHTWATCH_BASE_URL }}
         run: vendor/bin/phpunit --order-by=random --coverage-text
 
   agent_tests:
