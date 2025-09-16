@@ -21,13 +21,24 @@ class AgentCommandTest extends TestCase
             $result = $process->wait(function ($type, $o) use (&$output, $process) {
                 $output .= $o;
 
-                if (str_contains($o, 'Authentication successful')) {
-                    $process->signal(SIGTERM);
-                    sleep(2);
-                    if ($process->running()) {
-                        $process->signal(SIGKILL);
-                    }
+                if (! str_contains($o, 'Authentication successful')) {
+                    return;
                 }
+
+                $process->signal(SIGTERM);
+
+                $tries = 0;
+
+                while ($tries < 3) {
+                    if (! $process->running()) {
+                        return;
+                    }
+
+                    $tries++;
+                    sleep(1);
+                }
+
+                $process->signal(SIGKILL);
             });
         } catch (ProcessTimedOutException $e) {
             throw new RuntimeException('Failed to authenticate or stop the agent running. Output:'.PHP_EOL.$output, previous: $e);
