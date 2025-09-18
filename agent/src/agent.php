@@ -18,6 +18,9 @@ use function fwrite;
 use function gethostname;
 use function hash;
 use function in_array;
+use function is_file;
+use function preg_replace;
+use function realpath;
 use function round;
 use function rtrim;
 use function str_replace;
@@ -87,14 +90,24 @@ $error = static function (string $message) use ($silent): void {
 $debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
 /** @var ?string $basePath */
 $basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
+$envoyerPath = preg_replace('#^(.*?)/releases/\d+/(.*)$#', '$1/current/$2', $basePath) ?? '';
 
-$signaturePath = $basePath.'/signature.txt';
+if (is_file($envoyerPath.'/signature.txt') && realpath($envoyerPath) === $basePath) {
+    $signaturePath = $envoyerPath.'/signature.txt';
+} else {
+    $signaturePath = $basePath.'/signature.txt';
+}
+
 $expectedSignature = file_get_contents($signaturePath);
 
 if ($expectedSignature === false) {
     $error("Unable to read the agent's signature");
 
     return;
+}
+
+if ($debug) {
+    $info('Loaded agent signature from '.$signaturePath);
 }
 
 $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
