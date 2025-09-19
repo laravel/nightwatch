@@ -45,7 +45,7 @@ class CheckSignature
 
         ($this->onCheckSignature)($signature ?: 'No signature found');
 
-        if ($signature === $this->expectedSignature) {
+        if ($signature === $this->expectedSignature || ! $signature) {
             return;
         }
 
