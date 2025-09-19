@@ -17,7 +17,6 @@ use function date;
 use function file_get_contents;
 use function gethostname;
 use function hash;
-use function in_array;
 use function is_file;
 use function preg_replace;
 use function realpath;
@@ -68,6 +67,8 @@ $server ??= (string) gethostname();
 $silent ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'critical'; // @phpstan-ignore argument.type
 /** @var ?bool $quiet */
 $quiet ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'error'; // @phpstan-ignore argument.type
+/** @var ?bool $verbose */
+$verbose ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'verbose'; // @phpstan-ignore argument.type
 
 /*
  * Prepare loop...
@@ -82,6 +83,11 @@ Loop::set($loop);
 $stdOut = new WritableResourceStream(STDOUT, $loop);
 $stdErr = new WritableResourceStream(STDERR, $loop);
 
+$debug = static function (string $message) use ($verbose, $stdOut): void {
+    if ($verbose) {
+        $stdOut->write(date('Y-m-d H:i:s').' [DEBUG] '.$message.PHP_EOL);
+    }
+};
 $info = static function (string $message) use ($silent, $quiet, $stdOut): void {
     if (! $quiet && ! $silent) {
         $stdOut->write(date('Y-m-d H:i:s').' [INFO] '.$message.PHP_EOL);
@@ -97,7 +103,6 @@ $error = static function (string $message) use ($silent, $stdErr): void {
  * Internal state...
  */
 
-$debug = in_array($_SERVER['NIGHTWATCH_DEBUG'] ?? null, ['true', '1'], true);
 /** @var ?string $basePath */
 $basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
 $envoyerPath = preg_replace('#^(.*?)/releases/\d+/(.*)$#', '$1/current/$2', $basePath) ?? '';
@@ -116,9 +121,7 @@ if ($expectedSignature === false) {
     return;
 }
 
-if ($debug) {
-    $info("Read agent signature from [{$signaturePath}] and found [{$expectedSignature}]");
-}
+$debug("Read agent signature from [{$signaturePath}] and found [{$expectedSignature}]");
 
 $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 
@@ -127,6 +130,12 @@ $packageVersion = trim(file_get_contents($basePath.'/../../version.txt') ?: '');
 /*
  * Initialize services...
  */
+<<<<<<< HEAD
+=======
+$loop ??= new StreamSelectLoop;
+Loop::set($loop);
+$packageVersion = trim(@file_get_contents($basePath.'/../../version.txt') ?: '');
+>>>>>>> 4dcc22b (chore: add debug helper, remove NIGHTWATCH_DEBUG env)
 $browserFactory ??= new BrowserFactory;
 
 $ingestDetailsBrowser = $browserFactory(
@@ -136,7 +145,6 @@ $ingestDetailsBrowser = $browserFactory(
         'accept' => 'application/json',
         'authorization' => "Bearer {$refreshToken}",
         'content-type' => 'application/json',
-        ...($debug ? ['nightwatch-debug' => '1'] : []),
         'nightwatch-server' => $server,
         'user-agent' => 'NightwatchAgent/'.$packageVersion,
     ],
@@ -161,7 +169,6 @@ $ingestBrowser = $browserFactory(
         'accept' => 'application/json',
         'content-encoding' => 'gzip',
         'content-type' => 'application/json',
-        ...($debug ? ['nightwatch-debug' => '1'] : []),
         'nightwatch-server' => $server,
     ],
 );
@@ -172,7 +179,7 @@ $ingest = new Ingest(
     ingestDetails: $ingestDetails,
     buffer: new StreamBuffer(6_000_000),
     concurrentRequestLimit: 2,
-    maxBufferDurationInSeconds: $debug ? 1 : 10,
+    maxBufferDurationInSeconds: 10,
     onIngestSuccess: static fn (ResponseInterface $response, float $duration) => $info('Ingest successful ['.round($duration, 3).'s]'),
     onIngestError: static fn (string $message, float $duration) => $error('Ingest failed ['.round($duration, 3).'s]: '.$message),
     onOverQuota: static fn (string $message, float $duration) => $error('Ingest attempted ['.round($duration, 3).'s]: '.$message),
@@ -202,10 +209,8 @@ $checkSignature = new CheckSignature(
     signaturePath: $signaturePath,
     expectedSignature: $expectedSignature,
     shutdownDelayInMinutes: 5,
-    onCheckSignature: static function ($signature) use ($info, $debug) {
-        if ($debug) {
-            $info("Signature checked: [{$signature}]");
-        }
+    onCheckSignature: static function ($signature) use ($debug) {
+        $debug("Signature checked: [{$signature}]");
     },
     onShutdownInitiated: static function ($shuttingDownIn) use ($info) {
         $info('Agent signature changed: shutting down in '.$shuttingDownIn.' minutes');

@@ -86,7 +86,6 @@
         "agent": [
             "Composer\\Config::disableProcessTimeout",
             "@build",
-            "@putenv NIGHTWATCH_DEBUG=1",
             "@php vendor/bin/testbench nightwatch:agent"
         ],
         "build": [
