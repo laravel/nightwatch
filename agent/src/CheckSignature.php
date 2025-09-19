@@ -17,6 +17,7 @@ class CheckSignature
 
     /**
      * @param  LoopInterface  $loop
+     * @param  (Closure(string $signature): void)  $onCheckSignature
      * @param  (Closure(int $shuttingDownIn): void)  $onShutdownInitiated
      * @param  (Closure(): void)  $onShutdown
      */
@@ -25,6 +26,7 @@ class CheckSignature
         private string $signaturePath,
         private string $expectedSignature,
         private int $shutdownDelayInMinutes,
+        private Closure $onCheckSignature,
         private Closure $onShutdownInitiated,
         private Closure $onShutdown,
     ) {
@@ -40,6 +42,8 @@ class CheckSignature
     {
         clearstatcache(true, $this->signaturePath);
         $signature = @file_get_contents($this->signaturePath);
+
+        ($this->onCheckSignature)($signature ?: 'No signature found');
 
         if ($signature === $this->expectedSignature) {
             return;

@@ -202,6 +202,11 @@ $checkSignature = new CheckSignature(
     signaturePath: $signaturePath,
     expectedSignature: $expectedSignature,
     shutdownDelayInMinutes: 5,
+    onCheckSignature: static function ($signature) use ($info, $debug) {
+        if ($debug) {
+            $info('Agent signature read: '.$signature);
+        }
+    },
     onShutdownInitiated: static function ($shuttingDownIn) use ($info) {
         $info('Agent signature changed: shutting down in '.$shuttingDownIn.' minutes');
     },
