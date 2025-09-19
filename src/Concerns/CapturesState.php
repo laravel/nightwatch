@@ -73,7 +73,7 @@ trait CapturesState
 
         $this->sampling = $sample;
 
-        $this->ingest->shouldDigest($sample);
+        $this->ingest->shouldDigestWhenBufferIsFull($sample);
 
         Compatibility::addSamplingToContext($sample);
     }
@@ -171,7 +171,9 @@ trait CapturesState
 
         try {
             if ($e instanceof FatalError) {
-                $this->ingest->writeNow($this->sensor->fatalError($e));
+                if ($this->sampling) {
+                    $this->ingest->writeNow($this->sensor->fatalError($e));
+                }
             } else {
                 $this->ingest->write($this->sensor->exception($e, $handled));
             }
@@ -458,7 +460,7 @@ trait CapturesState
      */
     public function waitForExecution(): void
     {
-        $this->ingest->shouldDigest(false);
+        $this->sample(0);
     }
 
     /**
@@ -577,7 +579,7 @@ trait CapturesState
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
         $this->executionState->timestamp = $this->clock->microtime();
-        $this->ingest->shouldDigest(true);
+        $this->sample(1.0);
     }
 
     /**

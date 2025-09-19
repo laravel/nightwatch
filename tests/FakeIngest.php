@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Closure;
+use Deprecated;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -40,9 +41,15 @@ class FakeIngest implements IngestContract
         $this->ingest->writeNow($record);
     }
 
-    public function shouldDigest(bool $bool): void
+    #[Deprecated('Use shouldDigestWhenBufferIsFull instead')]
+    public function shouldDigest(bool $bool = true): void
     {
-        $this->ingest->shouldDigest($bool);
+        $this->shouldDigestWhenBufferIsFull($bool);
+    }
+
+    public function shouldDigestWhenBufferIsFull(bool $bool = true): void
+    {
+        $this->ingest->shouldDigestWhenBufferIsFull($bool);
     }
 
     public function digest(): void
