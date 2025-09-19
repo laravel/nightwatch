@@ -36,7 +36,7 @@ class CoreTest extends TestCase
             }
         });
 
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertTrue($this->core->ingest->thrownInDigest);
         $this->assertCount(1, $exceptions);

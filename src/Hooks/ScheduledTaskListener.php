@@ -37,7 +37,7 @@ final class ScheduledTaskListener
         }
 
         if ($event instanceof ScheduledTaskSkipped) {
-            $this->nightwatch->ingest->shouldDigest(true);
+            $this->nightwatch->prepareForNextScheduledTask();
         }
 
         try {
@@ -46,7 +46,7 @@ final class ScheduledTaskListener
             $this->nightwatch->report($e, handled: true);
         }
 
-        $this->nightwatch->digest()->waitForExecution();
+        $this->nightwatch->finishExecution()->waitForExecution();
     }
 
     private function isFinishedEventForFailedTask(ScheduledTaskFinished|ScheduledTaskSkipped|ScheduledTaskFailed $event): bool

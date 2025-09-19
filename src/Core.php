@@ -78,10 +78,14 @@ final class Core
      *
      * @return $this
      */
-    public function digest(): self
+    public function finishExecution(): self
     {
         try {
-            $this->ingest->digest();
+            if ($this->sampling) {
+                $this->ingest->digest();
+            } else {
+                $this->ingest->flush();
+            }
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
         }

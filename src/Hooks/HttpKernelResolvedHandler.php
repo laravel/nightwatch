@@ -36,7 +36,7 @@ final class HttpKernelResolvedHandler
             /**
              * @see \Laravel\Nightwatch\ExecutionStage::End
              * @see \Laravel\Nightwatch\Records\Request
-             * @see \Laravel\Nightwatch\Core::digest()
+             * @see \Laravel\Nightwatch\Core::finishExecution()
              */
             $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->nightwatch));
         } catch (Throwable $e) {

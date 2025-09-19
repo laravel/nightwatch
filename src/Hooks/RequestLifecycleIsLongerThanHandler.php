@@ -44,6 +44,6 @@ final class RequestLifecycleIsLongerThanHandler
             $this->nightwatch->report($e, handled: true);
         }
 
-        $this->nightwatch->digest();
+        $this->nightwatch->finishExecution();
     }
 }
