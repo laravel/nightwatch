@@ -130,9 +130,9 @@ class ScheduledTaskSensorTest extends TestCase
                 'files_written' => 0,
                 'cache_events' => 0,
                 'hydrated_models' => 0,
-                'peak_memory_usage' => 0,
+                'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => '',
+                'context' => '{}',
             ],
         ]);
     }
