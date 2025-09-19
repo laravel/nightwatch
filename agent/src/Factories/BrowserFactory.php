@@ -4,14 +4,13 @@ namespace Laravel\NightwatchAgent\Factories;
 
 use Laravel\NightwatchAgent\Browser as NightwatchBrowser;
 use Laravel\NightwatchAgent\Contracts\Browser as BrowserContract;
-use Laravel\NightwatchAgent\PackageVersionRepository;
 use React\Http\Browser as ReactBrowser;
 use React\Socket\Connector;
 
 class BrowserFactory
 {
     public function __construct(
-        private PackageVersionRepository $packageVersion,
+        private string $packageVersion,
     ) {
         //
     }
@@ -37,7 +36,7 @@ class BrowserFactory
         }
 
         return new NightwatchBrowser($browser, [
-            'user-agent' => fn () => 'NightwatchAgent/'.$this->packageVersion->get(),
+            'user-agent' => fn () => 'NightwatchAgent/'.$this->packageVersion,
         ]);
     }
 }

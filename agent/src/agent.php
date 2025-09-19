@@ -26,6 +26,7 @@ use function rtrim;
 use function str_replace;
 use function strtolower;
 use function substr;
+use function trim;
 
 require __DIR__.'/bootstrap.php';
 
@@ -121,13 +122,11 @@ if ($debug) {
 
 $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 
+$packageVersion = trim(file_get_contents($basePath.'/../../version.txt') ?: '');
+
 /*
  * Initialize services...
  */
-
-$packageVersion = new PackageVersionRepository(
-    path: $basePath.'/../../version.txt',
-);
 
 $browserFactory ??= new BrowserFactory($packageVersion);
 
