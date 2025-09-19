@@ -117,7 +117,7 @@ if ($expectedSignature === false) {
 }
 
 if ($debug) {
-    $info('Loaded agent signature from '.$signaturePath);
+    $info("Read agent signature from [{$signaturePath}] and found [{$expectedSignature}]");
 }
 
 $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
@@ -127,8 +127,7 @@ $packageVersion = trim(file_get_contents($basePath.'/../../version.txt') ?: '');
 /*
  * Initialize services...
  */
-
-$browserFactory ??= new BrowserFactory($packageVersion);
+$browserFactory ??= new BrowserFactory;
 
 $ingestDetailsBrowser = $browserFactory(
     connectionTimeout: $authenticationConnectionTimeout,
@@ -139,6 +138,7 @@ $ingestDetailsBrowser = $browserFactory(
         'content-type' => 'application/json',
         ...($debug ? ['nightwatch-debug' => '1'] : []),
         'nightwatch-server' => $server,
+        'user-agent' => 'NightwatchAgent/'.$packageVersion,
     ],
     baseUrl: rtrim($baseUrl, '/'),
 );
@@ -204,7 +204,7 @@ $checkSignature = new CheckSignature(
     shutdownDelayInMinutes: 5,
     onCheckSignature: static function ($signature) use ($info, $debug) {
         if ($debug) {
-            $info('Agent signature read: '.$signature);
+            $info("Signature checked: [{$signature}]");
         }
     },
     onShutdownInitiated: static function ($shuttingDownIn) use ($info) {

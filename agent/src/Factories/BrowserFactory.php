@@ -10,7 +10,6 @@ use React\Socket\Connector;
 class BrowserFactory
 {
     public function __construct(
-        private string $packageVersion,
     ) {
         //
     }
@@ -35,8 +34,6 @@ class BrowserFactory
             $browser = $browser->withHeader($key, $value);
         }
 
-        return new NightwatchBrowser($browser, [
-            'user-agent' => fn () => 'NightwatchAgent/'.$this->packageVersion,
-        ]);
+        return new NightwatchBrowser($browser);
     }
 }

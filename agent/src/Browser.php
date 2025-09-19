@@ -8,12 +8,8 @@ use React\Promise\PromiseInterface;
 
 class Browser implements BrowserContract
 {
-    /**
-     * @param  array<string, (callable(): string)>  $lazyHeaders
-     */
     public function __construct(
         private ReactBrowser $browser,
-        private array $lazyHeaders,
     ) {
         //
     }
@@ -24,22 +20,7 @@ class Browser implements BrowserContract
     public function post(string $url, array $headers = [], string $body = ''): PromiseInterface
     {
         return $this->browser->post($url, [
-            ...$this->headers(),
             ...$headers,
         ], $body);
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function headers(): array
-    {
-        $headers = [];
-
-        foreach ($this->lazyHeaders as $key => $value) {
-            $headers[$key] = $value();
-        }
-
-        return $headers;
     }
 }
