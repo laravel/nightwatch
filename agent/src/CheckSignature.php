@@ -6,6 +6,7 @@ use Closure;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
 
+use function clearstatcache;
 use function file_get_contents;
 
 class CheckSignature
@@ -37,6 +38,7 @@ class CheckSignature
 
     private function check(): void
     {
+        clearstatcache(true, $this->signaturePath);
         $signature = @file_get_contents($this->signaturePath);
 
         if ($signature === $this->expectedSignature) {
