@@ -66,7 +66,7 @@ $silent ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'critic
 $quiet ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'error'; // @phpstan-ignore argument.type
 
 /*
- * Prepare loop
+ * Prepare loop...
  */
 
 $loop ??= new StreamSelectLoop;
