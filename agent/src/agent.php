@@ -134,6 +134,7 @@ if ($packageVersion === false) {
 }
 
 $packageVersion = trim($packageVersion);
+$debug("Read version [{$packageVersion}]");
 
 /*
  * Initialize services...
