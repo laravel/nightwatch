@@ -121,7 +121,7 @@ if ($expectedSignature === false) {
     return;
 }
 
-$debug("Read agent signature from [{$signaturePath}] and found [{$expectedSignature}]");
+$debug("Read signature from [{$signaturePath}] and found [{$expectedSignature}]");
 
 $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 
