@@ -130,12 +130,6 @@ $packageVersion = trim(file_get_contents($basePath.'/../../version.txt') ?: '');
 /*
  * Initialize services...
  */
-<<<<<<< HEAD
-=======
-$loop ??= new StreamSelectLoop;
-Loop::set($loop);
-$packageVersion = trim(@file_get_contents($basePath.'/../../version.txt') ?: '');
->>>>>>> 4dcc22b (chore: add debug helper, remove NIGHTWATCH_DEBUG env)
 $browserFactory ??= new BrowserFactory;
 
 $ingestDetailsBrowser = $browserFactory(
