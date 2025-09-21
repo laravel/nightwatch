@@ -9,11 +9,6 @@ use React\Socket\Connector;
 
 class BrowserFactory
 {
-    public function __construct(
-    ) {
-        //
-    }
-
     /**
      * @param  array<string, string>  $headers
      */
