@@ -113,7 +113,7 @@ if (is_file($envoyerPath.'/signature.txt') && realpath($envoyerPath) === $basePa
     $signaturePath = $basePath.'/signature.txt';
 }
 
-$expectedSignature = file_get_contents($signaturePath);
+$expectedSignature = @file_get_contents($signaturePath);
 
 if ($expectedSignature === false) {
     $error("Unable to read the agent's signature");
