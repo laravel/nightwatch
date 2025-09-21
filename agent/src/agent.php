@@ -116,7 +116,7 @@ if (is_file($envoyerPath.'/signature.txt') && realpath($envoyerPath) === $basePa
 $expectedSignature = @file_get_contents($signaturePath);
 
 if ($expectedSignature === false) {
-    $error("Unable to read the agent's signature");
+    $error('Unable to read the signature');
 
     return;
 }
@@ -128,7 +128,7 @@ $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 $packageVersion = @file_get_contents($basePath.'/../../version.txt');
 
 if ($packageVersion === false) {
-    $error('Unable to read the package version');
+    $error('Unable to read the version');
 
     return;
 }
