@@ -202,7 +202,7 @@ class IngestDetailsRepositoryTest extends TestCase
             'authorization' => "Bearer {$token}",
             'content-type' => 'application/json',
             'nightwatch-server' => gethostname(),
-            'user-agent' => 'NightwatchAgent/'.trim(@file_get_contents('../version.txt') ?: ''),
+            'user-agent' => 'NightwatchAgent/'.trim(file_get_contents('../version.txt') ?: ''),
         ], $browser->headers);
         $browser->assertSent([
             Request::json('/api/agent-auth'),
