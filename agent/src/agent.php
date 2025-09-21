@@ -125,7 +125,15 @@ $debug("Read signature from [{$signaturePath}] and found [".trim($expectedSignat
 
 $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 
-$packageVersion = trim(file_get_contents($basePath.'/../../version.txt') ?: '');
+$packageVersion = @file_get_contents($basePath.'/../../version.txt');
+
+if ($packageVersion === false) {
+    $error('Unable to read the package version');
+
+    return;
+}
+
+$packageVersion = trim($packageVersion);
 
 /*
  * Initialize services...
