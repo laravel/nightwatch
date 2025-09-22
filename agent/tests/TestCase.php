@@ -125,9 +125,10 @@ abstract class TestCase extends BaseTestCase
 
         if ($verbose) {
             $expectedSignature = trim(self::getSignature());
-            $expectedSignaturePath = __DIR__.'/../build/signature.txt';
+            $expected = "{date} {debug} Found signature \[{$expectedSignature}\]\n{$expected}";
 
-            $expected = "{date} {debug} Read signature from \[{$expectedSignaturePath}\] and found \[{$expectedSignature}\]\n{$expected}";
+            $expectedSignaturePath = __DIR__.'/../build/signature.txt';
+            $expected = "{date} {debug} Reading signature from \[{$expectedSignaturePath}\]\n{$expected}";
         }
 
         $expected = str_replace('{date}', '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', $expected);
@@ -136,11 +137,16 @@ abstract class TestCase extends BaseTestCase
         $expected = str_replace('{error}', '\[ERROR\]', $expected);
         $expected = str_replace('{debug}', '\[DEBUG\]', $expected);
 
-        $expected = explode(PHP_EOL, $expected);
-        $actual = explode(PHP_EOL, $actual);
+        $expectedLines = explode(PHP_EOL, $expected);
+        $actualLines = explode(PHP_EOL, $actual);
 
-        foreach ($expected as $index => $e) {
-            $this->assertMatchesRegularExpression("#^{$e}$#", $actual[$index]);
+        foreach ($expectedLines as $index => $expectedLine) {
+            $this->assertMatchesRegularExpression("#^{$expectedLine}$#", $actualLines[$index], <<<LOG
+            === ACTUAL ===
+            {$actual}
+            === EXPECTED ===
+            {$expected}
+            LOG);
         }
 
         return $this;
