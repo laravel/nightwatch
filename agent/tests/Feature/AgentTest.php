@@ -10,6 +10,7 @@ use Tests\TestCase;
 use Tests\Timer;
 
 use function file_put_contents;
+use function unlink;
 
 class AgentTest extends TestCase
 {
@@ -140,6 +141,37 @@ class AgentTest extends TestCase
             OUTPUT, $output);
     }
 
+    public function test_it_does_not_restart_if_the_signature_file_is_unaccessible_to_support_envoyer_symlink_deployments(): void
+    {
+        $originalSignature = self::getSignature();
+
+        try {
+            $loop = new LoopFake(runForSeconds: 121);
+            $loop->addTimer(1, [self::class, 'unlinkSignature']);
+            $loop->addTimer(61, [self::class, 'writeSignature']);
+            $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
+
+            [$output, $e] = $this->runAgent(
+                via: 'source',
+                ingestDetailsBrowser: $ingestDetailsBrowser,
+                loop: $loop,
+                verbose: true,
+            );
+
+            self::writeSignature($originalSignature);
+
+            $this->assertNull($e, $e?->getMessage() ?? '');
+            $this->assertLogMatches(<<<'OUTPUT'
+                {date} {info} Authentication successful {duration}
+                {date} {debug} Signature checked: \[\]
+                {date} {debug} Signature checked: \[abcd\]
+                {date} {info} Agent signature changed: shutting down in 5 minutes
+                OUTPUT, $output, verbose: true);
+        } finally {
+            self::writeSignature($originalSignature);
+        }
+    }
+
     public static function writeSignature(string $content = 'abcd'): void
     {
         file_put_contents(self::signaturePath(), $content);
@@ -149,5 +181,10 @@ class AgentTest extends TestCase
     {
         $signature = self::getSignature();
         self::writeSignature($signature);
+    }
+
+    public static function unlinkSignature(): void
+    {
+        unlink(self::signaturePath());
     }
 }

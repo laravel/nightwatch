@@ -41,11 +41,11 @@ class CheckSignature
     private function check(): void
     {
         clearstatcache(clear_realpath_cache: true, filename: $this->signaturePath);
-        $signature = @file_get_contents($this->signaturePath);
+        $signature = @file_get_contents($this->signaturePath) ?: '';
 
-        ($this->onCheckSignature)($signature ?: 'No signature found');
+        ($this->onCheckSignature)($signature);
 
-        if ($signature === $this->expectedSignature || ! $signature) {
+        if ($signature === $this->expectedSignature || $signature === '') {
             return;
         }
 

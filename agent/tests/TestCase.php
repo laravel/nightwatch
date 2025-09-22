@@ -8,11 +8,13 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use Throwable;
 
+use function array_slice;
 use function debug_backtrace;
 use function explode;
 use function file_get_contents;
 use function file_put_contents;
 use function hash;
+use function implode;
 use function is_array;
 use function is_file;
 use function is_string;
@@ -139,15 +141,29 @@ abstract class TestCase extends BaseTestCase
 
         $expectedLines = explode(PHP_EOL, $expected);
         $actualLines = explode(PHP_EOL, $actual);
+        $expectedAndFound = '';
 
         foreach ($expectedLines as $index => $expectedLine) {
-            $this->assertMatchesRegularExpression("#^{$expectedLine}$#", $actualLines[$index], <<<LOG
-            === ACTUAL ===
-            {$actual}
-            === EXPECTED ===
-            {$expected}
-            LOG);
+            $this->assertMatchesRegularExpression("#^{$expectedLine}$#", $actualLines[$index], <<<MESSAGE
+                === ACTUAL ===
+                {$actual}
+                === EXPECTED ===
+                {$expected}
+                MESSAGE);
+
+            $expectedAndFound .= $actualLines[$index].PHP_EOL;
         }
+
+        $remaining = implode(PHP_EOL, array_slice($actualLines, $index + 1));
+
+        $this->assertSame('', $remaining, <<<MESSAGE
+            Unexpected lines in log after expected log lines
+
+            === EXPECTED ===
+            {$expectedAndFound}
+            === UNEXPECTED ===
+            {$remaining}
+            MESSAGE);
 
         return $this;
     }
