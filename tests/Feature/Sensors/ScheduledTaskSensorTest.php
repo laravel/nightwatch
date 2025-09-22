@@ -132,7 +132,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => '{}',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
