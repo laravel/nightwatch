@@ -6,6 +6,7 @@ return [
     'deployment' => env('NIGHTWATCH_DEPLOY'),
     'server' => env('NIGHTWATCH_SERVER', (string) gethostname()),
     'capture_exception_source_code' => env('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', true),
+    'redact_headers' => explode(',', env('NIGHTWATCH_REDACT_HEADERS', 'Authorization,Cookie,Proxy-Authorization')),
 
     'sampling' => [
         'requests' => env('NIGHTWATCH_REQUEST_SAMPLE_RATE', 1.0),

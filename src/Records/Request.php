@@ -2,6 +2,8 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Symfony\Component\HttpFoundation\HeaderBag;
+
 final class Request
 {
     /**
@@ -20,6 +22,7 @@ final class Request
         public readonly int $statusCode,
         public readonly int $requestSize,
         public readonly int $responseSize,
+        public HeaderBag $headers,
     ) {
         //
     }

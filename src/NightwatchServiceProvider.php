@@ -121,6 +121,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     server?: string,
      *     ingest?: array{ uri?: string, timeout?: float|int, connection_timeout?: float|int, event_buffer?: int },
      *     capture_exception_source_code?: bool,
+     *     redact_headers?: string[],
      *  }
      */
     private array $nightwatchConfig;
@@ -251,6 +252,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                     publicPath: $this->app->publicPath(),
                 ),
                 captureExceptionSourceCode: (bool) ($this->nightwatchConfig['capture_exception_source_code'] ?? true),
+                redactHeaders: $this->nightwatchConfig['redact_headers'] ?? ['Authorization', 'Cookie', 'Proxy-Authorization'],
                 config: $this->config,
             ),
             executionState: $executionState,

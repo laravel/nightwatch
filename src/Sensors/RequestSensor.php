@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Sensors;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Concerns\RecordsContext;
+use Laravel\Nightwatch\Concerns\RedactsHeaders;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
@@ -19,8 +20,10 @@ use function implode;
 use function is_int;
 use function is_numeric;
 use function is_string;
+use function json_encode;
 use function sort;
 use function strlen;
+use function tap;
 
 /**
  * @internal
@@ -28,9 +31,14 @@ use function strlen;
 final class RequestSensor
 {
     use RecordsContext;
+    use RedactsHeaders;
 
+    /**
+     * @param  list<string>  $redactHeaders
+     */
     public function __construct(
         private RequestState $requestState,
+        private array $redactHeaders,
     ) {
         //
     }
@@ -78,6 +86,11 @@ final class RequestSensor
                 statusCode: $response->getStatusCode(),
                 requestSize: strlen($request->getContent()),
                 responseSize: $this->parseResponseSize($response),
+                headers: tap(clone $request->headers, static function ($headers) {
+                    $headers->remove('php-auth-user');
+                    $headers->remove('php-auth-pw');
+                    $headers->remove('php-auth-digest');
+                }),
             ),
             function () use ($record) {
                 return [
@@ -125,6 +138,7 @@ final class RequestSensor
                     'peak_memory_usage' => $this->requestState->peakMemory(),
                     'exception_preview' => Str::tinyText($this->requestState->exceptionPreview),
                     'context' => $this->serializedContext(),
+                    'headers' => Str::text(json_encode((object) $this->redactHeaders($record->headers, $this->redactHeaders)->all(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)),
                 ];
             },
         ];

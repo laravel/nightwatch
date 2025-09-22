@@ -23,6 +23,7 @@ use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\SensorManager;
 use Livewire\Livewire;
+use Orchestra\Testbench\Attributes\WithEnv;
 use Tests\TestCase;
 
 use function fseek;
@@ -110,6 +111,7 @@ class RequestSensorTest extends TestCase
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
                 'context' => Compatibility::$contextExists ? '{}' : '',
+                'headers' => '{"host":["localhost"],"user-agent":["Symfony"],"accept":["text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"],"accept-language":["en-us,en;q=0.5"],"accept-charset":["ISO-8859-1,utf-8;q=0.7,*;q=0.7"]}',
             ],
         ]);
     }
@@ -810,6 +812,121 @@ class RequestSensorTest extends TestCase
             $this->assertSame(['key' => 'value'], $context['associative']);
             $this->assertSame(['key' => 'value'], $context['object']);
             $this->assertSame($model->getKey(), $context['model']['id']);
+
+            return true;
+        });
+    }
+
+    public function test_it_captures_request_headers(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {});
+
+        $response = $this
+            ->withHeader('Test-Header', 'test header value')
+            ->get('/test');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.headers', function ($headers) {
+            $headers = json_decode($headers, true);
+            $this->assertSame([
+                'host' => [
+                    'localhost',
+                ],
+                'user-agent' => [
+                    'Symfony',
+                ],
+                'accept' => [
+                    'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                ],
+                'accept-language' => [
+                    'en-us,en;q=0.5',
+                ],
+                'accept-charset' => [
+                    'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+                ],
+                'test-header' => [
+                    'test header value',
+                ],
+            ], $headers);
+
+            return true;
+        });
+    }
+
+    #[WithEnv('NIGHTWATCH_REDACT_HEADERS', 'Authorization,Cookie,Proxy-Authorization,custom')]
+    public function test_it_redacts_sensitive_headers(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {});
+
+        $response = $this
+            ->withBasicAuth('taylor', '$f4c4d3')
+            ->withHeader('Proxy-Authorization', 'Bearer secret-token')
+            ->withHeader('Cookie', 'laravel_session=abc123; XSRF-TOKEN=1234')
+            ->withHeader('Custom', 'secret')
+            ->get('/test');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.headers', function ($headers) {
+            $headers = json_decode($headers, true);
+            $this->assertSame(['Basic [20 bytes redacted]'], $headers['authorization']);
+            $this->assertSame(['Bearer [12 bytes redacted]'], $headers['proxy-authorization']);
+            $this->assertSame(['laravel_session=[6 bytes redacted]; XSRF-TOKEN=[4 bytes redacted]'], $headers['cookie']);
+            $this->assertSame(['[6 bytes redacted]'], $headers['custom']);
+            $this->assertArrayNotHasKey('php-auth-user', $headers);
+            $this->assertArrayNotHasKey('php-auth-pw', $headers);
+
+            return true;
+        });
+    }
+
+    #[WithEnv('NIGHTWATCH_REDACT_HEADERS', '')]
+    public function test_header_redaction_can_be_disabled(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {});
+
+        $response = $this
+            ->withBasicAuth('taylor', '$f4c4d3')
+            ->withHeader('Proxy-Authorization', 'Bearer secret-token')
+            ->withHeader('Cookie', 'laravel_session=abc123; XSRF-TOKEN=1234')
+            ->get('/test');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.headers', function ($headers) {
+            $headers = json_decode($headers, true);
+            $this->assertSame(['Basic dGF5bG9yOiRmNGM0ZDM='], $headers['authorization']);
+            $this->assertSame(['Bearer secret-token'], $headers['proxy-authorization']);
+            $this->assertSame(['laravel_session=abc123; XSRF-TOKEN=1234'], $headers['cookie']);
+            $this->assertArrayNotHasKey('php-auth-user', $headers);
+            $this->assertArrayNotHasKey('php-auth-pw', $headers);
+
+            return true;
+        });
+    }
+
+    public function test_it_handles_unconventional_headers(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {});
+
+        $response = $this
+            ->withHeader('Authorization', 'secret-token')
+            ->withHeader('Proxy-Authorization', 'secret-key secret-token')
+            ->withHeader('Cookie', 'secret')
+            ->get('/test');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.headers', function ($headers) {
+            $headers = json_decode($headers, true);
+            $this->assertSame(['[12 bytes redacted]'], $headers['authorization']);
+            $this->assertSame(['[23 bytes redacted]'], $headers['proxy-authorization']);
+            $this->assertSame(['[6 bytes redacted]'], $headers['cookie']);
 
             return true;
         });
