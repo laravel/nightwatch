@@ -114,6 +114,8 @@ if (is_file($envoyerPath.'/signature.txt') && realpath($envoyerPath) === $basePa
     $signaturePath = $basePath.'/signature.txt';
 }
 
+$debug("Reading signature from [{$signaturePath}]");
+
 $expectedSignature = @file_get_contents($signaturePath);
 
 if ($expectedSignature === false) {
@@ -122,8 +124,7 @@ if ($expectedSignature === false) {
     return;
 }
 
-$debug("Read signature from [{$signaturePath}] and found [".trim($expectedSignature).']');
-
+$debug('Found signature ['.trim($expectedSignature).']');
 
 $packageVersion = trim(file_get_contents($basePath.'/../../version.txt') ?: '');
 
