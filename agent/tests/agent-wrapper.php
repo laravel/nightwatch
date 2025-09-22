@@ -55,7 +55,7 @@ if ($viaPhar === false) {
         foreach ($server->connections ?? [] as $connection) {
             $connection->removeAllListeners();
         }
-        if ($loop?->stopped) {
+        if ($loop?->running === false) {
             foreach ($loop->pendingTimers as &$timer) {
                 $timer = [
                     ...$timer,
@@ -122,7 +122,7 @@ $server?->removeAllListeners();
 foreach ($server->connections ?? [] as $connection) {
     $connection->removeAllListeners();
 }
-if ($loop?->stopped) {
+if ($loop?->running === false) {
     foreach ($loop->pendingTimers as &$timer) {
         $timer = [
             ...$timer,

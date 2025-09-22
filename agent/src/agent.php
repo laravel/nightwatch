@@ -6,12 +6,11 @@ use Closure;
 use Laravel\NightwatchAgent\Contracts\Browser;
 use Laravel\NightwatchAgent\Factories\BrowserFactory;
 use Psr\Http\Message\ResponseInterface;
-use React\EventLoop\Loop;
+use React\EventLoop\Loop as BaseLoop;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\StreamSelectLoop;
 use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
-use React\Stream\WritableResourceStream;
 
 use function date;
 use function file_get_contents;
@@ -73,14 +72,15 @@ $verbose ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'verbo
  * Prepare loop...
  */
 
-$loop ??= new StreamSelectLoop;
-Loop::set($loop);
+$loop = new Loop($loop ?? new StreamSelectLoop);
+BaseLoop::set($loop);
 
 /*
  * Logging helpers...
  */
-$stdOut = new WritableResourceStream(STDOUT, $loop);
-$stdErr = new WritableResourceStream(STDERR, $loop);
+
+$stdOut = new OutputWriter($loop, STDOUT);
+$stdErr = new OutputWriter($loop, STDERR);
 
 $debug = static function (string $message) use ($verbose, $stdOut): void {
     if ($verbose) {
