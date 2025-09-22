@@ -103,6 +103,7 @@ $error = static function (string $message) use ($silent, $stdErr): void {
  * Internal state...
  */
 
+$tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 /** @var ?string $basePath */
 $basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
 $envoyerPath = preg_replace('#^(.*?)/releases/\d+/(.*)$#', '$1/current/$2', $basePath) ?? '';
@@ -122,8 +123,6 @@ if ($expectedSignature === false) {
 }
 
 $debug("Read signature from [{$signaturePath}] and found [".trim($expectedSignature).']');
-
-$tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 
 $packageVersion = @file_get_contents($basePath.'/../../version.txt');
 
