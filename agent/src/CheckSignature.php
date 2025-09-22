@@ -6,6 +6,7 @@ use Closure;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
 
+use function clearstatcache;
 use function file_get_contents;
 
 class CheckSignature
@@ -16,6 +17,7 @@ class CheckSignature
 
     /**
      * @param  LoopInterface  $loop
+     * @param  (Closure(string $signature): void)  $onCheckSignature
      * @param  (Closure(int $shuttingDownIn): void)  $onShutdownInitiated
      * @param  (Closure(): void)  $onShutdown
      */
@@ -24,6 +26,7 @@ class CheckSignature
         private string $signaturePath,
         private string $expectedSignature,
         private int $shutdownDelayInMinutes,
+        private Closure $onCheckSignature,
         private Closure $onShutdownInitiated,
         private Closure $onShutdown,
     ) {
@@ -37,9 +40,12 @@ class CheckSignature
 
     private function check(): void
     {
-        $signature = @file_get_contents($this->signaturePath);
+        clearstatcache(clear_realpath_cache: true, filename: $this->signaturePath);
+        $signature = @file_get_contents($this->signaturePath) ?: '';
 
-        if ($signature === $this->expectedSignature) {
+        ($this->onCheckSignature)($signature);
+
+        if ($signature === $this->expectedSignature || $signature === '') {
             return;
         }
 

@@ -8,14 +8,18 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use Throwable;
 
+use function array_slice;
 use function debug_backtrace;
+use function explode;
 use function file_get_contents;
 use function file_put_contents;
 use function hash;
+use function implode;
 use function is_array;
 use function is_file;
 use function is_string;
 use function rand;
+use function rtrim;
 use function serialize;
 use function str_replace;
 use function substr;
@@ -44,6 +48,7 @@ abstract class TestCase extends BaseTestCase
         ?TcpServerFake &$server = null,
         bool $silent = false,
         bool $quiet = false,
+        ?bool $verbose = null,
     ): array {
         $output = '';
         $port = rand(9000, 9999);
@@ -59,6 +64,7 @@ abstract class TestCase extends BaseTestCase
                 'server' => $server,
                 'silent' => $silent,
                 'quiet' => $quiet,
+                'verbose' => $verbose,
             ]));
 
             if ($write === false) {
@@ -113,17 +119,51 @@ abstract class TestCase extends BaseTestCase
         return static::class.'::'.debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 2)[1]['function'];
     }
 
-    protected function assertLogMatches(string $expected, string $actual, bool $silent = false, bool $quiet = false): self
+    protected function assertLogMatches(string $expected, string $actual, bool $silent = false, bool $quiet = false, bool $verbose = false): self
     {
         if (! $quiet && ! $silent) {
             $expected = "{date} {info} Nightwatch agent initiated: Listening on \[127.0.0.1:\d{4}\]\n{$expected}";
         }
+
+        if ($verbose) {
+            $expectedSignature = rtrim(self::getSignature());
+            $expected = "{date} {debug} Found signature \[{$expectedSignature}\]\n{$expected}";
+
+            $expectedSignaturePath = __DIR__.'/../build/signature.txt';
+            $expected = "{date} {debug} Reading signature from \[{$expectedSignaturePath}\]\n{$expected}";
+        }
+
         $expected = str_replace('{date}', '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', $expected);
         $expected = str_replace('{duration}', '\[\d(\.\d{1,3})?s\]', $expected);
         $expected = str_replace('{info}', '\[INFO\]', $expected);
         $expected = str_replace('{error}', '\[ERROR\]', $expected);
+        $expected = str_replace('{debug}', '\[DEBUG\]', $expected);
 
-        $this->assertMatchesRegularExpression("#^{$expected}$#", $actual);
+        $expectedLines = explode(PHP_EOL, $expected);
+        $actualLines = explode(PHP_EOL, $actual);
+        $expectedAndFound = '';
+
+        foreach ($expectedLines as $index => $expectedLine) {
+            $this->assertMatchesRegularExpression("#^{$expectedLine}$#", $actualLines[$index], <<<MESSAGE
+                === ACTUAL ===
+                {$actual}
+                === EXPECTED ===
+                {$expected}
+                MESSAGE);
+
+            $expectedAndFound .= $actualLines[$index].PHP_EOL;
+        }
+
+        $remaining = implode(PHP_EOL, array_slice($actualLines, $index + 1));
+
+        $this->assertSame('', $remaining, <<<MESSAGE
+            Unexpected lines in log after expected log lines
+
+            === EXPECTED ===
+            {$expectedAndFound}
+            === UNEXPECTED ===
+            {$remaining}
+            MESSAGE);
 
         return $this;
     }
@@ -136,5 +176,21 @@ abstract class TestCase extends BaseTestCase
         }
 
         return substr(hash('xxh128', $refreshToken), 0, 7);
+    }
+
+    public static function getSignature(): string
+    {
+        $contents = file_get_contents(self::signaturePath());
+
+        if ($contents === false) {
+            throw new RuntimeException('Unable to read the signature file');
+        }
+
+        return $contents;
+    }
+
+    public static function signaturePath(): string
+    {
+        return __DIR__.'/../build/signature.txt';
     }
 }

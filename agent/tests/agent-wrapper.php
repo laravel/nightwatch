@@ -32,7 +32,7 @@ if (! is_array($payload)) {
     exit(1);
 }
 
-/** @var array{listenOn: string, viaPhar: bool, ingestDetailsBrowser: \Tests\BrowserFake|null, ingestBrowser: \Tests\BrowserFake|null, loop: \Tests\LoopFake|null, server: \Tests\TcpServerFake|null, silent: bool|null, quiet: bool|null }  $payload */
+/** @var array{listenOn: string, viaPhar: bool, ingestDetailsBrowser: \Tests\BrowserFake|null, ingestBrowser: \Tests\BrowserFake|null, loop: \Tests\LoopFake|null, server: \Tests\TcpServerFake|null, silent: bool|null, quiet: bool|null, verbose: bool|null }  $payload */
 [
     'listenOn' => $listenOn,
     'viaPhar' => $viaPhar,
@@ -42,6 +42,7 @@ if (! is_array($payload)) {
     'server' => $server,
     'silent' => $silent,
     'quiet' => $quiet,
+    'verbose' => $verbose,
 ] = $payload;
 
 $browserFactory = null;
@@ -107,11 +108,11 @@ if ($viaPhar === false) {
 }
 
 if ($viaPhar) {
-    call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop, $silent, $quiet) { // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
+    call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop, $silent, $quiet, $verbose) { // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
         require __DIR__.'/../build/agent.phar';
     });
 } else {
-    call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop, $silent, $quiet) {  // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
+    call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop, $silent, $quiet, $verbose) {  // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
         $basePath = __DIR__.'/../build';
         require __DIR__.'/../src/agent.php';
     });

@@ -9,8 +9,8 @@ use Tests\Response;
 use Tests\TestCase;
 use Tests\Timer;
 
-use function file_get_contents;
 use function file_put_contents;
+use function unlink;
 
 class AgentTest extends TestCase
 {
@@ -95,6 +95,34 @@ class AgentTest extends TestCase
         }
     }
 
+    public function test_it_outputs_debug_message_when_signature_changed(): void
+    {
+        $originalSignature = self::getSignature();
+        try {
+            $loop = new LoopFake(runForSeconds: 61);
+            $loop->addTimer(1, [self::class, 'writeSignature']);
+            $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
+
+            [$output, $e] = $this->runAgent(
+                via: 'source',
+                ingestDetailsBrowser: $ingestDetailsBrowser,
+                loop: $loop,
+                verbose: true,
+            );
+
+            self::writeSignature($originalSignature);
+
+            $this->assertNull($e, $e?->getMessage() ?? '');
+            $this->assertLogMatches(<<<'OUTPUT'
+                {date} {info} Authentication successful {duration}
+                {date} {debug} Signature checked: \[abcd\]
+                {date} {info} Agent signature changed: shutting down in 5 minutes
+                OUTPUT, $output, verbose: true);
+        } finally {
+            self::writeSignature($originalSignature);
+        }
+    }
+
     public function test_it_does_not_restart_unless_signature_changes(): void
     {
         $loop = new LoopFake(runForSeconds: 60 * 20);
@@ -113,19 +141,50 @@ class AgentTest extends TestCase
             OUTPUT, $output);
     }
 
-    public static function writeSignature(string $content = 'abcd'): void
+    public function test_it_does_not_restart_if_the_signature_file_is_unaccessible_to_support_envoyer_symlink_deployments(): void
     {
-        file_put_contents(__DIR__.'/../../build/signature.txt', $content);
+        $originalSignature = self::getSignature();
+
+        try {
+            $loop = new LoopFake(runForSeconds: 121);
+            $loop->addTimer(1, [self::class, 'unlinkSignature']);
+            $loop->addTimer(61, [self::class, 'writeSignature']);
+            $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
+
+            [$output, $e] = $this->runAgent(
+                via: 'source',
+                ingestDetailsBrowser: $ingestDetailsBrowser,
+                loop: $loop,
+                verbose: true,
+            );
+
+            self::writeSignature($originalSignature);
+
+            $this->assertNull($e, $e?->getMessage() ?? '');
+            $this->assertLogMatches(<<<'OUTPUT'
+                {date} {info} Authentication successful {duration}
+                {date} {debug} Signature checked: \[\]
+                {date} {debug} Signature checked: \[abcd\]
+                {date} {info} Agent signature changed: shutting down in 5 minutes
+                OUTPUT, $output, verbose: true);
+        } finally {
+            self::writeSignature($originalSignature);
+        }
     }
 
-    public static function getSignature(): string
+    public static function writeSignature(string $content = "abcd\n"): void
     {
-        return file_get_contents(__DIR__.'/../../build/signature.txt') ?: '';
+        file_put_contents(self::signaturePath(), $content);
     }
 
     public static function touchSignature(): void
     {
         $signature = self::getSignature();
         self::writeSignature($signature);
+    }
+
+    public static function unlinkSignature(): void
+    {
+        unlink(self::signaturePath());
     }
 }

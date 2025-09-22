@@ -57,6 +57,8 @@ final class AgentCommand extends Command
 
         $quiet = $this->option('quiet') ?: null;
 
+        $verbose = $this->option('verbose') ?: null;
+
         require __DIR__.'/../../agent/build/agent.phar';
     }
 }
