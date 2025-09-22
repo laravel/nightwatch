@@ -55,7 +55,7 @@ class LogRecordProcessorTest extends TestCase
         Log::channel('stack')->info('test', [
             'now' => now('Australia/Melbourne'),
         ]);
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(2, $streams);
         [$log, $ingest] = $streams;
@@ -82,7 +82,7 @@ class LogRecordProcessorTest extends TestCase
         Log::channel('stack')->info('test', [
             'now' => now('Australia/Melbourne'),
         ]);
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(2, $streams);
         [$log, $ingest] = $streams;

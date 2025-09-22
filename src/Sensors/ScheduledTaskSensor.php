@@ -13,7 +13,6 @@ use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\RecordsContext;
 use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\Support\Uuid;
 use Laravel\Nightwatch\Types\Str;
 use ReflectionClass;
 use ReflectionFunction;
@@ -37,7 +36,6 @@ final class ScheduledTaskSensor
 
     public function __construct(
         private CommandState $commandState,
-        private Uuid $uuid,
         private Clock $clock,
     ) {
         //
@@ -51,10 +49,6 @@ final class ScheduledTaskSensor
         $now = $this->clock->microtime();
         $name = $this->normalizeTaskName($event->task);
         $timezone = $event->task->timezone instanceof DateTimeZone ? $event->task->timezone->getName() : $event->task->timezone;
-
-        if ($event instanceof ScheduledTaskSkipped) {
-            return $this->recordSkippedTask($event, $now, $name, $timezone);
-        }
 
         return [
             'v' => 1,
@@ -75,8 +69,12 @@ final class ScheduledTaskSensor
             'status' => match ($event::class) { // @phpstan-ignore-line match.unhandled
                 ScheduledTaskFinished::class => 'processed',
                 ScheduledTaskFailed::class => 'failed',
+                ScheduledTaskSkipped::class => 'skipped',
             },
-            'duration' => (int) round(($now - $this->commandState->timestamp) * 1_000_000),
+            'duration' => match ($event::class) {
+                ScheduledTaskSkipped::class => 0,
+                default => (int) round(($now - $this->commandState->timestamp) * 1_000_000),
+            },
             // --- //
             'exceptions' => $this->commandState->exceptions,
             'logs' => $this->commandState->logs,
@@ -147,50 +145,5 @@ final class ScheduledTaskSensor
         // Invokable class
         // @phpstan-ignore-next-line classConstant.nonObject
         return $callback::class;
-    }
-
-    /**
-     * When a scheduled task is skipped, Laravel does not dispatch the `ScheduledTaskStarting` event.
-     * Therefore, we need to manually generate a timestamp and trace ID for these tasks.
-     *
-     * @return array<mixed>
-     */
-    private function recordSkippedTask(ScheduledTaskSkipped $event, float $timestamp, string $name, string $timezone): array
-    {
-        return [
-            'v' => 1,
-            't' => 'scheduled-task',
-            'timestamp' => $timestamp,
-            'deploy' => $this->commandState->deploy,
-            'server' => $this->commandState->server,
-            '_group' => hash('xxh128', "{$name},{$event->task->expression},{$timezone}"),
-            'trace_id' => $this->uuid->make(),
-            // --- //
-            'name' => $name,
-            'cron' => $event->task->expression,
-            'timezone' => $timezone,
-            'without_overlapping' => $event->task->withoutOverlapping,
-            'on_one_server' => $event->task->onOneServer,
-            'run_in_background' => $event->task->runInBackground,
-            'even_in_maintenance_mode' => $event->task->evenInMaintenanceMode,
-            'status' => 'skipped',
-            'duration' => 0,
-            // --- //
-            'exceptions' => 0,
-            'logs' => 0,
-            'queries' => 0,
-            'lazy_loads' => 0,
-            'jobs_queued' => 0,
-            'mail' => 0,
-            'notifications' => 0,
-            'outgoing_requests' => 0,
-            'files_read' => 0,
-            'files_written' => 0,
-            'cache_events' => 0,
-            'hydrated_models' => 0,
-            'peak_memory_usage' => 0,
-            'exception_preview' => '',
-            'context' => '',
-        ];
     }
 }

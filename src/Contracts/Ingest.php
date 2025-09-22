@@ -2,6 +2,8 @@
 
 namespace Laravel\Nightwatch\Contracts;
 
+use Deprecated;
+
 /**
  * @internal
  */
@@ -19,7 +21,10 @@ interface Ingest
 
     public function ping(): void;
 
-    public function shouldDigest(bool $bool): void;
+    #[Deprecated('Use shouldDigestWhenBufferIsFull instead')]
+    public function shouldDigest(bool $bool = true): void;
+
+    public function shouldDigestWhenBufferIsFull(bool $bool = true): void;
 
     public function digest(): void;
 

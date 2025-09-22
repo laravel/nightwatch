@@ -355,7 +355,7 @@ class FilteringTest extends TestCase
 
             $run = true;
         });
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertTrue($run);
         $ingest->assertWrittenTimes(0);
@@ -372,7 +372,7 @@ class FilteringTest extends TestCase
 
             $run = true;
         });
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertTrue($run);
         $ingest->assertWrittenTimes(1);

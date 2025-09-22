@@ -42,7 +42,6 @@ use Laravel\Nightwatch\Sensors\StageSensor;
 use Laravel\Nightwatch\Sensors\UserSensor;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
-use Laravel\Nightwatch\Support\Uuid;
 use Laravel\Nightwatch\Types\Str;
 use Monolog\LogRecord;
 use Psr\Http\Message\RequestInterface;
@@ -132,7 +131,6 @@ final class SensorManager
         private RequestState|CommandState $executionState,
         private Clock $clock,
         public Location $location,
-        private Uuid $uuid,
         private bool $captureExceptionSourceCode,
         private Repository $config,
     ) {
@@ -334,7 +332,6 @@ final class SensorManager
         $sensor = $this->scheduledTaskSensor ??= new ScheduledTaskSensor(
             commandState: $this->executionState, // @phpstan-ignore argument.type
             clock: $this->clock,
-            uuid: $this->uuid,
         );
 
         return $sensor($event);

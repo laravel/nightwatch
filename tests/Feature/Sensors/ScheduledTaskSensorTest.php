@@ -4,6 +4,7 @@ namespace Tests\Feature\Sensors;
 
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterval as Duration;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Console\Scheduling\Schedule;
@@ -14,9 +15,12 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Sleep;
 use Laravel\Nightwatch\Compatibility;
+use Orchestra\Testbench\Attributes\WithConfig;
 use Tests\TestCase;
 
+use function collect;
 use function dirname;
 use function hash;
 use function json_decode;
@@ -130,9 +134,9 @@ class ScheduledTaskSensorTest extends TestCase
                 'files_written' => 0,
                 'cache_events' => 0,
                 'hydrated_models' => 0,
-                'peak_memory_usage' => 0,
+                'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => '',
+                'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
     }
@@ -236,6 +240,117 @@ class ScheduledTaskSensorTest extends TestCase
                 'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
+    }
+
+    public function test_it_ingests_subminute_tasks(): void
+    {
+        $ingest = $this->fakeIngest();
+        $line = __LINE__ + 1;
+        $task = $this->app[Schedule::class]->call(fn () => $this->travelTo(now()->addMicroseconds(30_000_000)))->everyThirtySeconds();
+        $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
+
+        Artisan::call('schedule:run');
+
+        $ingest->assertWrittenTimes(2);
+
+        $ingest->assertWrite(0, 'scheduled-task:*', [
+            [
+                'v' => 1,
+                't' => 'scheduled-task',
+                'timestamp' => 946688523.456789,
+                'deploy' => 'v1.2.3',
+                'server' => 'scheduler-01',
+                '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone}"),
+                'trace_id' => '00000000-0000-0000-0000-000000000000',
+                'name' => $name,
+                'cron' => '* * * * *',
+                'timezone' => 'UTC',
+                'without_overlapping' => false,
+                'on_one_server' => false,
+                'run_in_background' => false,
+                'even_in_maintenance_mode' => false,
+                'status' => 'processed',
+                'duration' => 30_000_000,
+                'exceptions' => 0,
+                'logs' => 0,
+                'queries' => 0,
+                'lazy_loads' => 0,
+                'jobs_queued' => 0,
+                'mail' => 0,
+                'notifications' => 0,
+                'outgoing_requests' => 0,
+                'files_read' => 0,
+                'files_written' => 0,
+                'cache_events' => 0,
+                'hydrated_models' => 0,
+                'peak_memory_usage' => 1234,
+                'exception_preview' => '',
+                'context' => Compatibility::$contextExists ? '{}' : '',
+            ],
+        ]);
+
+        $ingest->assertWrite(1, 'scheduled-task:*', [
+            [
+                'v' => 1,
+                't' => 'scheduled-task',
+                'timestamp' => 946688553.456789,
+                'deploy' => 'v1.2.3',
+                'server' => 'scheduler-01',
+                '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone}"),
+                'trace_id' => '00000000-0000-0000-0000-000000000000',
+                'name' => $name,
+                'cron' => '* * * * *',
+                'timezone' => 'UTC',
+                'without_overlapping' => false,
+                'on_one_server' => false,
+                'run_in_background' => false,
+                'even_in_maintenance_mode' => false,
+                'status' => 'processed',
+                'duration' => 30_000_000,
+                'exceptions' => 0,
+                'logs' => 0,
+                'queries' => 0,
+                'lazy_loads' => 0,
+                'jobs_queued' => 0,
+                'mail' => 0,
+                'notifications' => 0,
+                'outgoing_requests' => 0,
+                'files_read' => 0,
+                'files_written' => 0,
+                'cache_events' => 0,
+                'hydrated_models' => 0,
+                'peak_memory_usage' => 1234,
+                'exception_preview' => '',
+                'context' => Compatibility::$contextExists ? '{}' : '',
+            ],
+        ]);
+    }
+
+    #[WithConfig('cache.default', 'database')]
+    public function test_it_does_not_digest_records_between_sub_minute_scheduled_tasks(): void
+    {
+        $this->travelTo(now()->startOfMinute());
+        $ingest = $this->fakeIngest();
+
+        Sleep::fake();
+        Sleep::whenFakingSleep(function (Duration $duration) {
+            $this->travel($duration->totalMilliseconds)->milliseconds();
+        });
+
+        $line = __LINE__ + 1;
+        $task = $this->app[Schedule::class]->call(fn () => null)->everyThirtySeconds();
+        $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
+
+        Artisan::call('schedule:run');
+
+        $ingest->assertWrittenTimes(2);
+
+        $ingest->decodedWrites()->each(function ($write) use ($name) {
+            collect($write)->each(function ($record) use ($name) {
+                $this->assertSame('scheduled-task', $record['t']);
+                $this->assertSame($name, $record['name']);
+            });
+        });
     }
 
     public function test_it_resets_trace_id_and_timestamp_on_each_task_run(): void

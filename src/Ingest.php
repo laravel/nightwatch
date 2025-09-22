@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
+use Deprecated;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use RuntimeException;
 use Throwable;
@@ -30,7 +31,7 @@ final class Ingest implements IngestContract
      */
     private array $timeout;
 
-    private bool $shouldDigest = true;
+    private bool $shouldDigestWhenBufferIsFull = true;
 
     /**
      * @param  (callable(string $address, float $timeout): resource)  $streamFactory
@@ -55,17 +56,13 @@ final class Ingest implements IngestContract
     {
         $this->buffer->write($record);
 
-        if ($this->shouldDigest && $this->buffer->full) {
+        if ($this->shouldDigestWhenBufferIsFull && $this->buffer->full) {
             $this->digest();
         }
     }
 
     public function writeNow(array $record): void
     {
-        if (! $this->shouldDigest) {
-            return;
-        }
-
         $this->transmit(Payload::json([$record], $this->tokenHash));
     }
 
@@ -79,18 +76,20 @@ final class Ingest implements IngestContract
         $this->transmit(Payload::text('PING', $this->tokenHash));
     }
 
-    public function shouldDigest(bool $bool): void
+    #[Deprecated('Use shouldDigestWhenBufferIsFull instead')]
+    public function shouldDigest(bool $bool = true): void
     {
-        $this->shouldDigest = $bool;
+        $this->shouldDigestWhenBufferIsFull($bool);
+    }
+
+    public function shouldDigestWhenBufferIsFull(bool $bool = true): void
+    {
+        $this->shouldDigestWhenBufferIsFull = $bool;
     }
 
     public function digest(): void
     {
-        if ($this->shouldDigest) {
-            $this->transmit($this->buffer->pull($this->tokenHash));
-        } else {
-            $this->flush();
-        }
+        $this->transmit($this->buffer->pull($this->tokenHash));
     }
 
     private function transmit(Payload $payload): void

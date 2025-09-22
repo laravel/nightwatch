@@ -50,7 +50,7 @@ class IngestTest extends TestCase
         };
 
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(1, $calls);
         [$address, $connectionTimeout] = $calls[0];
@@ -76,7 +76,7 @@ class IngestTest extends TestCase
         StreamWrapper::intercept('stream_set_option', fn () => false);
 
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(1, $exceptions);
 
@@ -97,7 +97,7 @@ class IngestTest extends TestCase
     public function test_it_sets_the_read_timeout(): void
     {
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(1, StreamWrapper::type('stream_set_option'));
         $this->assertSame([
@@ -120,7 +120,7 @@ class IngestTest extends TestCase
         StreamWrapper::intercept('stream_write', fn (string $value) => 35);
 
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(1, StreamWrapper::type('stream_write'));
         $this->assertSame([
@@ -146,7 +146,7 @@ class IngestTest extends TestCase
         StreamWrapper::intercept('stream_write', fn (string $value) => false);
 
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(1, $exceptions);
 
@@ -173,7 +173,7 @@ class IngestTest extends TestCase
         });
 
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(6, StreamWrapper::type('stream_write'));
         $this->assertSame([
@@ -218,7 +218,7 @@ class IngestTest extends TestCase
         });
 
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(1, $exceptions);
 
@@ -239,7 +239,7 @@ class IngestTest extends TestCase
     public function test_it_reads_response_from_stream(): void
     {
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(1, StreamWrapper::type('stream_read'));
         $this->assertSame([
@@ -264,7 +264,7 @@ class IngestTest extends TestCase
         });
 
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(4, StreamWrapper::type('stream_read'));
         $this->assertSame([
@@ -309,7 +309,7 @@ class IngestTest extends TestCase
         });
 
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(1, $exceptions);
 
@@ -336,7 +336,7 @@ class IngestTest extends TestCase
         StreamWrapper::intercept('stream_read', fn () => 'XXXXXXXXXXXXXXXXXXXXXXX');
 
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(1, $exceptions);
 
@@ -357,7 +357,7 @@ class IngestTest extends TestCase
     public function test_it_closes_the_stream(): void
     {
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertSame('stream_close', StreamWrapper::$events->pluck('type')->last());
     }
@@ -382,7 +382,7 @@ class IngestTest extends TestCase
         });
 
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(1, $exceptions);
 
@@ -414,7 +414,7 @@ class IngestTest extends TestCase
         });
 
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertCount(1, $exceptions);
         $this->assertInstanceOf(RuntimeException::class, $exceptions[0]);
@@ -459,7 +459,7 @@ class IngestTest extends TestCase
         });
 
         $this->core->ingest->write(FakeRecord::make());
-        $this->core->digest();
+        $this->core->finishExecution();
 
         $this->assertSame(5, $reads);
         $this->assertCount(1, $exceptions);

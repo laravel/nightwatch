@@ -712,7 +712,7 @@ class JobAttemptSensorTest extends TestCase
 
         $this->assertGreaterThan(50, $loops);
         $ingest->assertWrittenTimes(0);
-        $this->assertCount(2, $this->core->ingest->buffer);  // popping query + illuminate:queue:restart
+        $this->assertCount(0, $this->core->ingest->buffer);
     }
 
     #[DataProvider('workCommands')]
