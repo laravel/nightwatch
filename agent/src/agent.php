@@ -124,16 +124,8 @@ if ($expectedSignature === false) {
 
 $debug("Read signature from [{$signaturePath}] and found [".trim($expectedSignature).']');
 
-$packageVersion = @file_get_contents($basePath.'/../../version.txt');
 
-if ($packageVersion === false) {
-    $error('Unable to read the version');
-
-    return;
-}
-
-$packageVersion = trim($packageVersion);
-$debug("Read version [{$packageVersion}]");
+$packageVersion = trim(file_get_contents($basePath.'/../../version.txt') ?: '');
 
 /*
  * Initialize services...
