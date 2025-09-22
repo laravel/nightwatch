@@ -267,7 +267,7 @@ class ServerTest extends TestCase
             Connection::ok(),
             Connection::ok(),
         ]);
-        // $this->assertLogMatches('', $output, true);
+        $this->assertLogMatches('', $output, true);
         $loop->assertRun([
             new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
             new Timer(interval: 20, runAt: 20, scheduledAt: 0, scheduledBy: $this->functionName()),
