@@ -10,6 +10,7 @@ use Tests\TestCase;
 use Tests\Timer;
 
 use function file_put_contents;
+use function unlink;
 
 class AgentTest extends TestCase
 {
@@ -142,7 +143,7 @@ class AgentTest extends TestCase
 
     public static function writeSignature(string $content = 'abcd'): void
     {
-        file_put_contents(__DIR__.'/../../build/signature.txt', $content);
+        file_put_contents(self::signaturePath(), $content);
     }
 
     public static function touchSignature(): void

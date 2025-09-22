@@ -164,6 +164,17 @@ abstract class TestCase extends BaseTestCase
 
     public static function getSignature(): string
     {
-        return file_get_contents(__DIR__.'/../build/signature.txt') ?: '';
+        $contents = file_get_contents(self::signaturePath());
+
+        if ($contents === false) {
+            throw new RuntimeException('Unable to read the signature file');
+        }
+
+        return $contents;
+    }
+
+    public static function signaturePath(): string
+    {
+        return __DIR__.'/../build/signature.txt';
     }
 }
