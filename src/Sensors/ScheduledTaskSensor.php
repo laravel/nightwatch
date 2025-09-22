@@ -13,7 +13,6 @@ use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Concerns\RecordsContext;
 use Laravel\Nightwatch\State\CommandState;
-use Laravel\Nightwatch\Support\Uuid;
 use Laravel\Nightwatch\Types\Str;
 use ReflectionClass;
 use ReflectionFunction;
@@ -37,7 +36,6 @@ final class ScheduledTaskSensor
 
     public function __construct(
         private CommandState $commandState,
-        private Uuid $uuid,
         private Clock $clock,
     ) {
         //
@@ -68,7 +66,7 @@ final class ScheduledTaskSensor
             'on_one_server' => $event->task->onOneServer,
             'run_in_background' => $event->task->runInBackground,
             'even_in_maintenance_mode' => $event->task->evenInMaintenanceMode,
-            'status' => match ($event::class) {
+            'status' => match ($event::class) { // @phpstan-ignore-line match.unhandled
                 ScheduledTaskFinished::class => 'processed',
                 ScheduledTaskFailed::class => 'failed',
                 ScheduledTaskSkipped::class => 'skipped',

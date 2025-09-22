@@ -245,7 +245,6 @@ final class NightwatchServiceProvider extends ServiceProvider
                     basePath: $this->app->basePath(),
                     publicPath: $this->app->publicPath(),
                 ),
-                uuid: $uuid,
                 captureExceptionSourceCode: (bool) ($this->nightwatchConfig['capture_exception_source_code'] ?? true),
                 config: $this->config,
             ),
