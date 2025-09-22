@@ -16,9 +16,9 @@ use function file_get_contents;
 use function gethostname;
 use function json_encode;
 use function preg_quote;
+use function rtrim;
 use function str_repeat;
 use function strlen;
-use function trim;
 
 class IngestDetailsRepositoryTest extends TestCase
 {
