@@ -8,10 +8,12 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use RuntimeException;
 use Tests\TestCase;
 
+use function json_encode;
 use function str_repeat;
 use function strlen;
 
@@ -303,5 +305,18 @@ class UserProviderTest extends TestCase
 
         $response->assertOk();
         $this->assertSame(1, $calls);
+    }
+
+    public function test_it_fallsback_to_context_when_no_user_is_present(): void
+    {
+        Compatibility::addUserIdToContext('123');
+
+        $this->assertSame('123', $this->core->executionState->user->resolvedUserId());
+        $this->assertSame('"123"', json_encode($this->core->executionState->user->id()));
+
+        Auth::guard();
+
+        $this->assertSame('123', $this->core->executionState->user->resolvedUserId());
+        $this->assertSame('"123"', json_encode($this->core->executionState->user->id()));
     }
 }

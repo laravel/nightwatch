@@ -84,7 +84,7 @@ final class UserProvider
     {
         return $this->withAuth(function ($auth) {
             if (! $auth->hasResolvedGuards()) {
-                return '';
+                return Compatibility::getUserIdFromContext();
             }
 
             if ($auth->hasUser()) {
@@ -95,7 +95,7 @@ final class UserProvider
                 return $this->userId($this->rememberedUser);
             }
 
-            return '';
+            return Compatibility::getUserIdFromContext();
         });
     }
 

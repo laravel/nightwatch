@@ -162,6 +162,16 @@ final class Compatibility
         return self::getHiddenContext('nightwatch_trace_id', $default);
     }
 
+    public static function addUserIdToContext(string $id): void
+    {
+        self::addHiddenContext('nightwatch_user_id', $id);
+    }
+
+    public static function getUserIdFromContext(): string
+    {
+        return (string) self::getHiddenContext('nightwatch_user_id');
+    }
+
     /**
      * @see https://github.com/laravel/framework/pull/49730
      * @see https://github.com/laravel/framework/releases/tag/v11.0.0
