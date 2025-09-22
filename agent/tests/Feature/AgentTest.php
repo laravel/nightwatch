@@ -10,7 +10,6 @@ use Tests\TestCase;
 use Tests\Timer;
 
 use function file_put_contents;
-use function unlink;
 
 class AgentTest extends TestCase
 {
