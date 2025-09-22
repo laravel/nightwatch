@@ -4,6 +4,7 @@ namespace Tests\Feature\Sensors;
 
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterval as Duration;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Console\Scheduling\Schedule;
@@ -14,9 +15,12 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Sleep;
 use Laravel\Nightwatch\Compatibility;
+use Orchestra\Testbench\Attributes\WithConfig;
 use Tests\TestCase;
 
+use function collect;
 use function dirname;
 use function hash;
 use function json_decode;
@@ -320,6 +324,33 @@ class ScheduledTaskSensorTest extends TestCase
                 'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
+    }
+
+    #[WithConfig('cache.default', 'database')]
+    public function test_it_does_not_digest_records_between_sub_minute_scheduled_tasks(): void
+    {
+        $this->travelTo(now()->startOfMinute());
+        $ingest = $this->fakeIngest();
+
+        Sleep::fake();
+        Sleep::whenFakingSleep(function (Duration $duration) {
+            $this->travel($duration->totalMilliseconds)->milliseconds();
+        });
+
+        $line = __LINE__ + 1;
+        $task = $this->app[Schedule::class]->call(fn () => null)->everyThirtySeconds();
+        $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
+
+        Artisan::call('schedule:run');
+
+        $ingest->assertWrittenTimes(2);
+
+        $ingest->decodedWrites()->each(function ($write) use ($name) {
+            collect($write)->each(function ($record) use ($name) {
+                $this->assertSame('scheduled-task', $record['t']);
+                $this->assertSame($name, $record['name']);
+            });
+        });
     }
 
     public function test_it_resets_trace_id_and_timestamp_on_each_task_run(): void
