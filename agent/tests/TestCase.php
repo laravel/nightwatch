@@ -19,10 +19,10 @@ use function is_array;
 use function is_file;
 use function is_string;
 use function rand;
+use function rtrim;
 use function serialize;
 use function str_replace;
 use function substr;
-use function trim;
 use function unlink;
 use function unserialize;
 
@@ -126,7 +126,7 @@ abstract class TestCase extends BaseTestCase
         }
 
         if ($verbose) {
-            $expectedSignature = trim(self::getSignature());
+            $expectedSignature = rtrim(self::getSignature());
             $expected = "{date} {debug} Found signature \[{$expectedSignature}\]\n{$expected}";
 
             $expectedSignaturePath = __DIR__.'/../build/signature.txt';

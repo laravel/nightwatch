@@ -172,7 +172,7 @@ class AgentTest extends TestCase
         }
     }
 
-    public static function writeSignature(string $content = 'abcd'): void
+    public static function writeSignature(string $content = "abcd\n"): void
     {
         file_put_contents(self::signaturePath(), $content);
     }

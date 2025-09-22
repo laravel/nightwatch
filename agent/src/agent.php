@@ -25,7 +25,6 @@ use function rtrim;
 use function str_replace;
 use function strtolower;
 use function substr;
-use function trim;
 
 require __DIR__.'/bootstrap.php';
 
@@ -124,9 +123,9 @@ if ($expectedSignature === false) {
     return;
 }
 
-$debug('Found signature ['.trim($expectedSignature).']');
+$debug('Found signature ['.rtrim($expectedSignature).']');
 
-$packageVersion = trim(file_get_contents($basePath.'/../../version.txt') ?: '');
+$packageVersion = rtrim(file_get_contents($basePath.'/../../version.txt') ?: '');
 
 /*
  * Initialize services...
@@ -205,7 +204,7 @@ $checkSignature = new CheckSignature(
     expectedSignature: $expectedSignature,
     shutdownDelayInMinutes: 5,
     onCheckSignature: static function ($signature) use ($debug) {
-        $debug("Signature checked: [{$signature}]");
+        $debug('Signature checked: ['.rtrim($signature).']');
     },
     onShutdownInitiated: static function ($shuttingDownIn) use ($info) {
         $info('Agent signature changed: shutting down in '.$shuttingDownIn.' minutes');
