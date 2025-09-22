@@ -11,10 +11,10 @@ use React\EventLoop\LoopInterface;
 use React\EventLoop\StreamSelectLoop;
 use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
+use React\Stream\WritableResourceStream;
 
 use function date;
 use function file_get_contents;
-use function fwrite;
 use function gethostname;
 use function hash;
 use function in_array;
@@ -66,17 +66,26 @@ $silent ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'critic
 $quiet ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'error'; // @phpstan-ignore argument.type
 
 /*
- * Logging helpers...
+ * Prepare loop...
  */
 
-$info = static function (string $message) use ($silent, $quiet): void {
+$loop ??= new StreamSelectLoop;
+Loop::set($loop);
+
+/*
+ * Logging helpers...
+ */
+$stdOut = new WritableResourceStream(STDOUT, $loop);
+$stdErr = new WritableResourceStream(STDERR, $loop);
+
+$info = static function (string $message) use ($silent, $quiet, $stdOut): void {
     if (! $quiet && ! $silent) {
-        fwrite(STDOUT, date('Y-m-d H:i:s').' [INFO] '.$message.PHP_EOL);
+        $stdOut->write(date('Y-m-d H:i:s').' [INFO] '.$message.PHP_EOL);
     }
 };
-$error = static function (string $message) use ($silent): void {
+$error = static function (string $message) use ($silent, $stdErr): void {
     if (! $silent) {
-        fwrite(STDERR, date('Y-m-d H:i:s').' [ERROR] '.$message.PHP_EOL);
+        $stdErr->write(date('Y-m-d H:i:s').' [ERROR] '.$message.PHP_EOL);
     }
 };
 
@@ -102,8 +111,6 @@ $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 /*
  * Initialize services...
  */
-$loop ??= new StreamSelectLoop;
-Loop::set($loop);
 
 $packageVersion = new PackageVersionRepository(
     path: $basePath.'/../../version.txt',

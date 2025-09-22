@@ -24,7 +24,8 @@
         "react/event-loop": "^1.5",
         "react/http": "^1.11",
         "react/promise": "^3.2",
-        "react/socket": "^1.16"
+        "react/socket": "^1.16",
+        "react/stream": "^1.4"
     },
     "require-dev": {
         "ext-pcntl": "*",
@@ -32,7 +33,6 @@
         "laravel/pint": "1.21.0",
         "phpstan/phpstan": "^2.1.6",
         "phpunit/phpunit": "^11.5.3",
-        "react/stream": "^1.4",
         "symfony/process": "^7.2",
         "vlucas/phpdotenv": "^5.6"
     },

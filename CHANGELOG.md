@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.13.6...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.13.7...1.x)
+
+## [v1.13.7](https://github.com/laravel/nightwatch/compare/v1.13.6...v1.13.7) - 2025-09-20
+
+### What's Changed
+
+* Write to stdout and stderr via loop by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/268
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.13.6...v1.13.7
 
 ## [v1.13.6](https://github.com/laravel/nightwatch/compare/v1.13.5...v1.13.6) - 2025-09-16
 

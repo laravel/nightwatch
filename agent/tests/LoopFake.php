@@ -21,6 +21,11 @@ use function usort;
 class LoopFake implements LoopInterface
 {
     /**
+     * @var array<int, array{0: resource, 1: callable}>
+     */
+    private array $writeStreams = [];
+
+    /**
      * @var list<array{runAt: float, scheduledAt: float, scheduledBy: string, interval: float, callback: ?callable, instance: ?TimerInterface, periodic: bool }>
      */
     public array $pendingTimers = [];
@@ -62,7 +67,7 @@ class LoopFake implements LoopInterface
      */
     public function addWriteStream($stream, $listener): void
     {
-        //
+        $this->writeStreams[(int) $stream] = [$stream, $listener];
     }
 
     /**
@@ -78,7 +83,7 @@ class LoopFake implements LoopInterface
      */
     public function removeWriteStream($stream): void
     {
-        //
+        unset($this->writeStreams[(int) $stream]);
     }
 
     /**
@@ -87,7 +92,6 @@ class LoopFake implements LoopInterface
      */
     public function addTimer($interval, $callback): TimerInterface
     {
-
         $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
         $class = $frame['class'] ?? '';
 
@@ -109,7 +113,6 @@ class LoopFake implements LoopInterface
      */
     public function addPeriodicTimer($interval, $callback, $calledBy = null): TimerInterface
     {
-
         $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
         $class = $frame['class'] ?? '';
 
@@ -210,6 +213,10 @@ class LoopFake implements LoopInterface
                     'periodic' => $pendingTimer['periodic'],
                 ], $this->pendingTimers);
 
+                foreach ($this->writeStreams as [$stream, $listener]) {
+                    $listener($stream);
+                }
+
                 return;
             }
 
@@ -242,15 +249,30 @@ class LoopFake implements LoopInterface
                     array_shift($this->pendingTimers);
                 }
 
+                foreach ($this->writeStreams as [$stream, $listener]) {
+                    $listener($stream);
+                }
+
                 continue;
             }
 
+            foreach ($this->writeStreams as [$stream, $listener]) {
+                $listener($stream);
+            }
+
             $this->now = $runAt;
+        }
+
+        foreach ($this->writeStreams as [$stream, $listener]) {
+            $listener($stream);
         }
     }
 
     public function stop(): void
     {
+        foreach ($this->writeStreams as [$stream, $listener]) {
+            $listener($stream);
+        }
         $this->stopped = true;
     }
 
