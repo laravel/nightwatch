@@ -39,6 +39,7 @@ final class Compatibility
      * @var array{
      *   nightwatch_should_sample?: bool|null,
      *   nightwatch_trace_id?: string|null,
+     *   nightwatch_user_id?: string,
      * }
      */
     public static array $context = [];
@@ -95,14 +96,23 @@ final class Compatibility
             version_compare($version, '10.42.0', '>=');
 
         if (! self::$contextExists) {
-            Queue::createPayloadUsing(static fn ($c, $q, array $payload) => [
-                ...$payload,
-                'nightwatch' => [
-                    ...($payload['nightwatch'] ?? []),
-                    'nightwatch_trace_id' => self::$context['nightwatch_trace_id'] ?? null,
-                    'nightwatch_should_sample' => self::$context['nightwatch_should_sample'] ?? null,
-                ],
-            ]);
+            Queue::createPayloadUsing(static function ($c, $q, array $payload) use ($app) {
+                self::$context['nightwatch_user_id'] ??= '';
+
+                if (self::$context['nightwatch_user_id'] === '') {
+                    self::$context['nightwatch_user_id'] = $app->make(Core::class)->executionState->user->resolvedUserId();
+                }
+
+                return [
+                    ...$payload,
+                    'nightwatch' => [
+                        ...($payload['nightwatch'] ?? []),
+                        'nightwatch_trace_id' => self::$context['nightwatch_trace_id'] ?? null,
+                        'nightwatch_should_sample' => self::$context['nightwatch_should_sample'] ?? null,
+                        'nightwatch_user_id' => self::$context['nightwatch_user_id'],
+                    ],
+                ];
+            });
 
             /** @var Dispatcher */
             $events = $app->make(Dispatcher::class);
@@ -112,6 +122,7 @@ final class Compatibility
                 self::$context = [
                     'nightwatch_trace_id' => $nightwatch['nightwatch_trace_id'] ?? null,
                     'nightwatch_should_sample' => $nightwatch['nightwatch_should_sample'] ?? null,
+                    'nightwatch_user_id' => $nightwatch['nightwatch_user_id'] ?? '',
                 ];
             });
         }
