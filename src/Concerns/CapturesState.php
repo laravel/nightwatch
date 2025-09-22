@@ -460,7 +460,7 @@ trait CapturesState
      */
     public function waitForExecution(): void
     {
-        $this->sample(0);
+        $this->dontSample();
     }
 
     /**
@@ -579,7 +579,7 @@ trait CapturesState
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
         $this->executionState->timestamp = $this->clock->microtime();
-        $this->sample(1.0);
+        $this->sample();
     }
 
     /**
