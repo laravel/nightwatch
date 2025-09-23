@@ -7,8 +7,8 @@ use Illuminate\Console\Application as Artisan;
 use Illuminate\Foundation\Application;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\LazyValue;
-use Laravel\Nightwatch\NullUserProvider;
 use Laravel\Nightwatch\Types\Str;
+use Laravel\Nightwatch\UserProvider;
 
 use function call_user_func;
 use function memory_get_peak_usage;
@@ -41,6 +41,7 @@ final class CommandState
         public string $deploy,
         public string $server,
         public float $currentExecutionStageStartedAtMicrotime,
+        public UserProvider $user,
         public ExecutionStage $stage = ExecutionStage::Bootstrap,
         public array $stageDurations = [
             ExecutionStage::Bootstrap->value => 0,
@@ -64,7 +65,6 @@ final class CommandState
         public string $laravelVersion = Application::VERSION,
         public ?Artisan $artisan = null,
         public ?string $name = null,
-        public NullUserProvider $user = new NullUserProvider,
         public string $executionPreview = '',
         public string $exceptionPreview = '',
         public int $attempts = 0,
