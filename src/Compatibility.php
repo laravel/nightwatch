@@ -97,7 +97,7 @@ final class Compatibility
             version_compare($version, '10.42.0', '>=');
 
         if (self::$contextExists) {
-            Context::dehydrating(function (Repository $context) use ($app) {
+            Context::dehydrating(static function (Repository $context) use ($app) {
                 if ($context->getHidden('nightwatch_user_id', '') === '') {
                     $context->addHidden('nightwatch_user_id', $app->make(Core::class)->executionState->user->resolvedUserId());
                 }
@@ -180,7 +180,7 @@ final class Compatibility
 
     public static function getUserIdFromContext(): string
     {
-        return (string) self::getHiddenContext('nightwatch_user_id');
+        return (string) self::getHiddenContext('nightwatch_user_id'); // @phpstan-ignore cast.string
     }
 
     /**
