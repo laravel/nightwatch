@@ -98,7 +98,7 @@ final class Compatibility
 
         if (self::$contextExists) {
             Context::dehydrating(static function (Repository $context) use ($app) {
-                if ($context->getHidden('nightwatch_user_id', '') === '') {
+                if (($context->getHidden('nightwatch_user_id') ?? '') === '') {
                     $context->addHidden('nightwatch_user_id', $app->make(Core::class)->executionState->user->resolvedUserId());
                 }
             });
