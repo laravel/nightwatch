@@ -78,6 +78,7 @@ class AssociateQueueActivityWithUserIdTest extends TestCase
     }
 
     #[WithEnv('NIGHTWATCH_FORCE_COMMAND', '1')]
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '0')]
     public function test_it_associates_queue_activity_with_user_in_context(): void
     {
         $ingest = $this->fakeIngest();
@@ -96,6 +97,7 @@ class AssociateQueueActivityWithUserIdTest extends TestCase
     }
 
     #[WithEnv('NIGHTWATCH_FORCE_COMMAND', '1')]
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '0')]
     public function test_it_associates_queue_activity_with_the_authenticated_user(): void
     {
         $ingest = $this->fakeIngest();
