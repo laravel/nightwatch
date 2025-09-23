@@ -116,6 +116,7 @@ trait CapturesState
     public function ignore(callable $callback): mixed
     {
         $cachedPaused = $this->paused;
+        $cachedSamplingInContext = Compatibility::getSamplingFromContext();
 
         try {
             $this->paused = true;
@@ -124,7 +125,7 @@ trait CapturesState
             return $callback();
         } finally {
             $this->paused = $cachedPaused;
-            Compatibility::addSamplingToContext(! $this->paused);
+            Compatibility::addSamplingToContext($cachedSamplingInContext);
         }
     }
 
