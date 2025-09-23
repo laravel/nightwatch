@@ -22,6 +22,6 @@ final class VaporWorkCommandFinishedListener
 
     public function __invoke(CommandFinished $event): void
     {
-        $this->nightwatch->digest();
+        $this->nightwatch->finishExecution();
     }
 }

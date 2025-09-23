@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Laravel\NightwatchAgent\Loop;
 use PHPUnit\Framework\Assert;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\Timer\Timer as ReactTimer;
@@ -40,7 +41,7 @@ class LoopFake implements LoopInterface
      */
     public array $timersRun = [];
 
-    public bool $stopped = false;
+    public bool $running = false;
 
     private float $now;
 
@@ -92,7 +93,16 @@ class LoopFake implements LoopInterface
      */
     public function addTimer($interval, $callback): TimerInterface
     {
-        $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+        $frames = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+        $foundAt = -1;
+        foreach ($frames as $index => $frame) {
+            if (($frame['class'] ?? '') === Loop::class) {
+                $foundAt = $index + 1;
+                break;
+            }
+        }
+        $frame = $frames[$foundAt] ?? $frames[1];
+
         $class = $frame['class'] ?? '';
 
         if (str_starts_with($class, 'P\\Tests\\Feature')) {
@@ -113,7 +123,15 @@ class LoopFake implements LoopInterface
      */
     public function addPeriodicTimer($interval, $callback, $calledBy = null): TimerInterface
     {
-        $frame = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+        $frames = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+        $foundAt = -1;
+        foreach ($frames as $index => $frame) {
+            if (($frame['class'] ?? '') === Loop::class) {
+                $foundAt = $index + 1;
+                break;
+            }
+        }
+        $frame = $frames[$foundAt] ?? $frames[1];
         $class = $frame['class'] ?? '';
 
         if ($calledBy !== null) {
@@ -199,9 +217,11 @@ class LoopFake implements LoopInterface
 
     public function run(): void
     {
+        $this->running = true;
+
         $stopRunningAt = $this->now + $this->runForSeconds;
 
-        while (! $this->stopped && count($this->pendingTimers)) {
+        while ($this->running && count($this->pendingTimers)) {
             if ($this->now >= $stopRunningAt) {
                 $this->pendingTimers = array_map(fn ($pendingTimer) => [
                     'interval' => $pendingTimer['interval'],
@@ -273,7 +293,8 @@ class LoopFake implements LoopInterface
         foreach ($this->writeStreams as [$stream, $listener]) {
             $listener($stream);
         }
-        $this->stopped = true;
+
+        $this->running = false;
     }
 
     private function sortPendingTimers(): void

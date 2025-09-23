@@ -37,6 +37,6 @@ final class CommandLifecycleIsLongerThanHandler
             $this->nightwatch->report($e, handled: true);
         }
 
-        $this->nightwatch->digest();
+        $this->nightwatch->finishExecution();
     }
 }

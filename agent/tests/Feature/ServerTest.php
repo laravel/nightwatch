@@ -129,7 +129,7 @@ class ServerTest extends TestCase
         $loop->assertPending([
             new Timer(interval: 3_600, runAt: null, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
-        $this->assertTrue($loop->stopped);
+        $this->assertFalse($loop->running);
         $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
@@ -178,7 +178,7 @@ class ServerTest extends TestCase
         $loop->assertPending([
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
-        $this->assertFalse($loop->stopped);
+        $this->assertTrue($loop->running);
         $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
@@ -228,7 +228,7 @@ class ServerTest extends TestCase
         $loop->assertPending([
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
-        $this->assertFalse($loop->stopped);
+        $this->assertTrue($loop->running);
         $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
@@ -276,7 +276,7 @@ class ServerTest extends TestCase
         $loop->assertPending([
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
-        $this->assertFalse($loop->stopped);
+        $this->assertTrue($loop->running);
         $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),
         ]);

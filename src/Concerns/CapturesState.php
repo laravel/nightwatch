@@ -55,8 +55,6 @@ trait CapturesState
 
     private bool $paused = false;
 
-    private bool $waitingForJob = false;
-
     /**
      * @var WeakMap<Route, bool>
      */
@@ -75,7 +73,7 @@ trait CapturesState
 
         $this->sampling = $sample;
 
-        $this->ingest->shouldDigest($sample);
+        $this->ingest->shouldDigestWhenBufferIsFull($sample);
 
         Compatibility::addSamplingToContext($sample);
     }
@@ -173,7 +171,9 @@ trait CapturesState
 
         try {
             if ($e instanceof FatalError) {
-                $this->ingest->writeNow($this->sensor->fatalError($e));
+                if ($this->sampling) {
+                    $this->ingest->writeNow($this->sensor->fatalError($e));
+                }
             } else {
                 $this->ingest->write($this->sensor->exception($e, $handled));
             }
@@ -458,9 +458,9 @@ trait CapturesState
     /**
      * @internal
      */
-    public function waitForJob(): void
+    public function waitForExecution(): void
     {
-        $this->waitingForJob = true;
+        $this->dontSample();
     }
 
     /**
@@ -469,7 +469,7 @@ trait CapturesState
     public function configureForJobs(): void
     {
         $this->executionState->source = 'job';
-        $this->waitingForJob = true;
+        $this->waitForExecution();
     }
 
     /**
@@ -496,7 +496,6 @@ trait CapturesState
             Compatibility::getSamplingFromContext(default: true) ? 1.0 : 0.0
         );
 
-        $this->waitingForJob = false;
         $this->executionState->timestamp = $this->clock->microtime();
         $this->executionState->setId($this->uuid->make());
         $this->executionState->executionPreview = Str::tinyText($job->resolveName());
@@ -558,6 +557,7 @@ trait CapturesState
     public function configureForScheduledTasks(): void
     {
         $this->executionState->source = 'schedule';
+        $this->waitForExecution();
     }
 
     /**
@@ -579,6 +579,7 @@ trait CapturesState
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
         $this->executionState->timestamp = $this->clock->microtime();
+        $this->sample();
     }
 
     /**
