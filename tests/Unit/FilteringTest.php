@@ -529,4 +529,19 @@ class FilteringTest extends TestCase
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/test/***@***?token=***');
         $ingest->assertLatestWrite('request:0.ip', '127.0.*.*');
     }
+
+    public function test_it_restores_context_sampling_state_when_ignoring(): void
+    {
+        Compatibility::addSamplingToContext(true);
+
+        Nightwatch::ignore(fn () => null);
+
+        $this->assertTrue(Compatibility::getSamplingFromContext());
+
+        Compatibility::addSamplingToContext(false);
+
+        Nightwatch::ignore(fn () => null);
+
+        $this->assertFalse(Compatibility::getSamplingFromContext());
+    }
 }
