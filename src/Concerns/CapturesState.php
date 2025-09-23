@@ -494,7 +494,7 @@ trait CapturesState
         }
 
         $this->sample(
-            Compatibility::getSamplingFromContext(default: true) ? 1.0 : 0.0
+            Compatibility::getSamplingFromContext() ? 1.0 : 0.0
         );
 
         $this->executionState->timestamp = $this->clock->microtime();
