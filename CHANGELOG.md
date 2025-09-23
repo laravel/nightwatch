@@ -1,6 +1,17 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.13.7...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.13.8...1.x)
+
+## [v1.13.8](https://github.com/laravel/nightwatch/compare/v1.13.7...v1.13.8) - 2025-09-23
+
+### What's Changed
+
+* Improve auto-restart with Envoyer by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/266
+* Improve sub-minute task capture by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/265
+* Fix logging when outside of the loop by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/269
+* Bump minimum monolog version by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/272
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.13.7...v1.13.8
 
 ## [v1.13.7](https://github.com/laravel/nightwatch/compare/v1.13.6...v1.13.7) - 2025-09-20
 
