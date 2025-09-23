@@ -96,12 +96,18 @@ final class Compatibility
         self::$queuedJobDurationCapturable =
             version_compare($version, '10.42.0', '>=');
 
-        if (! self::$contextExists) {
+        if (self::$contextExists) {
+            Context::dehydrating(function (Repository $context) use ($app) {
+                if ($context->getHidden('nightwatch_user_id', '') === '') {
+                    $context->addHidden('nightwatch_user_id', $app->make(Core::class)->executionState->user->resolvedUserId());
+                }
+            });
+        } else {
             Queue::createPayloadUsing(static function ($c, $q, array $payload) use ($app) {
                 /*
                  * Dehydrating...
                  */
-                if (! (self::$context['nightwatch_user_id'] ?? '')) {
+                if ((self::$context['nightwatch_user_id'] ?? '') === '') {
                     self::$context['nightwatch_user_id'] = $app->make(Core::class)->executionState->user->resolvedUserId();
                 }
 
@@ -129,12 +135,6 @@ final class Compatibility
                     'nightwatch_should_sample' => $nightwatch['nightwatch_should_sample'] ?? null,
                     'nightwatch_user_id' => $nightwatch['nightwatch_user_id'] ?? '',
                 ];
-            });
-        } else {
-            Context::dehydrating(function (Repository $context) use ($app) {
-                if (! $context->gethidden('nightwatch_user_id')) {
-                    $context->addHidden('nightwatch_user_id', $app->make(Core::class)->executionState->user->resolvedUserId());
-                }
             });
         }
     }
