@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch;
 
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Log\Context\Repository;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Queue;
 use Illuminate\Support\Facades\Context;
@@ -97,9 +98,10 @@ final class Compatibility
 
         if (! self::$contextExists) {
             Queue::createPayloadUsing(static function ($c, $q, array $payload) use ($app) {
-                self::$context['nightwatch_user_id'] ??= '';
-
-                if (self::$context['nightwatch_user_id'] === '') {
+                /*
+                 * Dehydrating...
+                 */
+                if (! (self::$context['nightwatch_user_id'] ?? '')) {
                     self::$context['nightwatch_user_id'] = $app->make(Core::class)->executionState->user->resolvedUserId();
                 }
 
@@ -119,11 +121,20 @@ final class Compatibility
             $events->listen(static function (JobProcessing $event) {
                 $nightwatch = $event->job->payload()['nightwatch'] ?? [];
 
+                /*
+                 * Hydrating...
+                 */
                 self::$context = [
                     'nightwatch_trace_id' => $nightwatch['nightwatch_trace_id'] ?? null,
                     'nightwatch_should_sample' => $nightwatch['nightwatch_should_sample'] ?? null,
                     'nightwatch_user_id' => $nightwatch['nightwatch_user_id'] ?? '',
                 ];
+            });
+        } else {
+            Context::dehydrating(function (Repository $context) use ($app) {
+                if (! $context->gethidden('nightwatch_user_id')) {
+                    $context->addHidden('nightwatch_user_id', $app->make(Core::class)->executionState->user->resolvedUserId());
+                }
             });
         }
     }
