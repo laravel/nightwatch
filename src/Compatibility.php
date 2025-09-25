@@ -2,11 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
-use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Log\Context\Repository;
-use Illuminate\Queue\Events\JobProcessing;
-use Illuminate\Queue\Queue;
 use Illuminate\Support\Facades\Context;
 use ReflectionProperty;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -95,48 +91,6 @@ final class Compatibility
          */
         self::$queuedJobDurationCapturable =
             version_compare($version, '10.42.0', '>=');
-
-        if (self::$contextExists) {
-            Context::dehydrating(static function (Repository $context) use ($app) {
-                if (($context->getHidden('nightwatch_user_id') ?? '') === '') {
-                    $context->addHidden('nightwatch_user_id', $app->make(Core::class)->executionState->user->resolvedUserId());
-                }
-            });
-        } else {
-            Queue::createPayloadUsing(static function ($c, $q, array $payload) use ($app) {
-                /*
-                 * Dehydrating...
-                 */
-                if ((self::$context['nightwatch_user_id'] ?? '') === '') {
-                    self::$context['nightwatch_user_id'] = $app->make(Core::class)->executionState->user->resolvedUserId();
-                }
-
-                return [
-                    ...$payload,
-                    'nightwatch' => [
-                        ...($payload['nightwatch'] ?? []),
-                        'nightwatch_trace_id' => self::$context['nightwatch_trace_id'] ?? null,
-                        'nightwatch_should_sample' => self::$context['nightwatch_should_sample'] ?? null,
-                        'nightwatch_user_id' => self::$context['nightwatch_user_id'],
-                    ],
-                ];
-            });
-
-            /** @var Dispatcher */
-            $events = $app->make(Dispatcher::class);
-            $events->listen(static function (JobProcessing $event) {
-                $nightwatch = $event->job->payload()['nightwatch'] ?? [];
-
-                /*
-                 * Hydrating...
-                 */
-                self::$context = [
-                    'nightwatch_trace_id' => $nightwatch['nightwatch_trace_id'] ?? null,
-                    'nightwatch_should_sample' => $nightwatch['nightwatch_should_sample'] ?? null,
-                    'nightwatch_user_id' => $nightwatch['nightwatch_user_id'] ?? '',
-                ];
-            });
-        }
     }
 
     /**
