@@ -37,6 +37,7 @@ use Illuminate\Routing\Events\PreparingResponse;
 use Illuminate\Routing\Events\ResponsePrepared;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Env;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Nightwatch\Console\AgentCommand;
 use Laravel\Nightwatch\Facades\Nightwatch;
@@ -45,6 +46,7 @@ use Laravel\Nightwatch\Hooks\ArtisanStartingListener;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
 use Laravel\Nightwatch\Hooks\CommandStartingListener;
+use Laravel\Nightwatch\Hooks\ContextDehydratingHandler;
 use Laravel\Nightwatch\Hooks\ExceptionHandlerResolvedHandler;
 use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\HttpClientFactoryResolvedHandler;
@@ -54,6 +56,8 @@ use Laravel\Nightwatch\Hooks\LogoutListener;
 use Laravel\Nightwatch\Hooks\MailListener;
 use Laravel\Nightwatch\Hooks\NotificationListener;
 use Laravel\Nightwatch\Hooks\OctaneListener;
+use Laravel\Nightwatch\Hooks\PolyfillContextDehydration;
+use Laravel\Nightwatch\Hooks\PolyfillContextHydration;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
 use Laravel\Nightwatch\Hooks\QueuedJobListener;
@@ -360,6 +364,13 @@ final class NightwatchServiceProvider extends ServiceProvider
                 'job_id' => $core->uuid->make(),
             ],
         ]);
+
+        if (Compatibility::$contextExists) {
+            Context::dehydrating(new ContextDehydratingHandler($core));
+        } else {
+            Queue::createPayloadUsing(new PolyfillContextDehydration($core));
+            $events->listen((new PolyfillContextHydration($core))(...));
+        }
 
         //
         // -------------------------------------------------------------------------
