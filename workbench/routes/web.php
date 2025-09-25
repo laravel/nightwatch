@@ -48,7 +48,7 @@ Route::get('/', static function () {
 Route::get('/sampled-or-throw', static fn () => [])->middleware([
     // the order of these middleware matters
     'throwing-middleware',
-    Sample::rate(0),
+    Sample::never(),
 ]);
 
 Route::get('/test-exception', App\Http\ExceptionTestController::class);

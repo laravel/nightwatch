@@ -20,7 +20,7 @@ class SampleTest extends TestCase
         $ingest = $this->fakeIngest();
 
         Route::get('/users-0', fn () => [])
-            ->middleware(Sample::rate(0));
+            ->middleware(Sample::never());
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
@@ -46,7 +46,7 @@ class SampleTest extends TestCase
         $this->assertEqualsWithDelta(50, $writes, 20);
 
         Route::get('/users-100', fn () => [])
-            ->middleware(Sample::rate(1));
+            ->middleware(Sample::always());
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
@@ -62,7 +62,7 @@ class SampleTest extends TestCase
     public function test_it_can_sample_unmatched_routes()
     {
         $ingest = $this->fakeIngest();
-        Route::fallback(fn () => abort(404))->middleware(Sample::rate(0));
+        Route::fallback(fn () => abort(404))->middleware(Sample::never());
 
         $writes = 0;
 
@@ -87,7 +87,7 @@ class SampleTest extends TestCase
 
         $this->assertEqualsWithDelta(50, $writes, 20);
 
-        Route::fallback(fn () => abort(404))->middleware(Sample::rate(1));
+        Route::fallback(fn () => abort(404))->middleware(Sample::always());
         $writes = 0;
 
         for ($i = 0; $i < 100; $i++) {
