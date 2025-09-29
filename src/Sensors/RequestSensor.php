@@ -3,7 +3,9 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Arr;
 use Laravel\Nightwatch\Concerns\RecordsContext;
 use Laravel\Nightwatch\Concerns\RedactsHeaders;
 use Laravel\Nightwatch\ExecutionStage;
@@ -12,12 +14,16 @@ use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
+use function array_map;
 use function array_sum;
 use function hash;
 use function implode;
+use function in_array;
+use function is_array;
 use function is_int;
 use function is_numeric;
 use function is_string;
@@ -36,10 +42,13 @@ final class RequestSensor
     use RedactsHeaders;
 
     /**
+     * @param  list<string>  $redactKeys
      * @param  list<string>  $redactHeaders
      */
     public function __construct(
         private RequestState $requestState,
+        private bool $captureBody,
+        private array $redactKeys,
         private array $redactHeaders,
     ) {
         //
@@ -93,6 +102,8 @@ final class RequestSensor
                     $headers->remove('php-auth-pw');
                     $headers->remove('php-auth-digest');
                 }),
+                payload: rescue(fn () => $request->getPayload(), report: false),
+                files: clone $request->files,
             ),
             function () use ($record) {
                 return [
@@ -149,6 +160,18 @@ final class RequestSensor
                             return false;
                         },
                     ),
+                    'body' => $this->captureBody && $record->statusCode === 500
+                        ? Str::text(json_encode([
+                            'payload' => $record->payload instanceof InputBag ? $this->redactRecursively($record->payload->all()) : null,
+                            'files' => array_map(fn (UploadedFile $file) => [
+                                'client_name' => $file->getClientOriginalName(),
+                                'client_mime_type' => $file->getClientMimeType(),
+                                'mime_type' => $file->getMimeType(),
+                                'size' => $file->getSize(),
+                                'path' => $file->getPathname(),
+                            ], $record->files->all()),
+                        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT))
+                        : '',
                 ];
             },
         ];
@@ -178,5 +201,20 @@ final class RequestSensor
         // set this to `0`. We should offer a way to tell us the size of the
         // streamed response, e.g., echo Nightwatch::streaming($content);
         return 0;
+    }
+
+    /**
+     * @param  array<mixed>  $array
+     * @return array<mixed>
+     */
+    private function redactRecursively(array $array): array
+    {
+        return Arr::map($array, function ($value, $key) {
+            if (is_array($value)) {
+                return $this->redactRecursively($value);
+            }
+
+            return ! in_array($key, $this->redactKeys, true) || ! is_string($value) ? $value : '['.strlen($value).' bytes redacted]';
+        });
     }
 }

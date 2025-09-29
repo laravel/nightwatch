@@ -13,6 +13,7 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Context;
@@ -26,6 +27,7 @@ use Livewire\Livewire;
 use Orchestra\Testbench\Attributes\WithEnv;
 use Tests\TestCase;
 
+use function array_keys;
 use function fseek;
 use function fwrite;
 use function hash;
@@ -112,6 +114,7 @@ class RequestSensorTest extends TestCase
                 'exception_preview' => '',
                 'context' => Compatibility::$contextExists ? '{}' : '',
                 'headers' => '{"host":["localhost"],"user-agent":["Symfony"],"accept":["text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"],"accept-language":["en-us,en;q=0.5"],"accept-charset":["ISO-8859-1,utf-8;q=0.7,*;q=0.7"]}',
+                'body' => '',
             ],
         ]);
     }
@@ -930,6 +933,140 @@ class RequestSensorTest extends TestCase
 
             return true;
         });
+    }
+
+    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_BODY', 'true')]
+    public function test_it_captures_a_form_request_body_on_unhandled_exceptions(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::patch('/register', function () {
+            throw new Exception('Whoops!');
+        });
+
+        $response = $this
+            ->patch('/register?redirect=1', [
+                'user' => [
+                    'username' => 'taylor',
+                    'password' => '$f4c4d3',
+                ],
+                'avatar' => UploadedFile::fake()->create('avatar.jpg', 1, 'image/jpeg'),
+            ]);
+
+        $response->assertInternalServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.body', function ($body) {
+            $body = json_decode($body, true);
+            $this->assertNotNull($body);
+            $this->assertSame([
+                'user' => [
+                    'username' => 'taylor',
+                    'password' => '[7 bytes redacted]',
+                ],
+            ], $body['payload']);
+            $this->assertCount(1, $body['files']);
+            $this->assertEqualsCanonicalizing([
+                'client_name',
+                'client_mime_type',
+                'mime_type',
+                'size',
+                'path',
+            ], array_keys($body['files']['avatar']));
+            $this->assertSame('avatar.jpg', $body['files']['avatar']['client_name']);
+            $this->assertSame('image/jpeg', $body['files']['avatar']['client_mime_type']);
+            $this->assertSame('image/jpeg', $body['files']['avatar']['mime_type']);
+            $this->assertSame(1024, $body['files']['avatar']['size']);
+            $this->assertFileExists($body['files']['avatar']['path']);
+
+            return true;
+        });
+    }
+
+    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_BODY', 'true')]
+    public function test_it_captures_a_json_body_on_unhandled_exceptions(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::patch('/register', function () {
+            throw new Exception('Whoops!');
+        });
+
+        $response = $this
+            ->patchJson('/register?redirect=1', [
+                'user' => [
+                    'username' => 'taylor',
+                    'password' => '$f4c4d3',
+                ],
+            ]);
+
+        $response->assertInternalServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.body', function ($body) {
+            $body = json_decode($body, true);
+            $this->assertNotNull($body);
+            $this->assertSame([
+                'user' => [
+                    'username' => 'taylor',
+                    'password' => '[7 bytes redacted]',
+                ],
+            ], $body['payload']);
+            $this->assertCount(0, $body['files']);
+
+            return true;
+        });
+    }
+
+    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_BODY', 'true')]
+    #[WithEnv('NIGHTWATCH_REDACT_KEYS', 'foo')]
+    public function test_the_redacted_keys_can_be_customized(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::patch('/register', function () {
+            throw new Exception('Whoops!');
+        });
+
+        $response = $this
+            ->patch('/register?redirect=1', [
+                'user' => [
+                    'username' => 'taylor',
+                    'password' => '$f4c4d3',
+                ],
+                'foo' => 'bar',
+            ]);
+
+        $response->assertInternalServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.body', function ($body) {
+            $body = json_decode($body, true);
+            $this->assertNotNull($body);
+            $this->assertSame([
+                'user' => [
+                    'username' => 'taylor',
+                    'password' => '$f4c4d3',
+                ],
+                'foo' => '[3 bytes redacted]',
+            ], $body['payload']);
+
+            return true;
+        });
+    }
+
+    public function test_it_doesnt_capture_request_body_on_unhandled_exceptions_by_default(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::patch('/register', function () {
+            throw new Exception('Whoops!');
+        });
+
+        $response = $this
+            ->patchJson('/register?redirect=1', [
+                'user' => [
+                    'username' => 'taylor',
+                    'password' => '$f4c4d3',
+                ],
+            ]);
+
+        $response->assertInternalServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.body', '');
     }
 
     public function test_livewire_2(): void
