@@ -30,6 +30,16 @@ class Sample
         return static::class.':'.$rate;
     }
 
+    public static function always(): string
+    {
+        return static::class.':1.0';
+    }
+
+    public static function never(): string
+    {
+        return static::class.':0.0';
+    }
+
     public function handle(Request $request, Closure $next, float $rate): mixed
     {
         try {
