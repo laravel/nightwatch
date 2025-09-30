@@ -252,7 +252,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                     publicPath: $this->app->publicPath(),
                 ),
                 captureExceptionSourceCode: (bool) ($this->nightwatchConfig['capture_exception_source_code'] ?? true),
-                redactHeaders: $this->nightwatchConfig['redact_headers'] ?? ['Authorization', 'Cookie', 'Proxy-Authorization'],
+                redactHeaders: $this->nightwatchConfig['redact_headers'] ?? ['Authorization', 'Cookie', 'Proxy-Authorization', 'X-XSRF-TOKEN'],
                 config: $this->config,
             ),
             executionState: $executionState,
