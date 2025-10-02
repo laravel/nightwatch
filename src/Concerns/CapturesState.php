@@ -174,7 +174,7 @@ trait CapturesState
             $record = $this->sensor->exception($e, $handled);
 
             if ($this->sampling && ($e instanceof FatalError || ! $record['handled'])) {
-                $this->ingest->write($record);
+                $this->ingest->writeNow($record);
             } else {
                 $this->ingest->write($record);
             }
