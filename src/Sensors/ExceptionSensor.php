@@ -36,7 +36,7 @@ use function rtrim;
  */
 final class ExceptionSensor
 {
-    private const int VERSION = 3;
+    private const VERSION = 3;
 
     /**
      * @var array<string, SplFileObject|null>
