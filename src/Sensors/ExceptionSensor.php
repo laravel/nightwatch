@@ -13,6 +13,7 @@ use Laravel\Nightwatch\Types\Str;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use SplFileObject;
 use stdClass;
+use Symfony\Component\ErrorHandler\Error\FatalError;
 use Throwable;
 
 use function array_is_list;
@@ -35,6 +36,8 @@ use function rtrim;
  */
 final class ExceptionSensor
 {
+    private const int VERSION = 3;
+
     /**
      * @var array<string, SplFileObject|null>
      */
@@ -56,6 +59,10 @@ final class ExceptionSensor
      */
     public function __invoke(Throwable $e, ?bool $handled): array
     {
+        if ($e instanceof FatalError) {
+            return $this->fatalError($e);
+        }
+
         $nowMicrotime = $this->clock->microtime();
         [$file, $line] = $this->location->forException($e);
         $normalizedException = match ($e->getPrevious()) {
@@ -76,7 +83,7 @@ final class ExceptionSensor
         $this->executionState->exceptions++;
 
         return [
-            'v' => 3,
+            'v' => self::VERSION,
             't' => 'exception',
             'timestamp' => $nowMicrotime,
             'deploy' => $this->executionState->deploy,
@@ -95,6 +102,35 @@ final class ExceptionSensor
             'code' => (string) $normalizedException->getCode(),
             'trace' => Str::mediumText($this->serializeTrace($normalizedException)),
             'handled' => $handled,
+            'php_version' => $this->executionState->phpVersion,
+            'laravel_version' => $this->executionState->laravelVersion,
+        ];
+    }
+
+    private function fatalError(FatalError $e)
+    {
+        $file = $this->location->normalizeFile($e->getFile());
+
+        return [
+            'v' => self::VERSION,
+            't' => 'exception',
+            'timestamp' => $this->clock->microtime(),
+            'deploy' => $this->executionState->deploy,
+            'server' => $this->executionState->server,
+            '_group' => hash('xxh128', $e::class.','.$e->getCode().','.$file.','.$e->getLine()),
+            'trace_id' => $this->executionState->trace,
+            'execution_source' => $this->executionState->source,
+            'execution_id' => '',
+            'execution_preview' => $this->executionState->executionPreview,
+            'execution_stage' => $this->executionState->stage,
+            'user' => $this->executionState->user->resolvedUserId(),
+            'class' => $e::class,
+            'file' => Str::tinyText($file),
+            'line' => $e->getLine(),
+            'message' => Str::text($e->getMessage()),
+            'code' => (string) $e->getCode(),
+            'trace' => '',
+            'handled' => false,
             'php_version' => $this->executionState->phpVersion,
             'laravel_version' => $this->executionState->laravelVersion,
         ];

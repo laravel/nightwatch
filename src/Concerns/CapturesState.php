@@ -171,12 +171,12 @@ trait CapturesState
         }
 
         try {
-            if ($e instanceof FatalError) {
-                if ($this->sampling) {
-                    $this->ingest->writeNow($this->sensor->fatalError($e));
-                }
+            $record = $this->sensor->exception($e, $handled);
+
+            if ($this->sampling && ($e instanceof FatalError || ! $record['handled'])) {
+                $this->ingest->write($record);
             } else {
-                $this->ingest->write($this->sensor->exception($e, $handled));
+                $this->ingest->write($record);
             }
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
