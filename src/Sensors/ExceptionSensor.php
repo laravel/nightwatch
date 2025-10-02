@@ -107,7 +107,10 @@ final class ExceptionSensor
         ];
     }
 
-    private function fatalError(FatalError $e)
+    /**
+     * @return array<mixed>
+     */
+    private function fatalError(FatalError $e): array
     {
         $file = $this->location->normalizeFile($e->getFile());
 
