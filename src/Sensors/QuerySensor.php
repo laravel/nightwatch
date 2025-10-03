@@ -45,7 +45,7 @@ final class QuerySensor
                 file: $file ?? '',
                 line: $line ?? 0,
                 duration: $durationInMicroseconds,
-                connection: $event->connection->getNameWithReadWriteType() ?? '',
+                connection: $event->connectionName ?? '', // @phpstan-ignore nullCoalesce.property
             ),
             function () use ($event, $record) {
                 $this->executionState->queries++;
