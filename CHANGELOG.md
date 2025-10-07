@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.14.0...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.14.1...1.x)
+
+## [v1.14.1](https://github.com/laravel/nightwatch/compare/v1.14.0...v1.14.1) - 2025-10-07
+
+### What's Changed
+
+* Capture query connection name with read/write type by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/278
+* Revert "Capture query connection name with read/write type (#278)" by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/279
+* Do not include bootstrapping or web worker initial wait time in first request for Octane by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/280
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.14.0...v1.14.1
 
 ## [v1.14.0](https://github.com/laravel/nightwatch/compare/v1.13.8...v1.14.0) - 2025-09-29
 
