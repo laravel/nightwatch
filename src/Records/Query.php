@@ -10,6 +10,7 @@ final class Query
         public readonly int $line,
         public readonly int $duration,
         public readonly string $connection,
+        public readonly bool $usingReadConnection,
     ) {
         //
     }

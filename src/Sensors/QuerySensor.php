@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Illuminate\Database\Connection;
 use Illuminate\Database\Events\QueryExecuted;
 use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\Location;
@@ -9,6 +10,7 @@ use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
+use PDO;
 
 use function hash;
 use function in_array;
@@ -46,6 +48,7 @@ final class QuerySensor
                 line: $line ?? 0,
                 duration: $durationInMicroseconds,
                 connection: $event->connectionName ?? '', // @phpstan-ignore nullCoalesce.property
+                usingReadConnection: $this->usingReadConnection($event),
             ),
             function () use ($event, $record) {
                 $this->executionState->queries++;
@@ -68,6 +71,7 @@ final class QuerySensor
                     'line' => $record->line,
                     'duration' => $record->duration,
                     'connection' => Str::tinyText($record->connection),
+                    'using_read_connection' => $record->usingReadConnection,
                 ];
             },
         ];
@@ -86,5 +90,26 @@ final class QuerySensor
         }
 
         return hash('xxh128', "{$record->connection},{$sql}");
+    }
+
+    /**
+     * Determine if the query was executed using the read connection.
+     */
+    private function usingReadConnection(QueryExecuted $event): bool
+    {
+        $connection = $event->connection;
+
+        $readPdo = $connection->getRawReadPdo();
+        $writePdo = $connection->getRawPdo();
+
+        if (! $readPdo instanceof PDO) {
+            return false;
+        }
+
+        if (! $writePdo instanceof PDO) {
+            return true;
+        }
+
+        return $connection->getReadPdo() !== $writePdo;
     }
 }
