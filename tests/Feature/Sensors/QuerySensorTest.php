@@ -21,9 +21,11 @@ use SingleStore\Laravel\Connect\Connection as LegacySingleStoreConnection;
 use SingleStore\Laravel\Connect\SingleStoreConnection;
 use Tests\TestCase;
 
+use function array_merge;
 use function base64_encode;
 use function class_exists;
 use function dirname;
+use function fake;
 use function hash;
 use function hex2bin;
 use function in_array;
@@ -93,6 +95,7 @@ class QuerySensorTest extends TestCase
                 'line' => $line,
                 'duration' => 4321,
                 'connection' => $connection,
+                'using_read_connection' => false,
             ],
         ]);
     }
@@ -351,5 +354,163 @@ class QuerySensorTest extends TestCase
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('query:0.connection', '');
+    }
+
+    public function test_it_captures_using_read_connection_as_false_when_read_and_write_connections_are_not_configured()
+    {
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            return DB::table('users')->get();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.using_read_connection', false);
+    }
+
+    public function test_it_captures_using_read_connection_as_true_for_select_query()
+    {
+        $this->configureReadWriteConnection();
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            return DB::table('users')->get();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.using_read_connection', true);
+    }
+
+    public function test_it_captures_using_read_connection_as_false_for_write_query()
+    {
+        $this->configureReadWriteConnection();
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            return DB::table('users')->insert([
+                'name' => fake()->name(),
+                'email' => fake()->email(),
+                'password' => fake()->password(),
+            ]);
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.using_read_connection', false);
+    }
+
+    public function test_it_captures_using_read_connection_as_false_when_records_have_been_modified_and_sticky_connection_is_enabled()
+    {
+        $this->configureReadWriteConnection(['sticky' => true]);
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            DB::table('users')->insert([
+                'name' => fake()->name(),
+                'email' => fake()->email(),
+                'password' => fake()->password(),
+            ]);
+
+            return DB::table('users')->get();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.using_read_connection', false); // insert
+        $ingest->assertLatestWrite('query:1.using_read_connection', false); // select
+    }
+
+    public function test_it_captures_using_read_connection_as_false_for_insert_and_true_for_select_when_sticky_connection_is_disabled()
+    {
+        $this->configureReadWriteConnection(['sticky' => false]);
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            DB::table('users')->insert([
+                'name' => fake()->name(),
+                'email' => fake()->email(),
+                'password' => fake()->password(),
+            ]);
+
+            return DB::table('users')->get();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.using_read_connection', false); // insert
+        $ingest->assertLatestWrite('query:1.using_read_connection', true); // select
+    }
+
+    public function test_it_captures_using_read_connection_as_false_when_it_should_use_write_connection_when_reading()
+    {
+        $this->configureReadWriteConnection();
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            return DB::useWriteConnectionWhenReading()->table('users')->get();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.using_read_connection', false);
+    }
+
+    public function test_it_captures_using_read_connection_as_false_when_in_a_transaction()
+    {
+        $this->configureReadWriteConnection();
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            DB::beginTransaction();
+
+            $users = DB::table('users')->get();
+
+            DB::rollBack();
+
+            return $users;
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.using_read_connection', false);
+    }
+
+    private function configureReadWriteConnection(array $options = []): void
+    {
+        $connection = Config::get('database.default');
+        $config = Config::get("database.connections.{$connection}");
+
+        Config::set("database.connections.{$connection}", array_merge($config, [
+            'read' => [
+                'database' => $config['database'],
+            ],
+            'write' => [
+                'database' => $config['database'],
+            ],
+        ], $options));
+
+        DB::purge($connection);
     }
 }
