@@ -102,7 +102,7 @@ final class RequestSensor
                     $headers->remove('php-auth-pw');
                     $headers->remove('php-auth-digest');
                 }),
-                payload: rescue(fn () => $request->getPayload(), report: false),
+                payload: rescue(static fn () => $request->getPayload(), report: false),
                 files: clone $request->files,
             ),
             function () use ($record) {
@@ -163,7 +163,7 @@ final class RequestSensor
                     'body' => $this->captureBody && $record->statusCode === 500
                         ? Str::text(json_encode([
                             'payload' => $record->payload instanceof InputBag ? $this->redactRecursively($record->payload->all()) : null,
-                            'files' => array_map(fn (UploadedFile $file) => [
+                            'files' => array_map(static fn (UploadedFile $file) => [
                                 'client_name' => $file->getClientOriginalName(),
                                 'client_mime_type' => $file->getClientMimeType(),
                                 'mime_type' => $file->getMimeType(),
