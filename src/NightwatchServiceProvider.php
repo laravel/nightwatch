@@ -40,6 +40,7 @@ use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Nightwatch\Console\AgentCommand;
+use Laravel\Nightwatch\Console\DeployCommand;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Factories\Logger;
 use Laravel\Nightwatch\Hooks\ArtisanStartingListener;
@@ -192,6 +193,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->registerLogger();
         $this->registerMiddleware();
         $this->registerAgentCommand();
+        $this->registerDeployCommand();
         $this->buildAndRegisterCore();
     }
 
@@ -223,6 +225,15 @@ final class NightwatchServiceProvider extends ServiceProvider
             token: $this->nightwatchConfig['token'] ?? null,
             server: $this->nightwatchConfig['server'] ?? null,
             ingestUri: $this->nightwatchConfig['ingest']['uri'] ?? null,
+        ));
+    }
+
+    private function registerDeployCommand(): void
+    {
+        $this->app->singleton(DeployCommand::class, fn () => new DeployCommand(
+            http: $this->app->make(\Illuminate\Http\Client\Factory::class),
+            token: $this->nightwatchConfig['token'] ?? null,
+            baseUrl: $this->nightwatchConfig['base_url'] ?? null,
         ));
     }
 
@@ -295,6 +306,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->commands([
             Console\AgentCommand::class,
             Console\StatusCommand::class,
+            Console\DeployCommand::class,
         ]);
     }
 

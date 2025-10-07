@@ -5,6 +5,7 @@ return [
     'token' => env('NIGHTWATCH_TOKEN'),
     'deployment' => env('NIGHTWATCH_DEPLOY'),
     'server' => env('NIGHTWATCH_SERVER', (string) gethostname()),
+    'base_url' => env('NIGHTWATCH_BASE_URL', 'https://nightwatch.laravel.com'),
     'capture_exception_source_code' => env('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', true),
     'redact_headers' => explode(',', env('NIGHTWATCH_REDACT_HEADERS', 'Authorization,Cookie,Proxy-Authorization,X-XSRF-TOKEN')),
 
