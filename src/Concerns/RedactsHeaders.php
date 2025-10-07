@@ -49,7 +49,22 @@ trait RedactsHeaders
 
         [$type, $remainder] = explode(' ', $value, 2);
 
-        if (in_array(strtolower($type), ['basic', 'bearer', 'digest', 'hoba', 'mutual', 'negotiate', 'ntlm', 'vapid', 'scram', 'aws4-hmac-sha256'], true)) {
+        if (in_array(strtolower($type), [
+            'basic',
+            'bearer',
+            'concealed',
+            'digest',
+            'dpop',
+            'gnap',
+            'hoba',
+            'mutual',
+            'negotiate',
+            'oauth',
+            'privatetoken',
+            'scram-sha-1',
+            'scram-sha-256',
+            'vapid',
+        ], true)) {
             return $type.' '.$this->redactHeaderValue($remainder);
         }
 
