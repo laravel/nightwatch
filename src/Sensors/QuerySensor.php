@@ -48,7 +48,7 @@ final class QuerySensor
                 line: $line ?? 0,
                 duration: $durationInMicroseconds,
                 connection: $event->connectionName ?? '', // @phpstan-ignore nullCoalesce.property
-                connectionType: $this->connectionType($event),
+                connectionType: $this->connectionType($event) ?? '',
             ),
             function () use ($event, $record) {
                 $this->executionState->queries++;
@@ -95,16 +95,16 @@ final class QuerySensor
     /**
      * Get the read or write connection type if configured.
      *
-     * @return 'read'|'write'|''
+     * @return 'read'|'write'|null
      */
-    private function connectionType(QueryExecuted $event): string
+    private function connectionType(QueryExecuted $event): ?string
     {
         $connection = $event->connection;
         $readPdo = $connection->getRawReadPdo();
         $writePdo = $connection->getRawPdo();
 
         if ($readPdo === null) {
-            return '';
+            return null;
         }
 
         if (! $readPdo instanceof PDO) {
