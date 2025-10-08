@@ -497,6 +497,45 @@ class QuerySensorTest extends TestCase
         $ingest->assertLatestWrite('query:0.connection_type', 'write');
     }
 
+    public function test_it_captures_write_connection_when_forcing_select_from_write_after_read_pdo_is_resolved()
+    {
+        $this->configureReadWriteConnection();
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            DB::select('select 1');
+            DB::selectFromWriteConnection('select 1');
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.connection_type', 'read');
+        $ingest->assertLatestWrite('query:0.connection_type', 'write');
+    }
+
+    public function test_it_captures_connection_type_when_forgetting_modified_records_state()
+    {
+        $this->configureReadWriteConnection(['sticky' => true]);
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            DB::statement('select 1');
+            DB::forgetRecordModificationState();
+            DB::select('select 1');
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.connection_type', 'write');
+        $ingest->assertLatestWrite('query:0.connection_type', 'read');
+    }
+
     private function configureReadWriteConnection(array $options = []): void
     {
         $connection = Config::get('database.default');
