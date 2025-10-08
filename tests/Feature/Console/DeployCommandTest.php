@@ -15,7 +15,6 @@ class DeployCommandTest extends TestCase
     {
         $output = '';
         $process = Process::timeout(10)->start('NIGHTWATCH_TOKEN="test-token" \
-          NIGHTWATCH_BASE_URL="http://localhost" \
           NIGHTWATCH_DEPLOY="v1.2.3" \
           vendor/bin/testbench nightwatch:deploy'
         );

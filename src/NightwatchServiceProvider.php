@@ -233,7 +233,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         $this->app->singleton(DeployCommand::class, fn () => new DeployCommand(
             http: $this->app->make(\Illuminate\Http\Client\Factory::class),
             token: $this->nightwatchConfig['token'] ?? null,
-            baseUrl: $this->nightwatchConfig['base_url'] ?? null,
         ));
     }
 

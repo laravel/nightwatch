@@ -14,7 +14,7 @@ use function now;
 /**
  * @internal
  */
-#[AsCommand(name: 'nightwatch:deploy', description: 'Notice the Nightwatch agent that a new deployment has been made.')]
+#[AsCommand(name: 'nightwatch:deploy', description: 'Notify Nightwatch of a deployment.')]
 final class DeployCommand extends Command
 {
     /**
@@ -27,11 +27,10 @@ final class DeployCommand extends Command
     /**
      * @var string
      */
-    protected $description = 'Notice the Nightwatch agent that a new deployment has been made.';
+    protected $description = 'Notify Nightwatch of a deployment.';
 
     public function __construct(
         private HttpFactory $http,
-        private ?string $baseUrl,
         #[SensitiveParameter] private ?string $token,
     ) {
         parent::__construct();
@@ -41,11 +40,7 @@ final class DeployCommand extends Command
     {
         $tag = config('nightwatch.deployment') ?? '';
 
-        if (! $this->baseUrl) {
-            $this->error('No Nightwatch base URL configured.');
-
-            return;
-        }
+        $baseUrl = $_SERVER['NIGHTWATCH_BASE_URL'] ?? 'https://nightwatch.laravel.com';
 
         if (! $this->token) {
             $this->error('No Nightwatch token configured.');
@@ -60,7 +55,7 @@ final class DeployCommand extends Command
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
                 ])
-                ->post("{$this->baseUrl}/api/deployments", [
+                ->post("{$baseUrl}/api/deployments", [
                     'timestamp' => now()->timestamp,
                     'version' => $tag,
                 ]);
