@@ -255,7 +255,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 ),
                 captureExceptionSourceCode: (bool) ($this->nightwatchConfig['capture_exception_source_code'] ?? true),
                 captureRequestBody: (bool) ($this->nightwatchConfig['capture_request_body'] ?? false),
-                redactKeys: $this->nightwatchConfig['redact_keys'] ?? ['password', 'password_confirmation'],
+                redactKeys: $this->nightwatchConfig['redact_keys'] ?? ['_token', 'password', 'password_confirmation'],
                 redactHeaders: $this->nightwatchConfig['redact_headers'] ?? ['Authorization', 'Cookie', 'Proxy-Authorization', 'X-XSRF-TOKEN'],
                 config: $this->config,
             ),

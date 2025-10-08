@@ -7,7 +7,7 @@ return [
     'server' => env('NIGHTWATCH_SERVER', (string) gethostname()),
     'capture_exception_source_code' => env('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', true),
     'capture_request_body' => env('NIGHTWATCH_CAPTURE_REQUEST_BODY', false),
-    'redact_keys' => explode(',', env('NIGHTWATCH_REDACT_KEYS', 'password,password_confirmation')),
+    'redact_keys' => explode(',', env('NIGHTWATCH_REDACT_KEYS', '_token,password,password_confirmation')),
     'redact_headers' => explode(',', env('NIGHTWATCH_REDACT_HEADERS', 'Authorization,Cookie,Proxy-Authorization,X-XSRF-TOKEN')),
 
     'sampling' => [
