@@ -14,12 +14,12 @@ use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 use function array_map;
 use function array_sum;
+use function assert;
 use function hash;
 use function implode;
 use function in_array;
@@ -102,7 +102,7 @@ final class RequestSensor
                     $headers->remove('php-auth-pw');
                     $headers->remove('php-auth-digest');
                 }),
-                payload: rescue(static fn () => $request->getPayload(), report: false),
+                payload: clone $request->request,
                 files: clone $request->files,
             ),
             function () use ($record) {
@@ -161,16 +161,18 @@ final class RequestSensor
                         },
                     ),
                     'body' => $this->captureBody && $record->statusCode === 500
-                        ? Str::text(json_encode([
-                            'payload' => $record->payload instanceof InputBag ? $this->redactRecursively($record->payload->all()) : null,
-                            'files' => array_map(static fn (UploadedFile $file) => [
-                                'client_name' => $file->getClientOriginalName(),
-                                'client_mime_type' => $file->getClientMimeType(),
-                                'mime_type' => $file->getMimeType(),
-                                'size' => $file->getSize(),
-                                'path' => $file->getPathname(),
-                            ], $record->files->all()),
-                        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT))
+                        ? Str::text(rescue(
+                            fn () => json_encode([
+                                ...$this->redactRecursively($record->payload->all()),
+                                '_nightwatch_files' => $this->mapUploadedFilesRecursively($record->files->all()),
+                            ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION),
+                            '{"_nightwatch_error":"Failed to serialize body"}',
+                            static function ($e) {
+                                Nightwatch::unrecoverableExceptionOccurred($e);
+
+                                return false;
+                            }
+                        ))
                         : '',
                 ];
             },
@@ -216,5 +218,28 @@ final class RequestSensor
 
             return ! in_array($key, $this->redactKeys, true) || ! is_string($value) ? $value : '['.strlen($value).' bytes redacted]';
         });
+    }
+
+    /**
+     * @param  array<mixed>  $files
+     * @return array<mixed>
+     */
+    private function mapUploadedFilesRecursively(array $files): array
+    {
+        return array_map(function ($file) {
+            if (is_array($file)) {
+                return $this->mapUploadedFilesRecursively($file);
+            }
+
+            assert($file instanceof UploadedFile);
+
+            return [
+                'client_name' => $file->getClientOriginalName(),
+                'client_mime_type' => $file->getClientMimeType(),
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'path' => $file->getPathname(),
+            ];
+        }, $files);
     }
 }

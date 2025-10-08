@@ -25,7 +25,7 @@ final class Request
         public readonly int $requestSize,
         public readonly int $responseSize,
         public HeaderBag $headers,
-        public ?InputBag $payload,
+        public InputBag $payload,
         public FileBag $files,
     ) {
         //

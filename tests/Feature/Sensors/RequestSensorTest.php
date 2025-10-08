@@ -27,7 +27,6 @@ use Livewire\Livewire;
 use Orchestra\Testbench\Attributes\WithEnv;
 use Tests\TestCase;
 
-use function array_keys;
 use function fseek;
 use function fwrite;
 use function hash;
@@ -948,34 +947,31 @@ class RequestSensorTest extends TestCase
                 'user' => [
                     'username' => 'taylor',
                     'password' => '$f4c4d3',
+                    'avatar' => UploadedFile::fake()->create('avatar.jpg', 1, 'image/jpeg'),
                 ],
-                'avatar' => UploadedFile::fake()->create('avatar.jpg', 1, 'image/jpeg'),
             ]);
 
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.body', function ($body) {
             $body = json_decode($body, true);
-            $this->assertNotNull($body);
             $this->assertSame([
                 'user' => [
                     'username' => 'taylor',
                     'password' => '[7 bytes redacted]',
                 ],
-            ], $body['payload']);
-            $this->assertCount(1, $body['files']);
-            $this->assertEqualsCanonicalizing([
-                'client_name',
-                'client_mime_type',
-                'mime_type',
-                'size',
-                'path',
-            ], array_keys($body['files']['avatar']));
-            $this->assertSame('avatar.jpg', $body['files']['avatar']['client_name']);
-            $this->assertSame('image/jpeg', $body['files']['avatar']['client_mime_type']);
-            $this->assertSame('image/jpeg', $body['files']['avatar']['mime_type']);
-            $this->assertSame(1024, $body['files']['avatar']['size']);
-            $this->assertFileExists($body['files']['avatar']['path']);
+                '_nightwatch_files' => [
+                    'user' => [
+                        'avatar' => [
+                            'client_name' => 'avatar.jpg',
+                            'client_mime_type' => 'image/jpeg',
+                            'mime_type' => 'image/jpeg',
+                            'size' => 1024,
+                            'path' => $body['_nightwatch_files']['user']['avatar']['path'],
+                        ],
+                    ],
+                ],
+            ], $body);
 
             return true;
         });
@@ -1001,14 +997,13 @@ class RequestSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.body', function ($body) {
             $body = json_decode($body, true);
-            $this->assertNotNull($body);
             $this->assertSame([
                 'user' => [
                     'username' => 'taylor',
                     'password' => '[7 bytes redacted]',
                 ],
-            ], $body['payload']);
-            $this->assertCount(0, $body['files']);
+                '_nightwatch_files' => [],
+            ], $body);
 
             return true;
         });
@@ -1036,14 +1031,14 @@ class RequestSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.body', function ($body) {
             $body = json_decode($body, true);
-            $this->assertNotNull($body);
             $this->assertSame([
                 'user' => [
                     'username' => 'taylor',
                     'password' => '$f4c4d3',
                 ],
                 'foo' => '[3 bytes redacted]',
-            ], $body['payload']);
+                '_nightwatch_files' => [],
+            ], $body);
 
             return true;
         });
