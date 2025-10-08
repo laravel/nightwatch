@@ -7,6 +7,7 @@ use Illuminate\Routing\Route;
 use Laravel\Nightwatch\Concerns\RecordsContext;
 use Laravel\Nightwatch\Concerns\RedactsHeaders;
 use Laravel\Nightwatch\ExecutionStage;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
@@ -21,6 +22,7 @@ use function is_int;
 use function is_numeric;
 use function is_string;
 use function json_encode;
+use function rescue;
 use function sort;
 use function strlen;
 use function tap;
@@ -138,7 +140,15 @@ final class RequestSensor
                     'peak_memory_usage' => $this->requestState->peakMemory(),
                     'exception_preview' => Str::tinyText($this->requestState->exceptionPreview),
                     'context' => $this->serializedContext(),
-                    'headers' => Str::text(json_encode((object) $this->redactHeaders($record->headers, $this->redactHeaders)->all(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)),
+                    'headers' => rescue(
+                        fn () => Str::text(json_encode((object) $this->redactHeaders($record->headers, $this->redactHeaders)->all(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)),
+                        '{"_nightwatch_error":"Failed to serialize headers"}',
+                        static function ($e) {
+                            Nightwatch::unrecoverableExceptionOccurred($e);
+
+                            return false;
+                        },
+                    ),
                 ];
             },
         ];
