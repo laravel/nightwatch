@@ -95,7 +95,7 @@ class QuerySensorTest extends TestCase
                 'line' => $line,
                 'duration' => 4321,
                 'connection' => $connection,
-                'using_read_connection' => false,
+                'connection_type' => '',
             ],
         ]);
     }
@@ -356,7 +356,7 @@ class QuerySensorTest extends TestCase
         $ingest->assertLatestWrite('query:0.connection', '');
     }
 
-    public function test_it_captures_using_read_connection_as_false_when_read_and_write_connections_are_not_configured()
+    public function test_it_captures_connection_type_as_empty_string_when_read_and_write_connections_are_not_configured()
     {
         $ingest = $this->fakeIngest();
 
@@ -368,10 +368,10 @@ class QuerySensorTest extends TestCase
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('query:0.using_read_connection', false);
+        $ingest->assertLatestWrite('query:0.connection_type', '');
     }
 
-    public function test_it_captures_using_read_connection_as_true_for_select_query()
+    public function test_it_captures_connection_type_as_read_for_select_query()
     {
         $this->configureReadWriteConnection();
 
@@ -385,10 +385,10 @@ class QuerySensorTest extends TestCase
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('query:0.using_read_connection', true);
+        $ingest->assertLatestWrite('query:0.connection_type', 'read');
     }
 
-    public function test_it_captures_using_read_connection_as_false_for_write_query()
+    public function test_it_captures_connection_type_as_write_for_write_query()
     {
         $this->configureReadWriteConnection();
 
@@ -406,10 +406,10 @@ class QuerySensorTest extends TestCase
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('query:0.using_read_connection', false);
+        $ingest->assertLatestWrite('query:0.connection_type', 'write');
     }
 
-    public function test_it_captures_using_read_connection_as_false_when_records_have_been_modified_and_sticky_connection_is_enabled()
+    public function test_it_captures_connection_type_as_write_when_records_have_been_modified_and_sticky_connection_is_enabled()
     {
         $this->configureReadWriteConnection(['sticky' => true]);
 
@@ -429,11 +429,11 @@ class QuerySensorTest extends TestCase
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('query:0.using_read_connection', false); // insert
-        $ingest->assertLatestWrite('query:1.using_read_connection', false); // select
+        $ingest->assertLatestWrite('query:0.connection_type', 'write'); // insert
+        $ingest->assertLatestWrite('query:1.connection_type', 'write'); // select
     }
 
-    public function test_it_captures_using_read_connection_as_false_for_insert_and_true_for_select_when_sticky_connection_is_disabled()
+    public function test_it_captures_connection_type_as_write_for_insert_and_read_for_select_when_sticky_connection_is_disabled()
     {
         $this->configureReadWriteConnection(['sticky' => false]);
 
@@ -453,11 +453,11 @@ class QuerySensorTest extends TestCase
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('query:0.using_read_connection', false); // insert
-        $ingest->assertLatestWrite('query:1.using_read_connection', true); // select
+        $ingest->assertLatestWrite('query:0.connection_type', 'write'); // insert
+        $ingest->assertLatestWrite('query:1.connection_type', 'read'); // select
     }
 
-    public function test_it_captures_using_read_connection_as_false_when_it_should_use_write_connection_when_reading()
+    public function test_it_captures_connection_type_as_write_when_it_should_use_write_connection_when_reading()
     {
         $this->configureReadWriteConnection();
 
@@ -471,10 +471,10 @@ class QuerySensorTest extends TestCase
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('query:0.using_read_connection', false);
+        $ingest->assertLatestWrite('query:0.connection_type', 'write');
     }
 
-    public function test_it_captures_using_read_connection_as_false_when_in_a_transaction()
+    public function test_it_captures_connection_type_as_write_when_in_a_transaction()
     {
         $this->configureReadWriteConnection();
 
@@ -494,7 +494,7 @@ class QuerySensorTest extends TestCase
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('query:0.using_read_connection', false);
+        $ingest->assertLatestWrite('query:0.connection_type', 'write');
     }
 
     private function configureReadWriteConnection(array $options = []): void

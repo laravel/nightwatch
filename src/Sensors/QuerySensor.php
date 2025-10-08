@@ -48,7 +48,7 @@ final class QuerySensor
                 line: $line ?? 0,
                 duration: $durationInMicroseconds,
                 connection: $event->connectionName ?? '', // @phpstan-ignore nullCoalesce.property
-                usingReadConnection: $this->usingReadConnection($event),
+                connectionType: $this->connectionType($event),
             ),
             function () use ($event, $record) {
                 $this->executionState->queries++;
@@ -71,7 +71,7 @@ final class QuerySensor
                     'line' => $record->line,
                     'duration' => $record->duration,
                     'connection' => Str::tinyText($record->connection),
-                    'using_read_connection' => $record->usingReadConnection,
+                    'connection_type' => $record->connectionType,
                 ];
             },
         ];
@@ -93,23 +93,32 @@ final class QuerySensor
     }
 
     /**
-     * Determine if the query was executed using the read connection.
+     * Get the read or write connection type if configured.
+     *
+     * @return 'read'|'write'|''
      */
-    private function usingReadConnection(QueryExecuted $event): bool
+    private function connectionType(QueryExecuted $event): string
     {
         $connection = $event->connection;
-
         $readPdo = $connection->getRawReadPdo();
         $writePdo = $connection->getRawPdo();
 
+        if ($readPdo === null) {
+            return '';
+        }
+
         if (! $readPdo instanceof PDO) {
-            return false;
+            return 'write';
         }
 
         if (! $writePdo instanceof PDO) {
-            return true;
+            return 'read';
         }
 
-        return $connection->getReadPdo() !== $writePdo;
+        if ($connection->getReadPdo() === $writePdo) {
+            return 'write';
+        }
+
+        return 'read';
     }
 }
