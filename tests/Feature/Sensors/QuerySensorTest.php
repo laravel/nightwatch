@@ -513,7 +513,7 @@ class QuerySensorTest extends TestCase
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('query:0.connection_type', 'read');
-        $ingest->assertLatestWrite('query:0.connection_type', 'write');
+        $ingest->assertLatestWrite('query:1.connection_type', 'write');
     }
 
     public function test_it_captures_connection_type_when_forgetting_modified_records_state()
@@ -533,7 +533,7 @@ class QuerySensorTest extends TestCase
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('query:0.connection_type', 'write');
-        $ingest->assertLatestWrite('query:0.connection_type', 'read');
+        $ingest->assertLatestWrite('query:1.connection_type', 'read');
     }
 
     private function configureReadWriteConnection(array $options = []): void
