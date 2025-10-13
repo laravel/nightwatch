@@ -963,11 +963,9 @@ class RequestSensorTest extends TestCase
                 '_nightwatch_files' => [
                     'user' => [
                         'avatar' => [
-                            'client_name' => 'avatar.jpg',
-                            'client_mime_type' => 'image/jpeg',
-                            'mime_type' => 'image/jpeg',
+                            'originalName' => 'avatar.jpg',
                             'size' => 1024,
-                            'path' => $body['_nightwatch_files']['user']['avatar']['path'],
+                            'error' => 0,
                         ],
                     ],
                 ],

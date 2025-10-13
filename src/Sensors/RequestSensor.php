@@ -3,7 +3,6 @@
 namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Arr;
 use Laravel\Nightwatch\Concerns\RecordsContext;
@@ -14,6 +13,7 @@ use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -234,11 +234,9 @@ final class RequestSensor
             assert($file instanceof UploadedFile);
 
             return [
-                'client_name' => $file->getClientOriginalName(),
-                'client_mime_type' => $file->getClientMimeType(),
-                'mime_type' => $file->getMimeType(),
+                'originalName' => $file->getClientOriginalName(),
                 'size' => $file->getSize(),
-                'path' => $file->getPathname(),
+                'error' => $file->getError(),
             ];
         }, $files);
     }
