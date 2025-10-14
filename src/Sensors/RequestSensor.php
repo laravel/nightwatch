@@ -105,7 +105,7 @@ final class RequestSensor
                 payload: clone $request->request,
                 files: clone $request->files,
             ),
-            function () use ($record) {
+            function () use ($request, $record) {
                 return [
                     'v' => 1,
                     't' => 'request',
@@ -160,7 +160,7 @@ final class RequestSensor
                             return false;
                         },
                     ),
-                    'body' => $this->shouldCaptureBody($record)
+                    'body' => $this->shouldCaptureBody($request, $record)
                         ? Str::text(rescue(
                             fn () => json_encode([
                                 ...$this->redactRecursively($record->payload->all()),
@@ -241,10 +241,11 @@ final class RequestSensor
         }, $files);
     }
 
-    private function shouldCaptureBody(RequestRecord $record): bool
+    private function shouldCaptureBody(Request $request, RequestRecord $record): bool
     {
         return $this->captureBody
             && $record->statusCode === 500
+            && ($request->isJson() || in_array($request->header('CONTENT_TYPE'), ['application/x-www-form-urlencoded', 'multipart/form-data'], true) || $record->payload->count() > 0 || $record->files->count() > 0)
             && (in_array($record->method, ['POST', 'PUT', 'PATCH'], true) || $record->payload->count() > 0 || $record->files->count() > 0);
     }
 }

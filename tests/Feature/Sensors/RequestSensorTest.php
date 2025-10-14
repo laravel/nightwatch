@@ -32,6 +32,8 @@ use function fwrite;
 use function hash;
 use function html_entity_decode;
 use function json_decode;
+use function json_encode;
+use function mb_strlen;
 use function now;
 use function ob_end_clean;
 use function ob_start;
@@ -1091,6 +1093,47 @@ class RequestSensorTest extends TestCase
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.body', '{"_nightwatch_files":{"foo":{"originalName":"avatar.jpg","size":1024,"error":0}}}');
+    }
+
+    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_BODY', 'true')]
+    public function test_it_doesnt_capture_request_body_on_unsupported_content_types(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::post('/register', function () {
+            throw new Exception('Whoops!');
+        });
+
+        $content = '<xml version="1.0"?><foo>bar</foo>';
+        $response = $this->call(
+            'POST',
+            '/register?redirect=1',
+            server: $this->transformHeadersToServerVars([
+                'CONTENT_LENGTH' => mb_strlen($content, '8bit'),
+                'CONTENT_TYPE' => 'application/xml',
+            ]),
+            content: $content
+        );
+
+        $response->assertInternalServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.body', '');
+
+        $ingest->forgetWrites();
+
+        $content = json_encode(['foo' => 'bar'], JSON_THROW_ON_ERROR);
+        $response = $this->call(
+            'POST',
+            '/register?redirect=1',
+            server: $this->transformHeadersToServerVars([
+                'CONTENT_LENGTH' => mb_strlen($content, '8bit'),
+                'CONTENT_TYPE' => 'bad',
+            ]),
+            content: $content
+        );
+
+        $response->assertInternalServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.body', '');
     }
 
     public function test_livewire_2(): void
