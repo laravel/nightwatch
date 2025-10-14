@@ -160,7 +160,7 @@ final class RequestSensor
                             return false;
                         },
                     ),
-                    'body' => $this->captureBody && $record->statusCode === 500
+                    'body' => $this->shouldCaptureBody($record)
                         ? Str::text(rescue(
                             fn () => json_encode([
                                 ...$this->redactRecursively($record->payload->all()),
@@ -239,5 +239,12 @@ final class RequestSensor
                 'error' => $file->getError(),
             ];
         }, $files);
+    }
+
+    private function shouldCaptureBody(RequestRecord $record): bool
+    {
+        return $this->captureBody
+            && $record->statusCode === 500
+            && (in_array($record->method, ['POST', 'PUT', 'PATCH'], true) || $record->payload->count() > 0 || $record->files->count() > 0);
     }
 }

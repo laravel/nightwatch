@@ -1062,6 +1062,37 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.body', '');
     }
 
+    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_BODY', 'true')]
+    public function test_it_doesnt_capture_request_body_on_get_requests_unless_there_is_payload(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/register', function () {
+            throw new Exception('Whoops!');
+        });
+
+        $response = $this->json('GET', '/register?redirect=1');
+
+        $response->assertInternalServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.body', '');
+
+        $ingest->forgetWrites();
+
+        $response = $this->json('GET', '/register?redirect=1', ['foo' => 'bar']);
+
+        $response->assertInternalServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.body', '{"foo":"bar","_nightwatch_files":[]}');
+
+        $ingest->forgetWrites();
+
+        $response = $this->json('GET', '/register?redirect=1', ['foo' => UploadedFile::fake()->create('avatar.jpg', 1, 'image/jpeg')]);
+
+        $response->assertInternalServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.body', '{"_nightwatch_files":{"foo":{"originalName":"avatar.jpg","size":1024,"error":0}}}');
+    }
+
     public function test_livewire_2(): void
     {
         $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '>='), 'Requires Livewire 2');
