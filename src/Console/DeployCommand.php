@@ -2,14 +2,16 @@
 
 namespace Laravel\Nightwatch\Console;
 
-use Exception;
+use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
-use Illuminate\Http\Client\Factory as HttpFactory;
+use Illuminate\Support\Facades\Http;
 use SensitiveParameter;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Throwable;
 
 use function config;
-use function now;
+use function strlen;
+use function substr;
 
 /**
  * @internal
@@ -22,51 +24,65 @@ final class DeployCommand extends Command
      */
     protected $signature = 'nightwatch:deploy';
 
-    protected $hidden = true;
-
     /**
      * @var string
      */
     protected $description = 'Notify Nightwatch of a deployment.';
 
+    /**
+     * @var bool
+     */
+    protected $hidden = true;
+
     public function __construct(
-        private HttpFactory $http,
         #[SensitiveParameter] private ?string $token,
     ) {
         parent::__construct();
     }
 
-    public function handle(): void
+    public function handle(): int
     {
+        if (! $this->token) {
+            $this->error('No NIGHTWATCH_TOKEN environment variable configured.');
+
+            return 1;
+        }
+
         $tag = config('nightwatch.deployment') ?? '';
 
         $baseUrl = $_SERVER['NIGHTWATCH_BASE_URL'] ?? 'https://nightwatch.laravel.com';
 
-        if (! $this->token) {
-            $this->error('No Nightwatch token configured.');
-
-            return;
-        }
-
         try {
-            $response = $this->http
+            $response = Http::connectTimeout(5)
+                ->timeout(10)
                 ->withHeaders([
                     'Authorization' => "Bearer {$this->token}",
                     'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
                 ])
                 ->post("{$baseUrl}/api/deployments", [
-                    'timestamp' => now()->timestamp,
+                    'timestamp' => CarbonImmutable::now()->timestamp,
                     'version' => $tag,
                 ]);
 
             if ($response->successful()) {
                 $this->info('Deployment successful');
+
+                return 0;
             } else {
-                $this->error("Deployment failed: {$response->status()} {$response->body()}");
+                $message = $response->body();
+
+                if (strlen($message) > 1005) {
+                    $message = substr($message, 0, 1000).'[...]';
+                }
+
+                $this->error("Deployment failed: {$response->status()} [{$message}]");
+
+                return 1;
             }
-        } catch (Exception $e) {
-            $this->error("Deployment failed: {$e->getMessage()}");
+        } catch (Throwable $e) {
+            $this->error("Deployment failed: [{$e->getMessage()}]");
+
+            return 1;
         }
     }
 }
