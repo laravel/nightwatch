@@ -66,12 +66,12 @@ class FilteringTest extends TestCase
     public function test_it_can_filter_queries(): void
     {
         $ingest = $this->fakeIngest();
-        Nightwatch::rejectQueries(function (Query $query) {
-            return str_contains($query->sql, 'jobs');
-        });
+        Nightwatch::rejectQueries(fn (Query $query) => str_contains($query->sql, 'jobs'));
+        Nightwatch::rejectQueries(fn (Query $query) => str_contains($query->sql, 'sessions'));
 
         DB::statement('select * from users');
         DB::statement('select * from jobs');
+        DB::statement('select * from sessions');
         $ingest->digest();
 
         $ingest->assertWrittenTimes(1);
@@ -121,11 +121,12 @@ class FilteringTest extends TestCase
     public function test_it_can_filter_notifications(): void
     {
         $ingest = $this->fakeIngest();
-        $keep = [false, true];
-        Nightwatch::rejectNotifications(function (NotificationRecord $notification) use (&$keep) {
-            return array_shift($keep);
+        $reject = [true, true, false];
+        Nightwatch::rejectNotifications(function (NotificationRecord $notification) use (&$reject) {
+            return array_shift($reject);
         });
 
+        Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
         Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
         Notification::route('mail', 'phillip@laravel.com')->notify(new MyNotification);
         $ingest->digest();
@@ -161,11 +162,11 @@ class FilteringTest extends TestCase
     public function test_it_can_filter_mail(): void
     {
         $ingest = $this->fakeIngest();
-        Nightwatch::rejectMail(function (MailRecord $mail) {
-            return $mail->subject === 'Hello Laravel';
-        });
+        Nightwatch::rejectMail(fn (MailRecord $mail) => $mail->subject === 'Hello Laravel');
+        Nightwatch::rejectMail(fn (MailRecord $mail) => $mail->subject === 'Hello Cloud');
 
         Mail::to('tim@laravel.com')->send(new MyMail('Hello Laravel'));
+        Mail::to('tim@laravel.com')->send(new MyMail('Hello Cloud'));
         Mail::to('tim@laravel.com')->send(new MyMail('Hello Nightwatch'));
         $ingest->digest();
 
@@ -200,12 +201,12 @@ class FilteringTest extends TestCase
     public function test_it_can_filter_cache_events(): void
     {
         $ingest = $this->fakeIngest();
-        Nightwatch::rejectCacheEvents(function (CacheEvent $cacheEvent) {
-            return str_contains($cacheEvent->key, 'forget');
-        });
+        Nightwatch::rejectCacheEvents(fn (CacheEvent $cacheEvent) => str_contains($cacheEvent->key, 'forget'));
+        Nightwatch::rejectCacheEvents(fn (CacheEvent $cacheEvent) => str_contains($cacheEvent->key, 'remember'));
 
         Cache::get('keep');
         Cache::get('forget');
+        Cache::get('remember');
         $ingest->digest();
 
         $ingest->assertWrittenTimes(1);
@@ -244,14 +245,15 @@ class FilteringTest extends TestCase
     {
         $ingest = $this->fakeIngest();
         Http::fake([
-            'https://nightwatch.laravel.com' => Http::response(status: 200),
             'https://laravel.com' => Http::response(status: 200),
+            'https://laravel.cloud' => Http::response(status: 200),
+            'https://nightwatch.laravel.com' => Http::response(status: 200),
         ]);
-        Nightwatch::rejectOutgoingRequests(function (OutgoingRequest $outgoingRequest) {
-            return $outgoingRequest->url === 'https://nightwatch.laravel.com';
-        });
+        Nightwatch::rejectOutgoingRequests(fn (OutgoingRequest $outgoingRequest) => $outgoingRequest->url === 'https://laravel.cloud');
+        Nightwatch::rejectOutgoingRequests(fn (OutgoingRequest $outgoingRequest) => $outgoingRequest->url === 'https://nightwatch.laravel.com');
 
         Http::get('https://laravel.com');
+        Http::get('https://laravel.cloud');
         Http::get('https://nightwatch.laravel.com');
         $ingest->digest();
 
