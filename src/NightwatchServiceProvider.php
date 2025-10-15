@@ -184,7 +184,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $this->config = $this->app->make(Repository::class);
 
-        $this->nightwatchConfig = $this->config->get('nightwatch') ?? [];
+        $this->nightwatchConfig = $this->config->get('nightwatch') ?? []; // @phpstan-ignore assign.propertyType
     }
 
     private function registerBindings(): void
