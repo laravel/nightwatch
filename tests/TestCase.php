@@ -27,17 +27,21 @@ use ReflectionFunction;
 
 use function array_combine;
 use function array_intersect_key;
+use function array_slice;
 use function class_exists;
 use function collect;
 use function dd;
 use function env;
+use function explode;
 use function fopen;
 use function hash;
+use function implode;
 use function is_string;
 use function method_exists;
 use function now;
 use function realpath;
 use function sprintf;
+use function str_replace;
 use function stream_wrapper_register;
 use function stream_wrapper_unregister;
 use function substr;
@@ -277,5 +281,43 @@ abstract class TestCase extends OrchestraTestCase
         }
 
         return substr(hash('xxh128', $refreshToken), 0, 7);
+    }
+
+    protected function assertLogMatches(string $expected, string $actual): self
+    {
+        $expected = str_replace('{date}', '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', $expected);
+        $expected = str_replace('{duration}', '\[\d(\.\d{1,3})?s\]', $expected);
+        $expected = str_replace('{info}', '\[INFO\]', $expected);
+        $expected = str_replace('{error}', '\[ERROR\]', $expected);
+        $expected = str_replace('{debug}', '\[DEBUG\]', $expected);
+        $expected = str_replace('{warning}', '\[WARNING\]', $expected);
+
+        $expectedLines = explode(PHP_EOL, $expected);
+        $actualLines = explode(PHP_EOL, $actual);
+        $expectedAndFound = '';
+
+        foreach ($expectedLines as $index => $expectedLine) {
+            $this->assertMatchesRegularExpression("#^{$expectedLine}$#", $actualLines[$index], <<<MESSAGE
+                === ACTUAL ===
+                {$actual}
+                === EXPECTED ===
+                {$expected}
+                MESSAGE);
+
+            $expectedAndFound .= $actualLines[$index].PHP_EOL;
+        }
+
+        $remaining = implode(PHP_EOL, array_slice($actualLines, $index + 1));
+
+        $this->assertSame('', $remaining, <<<MESSAGE
+            Unexpected lines in log after expected log lines
+
+            === EXPECTED ===
+            {$expectedAndFound}
+            === UNEXPECTED ===
+            {$remaining}
+            MESSAGE);
+
+        return $this;
     }
 }
