@@ -33,7 +33,6 @@ use function hash;
 use function html_entity_decode;
 use function json_decode;
 use function json_encode;
-use function mb_strlen;
 use function now;
 use function ob_end_clean;
 use function ob_start;
@@ -42,6 +41,7 @@ use function preg_match_all;
 use function report;
 use function response;
 use function stream_get_meta_data;
+use function strlen;
 use function tap;
 use function tmpfile;
 use function version_compare;
@@ -1108,7 +1108,7 @@ class RequestSensorTest extends TestCase
             'POST',
             '/register?redirect=1',
             server: $this->transformHeadersToServerVars([
-                'CONTENT_LENGTH' => mb_strlen($content, '8bit'),
+                'CONTENT_LENGTH' => strlen($content),
                 'CONTENT_TYPE' => 'application/xml',
             ]),
             content: $content
@@ -1125,7 +1125,7 @@ class RequestSensorTest extends TestCase
             'POST',
             '/register?redirect=1',
             server: $this->transformHeadersToServerVars([
-                'CONTENT_LENGTH' => mb_strlen($content, '8bit'),
+                'CONTENT_LENGTH' => strlen($content),
                 'CONTENT_TYPE' => 'bad',
             ]),
             content: $content
