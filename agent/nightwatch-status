@@ -2,11 +2,7 @@
 
 namespace NightwatchAgent;
 
-if (file_exists(__DIR__.'/../helpers.php')) {
-    require __DIR__.'/../helpers.php';
-} else {
-    require __DIR__.'/helpers.php';
-}
+require __DIR__.'/helpers.php';
 
 use RuntimeException;
 use Throwable;

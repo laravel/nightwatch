@@ -11,7 +11,7 @@ class HealthCheckTest extends TestCase
 {
     public function test_it_errors_when_agent_is_not_running(): void
     {
-        $process = Process::fromShellCommandline('php '.__DIR__.'/../../docker/nightwatch-status')
+        $process = Process::fromShellCommandline('php '.__DIR__.'/../../nightwatch-status')
             ->setTimeout(2);
 
         $process->run();
@@ -23,7 +23,7 @@ class HealthCheckTest extends TestCase
 
     public function test_it_can_check_status(): void
     {
-        $process = Process::fromShellCommandline('php '.__DIR__.'/../../docker/nightwatch-status')
+        $process = Process::fromShellCommandline('php '.__DIR__.'/../../nightwatch-status')
             ->setTimeout(2);
         [$output, $e] = $this->runAgent(via: 'phar', timeout: 10, until: function ($output) use ($process, &$listenOn) {
             if (str_contains($output, 'Authentication')) {
