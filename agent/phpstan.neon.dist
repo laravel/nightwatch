@@ -2,6 +2,7 @@ parameters:
   paths:
     - src
     - tests
+    - docker/nightwatch-status
   level: max
   ignoreErrors:
       -
