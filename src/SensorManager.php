@@ -128,7 +128,7 @@ final class SensorManager
     public $commandSensor;
 
     /**
-     * @param  list<string>  $redactKeys
+     * @param  list<string>  $redactPayloadFields
      * @param  list<string>  $redactHeaders
      */
     public function __construct(
