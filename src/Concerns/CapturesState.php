@@ -198,8 +198,10 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->outgoingRequest($startMicrotime, $endMicrotime, $request, $response);
 
-        if ($this->rejectOutgoingRequestCallback && $this->ignore(fn () => ($this->rejectOutgoingRequestCallback)($record))) {
-            return;
+        foreach ($this->rejectOutgoingRequestCallbacks as $callback) {
+            if ($this->ignore(fn () => ($callback)($record))) {
+                return;
+            }
         }
 
         if ($this->redactOutgoingRequestCallback) {
@@ -223,8 +225,10 @@ trait CapturesState
 
         [$record, $resolver] = $this->sensor->query($event, $trace);
 
-        if ($this->rejectQueryCallback && $this->ignore(fn () => ($this->rejectQueryCallback)($record))) {
-            return;
+        foreach ($this->rejectQueryCallbacks as $callback) {
+            if ($this->ignore(fn () => ($callback)($record))) {
+                return;
+            }
         }
 
         if ($this->redactQueryCallback) {
@@ -251,8 +255,10 @@ trait CapturesState
 
         [$record, $resolver] = $queuedJob;
 
-        if ($this->rejectQueuedJobCallback && $this->ignore(fn () => ($this->rejectQueuedJobCallback)($record))) {
-            return;
+        foreach ($this->rejectQueuedJobCallbacks as $callback) {
+            if ($this->ignore(fn () => ($callback)($record))) {
+                return;
+            }
         }
 
         $this->ingest->write($resolver());
@@ -275,8 +281,10 @@ trait CapturesState
 
         [$record, $resolver] = $notification;
 
-        if ($this->rejectNotificationCallback && $this->ignore(fn () => ($this->rejectNotificationCallback)($record))) {
-            return;
+        foreach ($this->rejectNotificationCallbacks as $callback) {
+            if ($this->ignore(fn () => ($callback)($record))) {
+                return;
+            }
         }
 
         $this->ingest->write($resolver());
@@ -299,8 +307,10 @@ trait CapturesState
 
         [$record, $resolver] = $mail;
 
-        if ($this->rejectMailCallback && $this->ignore(fn () => ($this->rejectMailCallback)($record))) {
-            return;
+        foreach ($this->rejectMailCallbacks as $callback) {
+            if ($this->ignore(fn () => ($callback)($record))) {
+                return;
+            }
         }
 
         if ($this->redactMailCallback) {
@@ -327,8 +337,10 @@ trait CapturesState
 
         [$record, $resolver] = $cacheEvent;
 
-        if ($this->rejectCacheEventCallback && $this->ignore(fn () => ($this->rejectCacheEventCallback)($record))) {
-            return;
+        foreach ($this->rejectCacheEventCallbacks as $callback) {
+            if ($this->ignore(fn () => ($callback)($record))) {
+                return;
+            }
         }
 
         if ($this->redactCacheEventCallback) {

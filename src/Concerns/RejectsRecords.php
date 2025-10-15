@@ -12,34 +12,34 @@ use Laravel\Nightwatch\Records\QueuedJob;
 trait RejectsRecords
 {
     /**
-     * @var ?callable(CacheEvent): bool
+     * @var array<callable(CacheEvent): bool>
      */
-    private $rejectCacheEventCallback = null;
+    private $rejectCacheEventCallbacks = [];
 
     /**
-     * @var ?callable(Mail): bool
+     * @var array<callable(Mail): bool>
      */
-    private $rejectMailCallback = null;
+    private $rejectMailCallbacks = [];
 
     /**
-     * @var ?callable(Notification): bool
+     * @var array<callable(Notification): bool>
      */
-    private $rejectNotificationCallback = null;
+    private $rejectNotificationCallbacks = [];
 
     /**
-     * @var ?callable(OutgoingRequest): bool
+     * @var array<callable(OutgoingRequest): bool>
      */
-    private $rejectOutgoingRequestCallback = null;
+    private $rejectOutgoingRequestCallbacks = [];
 
     /**
-     * @var ?callable(Query): bool
+     * @var array<callable(Query): bool>
      */
-    private $rejectQueryCallback = null;
+    private $rejectQueryCallbacks = [];
 
     /**
-     * @var ?callable(QueuedJob): bool
+     * @var array<callable(QueuedJob): bool>
      */
-    private $rejectQueuedJobCallback = null;
+    private $rejectQueuedJobCallbacks = [];
 
     /**
      * @api
@@ -48,7 +48,7 @@ trait RejectsRecords
      */
     public function rejectCacheEvents(callable $callback): void
     {
-        $this->rejectCacheEventCallback = $callback;
+        $this->rejectCacheEventCallbacks[] = $callback;
     }
 
     /**
@@ -58,7 +58,7 @@ trait RejectsRecords
      */
     public function rejectMail(callable $callback): void
     {
-        $this->rejectMailCallback = $callback;
+        $this->rejectMailCallbacks[] = $callback;
     }
 
     /**
@@ -68,7 +68,7 @@ trait RejectsRecords
      */
     public function rejectNotifications(callable $callback): void
     {
-        $this->rejectNotificationCallback = $callback;
+        $this->rejectNotificationCallbacks[] = $callback;
     }
 
     /**
@@ -78,7 +78,7 @@ trait RejectsRecords
      */
     public function rejectOutgoingRequests(callable $callback): void
     {
-        $this->rejectOutgoingRequestCallback = $callback;
+        $this->rejectOutgoingRequestCallbacks[] = $callback;
     }
 
     /**
@@ -88,7 +88,7 @@ trait RejectsRecords
      */
     public function rejectQueries(callable $callback): void
     {
-        $this->rejectQueryCallback = $callback;
+        $this->rejectQueryCallbacks[] = $callback;
     }
 
     /**
@@ -98,6 +98,6 @@ trait RejectsRecords
      */
     public function rejectQueuedJobs(callable $callback): void
     {
-        $this->rejectQueuedJobCallback = $callback;
+        $this->rejectQueuedJobCallbacks[] = $callback;
     }
 }
