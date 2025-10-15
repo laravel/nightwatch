@@ -199,7 +199,7 @@ trait CapturesState
         [$record, $resolver] = $this->sensor->outgoingRequest($startMicrotime, $endMicrotime, $request, $response);
 
         foreach ($this->rejectOutgoingRequestCallbacks as $callback) {
-            if ($this->ignore(fn () => ($callback)($record))) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
                 return;
             }
         }
@@ -226,7 +226,7 @@ trait CapturesState
         [$record, $resolver] = $this->sensor->query($event, $trace);
 
         foreach ($this->rejectQueryCallbacks as $callback) {
-            if ($this->ignore(fn () => ($callback)($record))) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
                 return;
             }
         }
@@ -256,7 +256,7 @@ trait CapturesState
         [$record, $resolver] = $queuedJob;
 
         foreach ($this->rejectQueuedJobCallbacks as $callback) {
-            if ($this->ignore(fn () => ($callback)($record))) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
                 return;
             }
         }
@@ -282,7 +282,7 @@ trait CapturesState
         [$record, $resolver] = $notification;
 
         foreach ($this->rejectNotificationCallbacks as $callback) {
-            if ($this->ignore(fn () => ($callback)($record))) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
                 return;
             }
         }
@@ -308,7 +308,7 @@ trait CapturesState
         [$record, $resolver] = $mail;
 
         foreach ($this->rejectMailCallbacks as $callback) {
-            if ($this->ignore(fn () => ($callback)($record))) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
                 return;
             }
         }
@@ -338,7 +338,7 @@ trait CapturesState
         [$record, $resolver] = $cacheEvent;
 
         foreach ($this->rejectCacheEventCallbacks as $callback) {
-            if ($this->ignore(fn () => ($callback)($record))) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
                 return;
             }
         }
