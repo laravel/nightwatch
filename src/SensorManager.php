@@ -136,8 +136,8 @@ final class SensorManager
         private Clock $clock,
         public Location $location,
         private bool $captureExceptionSourceCode,
-        private bool $captureRequestBody,
-        private array $redactKeys,
+        private bool $captureRequestPayload,
+        private array $redactPayloadFields,
         private array $redactHeaders,
         private Repository $config,
     ) {
@@ -161,8 +161,8 @@ final class SensorManager
     {
         $sensor = $this->requestSensor ??= new RequestSensor(
             requestState: $this->executionState, // @phpstan-ignore argument.type
-            captureBody: $this->captureRequestBody,
-            redactKeys: $this->redactKeys,
+            capturePayload: $this->captureRequestPayload,
+            redactPayloadFields: $this->redactPayloadFields,
             redactHeaders: $this->redactHeaders,
         );
 

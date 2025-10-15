@@ -42,13 +42,13 @@ final class RequestSensor
     use RedactsHeaders;
 
     /**
-     * @param  list<string>  $redactKeys
+     * @param  list<string>  $redactPayloadFields
      * @param  list<string>  $redactHeaders
      */
     public function __construct(
         private RequestState $requestState,
-        private bool $captureBody,
-        private array $redactKeys,
+        private bool $capturePayload,
+        private array $redactPayloadFields,
         private array $redactHeaders,
     ) {
         //
@@ -160,7 +160,7 @@ final class RequestSensor
                             return false;
                         },
                     ),
-                    'body' => $this->serializeBody($request, $response, $record),
+                    'payload' => $this->serializePayload($request, $response, $record),
                 ];
             },
         ];
@@ -192,7 +192,7 @@ final class RequestSensor
         return 0;
     }
 
-    private function serializeBody(Request $request, Response $response, RequestRecord $record): string
+    private function serializePayload(Request $request, Response $response, RequestRecord $record): string
     {
         if ($response->getStatusCode() !== 500) {
             return '';
@@ -202,7 +202,7 @@ final class RequestSensor
             return '';
         }
 
-        if (! $this->captureBody) {
+        if (! $this->capturePayload) {
             return '{"_nightwatch_error":"NOT_ENABLED"}';
         }
 
@@ -241,7 +241,7 @@ final class RequestSensor
                 return $this->redactRecursively($value);
             }
 
-            return ! in_array($key, $this->redactKeys, true) || ! is_string($value) ? $value : '['.strlen($value).' bytes redacted]';
+            return ! in_array($key, $this->redactPayloadFields, true) || ! is_string($value) ? $value : '['.strlen($value).' bytes redacted]';
         });
     }
 

@@ -115,7 +115,7 @@ class RequestSensorTest extends TestCase
                 'exception_preview' => '',
                 'context' => Compatibility::$contextExists ? '{}' : '',
                 'headers' => '{"host":["localhost"],"user-agent":["Symfony"],"accept":["text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"],"accept-language":["en-us,en;q=0.5"],"accept-charset":["ISO-8859-1,utf-8;q=0.7,*;q=0.7"]}',
-                'body' => '',
+                'payload' => '',
             ],
         ]);
     }
@@ -936,8 +936,8 @@ class RequestSensorTest extends TestCase
         });
     }
 
-    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_BODY', 'true')]
-    public function test_it_captures_a_form_request_body_on_unhandled_exceptions(): void
+    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_PAYLOAD', 'true')]
+    public function test_it_captures_a_form_request_payload_on_unhandled_exceptions(): void
     {
         $ingest = $this->fakeIngest();
         Route::patch('/register', function () {
@@ -955,8 +955,8 @@ class RequestSensorTest extends TestCase
 
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.body', function ($body) {
-            $body = json_decode($body, true);
+        $ingest->assertLatestWrite('request:0.payload', function ($payload) {
+            $payload = json_decode($payload, true);
             $this->assertSame([
                 'user' => [
                     'username' => 'taylor',
@@ -971,14 +971,14 @@ class RequestSensorTest extends TestCase
                         ],
                     ],
                 ],
-            ], $body);
+            ], $payload);
 
             return true;
         });
     }
 
-    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_BODY', 'true')]
-    public function test_it_captures_a_json_body_on_unhandled_exceptions(): void
+    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_PAYLOAD', 'true')]
+    public function test_it_captures_a_json_payload_on_unhandled_exceptions(): void
     {
         $ingest = $this->fakeIngest();
         Route::patch('/register', function () {
@@ -995,22 +995,22 @@ class RequestSensorTest extends TestCase
 
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.body', function ($body) {
-            $body = json_decode($body, true);
+        $ingest->assertLatestWrite('request:0.payload', function ($payload) {
+            $payload = json_decode($payload, true);
             $this->assertSame([
                 'user' => [
                     'username' => 'taylor',
                     'password' => '[7 bytes redacted]',
                 ],
                 '_nightwatch_files' => [],
-            ], $body);
+            ], $payload);
 
             return true;
         });
     }
 
-    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_BODY', 'true')]
-    #[WithEnv('NIGHTWATCH_REDACT_KEYS', 'foo')]
+    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_PAYLOAD', 'true')]
+    #[WithEnv('NIGHTWATCH_REDACT_PAYLOAD_FIELDS', 'foo')]
     public function test_the_redacted_keys_can_be_customized(): void
     {
         $ingest = $this->fakeIngest();
@@ -1029,8 +1029,8 @@ class RequestSensorTest extends TestCase
 
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.body', function ($body) {
-            $body = json_decode($body, true);
+        $ingest->assertLatestWrite('request:0.payload', function ($payload) {
+            $payload = json_decode($payload, true);
             $this->assertSame([
                 'user' => [
                     'username' => 'taylor',
@@ -1038,13 +1038,13 @@ class RequestSensorTest extends TestCase
                 ],
                 'foo' => '[3 bytes redacted]',
                 '_nightwatch_files' => [],
-            ], $body);
+            ], $payload);
 
             return true;
         });
     }
 
-    public function test_it_doesnt_capture_request_body_on_unhandled_exceptions_by_default(): void
+    public function test_it_doesnt_capture_request_payload_on_unhandled_exceptions_by_default(): void
     {
         $ingest = $this->fakeIngest();
         Route::patch('/register', function () {
@@ -1061,11 +1061,11 @@ class RequestSensorTest extends TestCase
 
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.body', '');
+        $ingest->assertLatestWrite('request:0.payload', '{"_nightwatch_error":"NOT_ENABLED"}');
     }
 
-    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_BODY', 'true')]
-    public function test_it_doesnt_capture_request_body_on_get_requests_unless_there_is_payload(): void
+    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_PAYLOAD', 'true')]
+    public function test_it_doesnt_capture_request_payload_on_get_requests_unless_there_is_payload(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/register', function () {
@@ -1076,7 +1076,7 @@ class RequestSensorTest extends TestCase
 
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.body', '');
+        $ingest->assertLatestWrite('request:0.payload', '');
 
         $ingest->forgetWrites();
 
@@ -1084,7 +1084,7 @@ class RequestSensorTest extends TestCase
 
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.body', '{"foo":"bar","_nightwatch_files":[]}');
+        $ingest->assertLatestWrite('request:0.payload', '{"foo":"bar","_nightwatch_files":[]}');
 
         $ingest->forgetWrites();
 
@@ -1092,11 +1092,11 @@ class RequestSensorTest extends TestCase
 
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.body', '{"_nightwatch_files":{"foo":{"originalName":"avatar.jpg","size":1024,"error":0}}}');
+        $ingest->assertLatestWrite('request:0.payload', '{"_nightwatch_files":{"foo":{"originalName":"avatar.jpg","size":1024,"error":0}}}');
     }
 
-    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_BODY', 'true')]
-    public function test_it_doesnt_capture_request_body_on_unsupported_content_types(): void
+    #[WithEnv('NIGHTWATCH_CAPTURE_REQUEST_PAYLOAD', 'true')]
+    public function test_it_doesnt_capture_request_payload_on_unsupported_content_types(): void
     {
         $ingest = $this->fakeIngest();
         Route::post('/register', function () {
@@ -1116,7 +1116,7 @@ class RequestSensorTest extends TestCase
 
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.body', '{"_nightwatch_error":"Unsupported content type [application\/xml]"}');
+        $ingest->assertLatestWrite('request:0.payload', '{"_nightwatch_error":"UNSUPPORTED_CONTENT_TYPE"}');
 
         $ingest->forgetWrites();
 
@@ -1133,7 +1133,7 @@ class RequestSensorTest extends TestCase
 
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.body', '{"_nightwatch_error":"Unsupported content type [bad]"}');
+        $ingest->assertLatestWrite('request:0.payload', '{"_nightwatch_error":"UNSUPPORTED_CONTENT_TYPE"}');
     }
 
     public function test_livewire_2(): void
