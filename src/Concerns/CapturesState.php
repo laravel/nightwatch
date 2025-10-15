@@ -205,7 +205,7 @@ trait CapturesState
         }
 
         foreach ($this->redactOutgoingRequestCallbacks as $callback) {
-            $this->ignore(fn () => ($callback)($record));
+            $this->ignore(static fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -232,7 +232,7 @@ trait CapturesState
         }
 
         foreach ($this->redactQueryCallbacks as $callback) {
-            $this->ignore(fn () => ($callback)($record));
+            $this->ignore(static fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -314,7 +314,7 @@ trait CapturesState
         }
 
         foreach ($this->redactMailCallbacks as $callback) {
-            $this->ignore(fn () => ($callback)($record));
+            $this->ignore(static fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -344,7 +344,7 @@ trait CapturesState
         }
 
         foreach ($this->redactCacheEventCallbacks as $callback) {
-            $this->ignore(fn () => ($callback)($record));
+            $this->ignore(static fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -398,7 +398,7 @@ trait CapturesState
         [$record, $resolver] = $this->sensor->request($request, $response);
 
         foreach ($this->redactRequestCallbacks as $callback) {
-            $this->ignore(fn () => ($callback)($record));
+            $this->ignore(static fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -558,7 +558,7 @@ trait CapturesState
         [$record, $resolver] = $this->sensor->command($input, $status);
 
         foreach ($this->redactCommandCallbacks as $callback) {
-            $this->ignore(fn () => ($callback)($record));
+            $this->ignore(static fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
