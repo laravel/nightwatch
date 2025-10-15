@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.14.1...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.15.0...1.x)
+
+## [v1.15.0](https://github.com/laravel/nightwatch/compare/v1.14.1...v1.15.0) - 2025-10-10
+
+### What's Changed
+
+* Capture request headers by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/270
+* Add error handling for serializing of request headers by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/283
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.14.1...v1.15.0
 
 ## [v1.14.1](https://github.com/laravel/nightwatch/compare/v1.14.0...v1.14.1) - 2025-10-07
 
