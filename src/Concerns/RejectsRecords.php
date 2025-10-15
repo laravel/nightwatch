@@ -12,34 +12,34 @@ use Laravel\Nightwatch\Records\QueuedJob;
 trait RejectsRecords
 {
     /**
-     * @var array<callable(CacheEvent): bool>
+     * @var list<callable(CacheEvent): bool>
      */
-    private $rejectCacheEventCallbacks = [];
+    private array $rejectCacheEventCallbacks = [];
 
     /**
-     * @var array<callable(Mail): bool>
+     * @var list<callable(Mail): bool>
      */
-    private $rejectMailCallbacks = [];
+    private array $rejectMailCallbacks = [];
 
     /**
-     * @var array<callable(Notification): bool>
+     * @var list<callable(Notification): bool>
      */
-    private $rejectNotificationCallbacks = [];
+    private array $rejectNotificationCallbacks = [];
 
     /**
-     * @var array<callable(OutgoingRequest): bool>
+     * @var list<callable(OutgoingRequest): bool>
      */
-    private $rejectOutgoingRequestCallbacks = [];
+    private array $rejectOutgoingRequestCallbacks = [];
 
     /**
-     * @var array<callable(Query): bool>
+     * @var list<callable(Query): bool>
      */
-    private $rejectQueryCallbacks = [];
+    private array $rejectQueryCallbacks = [];
 
     /**
-     * @var array<callable(QueuedJob): bool>
+     * @var list<callable(QueuedJob): bool>
      */
-    private $rejectQueuedJobCallbacks = [];
+    private array $rejectQueuedJobCallbacks = [];
 
     /**
      * @api
