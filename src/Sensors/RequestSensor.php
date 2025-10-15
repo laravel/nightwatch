@@ -160,7 +160,7 @@ final class RequestSensor
                             return false;
                         },
                     ),
-                    'body' => $this->shouldCaptureBody($request, $response) ? $this->serializeBody($request, $record) : '',
+                    'body' => $this->serializeBody($request, $response, $record),
                 ];
             },
         ];
@@ -192,19 +192,22 @@ final class RequestSensor
         return 0;
     }
 
-    private function shouldCaptureBody(Request $request, Response $response): bool
+    private function serializeBody(Request $request, Response $response, RequestRecord $record): string
     {
-        return $this->captureBody && $response->getStatusCode() === 500;
-    }
+        if ($response->getStatusCode() !== 500) {
+            return '';
+        }
 
-    private function serializeBody(Request $request, RequestRecord $record): string
-    {
         if (in_array($request->getMethod(), ['GET', 'HEAD', 'OPTIONS', 'TRACE'], true) && $record->payload->count() === 0 && $record->files->count() === 0) {
             return '';
         }
 
+        if (! $this->captureBody) {
+            return '{"_nightwatch_error":"NOT_ENABLED"}';
+        }
+
         if (! $this->isSupportedContentType($request) && $record->payload->count() === 0 && $record->files->count() === 0) {
-            return json_encode(['_nightwatch_error' => "Unsupported content type [{$request->headers->get('content-type')}]"], JSON_THROW_ON_ERROR);
+            return '{"_nightwatch_error":"UNSUPPORTED_CONTENT_TYPE"}';
         }
 
         return Str::text(rescue(
@@ -212,7 +215,7 @@ final class RequestSensor
                 ...$this->redactRecursively($record->payload->all()),
                 '_nightwatch_files' => $this->mapUploadedFilesRecursively($record->files->all()),
             ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION),
-            '{"_nightwatch_error":"Failed to serialize body"}',
+            '{"_nightwatch_error":"SERIALIZATION_FAILED"}',
             static function ($e) {
                 Nightwatch::unrecoverableExceptionOccurred($e);
 
@@ -224,7 +227,7 @@ final class RequestSensor
     private function isSupportedContentType(Request $request): bool
     {
         return $request->isJson()
-            || in_array($request->header('content-type'), ['application/x-www-form-urlencoded', 'multipart/form-data'], true);
+            || in_array($request->headers->get('content-type'), ['application/x-www-form-urlencoded', 'multipart/form-data'], true);
     }
 
     /**
