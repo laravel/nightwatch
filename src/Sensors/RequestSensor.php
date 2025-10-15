@@ -105,7 +105,7 @@ final class RequestSensor
                 payload: clone $request->request,
                 files: clone $request->files,
             ),
-            function () use ($request, $record) {
+            function () use ($request, $response, $record) {
                 return [
                     'v' => 1,
                     't' => 'request',
@@ -160,20 +160,7 @@ final class RequestSensor
                             return false;
                         },
                     ),
-                    'body' => $this->shouldCaptureBody($request, $record)
-                        ? Str::text(rescue(
-                            fn () => json_encode([
-                                ...$this->redactRecursively($record->payload->all()),
-                                '_nightwatch_files' => $this->mapUploadedFilesRecursively($record->files->all()),
-                            ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION),
-                            '{"_nightwatch_error":"Failed to serialize body"}',
-                            static function ($e) {
-                                Nightwatch::unrecoverableExceptionOccurred($e);
-
-                                return false;
-                            }
-                        ))
-                        : '',
+                    'body' => $this->shouldCaptureBody($request, $response) ? $this->serializeBody($request, $record) : '',
                 ];
             },
         ];
@@ -203,6 +190,41 @@ final class RequestSensor
         // set this to `0`. We should offer a way to tell us the size of the
         // streamed response, e.g., echo Nightwatch::streaming($content);
         return 0;
+    }
+
+    private function shouldCaptureBody(Request $request, Response $response): bool
+    {
+        return $this->captureBody && $response->getStatusCode() === 500;
+    }
+
+    private function serializeBody(Request $request, RequestRecord $record): string
+    {
+        if (in_array($request->getMethod(), ['GET', 'HEAD', 'OPTIONS', 'TRACE'], true) && $record->payload->count() === 0 && $record->files->count() === 0) {
+            return '';
+        }
+
+        if (! $this->isSupportedContentType($request) && $record->payload->count() === 0 && $record->files->count() === 0) {
+            return json_encode(['_nightwatch_error' => "Unsupported content type [{$request->headers->get('content-type')}]"], JSON_THROW_ON_ERROR);
+        }
+
+        return Str::text(rescue(
+            fn () => json_encode([
+                ...$this->redactRecursively($record->payload->all()),
+                '_nightwatch_files' => $this->mapUploadedFilesRecursively($record->files->all()),
+            ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION),
+            '{"_nightwatch_error":"Failed to serialize body"}',
+            static function ($e) {
+                Nightwatch::unrecoverableExceptionOccurred($e);
+
+                return false;
+            }
+        ));
+    }
+
+    private function isSupportedContentType(Request $request): bool
+    {
+        return $request->isJson()
+            || in_array($request->header('content-type'), ['application/x-www-form-urlencoded', 'multipart/form-data'], true);
     }
 
     /**
@@ -239,13 +261,5 @@ final class RequestSensor
                 'error' => $file->getError(),
             ];
         }, $files);
-    }
-
-    private function shouldCaptureBody(Request $request, RequestRecord $record): bool
-    {
-        return $this->captureBody
-            && $record->statusCode === 500
-            && ($request->isJson() || in_array($request->header('CONTENT_TYPE'), ['application/x-www-form-urlencoded', 'multipart/form-data'], true) || $record->payload->count() > 0 || $record->files->count() > 0)
-            && (in_array($record->method, ['POST', 'PUT', 'PATCH'], true) || $record->payload->count() > 0 || $record->files->count() > 0);
     }
 }

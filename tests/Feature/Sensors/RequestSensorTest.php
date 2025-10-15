@@ -1116,7 +1116,7 @@ class RequestSensorTest extends TestCase
 
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.body', '');
+        $ingest->assertLatestWrite('request:0.body', '{"_nightwatch_error":"Unsupported content type [application\/xml]"}');
 
         $ingest->forgetWrites();
 
@@ -1133,7 +1133,7 @@ class RequestSensorTest extends TestCase
 
         $response->assertInternalServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.body', '');
+        $ingest->assertLatestWrite('request:0.body', '{"_nightwatch_error":"Unsupported content type [bad]"}');
     }
 
     public function test_livewire_2(): void
