@@ -204,8 +204,8 @@ trait CapturesState
             }
         }
 
-        if ($this->redactOutgoingRequestCallback) {
-            $this->ignore(fn () => ($this->redactOutgoingRequestCallback)($record));
+        foreach ($this->redactOutgoingRequestCallbacks as $callback) {
+            $this->ignore(fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -231,8 +231,8 @@ trait CapturesState
             }
         }
 
-        if ($this->redactQueryCallback) {
-            $this->ignore(fn () => ($this->redactQueryCallback)($record));
+        foreach ($this->redactQueryCallbacks as $callback) {
+            $this->ignore(fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -313,8 +313,8 @@ trait CapturesState
             }
         }
 
-        if ($this->redactMailCallback) {
-            $this->ignore(fn () => ($this->redactMailCallback)($record));
+        foreach ($this->redactMailCallbacks as $callback) {
+            $this->ignore(fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -343,8 +343,8 @@ trait CapturesState
             }
         }
 
-        if ($this->redactCacheEventCallback) {
-            $this->ignore(fn () => ($this->redactCacheEventCallback)($record));
+        foreach ($this->redactCacheEventCallbacks as $callback) {
+            $this->ignore(fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -397,8 +397,8 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->request($request, $response);
 
-        if ($this->redactRequestCallback) {
-            $this->ignore(fn () => ($this->redactRequestCallback)($record));
+        foreach ($this->redactRequestCallbacks as $callback) {
+            $this->ignore(fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -557,8 +557,8 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->command($input, $status);
 
-        if ($this->redactCommandCallback) {
-            $this->ignore(fn () => ($this->redactCommandCallback)($record));
+        foreach ($this->redactCommandCallbacks as $callback) {
+            $this->ignore(fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());

@@ -438,7 +438,10 @@ class FilteringTest extends TestCase
     {
         $ingest = $this->fakeIngest();
         Nightwatch::redactCacheEvents(function (CacheEvent $cacheEvent) {
-            $cacheEvent->key = str_replace('jess@laravel.com|127.0.0.1', '***@***|*.*.*.*', $cacheEvent->key);
+            $cacheEvent->key = str_replace('jess@laravel.com', '***@***', $cacheEvent->key);
+        });
+        Nightwatch::redactCacheEvents(function (CacheEvent $cacheEvent) {
+            $cacheEvent->key = str_replace('127.0.0.1', '*.*.*.*', $cacheEvent->key);
         });
 
         Cache::get('jess@laravel.com|127.0.0.1');
@@ -458,14 +461,17 @@ class FilteringTest extends TestCase
         Nightwatch::redactCommands(function (Command $command) {
             $command->command = str_replace('jess@laravel.com', '***@***', $command->command);
         });
-        Artisan::command('mail:send {--email=}', fn () => 0);
+        Nightwatch::redactCommands(function (Command $command) {
+            $command->command = str_replace('secret123', '***', $command->command);
+        });
+        Artisan::command('mail:send {--email=} {--token=}', fn () => 0);
 
-        $status = Artisan::handle($input = new StringInput('mail:send --email=jess@laravel.com'));
+        $status = Artisan::handle($input = new StringInput('mail:send --email=jess@laravel.com --token=secret123'));
         Artisan::terminate($input, $status);
 
         $this->assertSame(0, $status);
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('command:0.command', 'mail:send --email=***@***');
+        $ingest->assertLatestWrite('command:0.command', 'mail:send --email=***@*** --token=***');
     }
 
     public function test_it_can_redact_mail(): void
@@ -474,29 +480,35 @@ class FilteringTest extends TestCase
         Nightwatch::redactMail(function (MailRecord $mail) {
             $mail->subject = str_replace('Jess', '****', $mail->subject);
         });
+        Nightwatch::redactMail(function (MailRecord $mail) {
+            $mail->subject = str_replace('Brisbane', '******', $mail->subject);
+        });
 
-        Mail::to('jess@laravel.com')->send(new MyMail('Hello Jess'));
+        Mail::to('jess@laravel.com')->send(new MyMail('Hello Jess from Brisbane'));
         $ingest->digest();
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('mail:0.subject', 'Hello ****');
+        $ingest->assertLatestWrite('mail:0.subject', 'Hello **** from ******');
     }
 
     public function test_it_can_redact_outgoing_requests(): void
     {
         $ingest = $this->fakeIngest();
         Http::fake([
-            'https://api.example.com/user?email=jess@laravel.com' => Http::response(status: 200),
+            'https://api.example.com/user?email=jess@laravel.com&token=secret123' => Http::response(status: 200),
         ]);
         Nightwatch::redactOutgoingRequests(function (OutgoingRequest $outgoingRequest) {
             $outgoingRequest->url = str_replace('jess@laravel.com', '***@***', $outgoingRequest->url);
         });
+        Nightwatch::redactOutgoingRequests(function (OutgoingRequest $outgoingRequest) {
+            $outgoingRequest->url = str_replace('secret123', '***', $outgoingRequest->url);
+        });
 
-        Http::get('https://api.example.com/user?email=jess@laravel.com');
+        Http::get('https://api.example.com/user?email=jess@laravel.com&token=secret123');
         $ingest->digest();
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('outgoing-request:0.url', 'https://api.example.com/user?email=***@***');
+        $ingest->assertLatestWrite('outgoing-request:0.url', 'https://api.example.com/user?email=***@***&token=***');
     }
 
     public function test_it_can_redact_queries(): void
@@ -505,12 +517,15 @@ class FilteringTest extends TestCase
         Nightwatch::redactQueries(function (Query $query) {
             $query->sql = str_replace('jess@laravel.com', '***@***', $query->sql);
         });
+        Nightwatch::redactQueries(function (Query $query) {
+            $query->sql = str_replace('secret', '***', $query->sql);
+        });
 
-        DB::statement('select * from users where email = "jess@laravel.com"');
+        DB::statement('select * from users where email = "jess@laravel.com" or password = "secret"');
         $ingest->digest();
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('query:0.sql', 'select * from users where email = "***@***"');
+        $ingest->assertLatestWrite('query:0.sql', 'select * from users where email = "***@***" or password = "***"');
     }
 
     public function test_it_can_redact_requests(): void
@@ -518,7 +533,11 @@ class FilteringTest extends TestCase
         $ingest = $this->fakeIngest();
         Nightwatch::redactRequests(function (Request $request) {
             $request->url = str_replace('jess@laravel.com', '***@***', $request->url);
+        });
+        Nightwatch::redactRequests(function (Request $request) {
             $request->url = str_replace('secret', '***', $request->url);
+        });
+        Nightwatch::redactRequests(function (Request $request) {
             $request->ip = preg_replace('/\d{1,3}\.\d{1,3}$/', '*.*', $request->ip);
         });
         Route::get('/test/{email}', function () {
