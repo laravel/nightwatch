@@ -184,7 +184,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $this->config = $this->app->make(Repository::class);
 
-        $this->nightwatchConfig = $this->config->all()['nightwatch'] ?? [];
+        $this->nightwatchConfig = $this->config->get('nightwatch') ?? []; // @phpstan-ignore assign.propertyType
     }
 
     private function registerBindings(): void
@@ -197,7 +197,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerLogger(): void
     {
-        if (! isset($this->config->all()['logging']['channels']['nightwatch'])) {
+        if (! $this->config->has('logging.channels.nightwatch')) {
             $this->config->set('logging.channels.nightwatch', [
                 'driver' => 'custom',
                 'via' => Logger::class,
