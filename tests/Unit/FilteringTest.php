@@ -25,6 +25,7 @@ use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Records\Request;
+use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Symfony\Component\Console\Input\StringInput;
 use Tests\TestCase;
@@ -216,6 +217,89 @@ class FilteringTest extends TestCase
             return true;
         });
         $ingest->assertLatestWrite('cache-event:0.key', 'keep');
+    }
+
+    #[DataProvider('ignoredCacheKeys')]
+    public function test_it_can_ignore_internal_cache_keys(array $ignoredKeys): void
+    {
+        $ingest = $this->fakeIngest();
+        $allowedKey = 'my_app:users';
+
+        foreach ([...$ignoredKeys, $allowedKey] as $key) {
+            Cache::get($key);
+        }
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', $allowedKey);
+    }
+
+    public static function ignoredCacheKeys(): iterable
+    {
+        yield 'vapor' => [
+            ['laravel_vapor_job_attempts:123', 'laravel_vapor_job_attemps:456'],
+        ];
+        yield 'breeze / jetstream rate limiter' => [
+            ['user@example.com|127.0.0.1', 'admin@test.com|192.168.1.1:timer', 'test@example.com|2001:0db8:85a3:0000:0000:8a2e:0370:7334'],
+        ];
+        yield 'session id' => [
+            ['abc123def456abc123def456abc123def456abc1', '1234567890abcdef1234567890abcdef12345678'],
+        ];
+        yield 'illuminate' => [
+            ['illuminate:foundation:down', 'illuminate:queue:restart', 'illuminate:cache:clear'],
+        ];
+        yield 'scheduler' => [
+            ['framework/schedule-40bd001563085fc35165329ea1ff5c5ecbdbbeef', 'framework/schedule-4d134bc072212ace2df1ff934946c12e96a45fe1'],
+        ];
+        yield 'pulse' => [
+            ['laravel:pulse:check', 'laravel:pulse:restart'],
+        ];
+        yield 'reverb' => [
+            ['laravel:reverb:restart'],
+        ];
+        yield 'nova' => [
+            ['nova:menu', 'nova-license'],
+        ];
+        yield 'telescope' => [
+            ['telescope:pause-recording', 'telescope:dump-watcher'],
+        ];
+    }
+
+    public function test_it_can_override_ignored_cache_keys(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        $this->core->config['filtering']['ignored_cache_keys'] = [
+            // Laravel Vapor keys are no longer ignored
+            '/^.+@.+\|(?:(?:\d+\.\d+\.\d+\.\d+)|[0-9a-fA-F:]+)(?::timer)?$/', // Breeze / Jetstream keys...
+            '/^[a-zA-Z0-9]{40}$/', // Session IDs...
+            '/^illuminate:/', // Laravel keys...
+            '/^framework\/schedule/', // Scheduler keys...
+            '/^laravel:pulse:/', // Pulse keys...
+            '/^laravel:reverb:/', // Reverb keys...
+            '/^nova/', // Nova keys...
+            '/^telescope:/', // Telescope keys...
+            '/^my_app:users/', // Additional key...
+        ];
+
+        Cache::get('laravel_vapor_job_attempts:123');
+        Cache::get('user@example.com|127.0.0.1');
+        Cache::get('my_app:users');
+
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', 'laravel_vapor_job_attempts:123');
     }
 
     public function test_it_can_ignore_outgoing_requests(): void
@@ -444,11 +528,11 @@ class FilteringTest extends TestCase
             $cacheEvent->key = str_replace('127.0.0.1', '*.*.*.*', $cacheEvent->key);
         });
 
-        Cache::get('jess@laravel.com|127.0.0.1');
+        Cache::get('user:jess@laravel.com:ip:127.0.0.1');
         $ingest->digest();
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('cache-event:0.key', '***@***|*.*.*.*');
+        $ingest->assertLatestWrite('cache-event:0.key', 'user:***@***:ip:*.*.*.*');
     }
 
     public function test_it_can_redact_commands(): void

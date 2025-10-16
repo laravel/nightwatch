@@ -44,6 +44,7 @@ use function array_unshift;
 use function debug_backtrace;
 use function env;
 use function memory_reset_peak_usage;
+use function preg_match;
 use function random_int;
 
 /**
@@ -336,6 +337,14 @@ trait CapturesState
         }
 
         [$record, $resolver] = $cacheEvent;
+
+        $ignoredKeys = $this->config['filtering']['ignored_cache_keys'] ?? [];
+
+        foreach ($ignoredKeys as $ignored) {
+            if (preg_match($ignored, $record->key)) {
+                return;
+            }
+        }
 
         foreach ($this->rejectCacheEventCallbacks as $callback) {
             if ($this->ignore(static fn () => ($callback)($record))) {
