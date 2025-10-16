@@ -198,12 +198,14 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->outgoingRequest($startMicrotime, $endMicrotime, $request, $response);
 
-        if ($this->rejectOutgoingRequestCallback && $this->ignore(fn () => ($this->rejectOutgoingRequestCallback)($record))) {
-            return;
+        foreach ($this->rejectOutgoingRequestCallbacks as $callback) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
+                return;
+            }
         }
 
-        if ($this->redactOutgoingRequestCallback) {
-            $this->ignore(fn () => ($this->redactOutgoingRequestCallback)($record));
+        foreach ($this->redactOutgoingRequestCallbacks as $callback) {
+            $this->ignore(static fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -223,12 +225,14 @@ trait CapturesState
 
         [$record, $resolver] = $this->sensor->query($event, $trace);
 
-        if ($this->rejectQueryCallback && $this->ignore(fn () => ($this->rejectQueryCallback)($record))) {
-            return;
+        foreach ($this->rejectQueryCallbacks as $callback) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
+                return;
+            }
         }
 
-        if ($this->redactQueryCallback) {
-            $this->ignore(fn () => ($this->redactQueryCallback)($record));
+        foreach ($this->redactQueryCallbacks as $callback) {
+            $this->ignore(static fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -251,8 +255,10 @@ trait CapturesState
 
         [$record, $resolver] = $queuedJob;
 
-        if ($this->rejectQueuedJobCallback && $this->ignore(fn () => ($this->rejectQueuedJobCallback)($record))) {
-            return;
+        foreach ($this->rejectQueuedJobCallbacks as $callback) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
+                return;
+            }
         }
 
         $this->ingest->write($resolver());
@@ -275,8 +281,10 @@ trait CapturesState
 
         [$record, $resolver] = $notification;
 
-        if ($this->rejectNotificationCallback && $this->ignore(fn () => ($this->rejectNotificationCallback)($record))) {
-            return;
+        foreach ($this->rejectNotificationCallbacks as $callback) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
+                return;
+            }
         }
 
         $this->ingest->write($resolver());
@@ -299,12 +307,14 @@ trait CapturesState
 
         [$record, $resolver] = $mail;
 
-        if ($this->rejectMailCallback && $this->ignore(fn () => ($this->rejectMailCallback)($record))) {
-            return;
+        foreach ($this->rejectMailCallbacks as $callback) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
+                return;
+            }
         }
 
-        if ($this->redactMailCallback) {
-            $this->ignore(fn () => ($this->redactMailCallback)($record));
+        foreach ($this->redactMailCallbacks as $callback) {
+            $this->ignore(static fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -327,12 +337,14 @@ trait CapturesState
 
         [$record, $resolver] = $cacheEvent;
 
-        if ($this->rejectCacheEventCallback && $this->ignore(fn () => ($this->rejectCacheEventCallback)($record))) {
-            return;
+        foreach ($this->rejectCacheEventCallbacks as $callback) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
+                return;
+            }
         }
 
-        if ($this->redactCacheEventCallback) {
-            $this->ignore(fn () => ($this->redactCacheEventCallback)($record));
+        foreach ($this->redactCacheEventCallbacks as $callback) {
+            $this->ignore(static fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -385,8 +397,8 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->request($request, $response);
 
-        if ($this->redactRequestCallback) {
-            $this->ignore(fn () => ($this->redactRequestCallback)($record));
+        foreach ($this->redactRequestCallbacks as $callback) {
+            $this->ignore(static fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
@@ -545,8 +557,8 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->command($input, $status);
 
-        if ($this->redactCommandCallback) {
-            $this->ignore(fn () => ($this->redactCommandCallback)($record));
+        foreach ($this->redactCommandCallbacks as $callback) {
+            $this->ignore(static fn () => ($callback)($record));
         }
 
         $this->ingest->write($resolver());
