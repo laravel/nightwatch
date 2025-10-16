@@ -338,7 +338,7 @@ trait CapturesState
 
         [$record, $resolver] = $cacheEvent;
 
-        $ignoredKeys = $this->config['filtering']['ignored_cache_keys'] ?? [];
+        $ignoredKeys = $this->config['filtering']['ignored_cache_keys'];
 
         foreach ($ignoredKeys as $ignored) {
             if (preg_match($ignored, $record->key)) {
