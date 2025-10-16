@@ -162,7 +162,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -216,7 +216,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Job failed',
@@ -270,7 +270,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -324,7 +324,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Job failed',
@@ -391,7 +391,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -446,7 +446,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -500,7 +500,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -613,7 +613,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -747,7 +747,7 @@ class JobAttemptSensorTest extends TestCase
                     'name' => 'Tests\Feature\Sensors\ProcessedJob',
                 ], $write[0], array_keys($expected));
             }, else: function () use ($write) {
-                $this->assertCount(6, $write);
+                $this->assertCount(5, $write);
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -789,16 +789,6 @@ class JobAttemptSensorTest extends TestCase
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
                     'name' => 'Tests\Feature\Sensors\ProcessedJob',
                 ], $write[4], array_keys($expected));
-                $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
-                    't' => 'cache-event',
-                    'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
-                    'execution_source' => 'job',
-                    'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
-                    'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
-                    'execution_stage' => 'action',
-                    'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
-                    'key' => 'illuminate:queue:restart',
-                ], $write[5], array_keys($expected));
             });
 
             return true;
@@ -838,14 +828,14 @@ class JobAttemptSensorTest extends TestCase
                     'outgoing_requests' => 0,
                 ], $write[0], array_keys($expected));
             }, else: function () use ($write) {
-                $this->assertCount(7, $write);
+                $this->assertCount(6, $write);
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'job-attempt',
                     'outgoing_requests' => 1,
                 ], $write[4], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'outgoing-request',
-                ], $write[6], array_keys($expected));
+                ], $write[5], array_keys($expected));
             });
 
             return true;
