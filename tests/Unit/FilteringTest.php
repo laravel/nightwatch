@@ -219,13 +219,13 @@ class FilteringTest extends TestCase
         $ingest->assertLatestWrite('cache-event:0.key', 'keep');
     }
 
-    #[DataProvider('ignoredCacheKeys')]
-    public function test_it_can_ignore_internal_cache_keys(array $ignoredKeys): void
+    #[DataProvider('vendorCacheKeys')]
+    public function test_it_can_filter_vendor_cache_keys(array $vendorKeys): void
     {
         $ingest = $this->fakeIngest();
         $allowedKey = 'my_app:users';
 
-        foreach ([...$ignoredKeys, $allowedKey] as $key) {
+        foreach ([...$vendorKeys, $allowedKey] as $key) {
             Cache::get($key);
         }
         $ingest->digest();
@@ -239,7 +239,7 @@ class FilteringTest extends TestCase
         $ingest->assertLatestWrite('cache-event:0.key', $allowedKey);
     }
 
-    public static function ignoredCacheKeys(): iterable
+    public static function vendorCacheKeys(): iterable
     {
         yield 'vapor' => [
             ['laravel_vapor_job_attempts:123', 'laravel_vapor_job_attemps:456'],
@@ -270,25 +270,37 @@ class FilteringTest extends TestCase
         ];
     }
 
-    public function test_it_can_override_ignored_cache_keys(): void
+    public function test_it_can_filter_custom_cache_keys(): void
     {
         $ingest = $this->fakeIngest();
 
-        $this->core->config['filtering']['ignored_cache_keys'] = [
-            // Laravel Vapor keys are no longer ignored
-            '/^.+@.+\|(?:(?:\d+\.\d+\.\d+\.\d+)|[0-9a-fA-F:]+)(?::timer)?$/', // Breeze / Jetstream keys...
-            '/^[a-zA-Z0-9]{40}$/', // Session IDs...
-            '/^illuminate:/', // Laravel keys...
-            '/^framework\/schedule/', // Scheduler keys...
-            '/^laravel:pulse:/', // Pulse keys...
-            '/^laravel:reverb:/', // Reverb keys...
-            '/^nova/', // Nova keys...
-            '/^telescope:/', // Telescope keys...
-            '/^my_app:users/', // Additional key...
-        ];
+        Nightwatch::rejectCacheKeys([
+            '/^my_app:users:/',
+        ]);
 
         Cache::get('laravel_vapor_job_attempts:123');
-        Cache::get('user@example.com|127.0.0.1');
+        Cache::get('my_app:users:123');
+        Cache::get('my_app:foo:456');
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', 'my_app:foo:456');
+    }
+
+    public function test_it_can_replace_vendor_cache_keys(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        Nightwatch::rejectCacheKeys([
+            '/^my_app:users/',
+        ], replaceVendorKeys: true);
+
+        Cache::get('laravel_vapor_job_attempts:123');
         Cache::get('my_app:users');
 
         $ingest->digest();
@@ -300,6 +312,48 @@ class FilteringTest extends TestCase
             return true;
         });
         $ingest->assertLatestWrite('cache-event:0.key', 'laravel_vapor_job_attempts:123');
+    }
+
+    public function test_it_can_filter_non_regex_cache_keys(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        Nightwatch::rejectCacheKeys([
+            'my_app:users',
+        ]);
+
+        Cache::get('laravel_vapor_job_attempts:123');
+        Cache::get('my_app:users');
+        Cache::get('my_app:users:123');
+
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', 'my_app:users:123');
+    }
+
+    public function test_it_can_handle_invalid_regex_in_cache_keys(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        Nightwatch::rejectCacheKeys([
+            '/^my_app:users*',
+        ]);
+        Cache::get('my_app:users');
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', 'my_app:users');
     }
 
     public function test_it_can_ignore_outgoing_requests(): void
