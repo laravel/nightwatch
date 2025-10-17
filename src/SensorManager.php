@@ -309,7 +309,7 @@ final class SensorManager
         $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
             executionState: $this->executionState,
             clock: $this->clock,
-            connectionConfig: $this->config->all()['queue']['connections'] ?? [],
+            connectionConfig: $this->config->get('queue.connections') ?? [], // @phpstan-ignore argument.type
         );
 
         return $sensor($event);
@@ -323,7 +323,7 @@ final class SensorManager
         $sensor = $this->jobAttemptSensor ??= new JobAttemptSensor(
             commandState: $this->executionState, // @phpstan-ignore argument.type
             clock: $this->clock,
-            connectionConfig: $this->config->all()['queue']['connections'] ?? [],
+            connectionConfig: $this->config->get('queue.connections') ?? [], // @phpstan-ignore argument.type
         );
 
         return $sensor($event);

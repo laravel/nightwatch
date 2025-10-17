@@ -4,7 +4,7 @@ namespace Laravel\NightwatchAgent;
 
 use React\Stream\WritableResourceStream;
 
-use function fwrite;
+use function Nightwatch\fwrite_all;
 
 class OutputWriter
 {
@@ -25,7 +25,7 @@ class OutputWriter
         if ($this->loop->running()) {
             $this->loopStream->write($message);
         } else {
-            fwrite($this->stream, $message);
+            fwrite_all($this->stream, $message);
         }
     }
 }

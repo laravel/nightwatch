@@ -2,6 +2,7 @@ parameters:
   paths:
     - src
     - tests
+    - nightwatch-status
   level: max
   ignoreErrors:
       -
