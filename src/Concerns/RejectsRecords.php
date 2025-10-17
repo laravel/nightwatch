@@ -17,6 +17,21 @@ trait RejectsRecords
     private array $rejectCacheEventCallbacks = [];
 
     /**
+     * @var list<string>
+     */
+    private array $rejectCacheKeys = [
+        '/(^laravel_vapor_job_attemp(t?)s:)/', // Laravel Vapor keys...
+        '/^.+@.+\|(?:(?:\d+\.\d+\.\d+\.\d+)|[0-9a-fA-F:]+)(?::timer)?$/', // Breeze / Jetstream keys...
+        '/^[a-zA-Z0-9]{40}$/', // Session IDs...
+        '/^illuminate:/', // Laravel keys...
+        '/^framework\/schedule/', // Scheduler keys...
+        '/^laravel:pulse:/', // Pulse keys...
+        '/^laravel:reverb:/', // Reverb keys...
+        '/^nova/', // Nova keys...
+        '/^telescope:/', // Telescope keys...
+    ];
+
+    /**
      * @var list<callable(Mail): bool>
      */
     private array $rejectMailCallbacks = [];
@@ -49,6 +64,21 @@ trait RejectsRecords
     public function rejectCacheEvents(callable $callback): void
     {
         $this->rejectCacheEventCallbacks[] = $callback;
+    }
+
+    /**
+     * @api
+     *
+     * @param  list<string>  $keys
+     */
+    public function rejectCacheKeys(array $keys, bool $replaceVendorKeys = false): void
+    {
+        $this->rejectCacheKeys = $replaceVendorKeys
+            ? $keys
+            : [
+                ...$this->rejectCacheKeys,
+                ...$keys,
+            ];
     }
 
     /**

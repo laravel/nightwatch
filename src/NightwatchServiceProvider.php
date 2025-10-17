@@ -115,7 +115,6 @@ final class NightwatchServiceProvider extends ServiceProvider
      *         ignore_outgoing_requests?: bool,
      *         ignore_queries?: bool,
      *         log_level?: \Psr\Log\LogLevel::*,
-     *         ignored_cache_keys?: list<string>,
      *     },
      *     token?: string,
      *     deployment?: string,
@@ -272,7 +271,6 @@ final class NightwatchServiceProvider extends ServiceProvider
                     'ignore_notifications' => (bool) ($this->nightwatchConfig['filtering']['ignore_notifications'] ?? false),
                     'ignore_outgoing_requests' => (bool) ($this->nightwatchConfig['filtering']['ignore_outgoing_requests'] ?? false),
                     'ignore_queries' => (bool) ($this->nightwatchConfig['filtering']['ignore_queries'] ?? false),
-                    'ignored_cache_keys' => $this->nightwatchConfig['filtering']['ignored_cache_keys'] ?? [],
                 ],
             ],
         ));
