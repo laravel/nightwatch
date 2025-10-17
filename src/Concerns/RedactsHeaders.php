@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Concerns;
 
+use RuntimeException;
 use Symfony\Component\HttpFoundation\HeaderBag;
 use Throwable;
 
@@ -80,6 +81,10 @@ trait RedactsHeaders
 
         try {
             return implode('; ', array_map(function ($cookie) {
+                if (strpos($cookie, '=') === false) {
+                    throw new RuntimeException('Invalid cookie format.');
+                }
+
                 [$name, $value] = explode('=', $cookie, 2);
 
                 return trim($name).'='.$this->redactHeaderValue($value);
