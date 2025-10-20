@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.15.1...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.15.2...1.x)
+
+## [v1.15.2](https://github.com/laravel/nightwatch/compare/v1.15.1...v1.15.2) - 2025-10-17
+
+### What's Changed
+
+* Fix PHP warning on bad cookie by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/292
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.15.1...v1.15.2
 
 ## [v1.15.1](https://github.com/laravel/nightwatch/compare/v1.15.0...v1.15.1) - 2025-10-16
 

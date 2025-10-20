@@ -1,10 +1,7 @@
-FROM boxproject/box:4.6.3
+FROM boxproject/box:4.6.8
 
 RUN install-php-extensions pcntl
 
-COPY docker/install-composer.sh /
-RUN ./install-composer.sh
-RUN ln -s /composer.phar /usr/bin/composer
-
 WORKDIR /app
+
 CMD ["compile"]
