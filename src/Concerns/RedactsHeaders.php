@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Concerns;
 
+use RuntimeException;
 use Symfony\Component\HttpFoundation\HeaderBag;
 use Throwable;
 
@@ -9,8 +10,8 @@ use function array_map;
 use function explode;
 use function implode;
 use function in_array;
+use function str_contains;
 use function strlen;
-use function strpos;
 use function strtolower;
 use function trim;
 
@@ -46,7 +47,7 @@ trait RedactsHeaders
 
     private function redactAuthorizationHeaderValue(string $value): string
     {
-        if (strpos($value, ' ') === false) {
+        if (! str_contains($value, ' ')) {
             return $this->redactHeaderValue($value);
         }
 
@@ -80,6 +81,10 @@ trait RedactsHeaders
 
         try {
             return implode('; ', array_map(function ($cookie) {
+                if (! str_contains($cookie, '=')) {
+                    throw new RuntimeException('Invalid cookie format.');
+                }
+
                 [$name, $value] = explode('=', $cookie, 2);
 
                 return trim($name).'='.$this->redactHeaderValue($value);
