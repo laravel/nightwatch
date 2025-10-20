@@ -605,11 +605,11 @@ class FilteringTest extends TestCase
             $cacheEvent->key = str_replace('127.0.0.1', '*.*.*.*', $cacheEvent->key);
         });
 
-        Cache::get('user:jess@laravel.com:ip:127.0.0.1');
+        Cache::get('jess@laravel.com|127.0.0.1');
         $ingest->digest();
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('cache-event:0.key', 'user:***@***:ip:*.*.*.*');
+        $ingest->assertLatestWrite('cache-event:0.key', '***@***|*.*.*.*');
     }
 
     public function test_it_can_redact_commands(): void
