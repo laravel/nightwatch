@@ -220,10 +220,10 @@ class FilteringTest extends TestCase
     }
 
     #[DataProvider('vendorCacheKeys')]
-    public function test_it_can_filter_vendor_cache_keys(array $vendorKeys): void
+    public function test_it_can_filter_default_vendor_cache_keys(array $vendorKeys): void
     {
         $ingest = $this->fakeIngest();
-        $allowedKey = 'my_app:users';
+        $allowedKey = 'illuminate:cache:flexible:created:123';
 
         foreach ([...$vendorKeys, $allowedKey] as $key) {
             Cache::get($key);
@@ -244,14 +244,8 @@ class FilteringTest extends TestCase
         yield 'vapor' => [
             ['laravel_vapor_job_attempts:123', 'laravel_vapor_job_attemps:456'],
         ];
-        yield 'breeze / jetstream rate limiter' => [
-            ['user@example.com|127.0.0.1', 'admin@test.com|192.168.1.1:timer', 'test@example.com|2001:0db8:85a3:0000:0000:8a2e:0370:7334'],
-        ];
-        yield 'session id' => [
-            ['abc123def456abc123def456abc123def456abc1', '1234567890abcdef1234567890abcdef12345678'],
-        ];
         yield 'illuminate' => [
-            ['illuminate:foundation:down', 'illuminate:queue:restart', 'illuminate:cache:clear'],
+            ['illuminate:foundation:down', 'illuminate:queue:restart'],
         ];
         yield 'scheduler' => [
             ['framework/schedule-40bd001563085fc35165329ea1ff5c5ecbdbbeef', 'framework/schedule-4d134bc072212ace2df1ff934946c12e96a45fe1'],
@@ -292,15 +286,19 @@ class FilteringTest extends TestCase
         $ingest->assertLatestWrite('cache-event:0.key', 'my_app:foo:456');
     }
 
-    public function test_it_can_replace_vendor_cache_keys(): void
+    public function test_it_can_capture_default_vendor_cache_keys(): void
     {
         $ingest = $this->fakeIngest();
 
+        Nightwatch::captureDefaultVendorCacheKeys();
+
         Nightwatch::rejectCacheKeys([
+            '/^illuminate:(?!cache:flexible:created:)/',
             '/^my_app:users/',
-        ], replaceVendorKeys: true);
+        ]);
 
         Cache::get('laravel_vapor_job_attempts:123');
+        Cache::get('illuminate:foundation:down');
         Cache::get('my_app:users');
 
         $ingest->digest();
@@ -312,6 +310,24 @@ class FilteringTest extends TestCase
             return true;
         });
         $ingest->assertLatestWrite('cache-event:0.key', 'laravel_vapor_job_attempts:123');
+        $ingest->forgetWrites();
+
+        Nightwatch::captureDefaultVendorCacheKeys(false);
+
+        Cache::get('laravel_vapor_job_attempts:123');
+        Cache::get('illuminate:foundation:down');
+        Cache::get('my_app:users');
+        Cache::get('illuminate:cache:flexible:created:123');
+
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', 'illuminate:cache:flexible:created:123');
     }
 
     public function test_it_can_filter_non_regex_cache_keys(): void

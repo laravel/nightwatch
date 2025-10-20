@@ -338,7 +338,11 @@ trait CapturesState
 
         [$record, $resolver] = $cacheEvent;
 
-        foreach ($this->rejectCacheKeys as $reject) {
+        $rejectKeys = $this->captureDefaultVendorCacheKeys
+            ? $this->rejectCacheKeys
+            : [...$this->defaultVendorCacheKeys(), ...$this->rejectCacheKeys];
+
+        foreach ($rejectKeys as $reject) {
             $isRegex = @preg_match($reject, '') !== false;
 
             if ($isRegex && preg_match($reject, $record->key)) {
