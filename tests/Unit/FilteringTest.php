@@ -269,12 +269,17 @@ class FilteringTest extends TestCase
         $ingest = $this->fakeIngest();
 
         Nightwatch::rejectCacheKeys([
-            '/^my_app:users:/',
+            '/^my_app:foo:/',
+        ]);
+
+        Nightwatch::rejectCacheKeys([
+            '/^my_app:bar:/',
         ]);
 
         Cache::get('laravel_vapor_job_attempts:123');
-        Cache::get('my_app:users:123');
-        Cache::get('my_app:foo:456');
+        Cache::get('my_app:foo:123');
+        Cache::get('my_app:bar:456');
+        Cache::get('my_app:users:789');
         $ingest->digest();
 
         $ingest->assertWrittenTimes(1);
@@ -283,7 +288,7 @@ class FilteringTest extends TestCase
 
             return true;
         });
-        $ingest->assertLatestWrite('cache-event:0.key', 'my_app:foo:456');
+        $ingest->assertLatestWrite('cache-event:0.key', 'my_app:users:789');
     }
 
     public function test_it_can_capture_default_vendor_cache_keys(): void
@@ -293,30 +298,32 @@ class FilteringTest extends TestCase
         Nightwatch::captureDefaultVendorCacheKeys();
 
         Nightwatch::rejectCacheKeys([
-            '/^illuminate:(?!cache:flexible:created:)/',
+            '/^laravel:pulse:/',
             '/^my_app:users/',
         ]);
 
-        Cache::get('laravel_vapor_job_attempts:123');
-        Cache::get('illuminate:foundation:down');
         Cache::get('my_app:users');
+        Cache::get('laravel:pulse:check');
+        Cache::get('laravel:reverb:restart');
+        Cache::get('illuminate:cache:flexible:created:123');
 
         $ingest->digest();
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($records) {
-            $this->assertCount(1, $records);
+            $this->assertCount(2, $records);
 
             return true;
         });
-        $ingest->assertLatestWrite('cache-event:0.key', 'laravel_vapor_job_attempts:123');
+        $ingest->assertLatestWrite('cache-event:0.key', 'laravel:reverb:restart');
+        $ingest->assertLatestWrite('cache-event:1.key', 'illuminate:cache:flexible:created:123');
         $ingest->forgetWrites();
 
         Nightwatch::captureDefaultVendorCacheKeys(false);
 
-        Cache::get('laravel_vapor_job_attempts:123');
-        Cache::get('illuminate:foundation:down');
         Cache::get('my_app:users');
+        Cache::get('laravel:pulse:check');
+        Cache::get('laravel:reverb:restart');
         Cache::get('illuminate:cache:flexible:created:123');
 
         $ingest->digest();
