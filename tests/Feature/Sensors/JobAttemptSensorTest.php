@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Vapor\Console\Commands\VaporWorkCommand;
 use Laravel\Vapor\Events\LambdaEvent;
 use Mockery;
@@ -732,6 +733,7 @@ class JobAttemptSensorTest extends TestCase
 
             $this->travelTo(now()->addMicroseconds(1000));
         });
+        Nightwatch::captureDefaultVendorCacheKeys();
 
         ProcessedJob::dispatch();
         Artisan::call($workCommand, $this->workOptions($workCommand));
@@ -747,7 +749,7 @@ class JobAttemptSensorTest extends TestCase
                     'name' => 'Tests\Feature\Sensors\ProcessedJob',
                 ], $write[0], array_keys($expected));
             }, else: function () use ($write) {
-                $this->assertCount(5, $write);
+                $this->assertCount(6, $write);
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -789,6 +791,16 @@ class JobAttemptSensorTest extends TestCase
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
                     'name' => 'Tests\Feature\Sensors\ProcessedJob',
                 ], $write[4], array_keys($expected));
+                $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                    't' => 'cache-event',
+                    'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                    'execution_source' => 'job',
+                    'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                    'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                    'execution_stage' => 'action',
+                    'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                    'key' => 'illuminate:queue:restart',
+                ], $write[5], array_keys($expected));
             });
 
             return true;
@@ -815,6 +827,7 @@ class JobAttemptSensorTest extends TestCase
 
             Http::get('https://laravel.com');
         });
+        Nightwatch::captureDefaultVendorCacheKeys();
 
         ProcessedJob::dispatch();
         Artisan::call($workCommand, $this->workOptions($workCommand));
@@ -828,14 +841,14 @@ class JobAttemptSensorTest extends TestCase
                     'outgoing_requests' => 0,
                 ], $write[0], array_keys($expected));
             }, else: function () use ($write) {
-                $this->assertCount(6, $write);
+                $this->assertCount(7, $write);
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'job-attempt',
                     'outgoing_requests' => 1,
                 ], $write[4], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'outgoing-request',
-                ], $write[5], array_keys($expected));
+                ], $write[6], array_keys($expected));
             });
 
             return true;
