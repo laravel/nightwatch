@@ -343,13 +343,13 @@ trait CapturesState
             : [...$this->defaultVendorCacheKeys(), ...$this->rejectCacheKeys];
 
         foreach ($rejectKeys as $reject) {
-            $isRegex = @preg_match($reject, '') !== false;
+            $match = @preg_match($reject, $record->key);
 
-            if ($isRegex && preg_match($reject, $record->key)) {
+            if ($match === 1) {
                 return;
             }
 
-            if (! $isRegex && $record->key === $reject) {
+            if ($match === false && $record->key === $reject) {
                 return;
             }
         }
