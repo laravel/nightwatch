@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Orchestra\Testbench\Attributes\WithEnv;
@@ -15,6 +16,7 @@ use Tests\TestCase;
 
 use function dirname;
 use function hash;
+use function trim;
 
 class CoreTest extends TestCase
 {
@@ -88,5 +90,19 @@ class CoreTest extends TestCase
                 'laravel_version' => '11.33.0',
             ],
         ]);
+    }
+
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
+    public function test_it_uses_git_refs_for_deployments_by_default(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {
+            return 'OK';
+        });
+
+        $this->get('/test')->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.deploy', trim(`git describe --tags --always`));
     }
 }

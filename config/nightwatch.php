@@ -3,7 +3,7 @@
 return [
     'enabled' => env('NIGHTWATCH_ENABLED', true),
     'token' => env('NIGHTWATCH_TOKEN'),
-    'deployment' => env('NIGHTWATCH_DEPLOY'),
+    'deployment' => env('NIGHTWATCH_DEPLOY', rescue(static fn () => trim((string) shell_exec('git describe --tags --always 2>/dev/null')), '', false)),
     'server' => env('NIGHTWATCH_SERVER', (string) gethostname()),
     'capture_exception_source_code' => env('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', true),
     'redact_headers' => explode(',', env('NIGHTWATCH_REDACT_HEADERS', 'Authorization,Cookie,Proxy-Authorization,X-XSRF-TOKEN')),
