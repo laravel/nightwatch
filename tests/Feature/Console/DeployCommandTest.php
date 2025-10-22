@@ -2,85 +2,72 @@
 
 namespace Tests\Feature\Console;
 
-use Illuminate\Process\Exceptions\ProcessTimedOutException;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Process;
-use RuntimeException;
+use Orchestra\Testbench\Attributes\WithEnv;
 use Tests\TestCase;
 
-use function sleep;
+use function now;
 
 class DeployCommandTest extends TestCase
 {
+    #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
+    #[WithEnv('NIGHTWATCH_DEPLOY', 'v1.2.3')]
     public function test_it_can_run_the_deploy_command(): void
     {
-        $output = '';
-        $process = Process::timeout(10)->start('NIGHTWATCH_DEPLOY="v1.2.3" \
-          vendor/bin/testbench nightwatch:deploy'
-        );
+        $this->freezeTime();
+        Http::fake([
+            '*/api/deployments' => function (Request $request) {
+                $this->assertEquals(['Bearer test-token'], $request->header('Authorization'));
+                $this->assertEquals([
+                    'timestamp' => now()->getTimestamp(),
+                    'version' => 'v1.2.3',
+                ], $request->data());
 
-        try {
-            $result = $process->wait(function ($type, $o) use (&$output, $process) {
-                $output .= $o;
+                return Http::response('OK');
+            },
+        ]);
 
-                $process->signal(SIGTERM);
-
-                $tries = 0;
-
-                while ($tries < 3) {
-                    if (! $process->running()) {
-                        return;
-                    }
-
-                    $tries++;
-                    sleep(1);
-                }
-
-                $process->signal(SIGKILL);
-            });
-        } catch (ProcessTimedOutException $e) {
-            throw new RuntimeException('Failed to deploy or stop the agent running. Output:'.PHP_EOL.$output, previous: $e);
-        }
-
-        $this->assertStringContainsString('Deployment successful', $output);
+        $this->artisan('nightwatch:deploy')
+            ->expectsOutput('Deployment successful')
+            ->assertExitCode(0);
     }
 
+    #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
+    public function test_it_can_run_the_deploy_command_without_a_version(): void
+    {
+        $this->freezeTime();
+        Http::fake([
+            '*/api/deployments' => function (Request $request) {
+                $this->assertEquals(['Bearer test-token'], $request->header('Authorization'));
+                $this->assertEquals([
+                    'timestamp' => now()->getTimestamp(),
+                    'version' => '',
+                ], $request->data());
+
+                return Http::response('OK');
+            },
+        ]);
+
+        $this->artisan('nightwatch:deploy')
+            ->expectsOutput('Deployment successful')
+            ->assertExitCode(0);
+    }
+
+    #[WithEnv('NIGHTWATCH_TOKEN', '')]
     public function test_it_fails_when_the_deploy_command_is_run_without_a_token(): void
     {
-        $process = Process::timeout(10)->start('NIGHTWATCH_DEPLOY="v1.2.3" \
-          NIGHTWATCH_TOKEN="" \
-          vendor/bin/testbench nightwatch:deploy');
-
-        try {
-            $process->wait(function ($type, $o) use (&$output, $process) {
-                $output .= $o;
-
-                $process->signal(SIGTERM);
-
-                $tries = 0;
-
-                while ($tries < 3) {
-                    if (! $process->running()) {
-                        return;
-                    }
-
-                    $tries++;
-                    sleep(1);
-                }
-
-                $process->signal(SIGKILL);
-            });
-        } catch (ProcessTimedOutException $e) {
-            throw new RuntimeException('Failed to deploy or stop the agent running. Output:'.PHP_EOL.$output, previous: $e);
-        }
-
-        $this->assertStringContainsString('No NIGHTWATCH_TOKEN environment variable configured.', $process->output());
+        $this->artisan('nightwatch:deploy')
+            ->expectsOutput('No NIGHTWATCH_TOKEN environment variable configured.')
+            ->assertExitCode(1);
     }
 
+    #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
     public function test_it_handles_http_errors(): void
     {
         Http::fake([
-            $_SERVER['NIGHTWATCH_BASE_URL'].'/api/deployments' => Http::response('Whoops!', 500),
+            '*/api/deployments' => Http::response('Whoops!', 500),
         ]);
 
         $this->artisan('nightwatch:deploy')
@@ -88,10 +75,11 @@ class DeployCommandTest extends TestCase
             ->assertExitCode(1);
     }
 
-    public function test_it_handles_throwable_errors(): void
+    #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
+    public function test_it_handles_connection_errors(): void
     {
         Http::fake([
-            $_SERVER['NIGHTWATCH_BASE_URL'].'/api/deployments' => Http::failedConnection('Whoops!'),
+            '*/api/deployments' => fn () => throw new ConnectionException('Whoops!'),
         ]);
 
         $this->artisan('nightwatch:deploy')

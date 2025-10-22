@@ -4,14 +4,14 @@ namespace Laravel\Nightwatch\Console;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use SensitiveParameter;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 
 use function config;
-use function strlen;
-use function substr;
 
 /**
  * @internal
@@ -50,10 +50,10 @@ final class DeployCommand extends Command
 
         $tag = config('nightwatch.deployment') ?? '';
 
-        $baseUrl = $_SERVER['NIGHTWATCH_BASE_URL'] ?? 'https://nightwatch.laravel.com';
+        $baseUrl = ! empty($_SERVER['NIGHTWATCH_BASE_URL']) ? $_SERVER['NIGHTWATCH_BASE_URL'] : 'https://nightwatch.laravel.com';
 
         try {
-            $response = Http::connectTimeout(5)
+            Http::connectTimeout(5)
                 ->timeout(10)
                 ->withHeaders([
                     'Authorization' => "Bearer {$this->token}",
@@ -62,23 +62,18 @@ final class DeployCommand extends Command
                 ->post("{$baseUrl}/api/deployments", [
                     'timestamp' => CarbonImmutable::now()->timestamp,
                     'version' => $tag,
-                ]);
+                ])
+                ->throw();
 
-            if ($response->successful()) {
-                $this->info('Deployment successful');
+            $this->info('Deployment successful');
 
-                return 0;
-            } else {
-                $message = $response->body();
+            return 0;
+        } catch (RequestException $e) {
+            $message = Str::limit($e->response->body(), 1000, '[...]');
 
-                if (strlen($message) > 1005) {
-                    $message = substr($message, 0, 1000).'[...]';
-                }
+            $this->error("Deployment failed: {$e->getCode()} [{$message}]");
 
-                $this->error("Deployment failed: {$response->status()} [{$message}]");
-
-                return 1;
-            }
+            return 1;
         } catch (Throwable $e) {
             $this->error("Deployment failed: [{$e->getMessage()}]");
 
