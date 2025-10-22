@@ -10,7 +10,7 @@ RUN ./install-composer.sh \
 
 WORKDIR /nightwatch-agent
 
-COPY version.txt agent/docker/entrypoint.sh agent/docker/nightwatch-status ./
+COPY version.txt agent/docker/entrypoint.sh agent/nightwatch-status agent/helpers.php ./
 COPY agent/build ./agent/build/
 
 ENV NIGHTWATCH_INGEST_URI=0.0.0.0:2407

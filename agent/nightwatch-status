@@ -1,0 +1,103 @@
+<?php
+
+namespace NightwatchAgent;
+
+require __DIR__.'/helpers.php';
+
+use RuntimeException;
+use Throwable;
+
+use function date;
+use function hash;
+use function Nightwatch\fclose_safely;
+use function Nightwatch\fread_all;
+use function Nightwatch\fwrite_all;
+use function Nightwatch\stream_configure_read_timeout;
+use function stream_socket_client;
+use function strlen;
+use function substr;
+
+/*
+ * Helpers...
+ */
+
+$waitForAcknowledgment = function ($stream) {
+    /** @var resource $stream */
+    $response = fread_all($stream, 4);
+
+    if ($response !== '2:OK') {
+        throw new RuntimeException("Unexpected response from agent [{$response}]");
+    }
+};
+
+$info = function (string $message): void {
+    fwrite_all(STDOUT, date('Y-m-d H:i:s').' [INFO] '.$message.PHP_EOL);
+};
+
+$error = function (string $message): void {
+    fwrite_all(STDERR, date('Y-m-d H:i:s').' [ERROR] '.$message.PHP_EOL);
+};
+
+$bail = function (string $message) use ($error): never {
+    $error($message);
+
+    exit(1);
+};
+
+try {
+    /*
+     * Input...
+     */
+
+    $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
+    /** @var string $refreshToken */
+    $ingestUri = $_SERVER['NIGHTWATCH_INGEST_URI'] ?? '127.0.0.1:2407';
+    /** @var string $ingestUri */
+    $timeout = $_SERVER['NIGHTWATCH_INGEST_TIMEOUT'] ?? 0.5;
+    /** @var float $timeout */
+    $connectionTimeout = $_SERVER['NIGHTWATCH_INGEST_CONNECTION_TIMEOUT'] ?? 0.5;
+    /** @var float $connectionTimeout */
+    if ($refreshToken === '') {
+        $bail('The NIGHTWATCH_TOKEN environment variable has not been configured');
+    }
+
+    /*
+     * Connect to the agent...
+     */
+
+    $stream = @stream_socket_client(
+        address: "tcp://{$ingestUri}",
+        error_code: $errorCode,
+        error_message: $errorMessage,
+        timeout: $connectionTimeout,
+    );
+
+    if ($stream === false) {
+        /**
+         * @var string $errorMessage
+         * @var int $errorCode
+         */
+        $bail("Failed connecting to the agent: {$errorMessage} [{$errorCode}]");
+    }
+
+    /*
+     * PING the agent...
+     */
+
+    $payload = 'v1:'.substr(hash('xxh128', $refreshToken), 0, 7).':PING';
+    $payload = strlen($payload).':'.$payload;
+
+    try {
+        stream_configure_read_timeout($stream, $timeout);
+
+        fwrite_all($stream, $payload);
+
+        $waitForAcknowledgment($stream);
+    } finally {
+        fclose_safely($stream);
+    }
+
+    $info('The Nightwatch agent is running and accepting connections');
+} catch (Throwable $e) {
+    $bail($e->getMessage());
+}

@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Vapor\Console\Commands\VaporWorkCommand;
 use Laravel\Vapor\Events\LambdaEvent;
 use Mockery;
@@ -162,7 +163,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -216,7 +217,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Job failed',
@@ -270,7 +271,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -324,7 +325,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Job failed',
@@ -391,7 +392,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -446,7 +447,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -500,7 +501,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -613,7 +614,7 @@ class JobAttemptSensorTest extends TestCase
                 'outgoing_requests' => 0,
                 'files_read' => 0,
                 'files_written' => 0,
-                'cache_events' => $this->whenVapor($workCommand, then: 0, else: 1),
+                'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
@@ -732,6 +733,7 @@ class JobAttemptSensorTest extends TestCase
 
             $this->travelTo(now()->addMicroseconds(1000));
         });
+        Nightwatch::captureDefaultVendorCacheKeys();
 
         ProcessedJob::dispatch();
         Artisan::call($workCommand, $this->workOptions($workCommand));
@@ -825,6 +827,7 @@ class JobAttemptSensorTest extends TestCase
 
             Http::get('https://laravel.com');
         });
+        Nightwatch::captureDefaultVendorCacheKeys();
 
         ProcessedJob::dispatch();
         Artisan::call($workCommand, $this->workOptions($workCommand));
