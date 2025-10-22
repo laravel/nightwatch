@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.15.2...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.16.0...1.x)
+
+## [v1.16.0](https://github.com/laravel/nightwatch/compare/v1.15.2...v1.16.0) - 2025-10-22
+
+### What's Changed
+
+* Use latest version of box by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/290
+* Ignore vendor cache keys by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/291
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.15.2...v1.16.0
 
 ## [v1.15.2](https://github.com/laravel/nightwatch/compare/v1.15.1...v1.15.2) - 2025-10-17
 
