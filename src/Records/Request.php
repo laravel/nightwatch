@@ -2,7 +2,9 @@
 
 namespace Laravel\Nightwatch\Records;
 
+use Symfony\Component\HttpFoundation\FileBag;
 use Symfony\Component\HttpFoundation\HeaderBag;
+use Symfony\Component\HttpFoundation\InputBag;
 
 final class Request
 {
@@ -23,6 +25,8 @@ final class Request
         public readonly int $requestSize,
         public readonly int $responseSize,
         public HeaderBag $headers,
+        public InputBag $payload,
+        public FileBag $files,
     ) {
         //
     }

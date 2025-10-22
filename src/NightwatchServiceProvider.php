@@ -122,6 +122,8 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     server?: string,
      *     ingest?: array{ uri?: string, timeout?: float|int, connection_timeout?: float|int, event_buffer?: int },
      *     capture_exception_source_code?: bool,
+     *     capture_request_payload?: bool,
+     *     redact_payload_fields?: string[],
      *     redact_headers?: string[],
      *  }
      */
@@ -185,7 +187,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         $this->config = $this->app->make(Repository::class);
 
-        $this->nightwatchConfig = $this->config->all()['nightwatch'] ?? [];
+        $this->nightwatchConfig = $this->config->get('nightwatch') ?? []; // @phpstan-ignore assign.propertyType
     }
 
     private function registerBindings(): void
@@ -199,7 +201,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private function registerLogger(): void
     {
-        if (! isset($this->config->all()['logging']['channels']['nightwatch'])) {
+        if (! $this->config->has('logging.channels.nightwatch')) {
             $this->config->set('logging.channels.nightwatch', [
                 'driver' => 'custom',
                 'via' => Logger::class,
@@ -261,6 +263,8 @@ final class NightwatchServiceProvider extends ServiceProvider
                     publicPath: $this->app->publicPath(),
                 ),
                 captureExceptionSourceCode: (bool) ($this->nightwatchConfig['capture_exception_source_code'] ?? true),
+                captureRequestPayload: (bool) ($this->nightwatchConfig['capture_request_payload'] ?? false),
+                redactPayloadFields: $this->nightwatchConfig['redact_payload_fields'] ?? ['_token', 'password', 'password_confirmation'],
                 redactHeaders: $this->nightwatchConfig['redact_headers'] ?? ['Authorization', 'Cookie', 'Proxy-Authorization', 'X-XSRF-TOKEN'],
                 config: $this->config,
             ),

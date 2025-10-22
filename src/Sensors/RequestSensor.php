@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Arr;
 use Laravel\Nightwatch\Concerns\RecordsContext;
 use Laravel\Nightwatch\Concerns\RedactsHeaders;
 use Laravel\Nightwatch\ExecutionStage;
@@ -12,12 +13,17 @@ use Laravel\Nightwatch\Records\Request as RequestRecord;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
+use function array_map;
 use function array_sum;
+use function assert;
 use function hash;
 use function implode;
+use function in_array;
+use function is_array;
 use function is_int;
 use function is_numeric;
 use function is_string;
@@ -36,10 +42,13 @@ final class RequestSensor
     use RedactsHeaders;
 
     /**
+     * @param  list<string>  $redactPayloadFields
      * @param  list<string>  $redactHeaders
      */
     public function __construct(
         private RequestState $requestState,
+        private bool $capturePayload,
+        private array $redactPayloadFields,
         private array $redactHeaders,
     ) {
         //
@@ -93,8 +102,10 @@ final class RequestSensor
                     $headers->remove('php-auth-pw');
                     $headers->remove('php-auth-digest');
                 }),
+                payload: clone $request->request,
+                files: clone $request->files,
             ),
-            function () use ($record) {
+            function () use ($request, $response, $record) {
                 return [
                     'v' => 1,
                     't' => 'request',
@@ -149,6 +160,7 @@ final class RequestSensor
                             return false;
                         },
                     ),
+                    'payload' => $this->serializePayload($request, $response, $record),
                 ];
             },
         ];
@@ -178,5 +190,79 @@ final class RequestSensor
         // set this to `0`. We should offer a way to tell us the size of the
         // streamed response, e.g., echo Nightwatch::streaming($content);
         return 0;
+    }
+
+    private function serializePayload(Request $request, Response $response, RequestRecord $record): string
+    {
+        if ($response->getStatusCode() !== 500) {
+            return '';
+        }
+
+        if (in_array($request->getMethod(), ['GET', 'HEAD', 'OPTIONS', 'TRACE'], true) && $record->payload->count() === 0 && $record->files->count() === 0) {
+            return '';
+        }
+
+        if (! $this->capturePayload) {
+            return '{"_nightwatch_error":"NOT_ENABLED"}';
+        }
+
+        if (! $this->isSupportedContentType($request) && $record->payload->count() === 0 && $record->files->count() === 0) {
+            return '{"_nightwatch_error":"UNSUPPORTED_CONTENT_TYPE"}';
+        }
+
+        return Str::text(rescue(
+            fn () => json_encode([
+                ...$this->redactRecursively($record->payload->all()),
+                '_nightwatch_files' => $this->mapUploadedFilesRecursively($record->files->all()),
+            ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION),
+            '{"_nightwatch_error":"SERIALIZATION_FAILED"}',
+            static function ($e) {
+                Nightwatch::unrecoverableExceptionOccurred($e);
+
+                return false;
+            }
+        ));
+    }
+
+    private function isSupportedContentType(Request $request): bool
+    {
+        return $request->isJson()
+            || in_array($request->headers->get('content-type'), ['application/x-www-form-urlencoded', 'multipart/form-data'], true);
+    }
+
+    /**
+     * @param  array<mixed>  $array
+     * @return array<mixed>
+     */
+    private function redactRecursively(array $array): array
+    {
+        return Arr::map($array, function ($value, $key) {
+            if (is_array($value)) {
+                return $this->redactRecursively($value);
+            }
+
+            return ! in_array($key, $this->redactPayloadFields, true) || ! is_string($value) ? $value : '['.strlen($value).' bytes redacted]';
+        });
+    }
+
+    /**
+     * @param  array<mixed>  $files
+     * @return array<mixed>
+     */
+    private function mapUploadedFilesRecursively(array $files): array
+    {
+        return array_map(function ($file) {
+            if (is_array($file)) {
+                return $this->mapUploadedFilesRecursively($file);
+            }
+
+            assert($file instanceof UploadedFile);
+
+            return [
+                'originalName' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'error' => $file->getError(),
+            ];
+        }, $files);
     }
 }

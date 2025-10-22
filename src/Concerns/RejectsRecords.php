@@ -12,34 +12,41 @@ use Laravel\Nightwatch\Records\QueuedJob;
 trait RejectsRecords
 {
     /**
-     * @var ?callable(CacheEvent): bool
+     * @var list<callable(CacheEvent): bool>
      */
-    private $rejectCacheEventCallback = null;
+    private array $rejectCacheEventCallbacks = [];
+
+    private bool $captureDefaultVendorCacheKeys = false;
 
     /**
-     * @var ?callable(Mail): bool
+     * @var list<string>
      */
-    private $rejectMailCallback = null;
+    private array $rejectCacheKeys = [];
 
     /**
-     * @var ?callable(Notification): bool
+     * @var list<callable(Mail): bool>
      */
-    private $rejectNotificationCallback = null;
+    private array $rejectMailCallbacks = [];
 
     /**
-     * @var ?callable(OutgoingRequest): bool
+     * @var list<callable(Notification): bool>
      */
-    private $rejectOutgoingRequestCallback = null;
+    private array $rejectNotificationCallbacks = [];
 
     /**
-     * @var ?callable(Query): bool
+     * @var list<callable(OutgoingRequest): bool>
      */
-    private $rejectQueryCallback = null;
+    private array $rejectOutgoingRequestCallbacks = [];
 
     /**
-     * @var ?callable(QueuedJob): bool
+     * @var list<callable(Query): bool>
      */
-    private $rejectQueuedJobCallback = null;
+    private array $rejectQueryCallbacks = [];
+
+    /**
+     * @var list<callable(QueuedJob): bool>
+     */
+    private array $rejectQueuedJobCallbacks = [];
 
     /**
      * @api
@@ -48,7 +55,46 @@ trait RejectsRecords
      */
     public function rejectCacheEvents(callable $callback): void
     {
-        $this->rejectCacheEventCallback = $callback;
+        $this->rejectCacheEventCallbacks[] = $callback;
+    }
+
+    /**
+     * @api
+     *
+     * @param  list<string>  $keys
+     */
+    public function rejectCacheKeys(array $keys): void
+    {
+        $this->rejectCacheKeys = [
+            ...$this->rejectCacheKeys,
+            ...$keys,
+        ];
+    }
+
+    /**
+     * @api
+     */
+    public function captureDefaultVendorCacheKeys(bool $capture = true): void
+    {
+        $this->captureDefaultVendorCacheKeys = $capture;
+    }
+
+    /**
+     * @api
+     *
+     * @return list<string>
+     */
+    public static function defaultVendorCacheKeys(): array
+    {
+        return [
+            '/(^laravel_vapor_job_attemp(t?)s:)/', // Laravel Vapor keys...
+            '/^illuminate:(?!cache:flexible:created:)/', // Laravel keys...
+            '/^framework\/schedule/', // Scheduler keys...
+            '/^laravel:pulse:/', // Pulse keys...
+            '/^laravel:reverb:/', // Reverb keys...
+            '/^nova/', // Nova keys...
+            '/^telescope:/', // Telescope keys...
+        ];
     }
 
     /**
@@ -58,7 +104,7 @@ trait RejectsRecords
      */
     public function rejectMail(callable $callback): void
     {
-        $this->rejectMailCallback = $callback;
+        $this->rejectMailCallbacks[] = $callback;
     }
 
     /**
@@ -68,7 +114,7 @@ trait RejectsRecords
      */
     public function rejectNotifications(callable $callback): void
     {
-        $this->rejectNotificationCallback = $callback;
+        $this->rejectNotificationCallbacks[] = $callback;
     }
 
     /**
@@ -78,7 +124,7 @@ trait RejectsRecords
      */
     public function rejectOutgoingRequests(callable $callback): void
     {
-        $this->rejectOutgoingRequestCallback = $callback;
+        $this->rejectOutgoingRequestCallbacks[] = $callback;
     }
 
     /**
@@ -88,7 +134,7 @@ trait RejectsRecords
      */
     public function rejectQueries(callable $callback): void
     {
-        $this->rejectQueryCallback = $callback;
+        $this->rejectQueryCallbacks[] = $callback;
     }
 
     /**
@@ -98,6 +144,6 @@ trait RejectsRecords
      */
     public function rejectQueuedJobs(callable $callback): void
     {
-        $this->rejectQueuedJobCallback = $callback;
+        $this->rejectQueuedJobCallbacks[] = $callback;
     }
 }
