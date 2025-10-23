@@ -6,4 +6,3 @@ interface Clock
 {
     public function time(): int;
 }
-
