@@ -4,6 +4,7 @@ namespace Laravel\NightwatchAgent;
 
 use Closure;
 use Laravel\NightwatchAgent\Contracts\Browser;
+use Laravel\NightwatchAgent\Contracts\Clock;
 use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
@@ -46,6 +47,7 @@ class Ingest
         private $loop,
         private $browser,
         private IngestDetailsRepository $ingestDetails,
+        private Clock $clock,
         StreamBuffer $buffer,
         private int $concurrentRequestLimit,
         private int $maxBufferDurationInSeconds,
@@ -132,6 +134,10 @@ class Ingest
 
             if ($ingestDetails === null) {
                 throw new RuntimeException('No authentication details');
+            }
+
+            if ($this->clock->time() > $ingestDetails->expiresAt) {
+                throw new RuntimeException('Authentication token expired');
             }
 
             return $this->browser->post(

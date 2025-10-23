@@ -4,6 +4,7 @@ namespace Laravel\NightwatchAgent;
 
 use Closure;
 use Laravel\NightwatchAgent\Contracts\Browser;
+use Laravel\NightwatchAgent\Contracts\Clock as ClockContract;
 use Laravel\NightwatchAgent\Factories\BrowserFactory;
 use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\Loop as BaseLoop;
@@ -37,6 +38,8 @@ $browserFactory ??= null;
 $serverResolver ??= null;
 /** @var ?LoopInterface $loop */
 $loop ??= null;
+/** @var ?ClockContract $clock */
+$clock ??= null;
 
 /*
  * Input...
@@ -130,6 +133,8 @@ $packageVersion = rtrim(file_get_contents($basePath.'/../../version.txt') ?: '')
 /*
  * Initialize services...
  */
+$clock ??= new Clock;
+
 $browserFactory ??= new BrowserFactory;
 
 $ingestDetailsBrowser = $browserFactory(
@@ -148,6 +153,7 @@ $ingestDetailsBrowser = $browserFactory(
 $ingestDetails = new IngestDetailsRepository(
     loop: $loop,
     browser: $ingestDetailsBrowser,
+    clock: $clock,
     onAuthenticationSuccess: static fn (IngestDetails $ingestDetails, float $duration) => $info('Authentication successful ['.round($duration, 3).'s]'),
     onAuthenticationError: static fn (string $message, float $duration) => $error('Authentication failed ['.round($duration, 3).'s]: '.$message),
     onUnderQuota: static function () use (&$ingest) {
@@ -171,6 +177,7 @@ $ingest = new Ingest(
     loop: $loop,
     browser: $ingestBrowser,
     ingestDetails: $ingestDetails,
+    clock: $clock,
     buffer: new StreamBuffer(6_000_000),
     concurrentRequestLimit: 2,
     maxBufferDurationInSeconds: 10,

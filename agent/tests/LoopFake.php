@@ -21,6 +21,8 @@ use function usort;
 
 class LoopFake implements LoopInterface
 {
+    private ?SyncedClock $clock = null;
+
     /**
      * @var array<int, array{0: resource, 1: callable}>
      */
@@ -252,6 +254,10 @@ class LoopFake implements LoopInterface
 
             /** @var callable $callback */
             if ($this->now >= $runAt) {
+                if ($this->clock) {
+                    $this->clock->now = $this->now;
+                }
+
                 $callback();
 
                 $this->timersRun[] = [
@@ -395,5 +401,10 @@ class LoopFake implements LoopInterface
         ), $this->canceledTimers));
 
         return $this;
+    }
+
+    public function syncedClock(): SyncedClock
+    {
+        return $this->clock ??= new SyncedClock($this->now);
     }
 }
