@@ -115,7 +115,7 @@ if ($viaPhar) {
     });
 } else {
     call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop, $silent, $quiet, $verbose) {  // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
-        $clock = $loop?->syncedClock();
+        $clock = $loop?->clock;
 
         $basePath = __DIR__.'/../build';
         require __DIR__.'/../src/agent.php';
