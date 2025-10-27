@@ -11,6 +11,7 @@ use React\EventLoop\LoopInterface;
 use React\EventLoop\StreamSelectLoop;
 use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
+use React\Stream\WritableResourceStream;
 
 use function date;
 use function file_get_contents;
@@ -79,8 +80,13 @@ BaseLoop::set($loop);
  * Logging helpers...
  */
 
-$stdOut = new OutputWriter($loop, STDOUT);
-$stdErr = new OutputWriter($loop, STDERR);
+[$asyncStdOut, $asyncStdError] = match (PHP_OS_FAMILY) {
+    'Windows' => [null, null],
+    default => [new WritableResourceStream(STDOUT), new WritableResourceStream(STDERR)],
+};
+
+$stdOut = new OutputWriter($loop, syncStream: STDOUT, asyncStream: $asyncStdOut);
+$stdErr = new OutputWriter($loop, syncStream: STDERR, asyncStream: $asyncStdError);
 
 $debug = static function (string $message) use ($verbose, $stdOut): void {
     if ($verbose) {

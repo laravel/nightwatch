@@ -4,28 +4,29 @@ namespace Laravel\NightwatchAgent;
 
 use React\Stream\WritableResourceStream;
 
+use function fflush;
 use function Nightwatch\fwrite_all;
 
 class OutputWriter
 {
-    private WritableResourceStream $loopStream;
-
     /**
-     * @param  resource  $stream
+     * @param  resource  $syncStream
      */
     public function __construct(
         private Loop $loop,
-        private $stream,
+        private $syncStream,
+        private ?WritableResourceStream $asyncStream,
     ) {
-        $this->loopStream = new WritableResourceStream($stream);
+        //
     }
 
     public function write(string $message): void
     {
-        if ($this->loop->running()) {
-            $this->loopStream->write($message);
+        if ($this->loop->running() && $this->asyncStream !== null) {
+            $this->asyncStream->write($message);
         } else {
-            fwrite_all($this->stream, $message);
+            fwrite_all($this->syncStream, $message);
+            fflush($this->syncStream);
         }
     }
 }
