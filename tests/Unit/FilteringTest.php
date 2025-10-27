@@ -25,6 +25,7 @@ use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Records\Request;
+use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Symfony\Component\Console\Input\StringInput;
 use Tests\TestCase;
@@ -216,6 +217,166 @@ class FilteringTest extends TestCase
             return true;
         });
         $ingest->assertLatestWrite('cache-event:0.key', 'keep');
+    }
+
+    #[DataProvider('vendorCacheKeys')]
+    public function test_it_can_filter_default_vendor_cache_keys(array $vendorKeys): void
+    {
+        $ingest = $this->fakeIngest();
+        $allowedKey = 'illuminate:cache:flexible:created:123';
+
+        foreach ([...$vendorKeys, $allowedKey] as $key) {
+            Cache::get($key);
+        }
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', $allowedKey);
+    }
+
+    public static function vendorCacheKeys(): iterable
+    {
+        yield 'vapor' => [
+            ['laravel_vapor_job_attempts:123', 'laravel_vapor_job_attemps:456'],
+        ];
+        yield 'illuminate' => [
+            ['illuminate:foundation:down', 'illuminate:queue:restart'],
+        ];
+        yield 'scheduler' => [
+            ['framework/schedule-40bd001563085fc35165329ea1ff5c5ecbdbbeef', 'framework/schedule-4d134bc072212ace2df1ff934946c12e96a45fe1'],
+        ];
+        yield 'pulse' => [
+            ['laravel:pulse:check', 'laravel:pulse:restart'],
+        ];
+        yield 'reverb' => [
+            ['laravel:reverb:restart'],
+        ];
+        yield 'nova' => [
+            ['nova:menu', 'nova-license'],
+        ];
+        yield 'telescope' => [
+            ['telescope:pause-recording', 'telescope:dump-watcher'],
+        ];
+    }
+
+    public function test_it_can_filter_custom_cache_keys(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        Nightwatch::rejectCacheKeys([
+            '/^my_app:foo:/',
+        ]);
+
+        Nightwatch::rejectCacheKeys([
+            '/^my_app:bar:/',
+        ]);
+
+        Cache::get('laravel_vapor_job_attempts:123');
+        Cache::get('my_app:foo:123');
+        Cache::get('my_app:bar:456');
+        Cache::get('my_app:users:789');
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', 'my_app:users:789');
+    }
+
+    public function test_it_can_capture_default_vendor_cache_keys(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        Nightwatch::captureDefaultVendorCacheKeys();
+
+        Nightwatch::rejectCacheKeys([
+            '/^laravel:pulse:/',
+            '/^my_app:users/',
+        ]);
+
+        Cache::get('my_app:users');
+        Cache::get('laravel:pulse:check');
+        Cache::get('laravel:reverb:restart');
+        Cache::get('illuminate:cache:flexible:created:123');
+
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(2, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', 'laravel:reverb:restart');
+        $ingest->assertLatestWrite('cache-event:1.key', 'illuminate:cache:flexible:created:123');
+        $ingest->forgetWrites();
+
+        Nightwatch::captureDefaultVendorCacheKeys(false);
+
+        Cache::get('my_app:users');
+        Cache::get('laravel:pulse:check');
+        Cache::get('laravel:reverb:restart');
+        Cache::get('illuminate:cache:flexible:created:123');
+
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', 'illuminate:cache:flexible:created:123');
+    }
+
+    public function test_it_can_filter_non_regex_cache_keys(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        Nightwatch::rejectCacheKeys([
+            'my_app:users',
+        ]);
+
+        Cache::get('laravel_vapor_job_attempts:123');
+        Cache::get('my_app:users');
+        Cache::get('my_app:users:123');
+
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', 'my_app:users:123');
+    }
+
+    public function test_it_can_handle_invalid_regex_in_cache_keys(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        Nightwatch::rejectCacheKeys([
+            '/^my_app:users*',
+        ]);
+        Cache::get('my_app:users');
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite(function ($records) {
+            $this->assertCount(1, $records);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('cache-event:0.key', 'my_app:users');
     }
 
     public function test_it_can_ignore_outgoing_requests(): void

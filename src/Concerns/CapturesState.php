@@ -44,6 +44,7 @@ use function array_unshift;
 use function debug_backtrace;
 use function env;
 use function memory_reset_peak_usage;
+use function preg_match;
 use function random_int;
 
 /**
@@ -336,6 +337,22 @@ trait CapturesState
         }
 
         [$record, $resolver] = $cacheEvent;
+
+        $rejectKeys = $this->captureDefaultVendorCacheKeys
+            ? $this->rejectCacheKeys
+            : [...$this->defaultVendorCacheKeys(), ...$this->rejectCacheKeys];
+
+        foreach ($rejectKeys as $reject) {
+            $match = @preg_match($reject, $record->key);
+
+            if ($match === 1) {
+                return;
+            }
+
+            if ($match === false && $record->key === $reject) {
+                return;
+            }
+        }
 
         foreach ($this->rejectCacheEventCallbacks as $callback) {
             if ($this->ignore(static fn () => ($callback)($record))) {

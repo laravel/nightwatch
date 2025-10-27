@@ -128,6 +128,7 @@ final class SensorManager
     public $commandSensor;
 
     /**
+     * @param  list<string>  $redactPayloadFields
      * @param  list<string>  $redactHeaders
      */
     public function __construct(
@@ -135,6 +136,8 @@ final class SensorManager
         private Clock $clock,
         public Location $location,
         private bool $captureExceptionSourceCode,
+        private bool $captureRequestPayload,
+        private array $redactPayloadFields,
         private array $redactHeaders,
         private Repository $config,
     ) {
@@ -158,6 +161,8 @@ final class SensorManager
     {
         $sensor = $this->requestSensor ??= new RequestSensor(
             requestState: $this->executionState, // @phpstan-ignore argument.type
+            capturePayload: $this->captureRequestPayload,
+            redactPayloadFields: $this->redactPayloadFields,
             redactHeaders: $this->redactHeaders,
         );
 
