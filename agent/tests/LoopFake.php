@@ -21,6 +21,8 @@ use function usort;
 
 class LoopFake implements LoopInterface
 {
+    public SyncedClock $clock;
+
     /**
      * @var array<int, array{0: resource, 1: callable}>
      */
@@ -51,6 +53,7 @@ class LoopFake implements LoopInterface
         private float $runForSeconds = 0,
     ) {
         $this->startedAt = $this->now = microtime(true);
+        $this->clock = new SyncedClock($this->now);
     }
 
     /**
@@ -252,6 +255,8 @@ class LoopFake implements LoopInterface
 
             /** @var callable $callback */
             if ($this->now >= $runAt) {
+                $this->clock->now = $this->now;
+
                 $callback();
 
                 $this->timersRun[] = [

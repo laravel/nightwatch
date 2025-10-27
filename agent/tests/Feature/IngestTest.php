@@ -1173,4 +1173,52 @@ class IngestTest extends TestCase
         ]);
         $ingestBrowser->assertPending([]);
     }
+
+    public function test_it_does_not_ingest_if_token_has_expired(): void
+    {
+        $loop = new LoopFake(runForSeconds: 12);
+        $server = new TcpServerFake;
+        $ingestDetailsBrowser = new BrowserFake([
+            Response::jwt(expiresIn: 10),
+        ]);
+        $ingestBrowser = new BrowserFake([
+            Response::ingested(),
+        ]);
+        $records = array_fill(0, 375_001, ['t' => 'request']);
+        $loop->addTimer(10, $server->pendingConnection($records));
+        $loop->addTimer(11, $server->pendingConnection($records));
+
+        [$output, $e] = $this->runAgent(
+            via: 'source',
+            ingestDetailsBrowser: $ingestDetailsBrowser,
+            ingestBrowser: $ingestBrowser,
+            loop: $loop,
+            server: $server,
+        );
+
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $this->assertLogMatches(<<<'OUTPUT'
+            {date} {info} Authentication successful {duration}
+            {date} {info} Ingest successful {duration}
+            {date} {error} Ingest failed {duration}: Authentication token expired
+            OUTPUT, $output);
+        $ingestBrowser->assertSent([
+            Request::ingest($records),
+        ]);
+        $ingestBrowser->assertProcessing([]);
+        $ingestBrowser->assertPending([]);
+        $loop->assertRun([
+            new Timer(interval: 10, runAt: 10, scheduledAt: 0, scheduledBy: $this->functionName()),
+            new Timer(interval: 11, runAt: 11, scheduledAt: 0, scheduledBy: $this->functionName()),
+        ]);
+        $loop->assertPending([
+            new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+        ]);
+        $loop->assertCanceled([]);
+        $ingestDetailsBrowser->assertSent([
+            Request::json('/api/agent-auth'),
+        ]);
+        $ingestDetailsBrowser->assertPending([]);
+        $ingestDetailsBrowser->assertProcessing([]);
+    }
 }
