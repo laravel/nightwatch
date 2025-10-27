@@ -43,7 +43,7 @@ final class DeployCommand extends Command
     public function handle(): int
     {
         if (! $this->token) {
-            $this->error('No NIGHTWATCH_TOKEN environment variable configured.');
+            $this->components->error('Please configure the [NIGHTWATCH_TOKEN] environment variable.');
 
             return 1;
         }
@@ -66,17 +66,17 @@ final class DeployCommand extends Command
                 ])
                 ->throw();
 
-            $this->info('Deployment successful');
+            $this->components->info('Deployment sent to Nightwatch successfully.');
 
             return 0;
         } catch (RequestException $e) {
-            $message = Str::limit($e->response->body(), 1000, '[...]');
+            $message = Str::limit($e->response->json('message') ?? "[{$e->getCode()}] {$e->response->body()}", 1000, '[...]'); // @phpstan-ignore argument.type
 
-            $this->error("Deployment failed: {$e->getCode()} [{$message}]");
+            $this->components->error("Deployment could not be sent to Nightwatch: {$message}");
 
             return 1;
         } catch (Throwable $e) {
-            $this->error("Deployment failed: [{$e->getMessage()}]");
+            $this->components->error("Deployment could not be sent to Nightwatch: {$e->getMessage()}");
 
             return 1;
         }

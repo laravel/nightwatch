@@ -10,6 +10,7 @@ use Orchestra\Testbench\Attributes\WithEnv;
 use Tests\TestCase;
 
 use function env;
+use function json_encode;
 use function now;
 
 class DeployCommandTest extends TestCase
@@ -33,7 +34,7 @@ class DeployCommandTest extends TestCase
         ]);
 
         $this->artisan('nightwatch:deploy')
-            ->expectsOutput('Deployment successful')
+            ->expectsOutputToContain('Deployment sent to Nightwatch successfully.')
             ->assertExitCode(0);
     }
 
@@ -55,7 +56,7 @@ class DeployCommandTest extends TestCase
         ]);
 
         $this->artisan('nightwatch:deploy')
-            ->expectsOutput('Deployment successful')
+            ->expectsOutputToContain('Deployment sent to Nightwatch successfully.')
             ->assertExitCode(0);
     }
 
@@ -64,7 +65,19 @@ class DeployCommandTest extends TestCase
         $this->app->singleton(DeployCommand::class, fn () => new DeployCommand(token: null));
 
         $this->artisan('nightwatch:deploy')
-            ->expectsOutput('No NIGHTWATCH_TOKEN environment variable configured.')
+            ->expectsOutputToContain('Please configure the [NIGHTWATCH_TOKEN] environment variable.')
+            ->assertExitCode(1);
+    }
+
+    #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
+    public function test_it_handles_error_responses(): void
+    {
+        Http::fake([
+            '*/api/deployments' => Http::response(json_encode(['message' => 'Invalid environment token.']), 403),
+        ]);
+
+        $this->artisan('nightwatch:deploy')
+            ->expectsOutputToContain('Deployment could not be sent to Nightwatch: Invalid environment token.')
             ->assertExitCode(1);
     }
 
@@ -76,7 +89,7 @@ class DeployCommandTest extends TestCase
         ]);
 
         $this->artisan('nightwatch:deploy')
-            ->expectsOutput('Deployment failed: 500 [Whoops!]')
+            ->expectsOutputToContain('Deployment could not be sent to Nightwatch: [500] Whoops!')
             ->assertExitCode(1);
     }
 
@@ -88,7 +101,7 @@ class DeployCommandTest extends TestCase
         ]);
 
         $this->artisan('nightwatch:deploy')
-            ->expectsOutput('Deployment failed: [Whoops!]')
+            ->expectsOutputToContain('Deployment could not be sent to Nightwatch: Whoops!')
             ->assertExitCode(1);
     }
 }
