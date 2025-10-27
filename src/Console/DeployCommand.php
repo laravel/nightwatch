@@ -60,6 +60,7 @@ final class DeployCommand extends Command
                     'Accept' => 'application/json',
                 ])
                 ->post("{$baseUrl}/api/deployments", [
+                    'v' => 1,
                     'timestamp' => CarbonImmutable::now()->timestamp,
                     'version' => $tag,
                 ])

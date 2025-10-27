@@ -23,6 +23,7 @@ class DeployCommandTest extends TestCase
             '*/api/deployments' => function (Request $request) {
                 $this->assertEquals(['Bearer '.env('NIGHTWATCH_TOKEN')], $request->header('Authorization'));
                 $this->assertEquals([
+                    'v' => 1,
                     'timestamp' => now()->getTimestamp(),
                     'version' => 'v1.2.3',
                 ], $request->data());
@@ -44,6 +45,7 @@ class DeployCommandTest extends TestCase
             '*/api/deployments' => function (Request $request) {
                 $this->assertEquals(['Bearer '.env('NIGHTWATCH_TOKEN')], $request->header('Authorization'));
                 $this->assertEquals([
+                    'v' => 1,
                     'timestamp' => now()->getTimestamp(),
                     'version' => '',
                 ], $request->data());
