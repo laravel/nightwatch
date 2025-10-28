@@ -48,21 +48,19 @@ final class DeployCommand extends Command
             return 1;
         }
 
-        $tag = config('nightwatch.deployment') ?? '';
+        $version = config('nightwatch.deployment') ?? '';
 
         $baseUrl = ! empty($_SERVER['NIGHTWATCH_BASE_URL']) ? $_SERVER['NIGHTWATCH_BASE_URL'] : 'https://nightwatch.laravel.com';
 
         try {
             Http::connectTimeout(5)
                 ->timeout(10)
-                ->withHeaders([
-                    'Authorization' => "Bearer {$this->token}",
-                    'Accept' => 'application/json',
-                ])
+                ->acceptJson()
+                ->withToken($this->token)
                 ->post("{$baseUrl}/api/deployments", [
                     'v' => 1,
                     'timestamp' => CarbonImmutable::now()->timestamp,
-                    'version' => $tag,
+                    'version' => $version,
                 ])
                 ->throw();
 
