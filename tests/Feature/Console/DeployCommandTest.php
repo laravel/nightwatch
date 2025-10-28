@@ -66,7 +66,7 @@ class DeployCommandTest extends TestCase
 
         $this->artisan('nightwatch:deploy')
             ->expectsOutputToContain('Please configure the [NIGHTWATCH_TOKEN] environment variable.')
-            ->assertExitCode(1);
+            ->assertExitCode(0);
     }
 
     #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
@@ -78,7 +78,7 @@ class DeployCommandTest extends TestCase
 
         $this->artisan('nightwatch:deploy')
             ->expectsOutputToContain('Deployment could not be sent to Nightwatch: Invalid environment token.')
-            ->assertExitCode(1);
+            ->assertExitCode(0);
     }
 
     #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
@@ -90,7 +90,7 @@ class DeployCommandTest extends TestCase
 
         $this->artisan('nightwatch:deploy')
             ->expectsOutputToContain('Deployment could not be sent to Nightwatch: [500] Whoops!')
-            ->assertExitCode(1);
+            ->assertExitCode(0);
     }
 
     #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
@@ -102,6 +102,6 @@ class DeployCommandTest extends TestCase
 
         $this->artisan('nightwatch:deploy')
             ->expectsOutputToContain('Deployment could not be sent to Nightwatch: Whoops!')
-            ->assertExitCode(1);
+            ->assertExitCode(0);
     }
 }

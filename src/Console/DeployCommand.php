@@ -12,6 +12,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 
 use function config;
+use function report;
 
 /**
  * @internal
@@ -45,7 +46,7 @@ final class DeployCommand extends Command
         if (! $this->token) {
             $this->components->error('Please configure the [NIGHTWATCH_TOKEN] environment variable.');
 
-            return 1;
+            return 0;
         }
 
         $version = config('nightwatch.deployment') ?? '';
@@ -65,18 +66,18 @@ final class DeployCommand extends Command
                 ->throw();
 
             $this->components->info('Deployment sent to Nightwatch successfully.');
-
-            return 0;
         } catch (RequestException $e) {
+            report($e);
+
             $message = Str::limit($e->response->json('message') ?? "[{$e->getCode()}] {$e->response->body()}", 1000, '[...]'); // @phpstan-ignore argument.type
 
             $this->components->error("Deployment could not be sent to Nightwatch: {$message}");
-
-            return 1;
         } catch (Throwable $e) {
-            $this->components->error("Deployment could not be sent to Nightwatch: {$e->getMessage()}");
+            report($e);
 
-            return 1;
+            $this->components->error("Deployment could not be sent to Nightwatch: {$e->getMessage()}");
         }
+
+        return 0;
     }
 }
