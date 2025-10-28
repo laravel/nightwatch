@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__.'./../src/Contracts/Browser.php';
+require_once __DIR__.'/../src/Contracts/Clock.php';
 require_once __DIR__.'./../vendor/react/event-loop/src/LoopInterface.php';
 require_once __DIR__.'./../vendor/evenement/evenement/src/EventEmitterInterface.php';
 require_once __DIR__.'./../vendor/evenement/evenement/src/EventEmitterTrait.php';
@@ -11,6 +12,7 @@ require_once __DIR__.'./../vendor/react/stream/src/DuplexStreamInterface.php';
 require_once __DIR__.'./../vendor/react/socket/src/ConnectionInterface.php';
 require_once __DIR__.'./../vendor/react/socket/src/ServerInterface.php';
 require_once __DIR__.'/LoopFake.php';
+require_once __DIR__.'/SyncedClock.php';
 require_once __DIR__.'/BrowserFake.php';
 require_once __DIR__.'/Response.php';
 require_once __DIR__.'/PendingConnection.php';
@@ -112,7 +114,9 @@ if ($viaPhar) {
         require __DIR__.'/../build/agent.phar';
     });
 } else {
-    call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop, $silent, $quiet, $verbose) {  // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
+    call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop, $silent, $quiet, $verbose) {  // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
+        $clock = $loop?->clock;
+
         $basePath = __DIR__.'/../build';
         require __DIR__.'/../src/agent.php';
     });

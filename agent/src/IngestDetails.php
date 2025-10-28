@@ -9,6 +9,7 @@ class IngestDetails
         public int $expiresIn,
         public string $ingestUrl,
         public int $refreshIn,
+        public int $expiresAt,
     ) {
         //
     }

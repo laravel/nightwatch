@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.17.0...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.17.1...1.x)
+
+## [v1.17.1](https://github.com/laravel/nightwatch/compare/v1.17.0...v1.17.1) - 2025-10-27
+
+### What's Changed
+
+* Handle expired tokens by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/294
+* Write to `stderr` and `stdout` synchronously on Windows by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/295
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.17.0...v1.17.1
 
 ## [v1.17.0](https://github.com/laravel/nightwatch/compare/v1.16.0...v1.17.0) - 2025-10-22
 
