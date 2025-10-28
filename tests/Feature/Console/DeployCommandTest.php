@@ -29,7 +29,7 @@ class DeployCommandTest extends TestCase
                 $this->assertEquals(['Bearer '.env('NIGHTWATCH_TOKEN')], $request->header('Authorization'));
                 $this->assertEquals([
                     'v' => 1,
-                    'timestamp' => now()->getTimestamp(),
+                    'timestamp' => now()->toIso8601ZuluString('microsecond'),
                     'version' => 'v1.2.3',
                 ], $request->data());
 
@@ -51,7 +51,7 @@ class DeployCommandTest extends TestCase
                 $this->assertEquals(['Bearer '.env('NIGHTWATCH_TOKEN')], $request->header('Authorization'));
                 $this->assertEquals([
                     'v' => 1,
-                    'timestamp' => now()->getTimestamp(),
+                    'timestamp' => now()->toIso8601ZuluString('microsecond'),
                     'version' => '',
                 ], $request->data());
 

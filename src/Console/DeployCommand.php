@@ -44,6 +44,8 @@ final class DeployCommand extends Command
 
     public function handle(): int
     {
+        $start = CarbonImmutable::now();
+
         if (! $this->token) {
             $this->components->error('Please configure the [NIGHTWATCH_TOKEN] environment variable.');
 
@@ -63,7 +65,7 @@ final class DeployCommand extends Command
                 ->withToken($this->token)
                 ->post("{$baseUrl}/api/deployments", [
                     'v' => 1,
-                    'timestamp' => CarbonImmutable::now()->timestamp,
+                    'timestamp' => $start->toIso8601ZuluString('microsecond'),
                     'version' => $version,
                 ])
                 ->throw();
