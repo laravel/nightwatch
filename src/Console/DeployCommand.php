@@ -61,7 +61,7 @@ final class DeployCommand extends Command
                 ->withToken($this->token)
                 ->post("{$baseUrl}/api/deployments", [
                     'v' => 1,
-                    'timestamp' => $start->toIso8601ZuluString('microsecond'),
+                    'timestamp' => $start->toDateTimeString('microsecond'),
                     'version' => $version,
                 ])
                 ->throw();
