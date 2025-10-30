@@ -2,16 +2,12 @@
 
 namespace Tests\Feature\Console;
 
-use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Laravel\Nightwatch\Console\DeployCommand;
-use Laravel\Nightwatch\NightwatchDeployException;
 use Orchestra\Testbench\Attributes\WithEnv;
 use Tests\TestCase;
-use Throwable;
 
 use function env;
 use function json_encode;
@@ -66,27 +62,16 @@ class DeployCommandTest extends TestCase
 
     public function test_it_fails_when_the_deploy_command_is_run_without_a_token(): void
     {
-        $reported = null;
-        $this->app->make(ExceptionHandler::class)->reportable(function (Throwable $e) use (&$reported) {
-            $reported = $e;
-        });
         $this->app->singleton(DeployCommand::class, fn () => new DeployCommand(token: null));
 
         $this->artisan('nightwatch:deploy')
             ->expectsOutputToContain('Please configure the [NIGHTWATCH_TOKEN] environment variable.')
             ->assertExitCode(0);
-
-        $this->assertInstanceOf(NightwatchDeployException::class, $reported);
-        $this->assertSame('NIGHTWATCH_TOKEN environment variable is not configured.', $reported?->getMessage());
     }
 
     #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
     public function test_it_handles_error_responses(): void
     {
-        $reported = null;
-        $this->app->make(ExceptionHandler::class)->reportable(function (Throwable $e) use (&$reported) {
-            $reported = $e;
-        });
         Http::fake([
             '*/api/deployments' => Http::response(json_encode(['message' => 'Invalid environment token.']), 403),
         ]);
@@ -94,19 +79,11 @@ class DeployCommandTest extends TestCase
         $this->artisan('nightwatch:deploy')
             ->expectsOutputToContain('Deployment could not be sent to Nightwatch: Invalid environment token.')
             ->assertExitCode(0);
-
-        $this->assertInstanceOf(NightwatchDeployException::class, $reported);
-        $this->assertSame('Invalid environment token.', $reported?->getMessage());
-        $this->assertInstanceOf(RequestException::class, $reported?->getPrevious());
     }
 
     #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
     public function test_it_handles_http_errors(): void
     {
-        $reported = null;
-        $this->app->make(ExceptionHandler::class)->reportable(function (Throwable $e) use (&$reported) {
-            $reported = $e;
-        });
         Http::fake([
             '*/api/deployments' => Http::response('Whoops!', 500),
         ]);
@@ -114,19 +91,11 @@ class DeployCommandTest extends TestCase
         $this->artisan('nightwatch:deploy')
             ->expectsOutputToContain('Deployment could not be sent to Nightwatch: [500] Whoops!')
             ->assertExitCode(0);
-
-        $this->assertInstanceOf(NightwatchDeployException::class, $reported);
-        $this->assertSame('[500] Whoops!', $reported?->getMessage());
-        $this->assertInstanceOf(RequestException::class, $reported?->getPrevious());
     }
 
     #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
     public function test_it_handles_connection_errors(): void
     {
-        $reported = null;
-        $this->app->make(ExceptionHandler::class)->reportable(function (Throwable $e) use (&$reported) {
-            $reported = $e;
-        });
         Http::fake([
             '*/api/deployments' => fn () => throw new ConnectionException('Connection timeout.'),
         ]);
@@ -134,9 +103,5 @@ class DeployCommandTest extends TestCase
         $this->artisan('nightwatch:deploy')
             ->expectsOutputToContain('Deployment could not be sent to Nightwatch: Connection timeout.')
             ->assertExitCode(0);
-
-        $this->assertInstanceOf(NightwatchDeployException::class, $reported);
-        $this->assertSame('Connection timeout.', $reported?->getMessage());
-        $this->assertInstanceOf(ConnectionException::class, $reported?->getPrevious());
     }
 }

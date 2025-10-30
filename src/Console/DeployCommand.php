@@ -7,13 +7,11 @@ use Illuminate\Console\Command;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use Laravel\Nightwatch\NightwatchDeployException;
 use SensitiveParameter;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 
 use function config;
-use function report;
 
 /**
  * @internal
@@ -49,8 +47,6 @@ final class DeployCommand extends Command
         if (! $this->token) {
             $this->components->error('Please configure the [NIGHTWATCH_TOKEN] environment variable.');
 
-            report(new NightwatchDeployException('NIGHTWATCH_TOKEN environment variable is not configured.'));
-
             return 0;
         }
 
@@ -74,12 +70,8 @@ final class DeployCommand extends Command
         } catch (RequestException $e) {
             $message = Str::limit($e->response->json('message') ?? "[{$e->getCode()}] {$e->response->body()}", 1000, '[...]'); // @phpstan-ignore argument.type
 
-            report(new NightwatchDeployException($message, previous: $e));
-
             $this->components->error("Deployment could not be sent to Nightwatch: {$message}");
         } catch (Throwable $e) {
-            report(new NightwatchDeployException($e->getMessage(), previous: $e));
-
             $this->components->error("Deployment could not be sent to Nightwatch: {$e->getMessage()}");
         }
 
