@@ -177,7 +177,13 @@ trait CapturesState
                     $this->ingest->writeNow($this->sensor->fatalError($e));
                 }
             } else {
-                $this->ingest->write($this->sensor->exception($e, $handled));
+                [$record, $resolver] = $this->sensor->exception($e, $handled);
+
+                foreach ($this->redactExceptionCallbacks as $callback) {
+                    $this->ignore(static fn () => ($callback)($record));
+                }
+
+                $this->ingest->write($resolver());
             }
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
