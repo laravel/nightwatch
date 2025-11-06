@@ -58,7 +58,7 @@ final class LogHandler implements HandlerInterface
 
             $this->nightwatch->log($record);
 
-            return true;
+            return false;
         } catch (Throwable $e) {
             $this->nightwatch->report($e, handled: true);
 
