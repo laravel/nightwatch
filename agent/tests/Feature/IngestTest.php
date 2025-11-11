@@ -436,7 +436,7 @@ class IngestTest extends TestCase
         $ingestDetailsBrowser->assertPending([]);
     }
 
-    public function test_it_can_have_no_more_than_two_concurrent_ingest_requests(): void
+    public function test_it_can_have_no_more_than_five_concurrent_ingest_requests(): void
     {
         $loop = new LoopFake(runForSeconds: 10);
         $server = new TcpServerFake;
@@ -446,8 +446,13 @@ class IngestTest extends TestCase
         $ingestBrowser = new BrowserFake([
             Response::ingested(duration: 3),
             Response::ingested(duration: 4),
+            Response::ingested(duration: 5),
+            Response::ingested(duration: 6),
+            Response::ingested(duration: 7),
         ]);
         $records = array_fill(0, 375_001, ['t' => 'request']);
+        $loop->addTimer(0, $server->pendingConnection($records));
+        $loop->addTimer(0, $server->pendingConnection($records));
         $loop->addTimer(0, $server->pendingConnection($records));
         $loop->addTimer(0, $server->pendingConnection($records));
         $loop->addTimer(0, $server->pendingConnection($records));
@@ -464,12 +469,17 @@ class IngestTest extends TestCase
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {error} Ingest failed {duration}: Exceeded concurrent request limit\. \[2\] requests are processing
-        {date} {error} Ingest failed {duration}: Exceeded concurrent request limit\. \[2\] requests are processing
+        {date} {error} Ingest failed {duration}: Exceeded concurrent request limit\. \[5\] requests are processing
+        {date} {info} Ingest successful {duration}
+        {date} {info} Ingest successful {duration}
+        {date} {info} Ingest successful {duration}
         {date} {info} Ingest successful {duration}
         {date} {info} Ingest successful {duration}
         OUTPUT, $output);
         $ingestBrowser->assertSent([
+            Request::ingest($records),
+            Request::ingest($records),
+            Request::ingest($records),
             Request::ingest($records),
             Request::ingest($records),
         ]);
@@ -480,8 +490,13 @@ class IngestTest extends TestCase
             new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: $this->functionName()),
             new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: $this->functionName()),
             new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: $this->functionName()),
+            new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: $this->functionName()),
+            new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: $this->functionName()),
             new Timer(interval: 3, runAt: 3, scheduledAt: 0, scheduledBy: 'Tests\Response::toPromise'),
             new Timer(interval: 4, runAt: 4, scheduledAt: 0, scheduledBy: 'Tests\Response::toPromise'),
+            new Timer(interval: 5, runAt: 5, scheduledAt: 0, scheduledBy: 'Tests\Response::toPromise'),
+            new Timer(interval: 6, runAt: 6, scheduledAt: 0, scheduledBy: 'Tests\Response::toPromise'),
+            new Timer(interval: 7, runAt: 7, scheduledAt: 0, scheduledBy: 'Tests\Response::toPromise'),
         ]);
         $loop->assertPending([
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
