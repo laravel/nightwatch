@@ -119,7 +119,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_processed_job_attempts($workCommand): void
+    public function test_it_ingests_processed_job_attempts($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -132,7 +132,7 @@ class JobAttemptSensorTest extends TestCase
         };
 
         ProcessedJob::dispatch();
-        Artisan::call($workCommand, $this->workOptions($workCommand));
+        Artisan::call($workCommand, $workOptions);
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('job-attempt:*', [
@@ -173,7 +173,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_released_job_attempts($workCommand): void
+    public function test_it_ingests_released_job_attempts($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -186,7 +186,7 @@ class JobAttemptSensorTest extends TestCase
         };
 
         FailedJob::dispatch();
-        Artisan::call($workCommand, $this->workOptions($workCommand, ['--tries' => 2]));
+        Artisan::call($workCommand, [...$workOptions, '--tries' => 2]);
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('job-attempt:*', [
@@ -227,7 +227,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_manually_released_job_attempts($workCommand): void
+    public function test_it_ingests_manually_released_job_attempts($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -240,7 +240,7 @@ class JobAttemptSensorTest extends TestCase
         };
 
         ReleasedJob::dispatch();
-        Artisan::call($workCommand, $this->workOptions($workCommand));
+        Artisan::call($workCommand, $workOptions);
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('job-attempt:*', [
@@ -281,7 +281,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_failed_job_attempts($workCommand): void
+    public function test_it_ingests_failed_job_attempts($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -294,7 +294,7 @@ class JobAttemptSensorTest extends TestCase
         };
 
         FailedJob::dispatch();
-        Artisan::call($workCommand, $this->workOptions($workCommand));
+        Artisan::call($workCommand, $workOptions);
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('job-attempt:*', [
@@ -344,7 +344,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_closure_job($workCommand): void
+    public function test_it_captures_closure_job($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -361,7 +361,7 @@ class JobAttemptSensorTest extends TestCase
         };
 
         dispatch($closure);
-        Artisan::call($workCommand, $this->workOptions($workCommand));
+        Artisan::call($workCommand, $workOptions);
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('job-attempt:*', [
@@ -402,7 +402,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_queued_event_listener($workCommand): void
+    public function test_it_captures_queued_event_listener($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -416,7 +416,7 @@ class JobAttemptSensorTest extends TestCase
 
         Event::listen(MyJobAttemptEvent::class, MyEventListener::class);
         Event::dispatch(new MyJobAttemptEvent);
-        Artisan::call($workCommand, $this->workOptions($workCommand));
+        Artisan::call($workCommand, $workOptions);
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('job-attempt:*', [
@@ -457,7 +457,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_queued_mail($workCommand): void
+    public function test_it_captures_queued_mail($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -470,7 +470,7 @@ class JobAttemptSensorTest extends TestCase
         };
 
         Mail::to('tim@laravel.com')->queue(new JobAttemptMail);
-        Artisan::call($workCommand, $this->workOptions($workCommand));
+        Artisan::call($workCommand, $workOptions);
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('job-attempt:*', [
@@ -536,16 +536,18 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_multiple_job_attempts($workCommand): void
+    public function test_it_captures_multiple_job_attempts($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
-        $options = $this->whenVapor($workCommand, then: $this->workOptions($workCommand, [
+        $options = $this->whenVapor($workCommand, then: [
+            ...$workOptions,
             '--tries' => 2,
-        ]), else: $this->workOptions($workCommand, [
+        ], else: [
+            ...$workOptions,
             '--tries' => 2,
             '--max-jobs' => 2,
-        ]));
+        ]);
 
         FailedJob::dispatch();
 
@@ -564,7 +566,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_manually_reported_exceptions($workCommand): void
+    public function test_it_captures_manually_reported_exceptions($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -583,7 +585,7 @@ class JobAttemptSensorTest extends TestCase
         };
 
         dispatch($closure);
-        Artisan::call($workCommand, $this->workOptions($workCommand));
+        Artisan::call($workCommand, $workOptions);
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('job-attempt:*', [
@@ -637,7 +639,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_context($workCommand): void
+    public function test_it_captures_context($workCommand, $workOptions): void
     {
         $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
 
@@ -646,7 +648,7 @@ class JobAttemptSensorTest extends TestCase
 
         Context::add('entry-from-parent', 'test');
         JobWithContext::dispatch();
-        Artisan::call($workCommand, $this->workOptions($workCommand));
+        Artisan::call($workCommand, $workOptions);
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('job-attempt:0.context', function ($context) {
@@ -667,16 +669,18 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_resets_the_state_between_job_attempts($workCommand): void
+    public function test_it_resets_the_state_between_job_attempts($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
-        $options = $this->whenVapor($workCommand, then: $this->workOptions($workCommand, [
+        $options = $this->whenVapor($workCommand, then: [
+            ...$workOptions,
             '--tries' => 2,
-        ]), else: $this->workOptions($workCommand, [
+        ], else: [
+            ...$workOptions,
             '--tries' => 2,
             '--max-jobs' => 2,
-        ]));
+        ]);
 
         $this->whenVapor($workCommand, then: function () use ($workCommand, $options) {
             FailedJob::dispatch();
@@ -717,7 +721,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_all_queue_events_for_a_job($workCommand): void
+    public function test_it_captures_all_queue_events_for_a_job($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -736,7 +740,7 @@ class JobAttemptSensorTest extends TestCase
         Nightwatch::captureDefaultVendorCacheKeys();
 
         ProcessedJob::dispatch();
-        Artisan::call($workCommand, $this->workOptions($workCommand));
+        Artisan::call($workCommand, $workOptions);
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($write) use ($workCommand) {
@@ -808,7 +812,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_counts_occuring_outside_job_execution($workCommand): void
+    public function test_it_captures_counts_occuring_outside_job_execution($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -830,7 +834,7 @@ class JobAttemptSensorTest extends TestCase
         Nightwatch::captureDefaultVendorCacheKeys();
 
         ProcessedJob::dispatch();
-        Artisan::call($workCommand, $this->workOptions($workCommand));
+        Artisan::call($workCommand, $workOptions);
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite(function ($write) use ($workCommand) {
@@ -856,7 +860,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_jobs_dispatched_from_job_attempt_get_unique_job_id($workCommand): void
+    public function test_jobs_dispatched_from_job_attempt_get_unique_job_id($workCommand, $workOptions): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -873,8 +877,8 @@ class JobAttemptSensorTest extends TestCase
             return array_shift($uuids) ?? Uuid::uuid4();
         };
 
-        Artisan::call($workCommand, $this->workOptions($workCommand));
-        Artisan::call($workCommand, $this->workOptions($workCommand));
+        Artisan::call($workCommand, $workOptions);
+        Artisan::call($workCommand, $workOptions);
 
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'queued-job:0.execution_id', '8c796368-b5ee-49b3-b02c-f883b8c6c6f8');
@@ -913,37 +917,33 @@ class JobAttemptSensorTest extends TestCase
         });
 
         JobThatMarksItselfAsHandled::dispatch();
-        Artisan::call('queue:work', $this->workOptions('queue:work'));
+        Artisan::call(...$this->workCommands()['queue:work']);
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('exception:*', []);
         $ingest->assertLatestWrite('job-attempt:0.attempt', 1);
     }
 
-    public static function workCommands(): iterable
+    public static function workCommands(): array
     {
-        yield ['queue:work'];
-        yield ['horizon:work'];
-        yield ['vapor:work'];
-    }
-
-    protected function workOptions(string $workCommand, array $overrides = []): array
-    {
-        if ($workCommand === 'vapor:work') {
-            return [
+        return [
+            'queue:work' => ['queue:work', [
+                '--max-jobs' => 1,
+                '--sleep' => 0,
+                '--stop-when-empty' => true,
+                '--tries' => 1,
+            ]],
+            'horizon:work' => ['horizon:work', [
+                '--max-jobs' => 1,
+                '--sleep' => 0,
+                '--stop-when-empty' => true,
+                '--tries' => 1,
+            ]],
+            'vapor:work' => ['vapor:work', [
                 '--tries' => 1,
                 '--timeout' => 0,
                 '--delay' => 0,
-                ...$overrides,
-            ];
-        }
-
-        return [
-            '--max-jobs' => 1,
-            '--sleep' => 0,
-            '--stop-when-empty' => true,
-            '--tries' => 1,
-            ...$overrides,
+            ]],
         ];
     }
 
