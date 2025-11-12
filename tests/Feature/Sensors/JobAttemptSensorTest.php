@@ -536,8 +536,10 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_multiple_job_attempts($workCommand, $workOptions): void
+    public function test_it_captures_multiple_job_attempts($workCommand, $workOptions, $simulating): void
     {
+        $this->markTestSkippedWhen($simulating === 'queue:listen', 'queue:listen does not support running multiple jobs');
+
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $options = $this->whenVapor($workCommand, then: [
@@ -669,8 +671,10 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_resets_the_state_between_job_attempts($workCommand, $workOptions): void
+    public function test_it_resets_the_state_between_job_attempts($workCommand, $workOptions, $simulating): void
     {
+        $this->markTestSkippedWhen($simulating === 'queue:listen', 'queue:listen does not capture state between jobs');
+
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $options = $this->whenVapor($workCommand, then: [
@@ -701,12 +705,8 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_does_not_ingest_or_build_up_state_while_idle($workCommand): void
     {
-        if ($workCommand === 'vapor:work') {
-            // Vapor doesn't loop for jobs; it processes one job and exits
-            $this->markTestSkipped('vapor:work does not loop waiting for jobs.');
+        $this->markTestSkippedWhen($workCommand === 'vapor:work', 'vapor:work does not loop waiting for jobs.');
 
-            return;
-        }
         $ingest = $this->fakeIngest();
         $loops = 0;
 
@@ -721,7 +721,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_all_queue_events_for_a_job($workCommand, $workOptions): void
+    public function test_it_captures_all_queue_events_for_a_job($workCommand, $workOptions, $simulating): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -743,8 +743,8 @@ class JobAttemptSensorTest extends TestCase
         Artisan::call($workCommand, $workOptions);
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite(function ($write) use ($workCommand) {
-            $this->whenVapor($workCommand, then: function () use ($write) {
+        $ingest->assertLatestWrite(match ($simulating ?? $workCommand) {
+            'vapor:work' => function ($write) {
                 // For Vapor, we only get the job-attempt record since there are no database queries
                 $this->assertCount(1, $write);
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
@@ -752,7 +752,56 @@ class JobAttemptSensorTest extends TestCase
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
                     'name' => 'Tests\Feature\Sensors\ProcessedJob',
                 ], $write[0], array_keys($expected));
-            }, else: function () use ($write) {
+
+                return true;
+            },
+            'queue:listen' => function ($write) {
+                $this->assertCount(5, $write);
+                $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                    't' => 'query',
+                    'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                    'execution_source' => 'job',
+                    'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                    'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                    'execution_stage' => 'action',
+                    'sql' => 'select * from "jobs" where "queue" = ? and (("reserved_at" is null and "available_at" <= ?) or ("reserved_at" <= ?)) order by "id" asc limit 1',
+                ], $write[0], array_keys($expected));
+                $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                    't' => 'query',
+                    'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                    'execution_source' => 'job',
+                    'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                    'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                    'execution_stage' => 'action',
+                    'sql' => 'update "jobs" set "reserved_at" = ?, "attempts" = ? where "id" = ?',
+                ], $write[1], array_keys($expected));
+                $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                    't' => 'query',
+                    'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                    'execution_source' => 'job',
+                    'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                    'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                    'execution_stage' => 'action',
+                    'sql' => 'select * from "jobs" where "id" = ? limit 1',
+                ], $write[2], array_keys($expected));
+                $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                    't' => 'query',
+                    'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                    'execution_source' => 'job',
+                    'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                    'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                    'execution_stage' => 'action',
+                    'sql' => 'delete from "jobs" where "id" = ?',
+                ], $write[3], array_keys($expected));
+                $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                    't' => 'job-attempt',
+                    'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                    'name' => 'Tests\Feature\Sensors\ProcessedJob',
+                ], $write[4], array_keys($expected));
+
+                return true;
+            },
+            default => function ($write) {
                 $this->assertCount(6, $write);
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
@@ -805,15 +854,17 @@ class JobAttemptSensorTest extends TestCase
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
                     'key' => 'illuminate:queue:restart',
                 ], $write[5], array_keys($expected));
-            });
 
-            return true;
+                return true;
+            },
         });
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_counts_occuring_outside_job_execution($workCommand, $workOptions): void
+    public function test_it_captures_counts_occuring_outside_job_execution($workCommand, $workOptions, $simulating): void
     {
+        $this->markTestSkippedWhen($simulating === 'queue:listen', 'queue:listen does not execute events outside the job execution');
+
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
         $uuids = [
@@ -932,18 +983,26 @@ class JobAttemptSensorTest extends TestCase
                 '--sleep' => 0,
                 '--stop-when-empty' => true,
                 '--tries' => 1,
-            ]],
+            ], null],
+            // This data set replicates how to the queue:listen command invokes
+            // the queue:work command in a new process using the `--once`
+            // option.
+            'queue:listen' => ['queue:work', [
+                '--once' => true,
+                '--sleep' => 0,
+                '--tries' => 1,
+            ], 'queue:listen'],
             'horizon:work' => ['horizon:work', [
                 '--max-jobs' => 1,
                 '--sleep' => 0,
                 '--stop-when-empty' => true,
                 '--tries' => 1,
-            ]],
+            ], null],
             'vapor:work' => ['vapor:work', [
                 '--tries' => 1,
                 '--timeout' => 0,
                 '--delay' => 0,
-            ]],
+            ], null],
         ];
     }
 

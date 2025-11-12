@@ -5,7 +5,7 @@ namespace Tests\Unit\Hooks;
 use Illuminate\Queue\Events\JobPopping;
 use Illuminate\Queue\Events\JobProcessing;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Hooks\WorkerEventListener;
+use Laravel\Nightwatch\Hooks\WorkerLifecycleListener;
 use Laravel\Nightwatch\RecordsBuffer;
 use RuntimeException;
 use Tests\FakeJob;
@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 use function tap;
 
-class WorkerEventListenerTest extends TestCase
+class WorkerLifecycleListenerTest extends TestCase
 {
     public function test_it_gracefully_handles_exceptions_for_job_popping_event(): void
     {
@@ -30,7 +30,7 @@ class WorkerEventListenerTest extends TestCase
         };
         $event = new JobPopping('redis');
 
-        $listener = new WorkerEventListener($this->core);
+        $listener = new WorkerLifecycleListener($this->core);
         $listener($event);
 
         $this->assertTrue($buffer->thrownInFlush);
@@ -49,7 +49,7 @@ class WorkerEventListenerTest extends TestCase
         });
         $event = new JobProcessing('redis', new FakeJob);
 
-        $listener = new WorkerEventListener($this->core);
+        $listener = new WorkerLifecycleListener($this->core);
         $listener($event);
 
         $this->assertTrue($thrownInMicrotimeResolver);

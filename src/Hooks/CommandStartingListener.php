@@ -75,7 +75,8 @@ final class CommandStartingListener
             JobPopping::class,
             JobProcessing::class,
             WorkerStopping::class,
-        ], (new WorkerEventListener($this->nightwatch))(...));
+            CommandFinished::class,
+        ], (new WorkerLifecycleListener($this->nightwatch))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
