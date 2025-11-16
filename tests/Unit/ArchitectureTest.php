@@ -1,23 +1,21 @@
 <?php
 
-namespace Tests;
+namespace Tests\Unit;
 
-use Illuminate\Support\LazyCollection;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
+use Tests\TestCase;
 
-use function dd;
 use function explode;
 use function in_array;
 use function str_replace;
 
 class ArchitectureTest extends TestCase
 {
-    const SRC_PATH = __DIR__.'/../src/';
+    const SRC_PATH = __DIR__.'/../../src/';
 
     public function test_marked_internal(): void
     {
-        dd('here');
         $ignore = [
             \Laravel\Nightwatch\Records\QueuedJob::class,
             \Laravel\Nightwatch\Records\Mail::class,
@@ -50,20 +48,17 @@ class ArchitectureTest extends TestCase
             }
 
             $this->assertTrue($class->isFinal(), "[{$class->getName()} is not final");
-
         }
     }
 
     private function classes(): iterable
     {
-        return new LazyCollection(function () {
-            $files = Finder::create()->files()->in(self::SRC_PATH);
+        $files = Finder::create()->files()->in(self::SRC_PATH);
 
-            foreach ($files as $file) {
-                yield new ReflectionClass(
-                    'Laravel\\Nightwatch\\'.str_replace([self::SRC_PATH, '.php', '/'], ['', '', '\\'], $file->getPathname())
-                );
-            }
-        });
+        foreach ($files as $file) {
+            yield new ReflectionClass(
+                'Laravel\\Nightwatch\\'.str_replace([self::SRC_PATH, '.php', '/'], ['', '', '\\'], $file->getPathname())
+            );
+        }
     }
 }
