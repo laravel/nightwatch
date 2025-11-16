@@ -10,7 +10,7 @@ use function count;
 /**
  * @internal
  */
-class RecordsBuffer implements Countable
+final class RecordsBuffer implements Countable
 {
     /**
      * @var list<array<mixed>>

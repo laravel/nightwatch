@@ -42,6 +42,18 @@ class ArchitectureTest extends TestCase
         }
     }
 
+    public function test_classes_are_final(): void
+    {
+        foreach ($this->classes() as $class) {
+            if ($class->isInterface() || $class->isTrait()) {
+                continue;
+            }
+
+            $this->assertTrue($class->isFinal(), "[{$class->getName()} is not final");
+
+        }
+    }
+
     private function classes(): iterable
     {
         return new LazyCollection(function () {

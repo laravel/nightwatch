@@ -9,7 +9,7 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
-class Sample
+final class Sample
 {
     /**
      * @param  Core<RequestState>  $nightwatch
@@ -27,17 +27,17 @@ class Sample
             $rate = '0.0';
         }
 
-        return static::class.':'.$rate;
+        return self::class.':'.$rate;
     }
 
     public static function always(): string
     {
-        return static::class.':1.0';
+        return self::class.':1.0';
     }
 
     public static function never(): string
     {
-        return static::class.':0.0';
+        return self::class.':0.0';
     }
 
     public function handle(Request $request, Closure $next, float $rate): mixed
