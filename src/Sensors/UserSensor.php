@@ -6,6 +6,9 @@ use Laravel\Nightwatch\Clock;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Types\Str;
 
+/**
+ * @internal
+ */
 final class UserSensor
 {
     public function __construct(

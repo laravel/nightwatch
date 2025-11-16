@@ -10,6 +10,9 @@ use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 class PolyfillContextHydration
+/**
+ * @internal
+ */
 {
     /**
      * @param  Core<RequestState|CommandState>  $nightwatch

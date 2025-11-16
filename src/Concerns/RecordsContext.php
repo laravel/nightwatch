@@ -10,6 +10,9 @@ use Throwable;
 
 use function json_encode;
 
+/**
+ * @internal
+ */
 trait RecordsContext
 {
     protected function serializedContext(): string

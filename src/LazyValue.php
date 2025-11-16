@@ -7,6 +7,8 @@ use JsonSerializable;
 use function call_user_func;
 
 /**
+ * @internal
+ *
  * @template TValue
  */
 final class LazyValue implements JsonSerializable

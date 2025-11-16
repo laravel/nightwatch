@@ -48,6 +48,8 @@ use function preg_match;
 use function random_int;
 
 /**
+ * @internal
+ *
  * @mixin Core
  */
 trait CapturesState

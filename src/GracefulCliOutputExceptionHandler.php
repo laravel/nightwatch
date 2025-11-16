@@ -11,6 +11,9 @@ use function date;
 use function Nightwatch\fwrite_all;
 
 class GracefulCliOutputExceptionHandler implements ExceptionHandler
+/**
+ * @internal
+ */
 {
     private bool $shuttingDown = false;
 

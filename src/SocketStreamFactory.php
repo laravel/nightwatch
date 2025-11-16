@@ -6,6 +6,9 @@ use RuntimeException;
 
 use function stream_socket_client;
 
+/**
+ * @internal
+ */
 final class SocketStreamFactory
 {
     /**

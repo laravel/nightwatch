@@ -10,6 +10,9 @@ use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\Request;
 
+/**
+ * @internal
+ */
 trait RedactsRecords
 {
     /**

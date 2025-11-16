@@ -5,6 +5,9 @@ namespace Laravel\Nightwatch\Types;
 use function max;
 use function min;
 
+/**
+ * @internal
+ */
 final class Number
 {
     public function uInt32(int $value): int

@@ -12,6 +12,9 @@ use function method_exists;
 use function value;
 use function version_compare;
 
+/**
+ * @internal
+ */
 final class Compatibility
 {
     public static bool $terminatingEventExists = false;

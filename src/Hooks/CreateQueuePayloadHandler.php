@@ -8,6 +8,9 @@ use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 class CreateQueuePayloadHandler
+/**
+ * @internal
+ */
 {
     /**
      * @param  Core<RequestState|CommandState>  $nightwatch

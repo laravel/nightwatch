@@ -9,6 +9,9 @@ use Laravel\Octane\Events\RequestReceived;
 use Throwable;
 
 class OctaneListener
+/**
+ * @internal
+ */
 {
     /**
      * @param  Core<RequestState|CommandState>  $nightwatch

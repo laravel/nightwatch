@@ -8,6 +8,8 @@ use function strlen;
 use function substr;
 
 /**
+ * @internal
+ *
  * @mixin \Illuminate\Support\Str
  */
 final class Str

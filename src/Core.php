@@ -13,6 +13,8 @@ use Throwable;
 use WeakMap;
 
 /**
+ * @internal
+ *
  * @template TState of RequestState|CommandState
  */
 final class Core

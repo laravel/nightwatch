@@ -9,6 +9,9 @@ use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
 class ContextDehydratingHandler
+/**
+ * @internal
+ */
 {
     /**
      * @param  Core<RequestState|CommandState>  $nightwatch
