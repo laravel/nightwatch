@@ -45,15 +45,13 @@ class IngestDetailsRepository
     private ?array $quickRetryStrategyDurationsCache = null;
 
     /**
-     * @param  LoopInterface  $loop
-     * @param  Browser  $browser
      * @param  (Closure(IngestDetails $ingestDetails, float $duration): mixed)  $onAuthenticationSuccess
      * @param  (Closure(string $message, float $duration): mixed)  $onAuthenticationError
      * @param  (Closure(): mixed)  $onUnderQuota
      */
     public function __construct(
-        private $loop,
-        private $browser,
+        private LoopInterface $loop,
+        private Browser $browser,
         private Clock $clock,
         private Closure $onAuthenticationSuccess,
         private Closure $onAuthenticationError,

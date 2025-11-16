@@ -37,15 +37,13 @@ class Ingest
     private StreamBuffer $streamBufferBackup;
 
     /**
-     * @param  LoopInterface  $loop
-     * @param  Browser  $browser
      * @param  (Closure(ResponseInterface $response, float $duration): mixed)  $onIngestSuccess
      * @param  (Closure(string $message, float $duration): mixed)  $onIngestError
      * @param  (Closure(string $message, float $duration): mixed)  $onOverQuota
      */
     public function __construct(
-        private $loop,
-        private $browser,
+        private LoopInterface $loop,
+        private Browser $browser,
         private IngestDetailsRepository $ingestDetails,
         private Clock $clock,
         StreamBuffer $buffer,

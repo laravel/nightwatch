@@ -16,13 +16,12 @@ class CheckSignature
     private TimerInterface $shutdownTimer;
 
     /**
-     * @param  LoopInterface  $loop
      * @param  (Closure(string $signature): void)  $onCheckSignature
      * @param  (Closure(int $shuttingDownIn): void)  $onShutdownInitiated
      * @param  (Closure(): void)  $onShutdown
      */
     public function __construct(
-        private $loop,
+        private LoopInterface $loop,
         private string $signaturePath,
         private string $expectedSignature,
         private int $shutdownDelayInMinutes,
