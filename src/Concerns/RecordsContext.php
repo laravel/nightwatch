@@ -15,7 +15,7 @@ use function json_encode;
  */
 trait RecordsContext
 {
-    protected function serializedContext(): string
+    private function serializedContext(): string
     {
         if (! Compatibility::$contextExists) {
             return '';
