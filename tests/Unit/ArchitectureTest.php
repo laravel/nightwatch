@@ -2,8 +2,10 @@
 
 namespace Tests\Unit;
 
+use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use ReflectionClass;
-use Symfony\Component\Finder\Finder;
 use Tests\TestCase;
 
 use function explode;
@@ -50,7 +52,7 @@ class ArchitectureTest extends TestCase
      */
     private function classes(): iterable
     {
-        $files = Finder::create()->files()->in($src = __DIR__.'/../../src/');
+        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($src = __DIR__.'/../../src/', flags: FilesystemIterator::SKIP_DOTS));
 
         foreach ($files as $file) {
             yield new ReflectionClass(
