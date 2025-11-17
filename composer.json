@@ -116,7 +116,10 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "audit": {
+            "block-insecure": false
+        }
     },
     "minimum-stability": "stable",
     "prefer-stable": true
