@@ -14,9 +14,9 @@ class ArchitectureTest extends TestCase
 {
     const SRC_PATH = __DIR__.'/../../src/';
 
-    public function test_marked_internal(): void
+    public function test_classes_are_internal(): void
     {
-        $ignore = [
+        $except = [
             \Laravel\Nightwatch\Records\QueuedJob::class,
             \Laravel\Nightwatch\Records\Mail::class,
             \Laravel\Nightwatch\Records\CacheEvent::class,
@@ -32,7 +32,7 @@ class ArchitectureTest extends TestCase
         ];
 
         foreach ($this->classes() as $class) {
-            if (in_array($class->getName(), $ignore, true)) {
+            if (in_array($class->getName(), $except, true)) {
                 continue;
             }
 
