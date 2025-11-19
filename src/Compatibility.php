@@ -35,6 +35,8 @@ final class Compatibility
 
     public static bool $queuedJobDurationCapturable = false;
 
+    public static bool $subMinuteScheduledTasksSupported = false;
+
     /**
      * @var array{
      *   nightwatch_should_sample?: bool|null,
@@ -94,6 +96,13 @@ final class Compatibility
          */
         self::$queuedJobDurationCapturable =
             version_compare($version, '10.42.0', '>=');
+
+        /**
+         * @see https://github.com/laravel/framework/pull/47279
+         * @see https://github.com/laravel/framework/releases/tag/v10.15.0
+         */
+        self::$subMinuteScheduledTasksSupported =
+            version_compare($version, '10.15.0', '>=');
     }
 
     /**

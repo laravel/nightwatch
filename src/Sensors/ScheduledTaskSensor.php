@@ -11,6 +11,7 @@ use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Concerns\RecordsContext;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
@@ -62,6 +63,7 @@ final class ScheduledTaskSensor
             'name' => $name,
             'cron' => $event->task->expression,
             'timezone' => $timezone,
+            'repeat_seconds' => Compatibility::$subMinuteScheduledTasksSupported && $event->task->repeatSeconds !== null ? $event->task->repeatSeconds : 0,
             'without_overlapping' => $event->task->withoutOverlapping,
             'on_one_server' => $event->task->onOneServer,
             'run_in_background' => $event->task->runInBackground,
