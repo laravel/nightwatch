@@ -7,6 +7,7 @@ use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bus\PendingDispatch;
+use Illuminate\Support\Env;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\CommandStartingListener;
 use Symfony\Component\Console\Input\StringInput;
@@ -90,5 +91,54 @@ class CommandStartingListenerTest extends TestCase
         $listener($event);
 
         $this->assertSame(0, $this->core->executionState->exceptions);
+    }
+
+    public function test_it_sets_default_sampling_when_no_environment(): void
+    {
+        $event = new CommandStarting('app:command', new StringInput(''), new NullOutput);
+        $events = $this->app[Dispatcher::class];
+        $kernel = $this->app[Kernel::class];
+
+        Nightwatch::sample();
+
+        $listener = new CommandStartingListener($events, $this->core, $kernel);
+        $listener($event);
+
+        $this->assertTrue(Nightwatch::sampling());
+
+        // TODO: how to rebind nightwatch and override config to set not sampling to assert against
+        Nightwatch::dontSample();
+
+        $listener = new CommandStartingListener($events, $this->core, $kernel);
+        $listener($event);
+
+        $this->assertFalse(Nightwatch::sampling());
+    }
+
+    public function test_it_sets_sampling_from_environment(): void
+    {
+        $event = new CommandStarting('app:command', new StringInput(''), new NullOutput);
+        $events = $this->app[Dispatcher::class];
+        $kernel = $this->app[Kernel::class];
+
+        $listener = new CommandStartingListener($events, $this->core, $kernel);
+        $listener($event);
+
+        $this->assertTrue(Nightwatch::sampling());
+    }
+
+    public function test_it_sets_not_sampling_from_environment(): void
+    {
+        $event = new CommandStarting('app:command', new StringInput(''), new NullOutput);
+        $events = $this->app[Dispatcher::class];
+        $kernel = $this->app[Kernel::class];
+
+        Env::getRepository()->set('NIGHTWATCH_SCHEDULE_TASK_SUBCOMMAND_SAMPLED', '0');
+
+        $listener = new CommandStartingListener($events, $this->core, $kernel);
+        $listener($event);
+
+        $this->assertFalse(Nightwatch::sampling());
+        Env::getRepository()->clear('NIGHTWATCH_SCHEDULE_TASK_SUBCOMMAND_SAMPLED');
     }
 }

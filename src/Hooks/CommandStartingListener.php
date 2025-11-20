@@ -18,10 +18,13 @@ use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Queue\Events\Looping;
 use Illuminate\Queue\Events\WorkerStopping;
+use Illuminate\Support\Env;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
+
+use function floatval;
 
 /**
  * @internal
@@ -116,6 +119,10 @@ final class CommandStartingListener
         }
 
         $this->nightwatch->configureGlobalCommandSampling();
+
+        $currentSample = $this->nightwatch->sampling() ? '1' : '0';
+        $sampling = (string) Env::get('NIGHTWATCH_SCHEDULE_TASK_SUBCOMMAND_SAMPLED', $currentSample);
+        $this->nightwatch->sample(floatval($sampling));
 
         $this->nightwatch->prepareForCommand($event->command);
 
