@@ -1,4 +1,4 @@
-FROM php:8.4-alpine
+FROM php:8.5-alpine
 
 COPY agent/composer.lock agent/composer.json agent/docker/install-composer.sh /
 

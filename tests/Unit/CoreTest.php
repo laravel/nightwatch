@@ -52,7 +52,7 @@ class CoreTest extends TestCase
         $this->setTraceId('00000000-0000-0000-0000-000000000000');
         $this->setExecutionId('00000000-0000-0000-0000-000000000001');
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
-        $this->setPhpVersion('8.4.1');
+        $this->setPhpVersion('8.5.0');
         $this->setLaravelVersion('11.33.0');
         $this->app->setBasePath($base = dirname($this->app->basePath()));
         $this->core->sensor->location->setBasePath($base);
@@ -84,7 +84,7 @@ class CoreTest extends TestCase
                 'code' => '0',
                 'trace' => '',
                 'handled' => false,
-                'php_version' => '8.4.1',
+                'php_version' => '8.5.0',
                 'laravel_version' => '11.33.0',
             ],
         ]);

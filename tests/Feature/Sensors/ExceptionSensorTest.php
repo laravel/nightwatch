@@ -62,7 +62,7 @@ class ExceptionSensorTest extends TestCase
         $this->setExecutionId('00000000-0000-0000-0000-000000000001');
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
         // --- //
-        $this->setPhpVersion('8.4.1');
+        $this->setPhpVersion('8.5.0');
         $this->setLaravelVersion('11.33.0');
         $this->app->setBasePath($base = dirname($this->app->basePath()));
         $this->core->sensor->location->setBasePath($base);
@@ -137,7 +137,7 @@ class ExceptionSensorTest extends TestCase
                     ], $trace),
                 ]),
                 'handled' => false,
-                'php_version' => '8.4.1',
+                'php_version' => '8.5.0',
                 'laravel_version' => '11.33.0',
             ],
         ]);
@@ -215,7 +215,7 @@ class ExceptionSensorTest extends TestCase
                     ], $trace),
                 ]),
                 'handled' => true,
-                'php_version' => '8.4.1',
+                'php_version' => '8.5.0',
                 'laravel_version' => '11.33.0',
             ],
         ]);
@@ -699,7 +699,7 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
         $response->assertServerError();
         $ingest->assertWrittenTimes(1);
-        if (version_compare(PHP_VERSION, '8.4', '<')) {
+        if (version_compare(PHP_VERSION, '8.5', '<')) {
             $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => ! str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
         } else {
             $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => ! str_contains($trace, trim(json_encode('{closure:'.static::class.'::'.$function.'():'.$line.'}(Illuminate\\Http\\Request)'), '"')));
@@ -709,7 +709,7 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
         $response->assertServerError();
         $ingest->assertWrittenTimes(2);
-        if (version_compare(PHP_VERSION, '8.4', '<')) {
+        if (version_compare(PHP_VERSION, '8.5', '<')) {
             $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
         } else {
             $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, trim(json_encode('{closure:'.static::class.'::'.$function.'():'.$line.'}(Illuminate\\Http\\Request)'), '"')));
@@ -785,7 +785,7 @@ class ExceptionSensorTest extends TestCase
                     ], $trace),
                 ]),
                 'handled' => false,
-                'php_version' => '8.4.1',
+                'php_version' => '8.5.0',
                 'laravel_version' => '11.33.0',
             ],
         ]);
