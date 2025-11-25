@@ -61,7 +61,7 @@ final class QueryExecutedListener
 - Use `Location` helper for file/line detection
 - Use `Clock` for timestamp management
 - **Check property visibility**: Before using reflection, verify if Laravel properties are public. Prefer direct property access over reflection when possible.
-- **Trust Laravel validation**: If Laravel validates a value, trust that validation rather than re-validating in our code
+- **Trust Laravel's internal constraints**: If Laravel enforces constraints on a value (e.g., requires >= 1 second for repeating tasks), trust those constraints rather than re-checking in our code
 
 ### State Management
 - Use `RequestState` for HTTP requests
