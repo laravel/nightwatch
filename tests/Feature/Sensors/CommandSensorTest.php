@@ -274,6 +274,17 @@ class CommandSensorTest extends TestCase
         $ingest->assertLatestWrite('command:0.cache_events', 1);
         $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
     }
+
+    public function test_it_ignores_schedule_finish_command(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        $status = Artisan::handle($input = new StringInput('schedule:finish 123'));
+        Artisan::terminate($input, $status);
+
+        $this->assertSame(0, $status);
+        $ingest->assertWrittenTimes(0);
+    }
 }
 
 class ParentCommand extends Command

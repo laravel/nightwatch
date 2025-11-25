@@ -53,6 +53,7 @@ final class CommandStartingListener
             match ($event->command) {
                 'queue:work', 'queue:listen', 'horizon:work', 'vapor:work' => $this->registerJobHooks($event),
                 'schedule:run', 'schedule:work' => $this->registerScheduledTaskHooks(),
+                'schedule:finish' => null,
                 default => $this->registerCommandHooks($event),
             };
         } catch (Throwable $e) {
