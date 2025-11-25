@@ -7,7 +7,6 @@ Laravel Nightwatch is a hosted application monitoring platform package for Larav
 ## Code Style & Formatting
 
 - **Use Laravel Pint** with the project's configuration (`pint.json`)
-- **Strict typing**: Always use type hints for parameters and return types
 - **Strict comparisons**: Use `===` and `!==` instead of `==` and `!=`
 - **Strict parameters**: Enable strict parameter checking
 - **Global namespace imports**: Import classes, constants, and functions from global namespace
