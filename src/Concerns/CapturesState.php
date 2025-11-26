@@ -21,6 +21,7 @@ use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Context;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
@@ -110,6 +111,14 @@ trait CapturesState
      */
     public function configureGlobalCommandSampling(): void
     {
+        if (Context::hasHidden('nightwatch_should_sample')) {
+            $this->sample(
+                Compatibility::getSamplingFromContext() ? 1.0 : 0.0
+            );
+
+            return;
+        }
+
         $this->sample($this->config['sampling']['commands']);
     }
 
