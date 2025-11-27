@@ -925,14 +925,19 @@ class JobAttemptSensorTest extends TestCase
                     'outgoing_requests' => 0,
                 ], $write[0], array_keys($expected));
             }, else: function () use ($write) {
-                $this->assertCount(8, $write);
+                if (version_compare(Application::VERSION, '12.40.0', '>=')) {
+                    $this->assertCount(8, $write);
+                    array_shift($write);
+                } else {
+                    $this->assertCount(7, $write);
+                }
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'job-attempt',
                     'outgoing_requests' => 1,
-                ], $write[5], array_keys($expected));
+                ], $write[4], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'outgoing-request',
-                ], $write[7], array_keys($expected));
+                ], $write[6], array_keys($expected));
             });
 
             return true;
