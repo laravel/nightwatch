@@ -10,6 +10,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Mail\Mailable;
@@ -52,6 +53,7 @@ use function now;
 use function putenv;
 use function report;
 use function value;
+use function version_compare;
 
 class JobAttemptSensorTest extends TestCase
 {
@@ -119,7 +121,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_processed_job_attempts($workCommand, $workOptions): void
+    public function test_it_ingests_processed_job_attempts($workCommand, $workOptions, $simulating): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -173,7 +175,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_released_job_attempts($workCommand, $workOptions): void
+    public function test_it_ingests_released_job_attempts($workCommand, $workOptions, $simulating): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -227,7 +229,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_manually_released_job_attempts($workCommand, $workOptions): void
+    public function test_it_ingests_manually_released_job_attempts($workCommand, $workOptions, $simulating): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -281,7 +283,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_ingests_failed_job_attempts($workCommand, $workOptions): void
+    public function test_it_ingests_failed_job_attempts($workCommand, $workOptions, $simulating): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -344,7 +346,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_closure_job($workCommand, $workOptions): void
+    public function test_it_captures_closure_job($workCommand, $workOptions, $simulating): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -402,7 +404,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_queued_event_listener($workCommand, $workOptions): void
+    public function test_it_captures_queued_event_listener($workCommand, $workOptions, $simulating): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -457,7 +459,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_queued_mail($workCommand, $workOptions): void
+    public function test_it_captures_queued_mail($workCommand, $workOptions, $simulating): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -568,7 +570,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_manually_reported_exceptions($workCommand, $workOptions): void
+    public function test_it_captures_manually_reported_exceptions($workCommand, $workOptions, $simulating): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
@@ -641,7 +643,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_captures_context($workCommand, $workOptions): void
+    public function test_it_captures_context($workCommand, $workOptions, $simulating): void
     {
         $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
 
@@ -703,7 +705,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_it_does_not_ingest_or_build_up_state_while_idle($workCommand): void
+    public function test_it_does_not_ingest_or_build_up_state_while_idle($workCommand, $workOptions, $simulating): void
     {
         $this->markTestSkippedWhen($workCommand === 'vapor:work', 'vapor:work does not loop waiting for jobs.');
 
@@ -756,7 +758,21 @@ class JobAttemptSensorTest extends TestCase
                 return true;
             },
             'queue:listen' => function ($write) {
-                $this->assertCount(6, $write);
+                if (version_compare(Application::VERSION, '12.40.0', '>=')) {
+                    $this->assertCount(6, $write);
+                    $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                        't' => 'cache-event',
+                        'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                        'execution_source' => 'job',
+                        'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                        'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                        'execution_stage' => 'action',
+                        'key' => 'illuminate:queue:paused:database:default',
+                    ], array_shift($write), array_keys($expected));
+                } else {
+                    $this->assertCount(5, $write);
+                }
+
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -765,7 +781,7 @@ class JobAttemptSensorTest extends TestCase
                     'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
                     'execution_stage' => 'action',
                     'sql' => 'select * from "jobs" where "queue" = ? and (("reserved_at" is null and "available_at" <= ?) or ("reserved_at" <= ?)) order by "id" asc limit 1',
-                ], $write[1], array_keys($expected));
+                ], $write[0], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -774,7 +790,7 @@ class JobAttemptSensorTest extends TestCase
                     'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
                     'execution_stage' => 'action',
                     'sql' => 'update "jobs" set "reserved_at" = ?, "attempts" = ? where "id" = ?',
-                ], $write[2], array_keys($expected));
+                ], $write[1], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -783,7 +799,7 @@ class JobAttemptSensorTest extends TestCase
                     'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
                     'execution_stage' => 'action',
                     'sql' => 'select * from "jobs" where "id" = ? limit 1',
-                ], $write[3], array_keys($expected));
+                ], $write[2], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -792,17 +808,30 @@ class JobAttemptSensorTest extends TestCase
                     'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
                     'execution_stage' => 'action',
                     'sql' => 'delete from "jobs" where "id" = ?',
-                ], $write[4], array_keys($expected));
+                ], $write[3], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'job-attempt',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
                     'name' => 'Tests\Feature\Sensors\ProcessedJob',
-                ], $write[5], array_keys($expected));
+                ], $write[4], array_keys($expected));
 
                 return true;
             },
             default => function ($write) {
-                $this->assertCount(7, $write);
+                if (version_compare(Application::VERSION, '12.40.0', '>=')) {
+                    $this->assertCount(7, $write);
+                    $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                        't' => 'cache-event',
+                        'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                        'execution_source' => 'job',
+                        'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                        'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                        'execution_stage' => 'action',
+                        'key' => 'illuminate:queue:paused:database:default',
+                    ], array_shift($write), array_keys($expected));
+                } else {
+                    $this->assertCount(6, $write);
+                }
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -811,7 +840,7 @@ class JobAttemptSensorTest extends TestCase
                     'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
                     'execution_stage' => 'action',
                     'sql' => 'select * from "jobs" where "queue" = ? and (("reserved_at" is null and "available_at" <= ?) or ("reserved_at" <= ?)) order by "id" asc limit 1',
-                ], $write[1], array_keys($expected));
+                ], $write[0], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -820,7 +849,7 @@ class JobAttemptSensorTest extends TestCase
                     'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
                     'execution_stage' => 'action',
                     'sql' => 'update "jobs" set "reserved_at" = ?, "attempts" = ? where "id" = ?',
-                ], $write[2], array_keys($expected));
+                ], $write[1], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -829,7 +858,7 @@ class JobAttemptSensorTest extends TestCase
                     'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
                     'execution_stage' => 'action',
                     'sql' => 'select * from "jobs" where "id" = ? limit 1',
-                ], $write[3], array_keys($expected));
+                ], $write[2], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -838,12 +867,12 @@ class JobAttemptSensorTest extends TestCase
                     'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
                     'execution_stage' => 'action',
                     'sql' => 'delete from "jobs" where "id" = ?',
-                ], $write[4], array_keys($expected));
+                ], $write[3], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'job-attempt',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
                     'name' => 'Tests\Feature\Sensors\ProcessedJob',
-                ], $write[5], array_keys($expected));
+                ], $write[4], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'cache-event',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -853,7 +882,7 @@ class JobAttemptSensorTest extends TestCase
                     'execution_stage' => 'action',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
                     'key' => 'illuminate:queue:restart',
-                ], $write[6], array_keys($expected));
+                ], $write[5], array_keys($expected));
 
                 return true;
             },
@@ -896,14 +925,19 @@ class JobAttemptSensorTest extends TestCase
                     'outgoing_requests' => 0,
                 ], $write[0], array_keys($expected));
             }, else: function () use ($write) {
-                $this->assertCount(8, $write);
+                if (version_compare(Application::VERSION, '12.40.0', '>=')) {
+                    $this->assertCount(8, $write);
+                    array_shift($write);
+                } else {
+                    $this->assertCount(7, $write);
+                }
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'job-attempt',
                     'outgoing_requests' => 1,
-                ], $write[5], array_keys($expected));
+                ], $write[4], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'outgoing-request',
-                ], $write[7], array_keys($expected));
+                ], $write[6], array_keys($expected));
             });
 
             return true;
@@ -911,7 +945,7 @@ class JobAttemptSensorTest extends TestCase
     }
 
     #[DataProvider('workCommands')]
-    public function test_jobs_dispatched_from_job_attempt_get_unique_job_id($workCommand, $workOptions): void
+    public function test_jobs_dispatched_from_job_attempt_get_unique_job_id($workCommand, $workOptions, $simulating): void
     {
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
