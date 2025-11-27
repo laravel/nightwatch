@@ -113,9 +113,7 @@ trait CapturesState
     {
         if (Compatibility::$contextExists) {
             if (Context::hasHidden('nightwatch_should_sample')) {
-                $this->sample(
-                    Compatibility::getSamplingFromContext() ? 1.0 : 0.0
-                );
+                $this->sample(Compatibility::getSamplingFromContext() ? 1.0 : 0.0);
 
                 return;
             }
