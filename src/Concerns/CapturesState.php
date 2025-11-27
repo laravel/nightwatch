@@ -111,12 +111,14 @@ trait CapturesState
      */
     public function configureGlobalCommandSampling(): void
     {
-        if (Context::hasHidden('nightwatch_should_sample')) {
-            $this->sample(
-                Compatibility::getSamplingFromContext() ? 1.0 : 0.0
-            );
+        if (Compatibility::$contextExists) {
+            if (Context::hasHidden('nightwatch_should_sample')) {
+                $this->sample(
+                    Compatibility::getSamplingFromContext() ? 1.0 : 0.0
+                );
 
-            return;
+                return;
+            }
         }
 
         $this->sample($this->config['sampling']['commands']);
