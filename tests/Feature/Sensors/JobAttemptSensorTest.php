@@ -929,7 +929,7 @@ class JobAttemptSensorTest extends TestCase
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'job-attempt',
                     'outgoing_requests' => 1,
-                ], $write[$version12 ? 6 : 4], array_keys($expected));
+                ], $write[$version12 ? 5 : 4], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'outgoing-request',
                 ], $write[$version12 ? 7 : 6], array_keys($expected));
