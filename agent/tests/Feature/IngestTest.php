@@ -253,8 +253,7 @@ class IngestTest extends TestCase
         $ingestBrowser = new BrowserFake([
             Response::ingested(),
         ]);
-        $records = array_fill(0, 375_001, ['t' => 'request']);
-        $loop->addTimer(0, $server->pendingConnection($records));
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -262,12 +261,13 @@ class IngestTest extends TestCase
             ingestBrowser: $ingestBrowser,
             loop: $loop,
             server: $server,
+            maxBufferLength: 1,
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches($log, $output);
         $ingestBrowser->assertSent($duration === 1
-            ? [Request::ingest($records)]
+            ? [Request::ingest([['t' => 'request']])]
             : []);
         $ingestBrowser->assertProcessing([]);
         $ingestBrowser->assertPending($duration === 1
@@ -313,8 +313,7 @@ class IngestTest extends TestCase
         $ingestBrowser = new BrowserFake([
             //
         ]);
-        $records = array_fill(0, 375_001, ['t' => 'request']);
-        $loop->addTimer(0, $server->pendingConnection($records));
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -322,6 +321,7 @@ class IngestTest extends TestCase
             ingestBrowser: $ingestBrowser,
             loop: $loop,
             server: $server,
+            maxBufferLength: 1,
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
@@ -354,8 +354,7 @@ class IngestTest extends TestCase
         $ingestBrowser = new BrowserFake([
             //
         ]);
-        $records = array_fill(0, 375_001, ['t' => 'request']);
-        $loop->addTimer(0, $server->pendingConnection($records));
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -363,6 +362,7 @@ class IngestTest extends TestCase
             ingestBrowser: $ingestBrowser,
             loop: $loop,
             server: $server,
+            maxBufferLength: 1,
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
@@ -396,9 +396,8 @@ class IngestTest extends TestCase
             Response::ingested(duration: 3),
             Response::ingested(duration: 4),
         ]);
-        $records = array_fill(0, 375_001, ['t' => 'request']);
-        $loop->addTimer(0, $server->pendingConnection($records));
-        $loop->addTimer(0, $server->pendingConnection($records));
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -406,6 +405,7 @@ class IngestTest extends TestCase
             ingestBrowser: $ingestBrowser,
             loop: $loop,
             server: $server,
+            maxBufferLength: 1,
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
@@ -415,8 +415,8 @@ class IngestTest extends TestCase
         {date} {info} Ingest successful {duration}
         OUTPUT, $output);
         $ingestBrowser->assertSent([
-            Request::ingest($records),
-            Request::ingest($records),
+            Request::ingest([['t' => 'request']]),
+            Request::ingest([['t' => 'request']]),
         ]);
         $ingestDetailsBrowser->assertProcessing([]);
         $ingestBrowser->assertPending([]);
@@ -450,13 +450,12 @@ class IngestTest extends TestCase
             Response::ingested(duration: 6),
             Response::ingested(duration: 7),
         ]);
-        $records = array_fill(0, 375_001, ['t' => 'request']);
-        $loop->addTimer(0, $server->pendingConnection($records));
-        $loop->addTimer(0, $server->pendingConnection($records));
-        $loop->addTimer(0, $server->pendingConnection($records));
-        $loop->addTimer(0, $server->pendingConnection($records));
-        $loop->addTimer(0, $server->pendingConnection($records));
-        $loop->addTimer(0, $server->pendingConnection($records));
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -464,6 +463,7 @@ class IngestTest extends TestCase
             ingestBrowser: $ingestBrowser,
             loop: $loop,
             server: $server,
+            maxBufferLength: 1,
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
@@ -477,11 +477,11 @@ class IngestTest extends TestCase
         {date} {info} Ingest successful {duration}
         OUTPUT, $output);
         $ingestBrowser->assertSent([
-            Request::ingest($records),
-            Request::ingest($records),
-            Request::ingest($records),
-            Request::ingest($records),
-            Request::ingest($records),
+            Request::ingest([['t' => 'request']]),
+            Request::ingest([['t' => 'request']]),
+            Request::ingest([['t' => 'request']]),
+            Request::ingest([['t' => 'request']]),
+            Request::ingest([['t' => 'request']]),
         ]);
         $ingestDetailsBrowser->assertProcessing([]);
         $ingestBrowser->assertPending([]);
@@ -530,7 +530,7 @@ class IngestTest extends TestCase
             Response::ingested(duration: 1),
             Response::ingested(duration: 1),
         ]);
-        $records = array_fill(0, 375_001, ['t' => 'request']);
+        $records = [['t' => 'request']];
         //
         $loop->addTimer(0, $server->pendingConnection($records));
         $loop->addTimer(0, $server->pendingConnection($records));
@@ -553,6 +553,7 @@ class IngestTest extends TestCase
             loop: $loop,
             server: $server,
             timeout: 10.0,
+            maxBufferLength: 1,
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
@@ -676,6 +677,7 @@ class IngestTest extends TestCase
             ingestBrowser: $ingestBrowser,
             loop: $loop,
             server: $server,
+            maxBufferLength: 16,
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
@@ -714,8 +716,7 @@ class IngestTest extends TestCase
         $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
         $loop->addTimer(1, $server->pendingConnection([['t' => 'request']]));
         $loop->addTimer(2, $server->pendingConnection([['t' => 'request']]));
-        $records = array_fill(0, 375_001, ['t' => 'request']);
-        $loop->addTimer(3, $server->pendingConnection($records));
+        $loop->addTimer(3, $server->pendingConnection([['t' => 'request']]));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -723,6 +724,7 @@ class IngestTest extends TestCase
             ingestBrowser: $ingestBrowser,
             loop: $loop,
             server: $server,
+            maxBufferLength: 63,
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
@@ -735,7 +737,7 @@ class IngestTest extends TestCase
                 ['t' => 'request'],
                 ['t' => 'request'],
                 ['t' => 'request'],
-                ...$records,
+                ['t' => 'request'],
             ]),
         ]);
         $ingestBrowser->assertProcessing([]);
@@ -768,8 +770,7 @@ class IngestTest extends TestCase
         $ingestBrowser = new BrowserFake([
             Response::ingested(),
         ]);
-        $records = array_fill(0, 375_001, ['t' => 'request']);
-        $loop->addTimer(0, $server->pendingConnection($records));
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -777,6 +778,7 @@ class IngestTest extends TestCase
             ingestBrowser: $ingestBrowser,
             loop: $loop,
             server: $server,
+            maxBufferLength: 1,
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
@@ -785,7 +787,7 @@ class IngestTest extends TestCase
         {date} {info} Ingest successful {duration}
         OUTPUT, $output);
         $ingestBrowser->assertSent([
-            Request::ingest($records),
+            Request::ingest([['t' => 'request']]),
         ]);
         $ingestBrowser->assertProcessing([]);
         $ingestBrowser->assertPending([]);
@@ -1199,9 +1201,8 @@ class IngestTest extends TestCase
         $ingestBrowser = new BrowserFake([
             Response::ingested(),
         ]);
-        $records = array_fill(0, 375_001, ['t' => 'request']);
-        $loop->addTimer(10, $server->pendingConnection($records));
-        $loop->addTimer(11, $server->pendingConnection($records));
+        $loop->addTimer(10, $server->pendingConnection([['t' => 'request']]));
+        $loop->addTimer(11, $server->pendingConnection([['t' => 'request']]));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -1209,6 +1210,7 @@ class IngestTest extends TestCase
             ingestBrowser: $ingestBrowser,
             loop: $loop,
             server: $server,
+            maxBufferLength: 1,
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
@@ -1218,7 +1220,7 @@ class IngestTest extends TestCase
             {date} {error} Ingest failed {duration}: Authentication token expired
             OUTPUT, $output);
         $ingestBrowser->assertSent([
-            Request::ingest($records),
+            Request::ingest([['t' => 'request']]),
         ]);
         $ingestBrowser->assertProcessing([]);
         $ingestBrowser->assertPending([]);

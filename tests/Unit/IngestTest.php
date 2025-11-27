@@ -18,10 +18,12 @@ use function fclose;
 use function fopen;
 use function implode;
 use function json_encode;
+use function phpversion;
 use function str_repeat;
 use function stream_wrapper_register;
 use function stream_wrapper_unregister;
 use function strlen;
+use function version_compare;
 
 class IngestTest extends TestCase
 {
@@ -375,6 +377,7 @@ class IngestTest extends TestCase
 
     public function test_it_does_not_retrieve_meta_of_already_closed_stream(): void
     {
+        $this->markTestSkippedWhen(version_compare(phpversion(), '8.5.0', '>='), 'Closing a userland stream within a intercepted callback is no longer supported');
         $exceptions = [];
         Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
             $exceptions[] = $e;
