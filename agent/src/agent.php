@@ -41,6 +41,8 @@ $serverResolver ??= null;
 $loop ??= null;
 /** @var ?ClockContract $clock */
 $clock ??= null;
+/** @var ?int $maxBufferLength */
+$maxBufferLength ??= null;
 
 /*
  * Input...
@@ -184,7 +186,7 @@ $ingest = new Ingest(
     browser: $ingestBrowser,
     ingestDetails: $ingestDetails,
     clock: $clock,
-    buffer: new StreamBuffer(6_000_000),
+    buffer: new StreamBuffer($maxBufferLength ?? 6_000_000),
     concurrentRequestLimit: 5,
     maxBufferDurationInSeconds: 10,
     onIngestSuccess: static fn (ResponseInterface $response, float $duration) => $info('Ingest successful ['.round($duration, 3).'s]'),
