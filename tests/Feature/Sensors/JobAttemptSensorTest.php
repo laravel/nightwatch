@@ -10,6 +10,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Mail\Mailable;
@@ -756,7 +757,21 @@ class JobAttemptSensorTest extends TestCase
                 return true;
             },
             'queue:listen' => function ($write) {
-                $this->assertCount(5, $write);
+                if (version_compare(Application::VERSION, '12.40.0', '>=')) {
+                    $this->assertCount(6, $write);
+                    $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                        't' => 'cache-event',
+                        'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                        'execution_source' => 'job',
+                        'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                        'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                        'execution_stage' => 'action',
+                        'key' => 'illuminate:queue:paused:database:default',
+                    ], array_shift($write), array_keys($expected));
+                } else {
+                    $this->assertCount(5, $write);
+                }
+
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -802,7 +817,20 @@ class JobAttemptSensorTest extends TestCase
                 return true;
             },
             default => function ($write) {
-                $this->assertCount(6, $write);
+                if (version_compare(Application::VERSION, '12.40.0', '>=')) {
+                    $this->assertCount(7, $write);
+                    $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                        't' => 'cache-event',
+                        'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                        'execution_source' => 'job',
+                        'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                        'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                        'execution_stage' => 'action',
+                        'key' => 'illuminate:queue:paused:database:default',
+                    ], array_shift($write), array_keys($expected));
+                } else {
+                    $this->assertCount(6, $write);
+                }
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'query',
                     'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
@@ -896,14 +924,14 @@ class JobAttemptSensorTest extends TestCase
                     'outgoing_requests' => 0,
                 ], $write[0], array_keys($expected));
             }, else: function () use ($write) {
-                $this->assertCount(7, $write);
+                $this->assertCount(8, $write);
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'job-attempt',
                     'outgoing_requests' => 1,
-                ], $write[4], array_keys($expected));
+                ], $write[5], array_keys($expected));
                 $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                     't' => 'outgoing-request',
-                ], $write[6], array_keys($expected));
+                ], $write[7], array_keys($expected));
             });
 
             return true;
