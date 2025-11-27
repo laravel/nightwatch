@@ -13,8 +13,6 @@ use Throwable;
 use WeakMap;
 
 /**
- * @internal
- *
  * @template TState of RequestState|CommandState
  */
 final class Core
@@ -49,11 +47,17 @@ final class Core
      * }  $config
      */
     public function __construct(
+        /** @internal */
         public Ingest $ingest,
+        /** @internal */
         public SensorManager $sensor,
+        /** @internal */
         public RequestState|CommandState $executionState,
+        /** @internal */
         public Clock $clock,
+        /** @internal */
         public Uuid $uuid,
+        /** @internal */
         public array $config,
     ) {
         $this->routesWithMiddlewareRegistered = new WeakMap;
