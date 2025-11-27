@@ -53,6 +53,7 @@ use function now;
 use function putenv;
 use function report;
 use function value;
+use function version_compare;
 
 class JobAttemptSensorTest extends TestCase
 {
