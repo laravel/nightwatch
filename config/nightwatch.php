@@ -14,6 +14,7 @@ return [
         'requests' => env('NIGHTWATCH_REQUEST_SAMPLE_RATE', 1.0),
         'commands' => env('NIGHTWATCH_COMMAND_SAMPLE_RATE', 1.0),
         'exceptions' => env('NIGHTWATCH_EXCEPTION_SAMPLE_RATE', 1.0),
+        'scheduled_tasks' => env('NIGHTWATCH_SCHEDULED_TASK_SAMPLE_RATE', 1.0),
     ],
 
     'filtering' => [

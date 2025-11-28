@@ -118,6 +118,14 @@ trait CapturesState
     }
 
     /**
+     * @internal
+     */
+    public function configureGlobalScheduledTaskSampling(): void
+    {
+        $this->sample($this->config['sampling']['scheduled_tasks']);
+    }
+
+    /**
      * @api
      */
     public function ignore(callable $callback): mixed
@@ -621,7 +629,7 @@ trait CapturesState
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
         $this->executionState->timestamp = $this->clock->microtime();
-        $this->sample();
+        $this->configureGlobalScheduledTaskSampling();
     }
 
     /**
