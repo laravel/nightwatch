@@ -125,8 +125,8 @@ final class Compatibility
     {
         $context = self::getHiddenContext('nightwatch_should_sample', $default);
 
-        if ($context === $default) {
-            return $default;
+        if ($context === null) {
+            return null;
         }
 
         return (bool) $context;
