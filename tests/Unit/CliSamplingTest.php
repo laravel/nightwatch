@@ -9,7 +9,6 @@ use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Context;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Symfony\Component\Console\Input\StringInput;
@@ -119,7 +118,7 @@ class CliSamplingTest extends TestCase
 
     public function test_it_pulls_sample_from_context_when_command_starting(): void
     {
-        Context::addHidden('nightwatch_should_sample', false);
+        Compatibility::addSamplingToContext(false);
 
         $this->assertTrue(Nightwatch::sampling());
         event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
