@@ -100,7 +100,7 @@ trait CapturesState
     /**
      * @internal
      */
-    public function configureGlobalRequestSampling(): void
+    public function configureRequestSampling(): void
     {
         $this->sample($this->config['sampling']['requests']);
     }
@@ -108,7 +108,7 @@ trait CapturesState
     /**
      * @internal
      */
-    public function configureGlobalCommandSampling(): void
+    public function configureCommandSampling(): void
     {
         $this->sample(match (Compatibility::getSamplingFromContext(null)) {
             true => 1.0,
