@@ -140,6 +140,7 @@ class CliSamplingTest extends TestCase
         $this->core->config['sampling']['scheduled_tasks'] = 0;
         event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
 
+        event(new ScheduledTaskStarting($this->app[Schedule::class]->call('php artisan inspire')));
         $this->assertFalse(Nightwatch::sampling());
     }
 }
