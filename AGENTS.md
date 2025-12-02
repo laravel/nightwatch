@@ -64,7 +64,7 @@ final class QueryExecutedListener
 
 ### State Management
 - Use `RequestState` for HTTP requests
-- Use `CommandState` for Artisan commands
+- Use `CommandState` for Artisan commands, scheduled tasks, and job attempts
 - State is managed through `Core` class
 - Execution stages tracked via `ExecutionStage` enum
 
