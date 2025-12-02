@@ -134,4 +134,12 @@ class CliSamplingTest extends TestCase
 
         $this->assertTrue(Nightwatch::sampling());
     }
+
+    public function test_it_can_use_global_config_to_sample_scheduled_tasks(): void
+    {
+        $this->core->config['sampling']['scheduled_tasks'] = 0;
+        event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
+
+        $this->assertFalse(Nightwatch::sampling());
+    }
 }
