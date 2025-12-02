@@ -201,11 +201,11 @@ Compatibility flags in the `Compatibility` class are used to handle version-spec
 - **Versioning**: Use payload version (`'v' => 1`)
 - **Lazy values**: Use `LazyValue` for values that cannot be determined at event capture time and need to be evaluated later when the record is serialized. This is for values that depend on state that will change or finalize between when the event is captured and when the record is sent to the ingest service
 - **Grouping**: Use `_group` hash for similar events. The `_group` key identifies the "type" or "identity" of an event, grouping events that are the same "thing" even if they're different executions. **Include fields that define the identity of the event, not execution details or results.** Guidelines:
-  - **Include**: Fields that define WHAT the thing is or WHEN it's scheduled (e.g., task name, cron expression, repeat frequency, route path, job class)
-  - **Exclude**: Fields that define HOW it runs or WHAT happened (e.g., withoutOverlapping, duration, status, memory usage)
-  - **Scheduling vs. Execution**: For scheduled tasks, both cron expression AND repeat frequency are part of the schedule identity (WHEN), while constraints like withoutOverlapping are execution details (HOW)
-  - **Consistency**: Changing identity fields (e.g., cron expression, repeat frequency) should create a new group; changing execution details should not
-  - **Backward compatibility**: When adding new fields to `_group` hashes, consider whether to include them conditionally to maintain existing group hashes. For example, only include `repeat_seconds` when it's non-zero to preserve hashes for regular (non-subminute) tasks
+  - **Include**: Fields that define WHAT the thing is or WHEN it's scheduled (e.g., task name, cron expression, route path, cache key, job class, query SQL)
+  - **Exclude**: Fields that define HOW it runs or WHAT happened (e.g., withoutOverlapping, duration, status, memory usage, response code)
+  - **Identity vs. Execution**: Identity fields define the "what" (e.g., route path for HTTP requests, cache key for cache operations, SQL for queries), while execution details define the "how" or results (e.g., middleware applied, cache hit/miss, query bindings)
+  - **Consistency**: Changing identity fields should create a new group; changing execution details should not. For example, changing a route path creates a new group, but changing response status does not
+  - **Backward compatibility**: When adding new fields to `_group` hashes, consider whether to include them conditionally to maintain existing group hashes. For example, only include `repeat_seconds` when it's non-zero to preserve hashes for regular scheduled tasks
   - **Examples**: 
     - ✅ Scheduled task: `{name},{expression},{timezone},{repeatSeconds}` when repeatSeconds > 0, else `{name},{expression},{timezone}` - defines the schedule identity while preserving backward compatibility
     - ✅ HTTP request: `{methods},{domain},{route}` - defines the route identity
