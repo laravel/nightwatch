@@ -173,7 +173,6 @@ Compatibility flags in the `Compatibility` class are used to handle version-spec
 
 ## Performance
 
-- **Lazy evaluation**: Use `LazyValue` for expensive computations
 - **Sampling**: Respect sampling configuration
 - **Buffering**: Use `RecordsBuffer` for efficient batching
 - **Memory**: Be mindful of memory usage, especially in long-running processes
@@ -200,6 +199,7 @@ Compatibility flags in the `Compatibility` class are used to handle version-spec
 - **Record classes**: Located in `src/Records/`
 - **Payload structure**: Follow existing payload structure patterns
 - **Versioning**: Use payload version (`'v' => 1`)
+- **Lazy values**: Use `LazyValue` for values that cannot be determined at event capture time and need to be evaluated later when the record is serialized. This is for values that depend on state that will change or finalize between when the event is captured and when the record is sent to the ingest service
 - **Grouping**: Use `_group` hash for similar events. The `_group` key identifies the "type" or "identity" of an event, grouping events that are the same "thing" even if they're different executions. **Include fields that define the identity of the event, not execution details or results.** Guidelines:
   - **Include**: Fields that define WHAT the thing is or WHEN it's scheduled (e.g., task name, cron expression, repeat frequency, route path, job class)
   - **Exclude**: Fields that define HOW it runs or WHAT happened (e.g., withoutOverlapping, duration, status, memory usage)
