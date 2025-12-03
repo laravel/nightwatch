@@ -62,6 +62,7 @@ final class Core
         public array $config,
     ) {
         $this->routesWithMiddlewareRegistered = new WeakMap;
+        $this->scheduledTasksSampleRates = new WeakMap;
     }
 
     /**
