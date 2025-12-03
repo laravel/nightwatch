@@ -7,6 +7,7 @@ use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskSkipped;
+use Illuminate\Console\Scheduling\Event;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Database\Events\QueryExecuted;
@@ -57,6 +58,11 @@ trait CapturesState
     private bool $sampling = true;
 
     private bool $paused = false;
+
+    /**
+     * @var WeakMap<Event, float>
+     */
+    private WeakMap $scheduledTasksSampleRates;
 
     /**
      * @var WeakMap<Route, bool>
@@ -120,9 +126,9 @@ trait CapturesState
     /**
      * @internal
      */
-    public function configureScheduledTaskSampling(): void
+    public function configureScheduledTaskSampling(Event $event): void
     {
-        $this->sample($this->config['sampling']['scheduled_tasks']);
+        $this->sample(rate: $this->scheduledTasksSampleRates[$event] ?? $this->config['sampling']['scheduled_tasks']);
     }
 
     /**
@@ -613,7 +619,7 @@ trait CapturesState
     /**
      * @internal
      */
-    public function prepareForNextScheduledTask(): void
+    public function prepareForNextScheduledTask(Event $event): void
     {
         /*
          * Reset state for the current scheduled task execution.
@@ -629,7 +635,7 @@ trait CapturesState
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
         $this->executionState->timestamp = $this->clock->microtime();
-        $this->configureScheduledTaskSampling();
+        $this->configureScheduledTaskSampling($event);
     }
 
     /**
@@ -671,6 +677,19 @@ trait CapturesState
     public function shouldCaptureLogs(): bool
     {
         return $this->enabled();
+    }
+
+    public function sampleScheduledTask(Event $event, float $rate = 1.0): void
+    {
+        $this->scheduledTasksSampleRates[$event] = $rate;
+    }
+
+    /**
+     * @internal
+     */
+    public function shouldSampleScheduledTask(Event $event): void
+    {
+        $this->sample($this->scheduledTasksSampleRates[$event] ?? 1.0);
     }
 
     /**
