@@ -687,14 +687,6 @@ trait CapturesState
     /**
      * @internal
      */
-    public function shouldSampleScheduledTask(Event $event): void
-    {
-        $this->sample($this->scheduledTasksSampleRates[$event] ?? 1.0);
-    }
-
-    /**
-     * @internal
-     */
     public function flush(): void
     {
         $this->executionState->flush();
