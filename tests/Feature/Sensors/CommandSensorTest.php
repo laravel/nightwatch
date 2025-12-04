@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Laravel\Nightwatch\Compatibility;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\NullOutput;
 use Tests\TestCase;
 
 use function array_shift;
@@ -284,6 +286,28 @@ class CommandSensorTest extends TestCase
 
         $this->assertSame(0, $status);
         $ingest->assertWrittenTimes(0);
+    }
+
+    #[DataProvider('vendorCommands')]
+    public function test_it_samples_vendor_commands_separately(string $command): void
+    {
+        $ingest = $this->fakeIngest();
+        Artisan::command($command, function () {});
+
+        $status = Artisan::handle($input = new StringInput($command), new NullOutput);
+        Artisan::terminate($input, $status);
+
+        $ingest->assertWrittenTimes(0);
+    }
+
+    public static function vendorCommands(): iterable
+    {
+        yield ['model:prune'];
+        yield ['horizon:snapshot'];
+        yield ['horizon:status'];
+        yield ['passport:purge'];
+        yield ['sanctum:prune-expired'];
+        yield ['auth:clear-resets'];
     }
 }
 
