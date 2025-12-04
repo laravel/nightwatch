@@ -135,6 +135,10 @@ final class CommandStartingListener
 
     private function prepareForCommand(CommandStarting $event): void
     {
+        if (! $this->kernel instanceof ConsoleKernel) {
+            return;
+        }
+
         $this->nightwatch->prepareForCommand($event->command);
 
         /**
