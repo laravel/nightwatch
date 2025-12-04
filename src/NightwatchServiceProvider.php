@@ -108,6 +108,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      *        commands?: float,
      *        exceptions?: float,
      *        scheduled_tasks?: float,
+     *        vendor_commands?: float,
      *     },
      *     filtering?: array{
      *         ignore_cache_events?: bool,
@@ -270,6 +271,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                     'commands' => $this->nightwatchConfig['sampling']['commands'] ?? 1.0,
                     'exceptions' => $this->nightwatchConfig['sampling']['exceptions'] ?? 1.0,
                     'scheduled_tasks' => $this->nightwatchConfig['sampling']['scheduled_tasks'] ?? 1.0,
+                    'vendor_commands' => $this->nightwatchConfig['sampling']['vendor_commands'] ?? 0.0,
                 ],
                 'filtering' => [
                     'ignore_cache_events' => (bool) ($this->nightwatchConfig['filtering']['ignore_cache_events'] ?? false),

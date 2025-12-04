@@ -54,6 +54,7 @@ final class CommandStartingListener
                 'queue:work', 'queue:listen', 'horizon:work', 'vapor:work' => $this->registerJobHooks($event),
                 'schedule:run', 'schedule:work' => $this->registerScheduledTaskHooks(),
                 'schedule:finish' => null,
+                'horizon:snapshot', 'horizon:status', 'passport:purge', 'sanctum:prune-expired', 'model:prune', 'auth:clear-resets' => $this->registerVendorCommandHooks($event),
                 default => $this->registerCommandHooks($event),
             };
         } catch (Throwable $e) {
@@ -118,6 +119,22 @@ final class CommandStartingListener
 
         $this->nightwatch->configureCommandSampling();
 
+        $this->prepareForCommand($event);
+    }
+
+    private function registerVendorCommandHooks(CommandStarting $event): void
+    {
+        if (! $this->kernel instanceof ConsoleKernel) {
+            return;
+        }
+
+        $this->nightwatch->configureVendorCommandSampling();
+
+        $this->prepareForCommand($event);
+    }
+
+    private function prepareForCommand(CommandStarting $event): void
+    {
         $this->nightwatch->prepareForCommand($event->command);
 
         /**

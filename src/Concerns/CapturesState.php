@@ -120,6 +120,14 @@ trait CapturesState
     /**
      * @internal
      */
+    public function configureVendorCommandSampling(): void
+    {
+        $this->sample($this->config['sampling']['vendor_commands']);
+    }
+
+    /**
+     * @internal
+     */
     public function configureScheduledTaskSampling(): void
     {
         $this->sample($this->config['sampling']['scheduled_tasks']);

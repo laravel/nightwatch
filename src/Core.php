@@ -37,6 +37,7 @@ final class Core
      *         commands: float,
      *         exceptions: float,
      *         scheduled_tasks: float,
+     *         vendor_commands: float,
      *     },
      *     filtering: array{
      *         ignore_cache_events: bool,
