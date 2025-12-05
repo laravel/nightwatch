@@ -32,6 +32,7 @@ class ArchitectureTest extends TestCase
     public function test_classes_are_internal(): void
     {
         $except = [
+            \Laravel\Nightwatch\Console\Sample::class,
             \Laravel\Nightwatch\Core::class,
             \Laravel\Nightwatch\Facades\Nightwatch::class,
             \Laravel\Nightwatch\Http\Middleware\Sample::class,
