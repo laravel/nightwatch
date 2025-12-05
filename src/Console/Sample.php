@@ -10,6 +10,6 @@ final class Sample
 {
     public static function rate(float $rate = 1.0): Closure
     {
-        return fn (Event $event) => Nightwatch::sampleScheduledTask($event, $rate);
+        return static fn (Event $event) => Nightwatch::sampleScheduledTask($event, $rate);
     }
 }
