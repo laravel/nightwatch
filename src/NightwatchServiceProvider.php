@@ -17,7 +17,6 @@ use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Console\Events\CommandStarting;
-use Illuminate\Console\Scheduling\Event;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -70,7 +69,6 @@ use Laravel\Nightwatch\Hooks\RouteMatchedListener;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Http\Middleware\Sample;
-use Laravel\Nightwatch\Mixins\ScheduledTaskSampling;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Support\Uuid;
@@ -135,8 +133,6 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        Event::mixin(new ScheduledTaskSampling);
-
         try {
             $this->captureTimestamp();
             Compatibility::boot($this->app);
