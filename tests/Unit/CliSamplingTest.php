@@ -10,6 +10,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\Console\Sample;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\NullOutput;
@@ -142,5 +143,23 @@ class CliSamplingTest extends TestCase
 
         event(new ScheduledTaskStarting($this->app[Schedule::class]->call('php artisan inspire')));
         $this->assertFalse(Nightwatch::sampling());
+    }
+
+    public function test_it_applies_individual_sample_rates_to_scheduled_tasks(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        Artisan::command('schedule_1', fn () => null);
+        Artisan::command('schedule_2', fn () => null);
+
+        event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
+
+        event(new ScheduledTaskStarting($this->app[Schedule::class]->command('schedule_1')->everyMinute()->tap(Sample::rate(0.0))));
+        $this->assertFalse(Nightwatch::sampling());
+
+        event(new ScheduledTaskStarting($this->app[Schedule::class]->command('schedule_2')->everyMinute()));
+        $this->assertTrue(Nightwatch::sampling());
+
+        // $ingest->assertWrittenTimes(1);
     }
 }
