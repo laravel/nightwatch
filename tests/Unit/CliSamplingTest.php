@@ -149,17 +149,13 @@ class CliSamplingTest extends TestCase
     {
         $ingest = $this->fakeIngest();
 
-        Artisan::command('schedule_1', fn () => null);
-        Artisan::command('schedule_2', fn () => null);
-
         event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
 
-        event(new ScheduledTaskStarting($this->app[Schedule::class]->command('schedule_1')->everyMinute()->tap(Sample::rate(0.0))));
-        $this->assertFalse(Nightwatch::sampling());
+        $this->app[Schedule::class]->call(fn () => 'schedule 1')->everyMinute()->tap(Sample::rate(0.0));
+        $this->app[Schedule::class]->call(fn () => 'schedule 2')->everyMinute()->tap(Sample::rate(1.0))->description('schedule 2');
+        Artisan::call('schedule:run');
 
-        event(new ScheduledTaskStarting($this->app[Schedule::class]->command('schedule_2')->everyMinute()));
-        $this->assertTrue(Nightwatch::sampling());
-
-        // $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:0.name', 'schedule 2');
     }
 }
