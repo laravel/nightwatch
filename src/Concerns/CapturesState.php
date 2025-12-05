@@ -679,6 +679,9 @@ trait CapturesState
         return $this->enabled();
     }
 
+    /**
+     * @internal
+     */
     public function sampleScheduledTask(Event $event, float $rate = 1.0): void
     {
         $this->scheduledTasksSampleRates[$event] = $rate;
