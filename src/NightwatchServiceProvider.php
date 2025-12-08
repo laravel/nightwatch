@@ -17,7 +17,6 @@ use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Console\Events\CommandStarting;
-use Illuminate\Console\Scheduling\Event;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernelContract;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -82,10 +81,8 @@ use Throwable;
 use function class_exists;
 use function defined;
 use function hash;
-use function method_exists;
 use function microtime;
 use function substr;
-use function tap;
 
 /**
  * @internal
@@ -136,12 +133,6 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        if (! method_exists(Event::class, 'tap')) {
-            Event::macro('tap', function ($callable) {
-                return tap($this, $callable);
-            });
-        }
-
         try {
             $this->captureTimestamp();
             Compatibility::boot($this->app);

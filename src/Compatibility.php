@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
+use Illuminate\Console\Scheduling\Event;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Context;
 use ReflectionProperty;
@@ -9,6 +10,7 @@ use Symfony\Component\Console\Input\ArgvInput;
 
 use function implode;
 use function method_exists;
+use function tap;
 use function value;
 use function version_compare;
 
@@ -94,6 +96,13 @@ final class Compatibility
          */
         self::$queuedJobDurationCapturable =
             version_compare($version, '10.42.0', '>=');
+
+        /**
+         * @see https://github.com/laravel/framework/releases/tag/v11.5.0
+         */
+        if (version_compare($version, '11.5.0', '<')) {
+            Event::macro('tap', fn (callable $callable) => tap($this, $callable));
+        }
     }
 
     /**
