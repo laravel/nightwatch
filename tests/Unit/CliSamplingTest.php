@@ -149,8 +149,8 @@ class CliSamplingTest extends TestCase
     {
         $ingest = $this->fakeIngest();
 
-        $this->app[Schedule::class]->call(fn () => 'schedule 1')->everyMinute()->tap(Sample::rate(0.0));
-        $this->app[Schedule::class]->call(fn () => 'schedule 2')->everyMinute()->tap(Sample::rate(1.0))->description('schedule 2');
+        $this->app[Schedule::class]->call(fn () => 'schedule 1')->everyMinute()->tap(Sample::never());
+        $this->app[Schedule::class]->call(fn () => 'schedule 2')->everyMinute()->tap(Sample::always())->description('schedule 2');
         Artisan::call('schedule:run');
 
         $ingest->assertWrittenTimes(1);
