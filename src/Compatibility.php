@@ -98,6 +98,7 @@ final class Compatibility
             version_compare($version, '10.42.0', '>=');
 
         /**
+         * @see https://github.com/laravel/framework/commit/6da5093aa672d26d0357b35
          * @see https://github.com/laravel/framework/releases/tag/v11.5.0
          */
         if (version_compare($version, '11.5.0', '<')) {
