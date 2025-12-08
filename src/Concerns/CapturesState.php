@@ -682,7 +682,7 @@ trait CapturesState
     /**
      * @internal
      */
-    public function sampleScheduledTask(Event $event, float $rate = 1.0): void
+    public function sampleScheduledTask(Event $event, float $rate): void
     {
         $this->scheduledTasksSampleRates[$event] = $rate;
     }
