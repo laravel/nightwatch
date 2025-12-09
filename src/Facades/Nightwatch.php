@@ -29,6 +29,8 @@ use function call_user_func;
  * @method static void rejectCacheKeys(array $keys)
  * @method static void captureDefaultVendorCacheKeys(bool $capture = true)
  * @method static array defaultVendorCacheKeys()
+ * @method static void captureDefaultVendorCommands(bool $capture = true)
+ * @method static array defaultVendorCommands()
  * @method static void rejectMail(callable $callback)
  * @method static void rejectNotifications(callable $callback)
  * @method static void rejectOutgoingRequests(callable $callback)
