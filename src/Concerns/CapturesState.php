@@ -119,8 +119,10 @@ trait CapturesState
      */
     public function configureCommandSampling(string $command): void
     {
-        if (in_array($command, $this->defaultVendorCommands(), true)) {
+        if (! $this->captureDefaultVendorCommands && in_array($command, $this->defaultVendorCommands(), true)) {
             $this->dontSample();
+
+            return;
         }
 
         $this->sample(match (Compatibility::getSamplingFromContext(null)) {
@@ -135,6 +137,10 @@ trait CapturesState
      */
     public function configureScheduledTaskSampling(Event $event): void
     {
+        if (! $this->captureDefaultVendorCommands && in_array($event->command, $this->defaultVendorCommands(), true)) {
+            $this->dontSample();
+        }
+
         $this->sample(rate: $this->scheduledTasksSampleRates[$event] ?? $this->config['sampling']['scheduled_tasks']);
     }
 
