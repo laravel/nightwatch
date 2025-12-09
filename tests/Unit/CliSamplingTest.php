@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Artisan;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Console\Sample;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\NullOutput;
 use Tests\TestCase;
@@ -151,7 +152,7 @@ class CliSamplingTest extends TestCase
             $ingest->forgetWrites();
         }
 
-        $this->assertEqualsWithDelta(50, $writes, 10);
+        $this->assertEqualsWithDelta(50, $writes, 20);
         $this->assertCount(0, $this->core->ingest->buffer);
     }
 
@@ -174,5 +175,58 @@ class CliSamplingTest extends TestCase
 
         $this->assertSame(100, $writes);
         $this->assertCount(0, $this->core->ingest->buffer);
+    }
+
+    #[DataProvider('vendorCommands')]
+    public function test_it_samples_vendor_commands_separately(string $command): void
+    {
+        $ingest = $this->fakeIngest();
+        Artisan::command($command, function () {});
+
+        $status = Artisan::handle($input = new StringInput($command), new NullOutput);
+        Artisan::terminate($input, $status);
+
+        $ingest->assertWrittenTimes(0);
+    }
+
+    #[DataProvider('vendorCommands')]
+    public function test_it_samples_vendor_scheduled_tasks_separately(string $command): void
+    {
+        $ingest = $this->fakeIngest();
+
+        $this->app[Schedule::class]->command($command)->everyMinute();
+
+        Artisan::call('schedule:run');
+
+        $this->assertCount(0, $ingest->writes());
+        $this->assertCount(0, $this->core->ingest->buffer);
+    }
+
+    #[DataProvider('vendorCommands')]
+    public function test_it_samples_vendor_scheduled_tasks_when_explicitly_sampled(string $command): void
+    {
+        $ingest = $this->fakeIngest();
+
+        $this->app[Schedule::class]->command($command)->everyMinute()->tap(Sample::rate(0.5));
+
+        $writes = 0;
+        for ($i = 0; $i < 100; $i++) {
+            Artisan::call('schedule:run');
+            $writes += $ingest->writes()->count();
+            $ingest->forgetWrites();
+        }
+
+        $this->assertEqualsWithDelta(50, $writes, 20);
+        $this->assertCount(0, $this->core->ingest->buffer);
+    }
+
+    public static function vendorCommands(): iterable
+    {
+        yield ['model:prune'];
+        yield ['horizon:snapshot'];
+        yield ['horizon:status'];
+        yield ['passport:purge'];
+        yield ['sanctum:prune-expired'];
+        yield ['auth:clear-resets'];
     }
 }

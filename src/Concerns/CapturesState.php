@@ -48,6 +48,7 @@ use function in_array;
 use function memory_reset_peak_usage;
 use function preg_match;
 use function random_int;
+use function str_contains;
 
 /**
  * @internal
@@ -137,11 +138,19 @@ trait CapturesState
      */
     public function configureScheduledTaskSampling(Event $event): void
     {
-        if (! $this->captureDefaultVendorCommands && in_array($event->command, $this->defaultVendorCommands(), true)) {
-            $this->dontSample();
+        $rate = $this->config['sampling']['scheduled_tasks'];
+
+        if (! $this->captureDefaultVendorCommands) {
+            foreach ($this->defaultVendorCommands() as $vendorCommand) {
+                if (str_contains($event->command, $vendorCommand)) {
+                    $rate = 0.0;
+
+                    break;
+                }
+            }
         }
 
-        $this->sample(rate: $this->scheduledTasksSampleRates[$event] ?? $this->config['sampling']['scheduled_tasks']);
+        $this->sample(rate: $this->scheduledTasksSampleRates[$event] ?? $rate);
     }
 
     /**
