@@ -44,6 +44,7 @@ use function array_shift;
 use function array_unshift;
 use function debug_backtrace;
 use function env;
+use function in_array;
 use function memory_reset_peak_usage;
 use function preg_match;
 use function random_int;
@@ -116,8 +117,12 @@ trait CapturesState
     /**
      * @internal
      */
-    public function configureCommandSampling(): void
+    public function configureCommandSampling(string $command): void
     {
+        if (in_array($command, $this->defaultVendorCommands(), true)) {
+            $this->dontSample();
+        }
+
         $this->sample(match (Compatibility::getSamplingFromContext(null)) {
             true => 1.0,
             false => 0.0,

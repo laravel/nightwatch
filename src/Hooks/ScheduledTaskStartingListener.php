@@ -7,6 +7,8 @@ use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
+use function in_array;
+
 /**
  * @internal
  */
@@ -24,7 +26,11 @@ final class ScheduledTaskStartingListener
     public function __invoke(ScheduledTaskStarting $event): void
     {
         try {
-            $this->nightwatch->prepareForNextScheduledTask($event->task);
+            $this->nightwatch->prepareForNextScheduledTask();
+
+            if (in_array($event->task->command, $this->nightwatch->defaultVendorCommands(), true)) {
+                $this->nightwatch->dontSample();
+            }
         } catch (Throwable $e) {
             $this->nightwatch->report($e, handled: true);
         }
