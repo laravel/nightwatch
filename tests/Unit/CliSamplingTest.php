@@ -138,22 +138,41 @@ class CliSamplingTest extends TestCase
 
     public function test_it_can_use_global_config_to_sample_scheduled_tasks(): void
     {
-        $this->core->config['sampling']['scheduled_tasks'] = 0;
-        event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
+        $ingest = $this->fakeIngest();
 
-        event(new ScheduledTaskStarting($this->app[Schedule::class]->call('php artisan inspire')));
-        $this->assertFalse(Nightwatch::sampling());
+        $this->core->config['sampling']['scheduled_tasks'] = 0.5;
+
+        $this->app[Schedule::class]->call(fn () => 'schedule 1')->everyMinute();
+
+        $writes = 0;
+        for ($i = 0; $i < 100; $i++) {
+            Artisan::call('schedule:run');
+            $writes += $ingest->writes()->count();
+            $ingest->forgetWrites();
+        }
+
+        $this->assertEqualsWithDelta(50, $writes, 10);
+        $this->assertCount(0, $this->core->ingest->buffer);
     }
 
     public function test_it_applies_individual_sample_rates_to_scheduled_tasks(): void
     {
         $ingest = $this->fakeIngest();
 
+        $this->core->config['sampling']['scheduled_tasks'] = 0.5;
+
         $this->app[Schedule::class]->call(fn () => 'schedule 1')->everyMinute()->tap(Sample::never());
         $this->app[Schedule::class]->call(fn () => 'schedule 2')->everyMinute()->tap(Sample::always())->description('schedule 2');
-        Artisan::call('schedule:run');
 
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('scheduled-task:0.name', 'schedule 2');
+        $writes = 0;
+        for ($i = 0; $i < 100; $i++) {
+            Artisan::call('schedule:run');
+            $ingest->assertLatestWrite('scheduled-task:0.name', 'schedule 2');
+            $writes += $ingest->writes()->count();
+            $ingest->forgetWrites();
+        }
+
+        $this->assertSame(100, $writes);
+        $this->assertCount(0, $this->core->ingest->buffer);
     }
 }
