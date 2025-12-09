@@ -193,6 +193,7 @@ class CliSamplingTest extends TestCase
     public function test_it_samples_vendor_scheduled_tasks_separately(string $command): void
     {
         $ingest = $this->fakeIngest();
+        Artisan::command($command, function () {});
 
         $this->app[Schedule::class]->command($command)->everyMinute();
 
@@ -206,6 +207,7 @@ class CliSamplingTest extends TestCase
     public function test_it_samples_vendor_scheduled_tasks_when_explicitly_sampled(string $command): void
     {
         $ingest = $this->fakeIngest();
+        Artisan::command($command, function () {});
 
         $this->app[Schedule::class]->command($command)->everyMinute()->tap(Sample::rate(0.5));
 
