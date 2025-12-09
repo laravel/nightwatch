@@ -222,11 +222,9 @@ class CliSamplingTest extends TestCase
 
     public static function vendorCommands(): iterable
     {
-        yield ['model:prune'];
         yield ['horizon:snapshot'];
         yield ['horizon:status'];
-        yield ['passport:purge'];
-        yield ['sanctum:prune-expired'];
-        yield ['auth:clear-resets'];
+        yield ['queue:monitor'];
+        yield ['schedule:list'];
     }
 }

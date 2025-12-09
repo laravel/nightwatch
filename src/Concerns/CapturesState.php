@@ -169,12 +169,10 @@ trait CapturesState
     public static function defaultVendorCommands(): array
     {
         return [
-            'auth:clear-resets',
             'horizon:snapshot',
             'horizon:status',
-            'model:prune',
-            'passport:purge',
-            'sanctum:prune-expired',
+            'queue:monitor',
+            'schedule:list',
         ];
     }
 
