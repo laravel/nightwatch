@@ -59,6 +59,8 @@ trait CapturesState
 
     private bool $paused = false;
 
+    private bool $captureDefaultVendorCommands = false;
+
     /**
      * @var WeakMap<Event, float>
      */
@@ -129,6 +131,31 @@ trait CapturesState
     public function configureScheduledTaskSampling(Event $event): void
     {
         $this->sample(rate: $this->scheduledTasksSampleRates[$event] ?? $this->config['sampling']['scheduled_tasks']);
+    }
+
+    /**
+     * @api
+     */
+    public function captureDefaultVendorCommands(bool $capture = true): void
+    {
+        $this->captureDefaultVendorCommands = $capture;
+    }
+
+    /**
+     * @api
+     *
+     * @return list<string>
+     */
+    public static function defaultVendorCommands(): array
+    {
+        return [
+            'auth:clear-resets',
+            'horizon:snapshot',
+            'horizon:status',
+            'model:prune',
+            'passport:purge',
+            'sanctum:prune-expired',
+        ];
     }
 
     /**
