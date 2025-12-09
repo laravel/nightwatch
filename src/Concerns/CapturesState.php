@@ -141,8 +141,8 @@ trait CapturesState
         $rate = $this->config['sampling']['scheduled_tasks'];
 
         if (! $this->captureDefaultVendorCommands) {
-            foreach ($this->defaultVendorCommands() as $vendorCommand) {
-                if (str_contains($event->command, $vendorCommand)) {
+            foreach ($this->defaultVendorCommands() as $command) {
+                if (str_contains($event->command ?? '', $command)) {
                     $rate = 0.0;
 
                     break;
