@@ -219,7 +219,7 @@ class CliSamplingTest extends TestCase
     {
         yield ['horizon:snapshot'];
         yield ['horizon:status'];
-        yield ['queue:monitor'];
+        yield ['queue:monitor default'];
         yield ['schedule:list'];
     }
 }
