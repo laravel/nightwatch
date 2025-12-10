@@ -17,6 +17,7 @@ use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\NullOutput;
 use Tests\TestCase;
 
+use function dirname;
 use function event;
 
 class CliSamplingTest extends TestCase
@@ -28,6 +29,8 @@ class CliSamplingTest extends TestCase
         $this->forceCommandExecutionState();
 
         parent::setUp();
+
+        $this->app->setBasePath(dirname($this->app->basePath()));
     }
 
     public function test_it_samples_job_attempts(): void
@@ -132,7 +135,7 @@ class CliSamplingTest extends TestCase
         event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
 
         Nightwatch::dontSample();
-        event(new ScheduledTaskStarting($this->app[Schedule::class]->call('php artisan inspire')));
+        event(new ScheduledTaskStarting($this->app[Schedule::class]->command('inspire')));
 
         $this->assertTrue(Nightwatch::sampling());
     }
@@ -181,7 +184,6 @@ class CliSamplingTest extends TestCase
     public function test_it_samples_vendor_commands_separately(string $command): void
     {
         $ingest = $this->fakeIngest();
-        Artisan::command($command, function () {});
 
         $status = Artisan::handle($input = new StringInput($command), new NullOutput);
         Artisan::terminate($input, $status);
@@ -192,34 +194,25 @@ class CliSamplingTest extends TestCase
     #[DataProvider('vendorCommands')]
     public function test_it_samples_vendor_scheduled_tasks_separately(string $command): void
     {
-        $ingest = $this->fakeIngest();
-        Artisan::command($command, function () {});
+        event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
 
-        $this->app[Schedule::class]->command($command)->everyMinute();
+        event(new ScheduledTaskStarting($this->app[Schedule::class]->command($command)->everyMinute()));
 
-        Artisan::call('schedule:run');
-
-        $this->assertCount(0, $ingest->writes());
-        $this->assertCount(0, $this->core->ingest->buffer);
+        $this->assertFalse(Nightwatch::sampling());
     }
 
     #[DataProvider('vendorCommands')]
     public function test_it_samples_vendor_scheduled_tasks_when_explicitly_sampled(string $command): void
     {
-        $ingest = $this->fakeIngest();
-        Artisan::command($command, function () {});
+        event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
 
-        $this->app[Schedule::class]->command($command)->everyMinute()->tap(Sample::rate(0.5));
-
-        $writes = 0;
+        $samples = 0;
         for ($i = 0; $i < 100; $i++) {
-            Artisan::call('schedule:run');
-            $writes += $ingest->writes()->count();
-            $ingest->forgetWrites();
+            event(new ScheduledTaskStarting($this->app[Schedule::class]->command($command)->everyMinute()->tap(Sample::rate(0.5))));
+            $samples += (int) Nightwatch::sampling();
         }
 
-        $this->assertEqualsWithDelta(50, $writes, 20);
-        $this->assertCount(0, $this->core->ingest->buffer);
+        $this->assertEqualsWithDelta(50, $samples, 20);
     }
 
     public static function vendorCommands(): iterable
