@@ -199,6 +199,20 @@ class CliSamplingTest extends TestCase
     }
 
     #[DataProvider('vendorCommands')]
+    public function test_it_samples_vendor_commands_when_enabled(string $command): void
+    {
+        $ingest = $this->fakeIngest();
+        Artisan::command($command, fn () => 0);
+
+        Nightwatch::captureDefaultVendorCommands();
+
+        $status = Artisan::handle($input = new StringInput($command), new NullOutput);
+        Artisan::terminate($input, $status);
+
+        $ingest->assertWrittenTimes(1);
+    }
+
+    #[DataProvider('vendorCommands')]
     public function test_it_samples_vendor_scheduled_tasks_separately(string $command): void
     {
         event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
@@ -206,6 +220,18 @@ class CliSamplingTest extends TestCase
         event(new ScheduledTaskStarting($this->app[Schedule::class]->command($command)->everyMinute()));
 
         $this->assertFalse(Nightwatch::sampling());
+    }
+
+    #[DataProvider('vendorCommands')]
+    public function test_it_samples_vendor_scheduled_tasks_when_enabled(string $command): void
+    {
+        Nightwatch::captureDefaultVendorCommands();
+
+        event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
+
+        event(new ScheduledTaskStarting($this->app[Schedule::class]->command($command)->everyMinute()));
+
+        $this->assertTrue(Nightwatch::sampling());
     }
 
     #[DataProvider('vendorCommands')]
