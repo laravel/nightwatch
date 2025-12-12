@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Laravel\Nightwatch\Compatibility;
 use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\NullOutput;
 use Tests\TestCase;
 
 use function array_shift;
@@ -280,6 +281,28 @@ class CommandSensorTest extends TestCase
         $ingest = $this->fakeIngest();
 
         $status = Artisan::handle($input = new StringInput('schedule:finish 123'));
+        Artisan::terminate($input, $status);
+
+        $this->assertSame(0, $status);
+        $ingest->assertWrittenTimes(0);
+    }
+
+    public function test_it_ignores_inspire_command(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        $status = Artisan::handle($input = new StringInput('inspire'), new NullOutput);
+        Artisan::terminate($input, $status);
+
+        $this->assertSame(0, $status);
+        $ingest->assertWrittenTimes(0);
+    }
+
+    public function test_it_ignores_help_command(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        $status = Artisan::handle($input = new StringInput('help'), new NullOutput);
         Artisan::terminate($input, $status);
 
         $this->assertSame(0, $status);

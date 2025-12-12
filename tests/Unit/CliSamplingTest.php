@@ -19,6 +19,7 @@ use Tests\TestCase;
 
 use function dirname;
 use function event;
+use function fake;
 
 class CliSamplingTest extends TestCase
 {
@@ -133,9 +134,14 @@ class CliSamplingTest extends TestCase
     public function test_it_resets_sampling_after_each_task(): void
     {
         event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
+        Artisan::command($command = fake()->name(), fn () => 0);
 
         Nightwatch::dontSample();
-        event(new ScheduledTaskStarting($this->app[Schedule::class]->command('inspire')));
+        event(new ScheduledTaskStarting($this->app[Schedule::class]->command($command)));
+        $this->assertTrue(Nightwatch::sampling());
+
+        Artisan::command($command = fake()->name(), fn () => 0);
+        event(new ScheduledTaskStarting($this->app[Schedule::class]->command($command)));
 
         $this->assertTrue(Nightwatch::sampling());
     }
@@ -184,6 +190,7 @@ class CliSamplingTest extends TestCase
     public function test_it_samples_vendor_commands_separately(string $command): void
     {
         $ingest = $this->fakeIngest();
+        Artisan::command($command, fn () => 0);
 
         $status = Artisan::handle($input = new StringInput($command), new NullOutput);
         Artisan::terminate($input, $status);
@@ -217,9 +224,18 @@ class CliSamplingTest extends TestCase
 
     public static function vendorCommands(): iterable
     {
+        yield ['auth:clear-resets'];
+        yield ['config:cache'];
         yield ['horizon:snapshot'];
         yield ['horizon:status'];
-        yield ['queue:monitor default'];
+        yield ['horizon:supervisor'];
+        yield ['inertia:start-ssr'];
+        yield ['invoke-serialized-closure'];
+        yield ['model:prune'];
+        yield ['nightwatch:agent'];
+        yield ['nightwatch:status'];
+        yield ['queue:monitor'];
+        yield ['reverb:start'];
         yield ['schedule:list'];
     }
 }

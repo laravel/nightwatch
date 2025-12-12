@@ -169,9 +169,18 @@ trait CapturesState
     public static function defaultVendorCommands(): array
     {
         return [
+            'auth:clear-resets',
+            'config:cache',
             'horizon:snapshot',
             'horizon:status',
+            'horizon:supervisor',
+            'inertia:start-ssr',
+            'invoke-serialized-closure',
+            'model:prune',
+            'nightwatch:agent',
+            'nightwatch:status',
             'queue:monitor',
+            'reverb:start',
             'schedule:list',
         ];
     }
