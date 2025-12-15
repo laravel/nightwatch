@@ -47,8 +47,10 @@ use function env;
 use function in_array;
 use function memory_reset_peak_usage;
 use function preg_match;
+use function preg_split;
 use function random_int;
-use function str_contains;
+use function str_replace;
+use function trim;
 
 /**
  * @internal
@@ -140,14 +142,16 @@ trait CapturesState
     {
         $rate = $this->config['sampling']['scheduled_tasks'];
 
-        if (! $this->captureDefaultVendorCommands) {
-            foreach ($this->defaultVendorCommands() as $command) {
-                if (str_contains($event->command ?? '', $command)) {
-                    $rate = 0.0;
+        $command = str_replace(
+            [Artisan::phpBinary(), Artisan::artisanBinary()],
+            '',
+            $event->command
+        );
 
-                    break;
-                }
-            }
+        $command = preg_split('/\s+/', trim($command), 2)[0] ?? '';
+
+        if (! $this->captureDefaultVendorCommands && in_array($command, $this->defaultVendorCommands(), true)) {
+            $rate = 0.0;
         }
 
         $this->sample(rate: $this->scheduledTasksSampleRates[$event] ?? $rate);
