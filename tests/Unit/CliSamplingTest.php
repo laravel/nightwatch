@@ -187,7 +187,7 @@ class CliSamplingTest extends TestCase
     }
 
     #[DataProvider('vendorCommands')]
-    public function test_it_samples_vendor_commands_separately(string $command): void
+    public function test_it_does_not_sample_vendor_commands(string $command): void
     {
         $ingest = $this->fakeIngest();
         Artisan::command($command, fn () => 0);
@@ -213,7 +213,7 @@ class CliSamplingTest extends TestCase
     }
 
     #[DataProvider('vendorCommands')]
-    public function test_it_samples_vendor_scheduled_tasks_separately(string $command): void
+    public function test_it_does_not_sample_scheduled_vendor_commands(string $command): void
     {
         event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
 
