@@ -145,7 +145,7 @@ trait CapturesState
         $command = str_replace(
             [Artisan::phpBinary(), Artisan::artisanBinary()],
             '',
-            $event->command
+            $event->command ?? ''
         );
 
         $command = preg_split('/\s+/', trim($command), 2)[0] ?? '';
