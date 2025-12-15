@@ -150,7 +150,7 @@ trait CapturesState
             $command = preg_split('/\s+/', trim($command), 2)[0] ?? '';
 
             if (in_array($command, $this->defaultVendorCommands(), true)) {
-                $this->sample(0.0);
+                $this->dontSample();
 
                 return;
             }
