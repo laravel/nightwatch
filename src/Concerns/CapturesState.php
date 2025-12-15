@@ -140,18 +140,20 @@ trait CapturesState
      */
     public function configureScheduledTaskSampling(Event $event): void
     {
-        $command = str_replace(
-            [Artisan::phpBinary(), Artisan::artisanBinary()],
-            '',
-            $event->command ?? ''
-        );
+        if (! $this->captureDefaultVendorCommands) {
+            $command = str_replace(
+                [Artisan::phpBinary(), Artisan::artisanBinary()],
+                '',
+                $event->command ?? ''
+            );
 
-        $command = preg_split('/\s+/', trim($command), 2)[0] ?? '';
+            $command = preg_split('/\s+/', trim($command), 2)[0] ?? '';
 
-        if (! $this->captureDefaultVendorCommands && in_array($command, $this->defaultVendorCommands(), true)) {
-            $this->sample(0.0);
+            if (in_array($command, $this->defaultVendorCommands(), true)) {
+                $this->sample(0.0);
 
-            return;
+                return;
+            }
         }
 
         $this->sample(rate: $this->scheduledTasksSampleRates[$event] ?? $this->config['sampling']['scheduled_tasks']);
