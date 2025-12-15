@@ -237,6 +237,7 @@ class CliSamplingTest extends TestCase
     #[DataProvider('vendorCommands')]
     public function test_it_samples_vendor_scheduled_tasks_when_explicitly_sampled(string $command): void
     {
+        Nightwatch::captureDefaultVendorCommands();
         event(new CommandStarting('schedule:run', new StringInput(''), new NullOutput));
 
         $samples = 0;
