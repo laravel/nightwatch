@@ -1,6 +1,19 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.19.0...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.20.0...1.x)
+
+## [v1.20.0](https://github.com/laravel/nightwatch/compare/v1.19.0...v1.20.0) - 2025-12-16
+
+### What's Changed
+
+* PHP 8.5 support by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/309
+* Allow interaction with the Core class by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/311
+* Use sampling from context if already present by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/308
+* Add sample rate for scheduled tasks by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/312
+* Allow customising sample rate for individual scheduled tasks by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/313
+* Disable vendor command sampling by default by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/315
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.19.0...v1.20.0
 
 ## [v1.19.0](https://github.com/laravel/nightwatch/compare/v1.18.1...v1.19.0) - 2025-11-25
 
