@@ -53,6 +53,7 @@ final class CommandStartingListener
             match ($event->command) {
                 'queue:work', 'queue:listen', 'horizon:work', 'vapor:work' => $this->registerJobHooks($event),
                 'schedule:run', 'schedule:work' => $this->registerScheduledTaskHooks(),
+                'help', 'inspire', 'schedule:finish' => null,
                 default => $this->registerCommandHooks($event),
             };
         } catch (Throwable $e) {
@@ -75,7 +76,8 @@ final class CommandStartingListener
             JobPopping::class,
             JobProcessing::class,
             WorkerStopping::class,
-        ], (new WorkerEventListener($this->nightwatch))(...));
+            CommandFinished::class,
+        ], (new WorkerLifecycleListener($this->nightwatch))(...));
 
         /**
          * @see \Laravel\Nightwatch\Records\JobAttempt
@@ -114,7 +116,7 @@ final class CommandStartingListener
             return;
         }
 
-        $this->nightwatch->configureGlobalCommandSampling();
+        $this->nightwatch->configureCommandSampling($event->command);
 
         $this->nightwatch->prepareForCommand($event->command);
 

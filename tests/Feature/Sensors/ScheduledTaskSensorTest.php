@@ -67,6 +67,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'name' => $name,
                 'cron' => '* * * * *',
                 'timezone' => 'UTC',
+                'repeat_seconds' => 0,
                 'without_overlapping' => false,
                 'on_one_server' => false,
                 'run_in_background' => false,
@@ -116,6 +117,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'name' => $name,
                 'cron' => '* * * * *',
                 'timezone' => 'UTC',
+                'repeat_seconds' => 0,
                 'without_overlapping' => false,
                 'on_one_server' => false,
                 'run_in_background' => false,
@@ -167,6 +169,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'name' => $name,
                 'cron' => '* * * * *',
                 'timezone' => 'UTC',
+                'repeat_seconds' => 0,
                 'without_overlapping' => false,
                 'on_one_server' => false,
                 'run_in_background' => false,
@@ -217,6 +220,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'name' => 'php artisan app:fly tokyo',
                 'cron' => '* * * * *',
                 'timezone' => 'UTC',
+                'repeat_seconds' => 0,
                 'without_overlapping' => false,
                 'on_one_server' => false,
                 'run_in_background' => true,
@@ -248,6 +252,7 @@ class ScheduledTaskSensorTest extends TestCase
         $line = __LINE__ + 1;
         $task = $this->app[Schedule::class]->call(fn () => $this->travelTo(now()->addMicroseconds(30_000_000)))->everyThirtySeconds();
         $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
+        $repeatSeconds = Compatibility::$subMinuteScheduledTasksSupported ? 30 : 0;
 
         Artisan::call('schedule:run');
 
@@ -260,11 +265,12 @@ class ScheduledTaskSensorTest extends TestCase
                 'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'scheduler-01',
-                '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone}"),
+                '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone},{$repeatSeconds}"),
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'name' => $name,
                 'cron' => '* * * * *',
                 'timezone' => 'UTC',
+                'repeat_seconds' => Compatibility::$subMinuteScheduledTasksSupported ? 30 : 0,
                 'without_overlapping' => false,
                 'on_one_server' => false,
                 'run_in_background' => false,
@@ -296,11 +302,12 @@ class ScheduledTaskSensorTest extends TestCase
                 'timestamp' => 946688553.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'scheduler-01',
-                '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone}"),
+                '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone},{$repeatSeconds}"),
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'name' => $name,
                 'cron' => '* * * * *',
                 'timezone' => 'UTC',
+                'repeat_seconds' => $repeatSeconds,
                 'without_overlapping' => false,
                 'on_one_server' => false,
                 'run_in_background' => false,

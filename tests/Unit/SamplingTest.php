@@ -224,7 +224,7 @@ class SamplingTest extends TestCase
     {
         $ingest = $this->fakeIngest();
         $this->core->config['sampling']['requests'] = 0;
-        $this->core->sensor->exceptionSensor = fn () => [];
+        $this->core->sensor->exceptionSensor = fn () => [[], fn () => []];
         $exception = new RuntimeException('Whoops!');
         Route::get('/users', fn () => throw $exception);
 

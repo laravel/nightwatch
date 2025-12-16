@@ -11,6 +11,7 @@ use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Concerns\RecordsContext;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
@@ -49,6 +50,7 @@ final class ScheduledTaskSensor
         $now = $this->clock->microtime();
         $name = $this->normalizeTaskName($event->task);
         $timezone = $event->task->timezone instanceof DateTimeZone ? $event->task->timezone->getName() : $event->task->timezone;
+        $repeatSeconds = Compatibility::$subMinuteScheduledTasksSupported && $event->task->repeatSeconds !== null ? $event->task->repeatSeconds : 0;
 
         return [
             'v' => 1,
@@ -56,12 +58,15 @@ final class ScheduledTaskSensor
             'timestamp' => $this->commandState->timestamp,
             'deploy' => $this->commandState->deploy,
             'server' => $this->commandState->server,
-            '_group' => hash('xxh128', "{$name},{$event->task->expression},{$timezone}"),
+            '_group' => $repeatSeconds > 0
+                ? hash('xxh128', "{$name},{$event->task->expression},{$timezone},{$repeatSeconds}")
+                : hash('xxh128', "{$name},{$event->task->expression},{$timezone}"),
             'trace_id' => $this->commandState->trace,
             // --- //
             'name' => $name,
             'cron' => $event->task->expression,
             'timezone' => $timezone,
+            'repeat_seconds' => $repeatSeconds,
             'without_overlapping' => $event->task->withoutOverlapping,
             'on_one_server' => $event->task->onOneServer,
             'run_in_background' => $event->task->runInBackground,

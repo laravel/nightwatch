@@ -6,7 +6,10 @@ use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\State\RequestState;
 use Livewire\Component;
 
-class LivewireListener
+/**
+ * @internal
+ */
+final class LivewireListener
 {
     /**
      * @param  Core<RequestState>  $nightwatch

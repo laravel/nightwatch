@@ -5,21 +5,51 @@ namespace Tests\Unit\Hooks;
 use Illuminate\Queue\Events\JobPopping;
 use Illuminate\Queue\Events\JobProcessing;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Hooks\WorkerEventListener;
-use Laravel\Nightwatch\RecordsBuffer;
+use Laravel\Nightwatch\Contracts\Ingest;
+use Laravel\Nightwatch\Hooks\WorkerLifecycleListener;
 use RuntimeException;
 use Tests\FakeJob;
 use Tests\TestCase;
 
 use function tap;
 
-class WorkerEventListenerTest extends TestCase
+class WorkerLifecycleListenerTest extends TestCase
 {
     public function test_it_gracefully_handles_exceptions_for_job_popping_event(): void
     {
-        $this->core->ingest->buffer = $buffer = new class(500) extends RecordsBuffer
+        $this->core->ingest = new class implements Ingest
         {
             public bool $thrownInFlush = false;
+
+            public function write(array $record): void
+            {
+                //
+            }
+
+            public function writeNow(array $record): void
+            {
+                //
+            }
+
+            public function ping(): void
+            {
+                //
+            }
+
+            public function shouldDigest(bool $bool = true): void
+            {
+                //
+            }
+
+            public function shouldDigestWhenBufferIsFull(bool $bool = true): void
+            {
+                //
+            }
+
+            public function digest(): void
+            {
+                //
+            }
 
             public function flush(): void
             {
@@ -30,10 +60,10 @@ class WorkerEventListenerTest extends TestCase
         };
         $event = new JobPopping('redis');
 
-        $listener = new WorkerEventListener($this->core);
+        $listener = new WorkerLifecycleListener($this->core);
         $listener($event);
 
-        $this->assertTrue($buffer->thrownInFlush);
+        $this->assertTrue($this->core->ingest->thrownInFlush);
         $this->assertSame(1, $this->core->executionState->exceptions);
     }
 
@@ -49,7 +79,7 @@ class WorkerEventListenerTest extends TestCase
         });
         $event = new JobProcessing('redis', new FakeJob);
 
-        $listener = new WorkerEventListener($this->core);
+        $listener = new WorkerLifecycleListener($this->core);
         $listener($event);
 
         $this->assertTrue($thrownInMicrotimeResolver);

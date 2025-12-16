@@ -4,13 +4,22 @@ namespace Laravel\Nightwatch\Concerns;
 
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Command;
+use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\Records\Mail;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\Request;
 
+/**
+ * @internal
+ */
 trait RedactsRecords
 {
+    /**
+     * @var list<callable(Exception): bool>
+     */
+    private array $redactExceptionCallbacks = [];
+
     /**
      * @var list<callable(CacheEvent): bool>
      */
@@ -40,6 +49,16 @@ trait RedactsRecords
      * @var list<callable(Request): bool>
      */
     private array $redactRequestCallbacks = [];
+
+    /**
+     * @api
+     *
+     * @param  callable(Exception): bool  $callback
+     */
+    public function redactExceptions(callable $callback): void
+    {
+        $this->redactExceptionCallbacks[] = $callback;
+    }
 
     /**
      * @api

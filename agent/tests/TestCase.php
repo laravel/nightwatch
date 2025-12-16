@@ -51,6 +51,7 @@ abstract class TestCase extends BaseTestCase
         bool $quiet = false,
         ?bool $verbose = null,
         ?string &$listenOn = null,
+        ?int $maxBufferLength = null,
     ): array {
         $output = '';
         $port = rand(9000, 9999);
@@ -68,6 +69,7 @@ abstract class TestCase extends BaseTestCase
                 'silent' => $silent,
                 'quiet' => $quiet,
                 'verbose' => $verbose,
+                'maxBufferLength' => $maxBufferLength,
             ]));
 
             if ($write === false) {

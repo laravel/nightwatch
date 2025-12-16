@@ -19,6 +19,7 @@ use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Command;
+use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\Records\Mail as MailRecord;
 use Laravel\Nightwatch\Records\Notification as NotificationRecord;
 use Laravel\Nightwatch\Records\OutgoingRequest;
@@ -687,6 +688,23 @@ class FilteringTest extends TestCase
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('query:0.sql', 'select * from users where email = "***@***" or password = "***"');
+    }
+
+    public function test_it_can_redact_exceptions(): void
+    {
+        $ingest = $this->fakeIngest();
+        Nightwatch::redactExceptions(function (Exception $exception) {
+            $exception->message = str_replace('jess@laravel.com', '***@***', $exception->message);
+        });
+        Nightwatch::redactExceptions(function (Exception $exception) {
+            $exception->message = str_replace('secret', '***', $exception->message);
+        });
+
+        report(new RuntimeException('Error in query: select * from users where email = "jess@laravel.com" or password = "secret"'));
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.message', 'Error in query: select * from users where email = "***@***" or password = "***"');
     }
 
     public function test_it_can_redact_requests(): void

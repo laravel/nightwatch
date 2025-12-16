@@ -10,6 +10,7 @@ final class Request
 {
     /**
      * @param  array<string>  $routeMethods
+     * @param  InputBag<string|int|float|bool|null>  $payload
      */
     public function __construct(
         public readonly string $method,

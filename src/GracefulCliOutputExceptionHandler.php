@@ -10,7 +10,10 @@ use Throwable;
 use function date;
 use function Nightwatch\fwrite_all;
 
-class GracefulCliOutputExceptionHandler implements ExceptionHandler
+/**
+ * @internal
+ */
+final class GracefulCliOutputExceptionHandler implements ExceptionHandler
 {
     private bool $shuttingDown = false;
 

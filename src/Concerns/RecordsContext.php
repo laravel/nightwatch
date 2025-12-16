@@ -10,9 +10,12 @@ use Throwable;
 
 use function json_encode;
 
+/**
+ * @internal
+ */
 trait RecordsContext
 {
-    protected function serializedContext(): string
+    private function serializedContext(): string
     {
         if (! Compatibility::$contextExists) {
             return '';

@@ -9,6 +9,9 @@ use Laravel\Nightwatch\State\RequestState;
 
 use function round;
 
+/**
+ * @internal
+ */
 final class StageSensor
 {
     public function __construct(

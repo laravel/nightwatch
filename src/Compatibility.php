@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch;
 
+use Illuminate\Console\Scheduling\Event;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Context;
 use ReflectionProperty;
@@ -9,9 +10,13 @@ use Symfony\Component\Console\Input\ArgvInput;
 
 use function implode;
 use function method_exists;
+use function tap;
 use function value;
 use function version_compare;
 
+/**
+ * @internal
+ */
 final class Compatibility
 {
     public static bool $terminatingEventExists = false;
@@ -31,6 +36,8 @@ final class Compatibility
     public static bool $contextExists = false;
 
     public static bool $queuedJobDurationCapturable = false;
+
+    public static bool $subMinuteScheduledTasksSupported = false;
 
     /**
      * @var array{
@@ -91,6 +98,21 @@ final class Compatibility
          */
         self::$queuedJobDurationCapturable =
             version_compare($version, '10.42.0', '>=');
+
+        /**
+         * @see https://github.com/laravel/framework/pull/47279
+         * @see https://github.com/laravel/framework/releases/tag/v10.15.0
+         */
+        self::$subMinuteScheduledTasksSupported =
+            version_compare($version, '10.15.0', '>=');
+
+        /**
+         * @see https://github.com/laravel/framework/commit/6da5093aa672d26d0357b35
+         * @see https://github.com/laravel/framework/releases/tag/v11.5.0
+         */
+        if (version_compare($version, '11.5.0', '<')) {
+            Event::macro('tap', fn (callable $callable) => tap($this, $callable));
+        }
     }
 
     /**
@@ -112,9 +134,21 @@ final class Compatibility
         self::addHiddenContext('nightwatch_should_sample', $sample);
     }
 
-    public static function getSamplingFromContext(bool $default = true): bool
+    /**
+     * @template T of bool|null
+     *
+     * @param  T  $default
+     * @return (T is bool ? bool : bool|null)
+     */
+    public static function getSamplingFromContext(?bool $default = true)
     {
-        return (bool) self::getHiddenContext('nightwatch_should_sample', $default);
+        $context = self::getHiddenContext('nightwatch_should_sample', $default);
+
+        if ($context === null) {
+            return null;
+        }
+
+        return (bool) $context;
     }
 
     public static function addTraceIdToContext(string $trace): void

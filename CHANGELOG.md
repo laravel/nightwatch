@@ -1,6 +1,50 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.17.1...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.20.0...1.x)
+
+## [v1.20.0](https://github.com/laravel/nightwatch/compare/v1.19.0...v1.20.0) - 2025-12-16
+
+### What's Changed
+
+* PHP 8.5 support by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/309
+* Allow interaction with the Core class by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/311
+* Use sampling from context if already present by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/308
+* Add sample rate for scheduled tasks by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/312
+* Allow customising sample rate for individual scheduled tasks by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/313
+* Disable vendor command sampling by default by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/315
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.19.0...v1.20.0
+
+## [v1.19.0](https://github.com/laravel/nightwatch/compare/v1.18.1...v1.19.0) - 2025-11-25
+
+### What's Changed
+
+* Fix data capture for `queue:listen` by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/299
+* Fix requiring lowest dependencies in CI by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/301
+* Internal improvements by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/300
+* Ignore `schedule:finish` command by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/306
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.18.1...v1.19.0
+
+## [v1.18.1](https://github.com/laravel/nightwatch/compare/v1.18.0...v1.18.1) - 2025-11-11
+
+#### What's Changed
+
+* Increase concurrent request limit to 5 by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/298
+
+### New Contributors
+
+* [@jradtilbrook](https://github.com/jradtilbrook) made their first contribution in https://github.com/laravel/nightwatch/pull/298
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.18.0...v1.18.1
+
+## [v1.18.0](https://github.com/laravel/nightwatch/compare/v1.17.1...v1.18.0) - 2025-11-04
+
+### What's Changed
+
+* Add ability to redact exceptions by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/296
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.17.1...v1.18.0
 
 ## [v1.17.1](https://github.com/laravel/nightwatch/compare/v1.17.0...v1.17.1) - 2025-10-27
 

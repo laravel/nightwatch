@@ -9,6 +9,9 @@ use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
 
+/**
+ * @internal
+ */
 trait RejectsRecords
 {
     /**

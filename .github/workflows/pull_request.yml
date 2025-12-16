@@ -10,7 +10,7 @@ concurrency:
 env:
   minimum_supported_php_version: "8.2"
   package_extensions: none, mbstring, curl, ctype, tokenizer, mongodb, xml, pdo, fileinfo, dom, xmlwriter, simplexml, sqlite3, pdo_sqlite, posix, redis
-  agent_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter
+  agent_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter, iconv
 
 jobs:
   ## Run coding standards and static analysis before building the agent
@@ -207,7 +207,7 @@ jobs:
 
     strategy:
       matrix:
-        php: [8.2, 8.3, 8.4]
+        php: [8.2, 8.3, 8.4, 8.5]
         laravel: [10, 11, 12]
         prefer-lowest: ["0", "1"]
 
@@ -264,7 +264,7 @@ jobs:
 
     strategy:
       matrix:
-        php: [8.2, 8.3, 8.4]
+        php: [8.2, 8.3, 8.4, 8.5]
 
     name: Test agent [PHP ${{ matrix.php }}]
 
