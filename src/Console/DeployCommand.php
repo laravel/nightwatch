@@ -55,7 +55,7 @@ final class DeployCommand extends Command
         $baseUrl = ! empty($_SERVER['NIGHTWATCH_BASE_URL']) ? $_SERVER['NIGHTWATCH_BASE_URL'] : 'https://nightwatch.laravel.com';
 
         try {
-            Http::connectTimeout(5)
+            Http::connectTimeout(5) // @phpstan-ignore method.notFound
                 ->timeout(10)
                 ->acceptJson()
                 ->withToken($this->token)
