@@ -53,6 +53,7 @@ final class CommandStartingListener
             match ($event->command) {
                 'queue:work', 'queue:listen', 'horizon:work', 'vapor:work' => $this->registerJobHooks($event),
                 'schedule:run', 'schedule:work' => $this->registerScheduledTaskHooks(),
+                'help', 'inspire', 'schedule:finish' => null,
                 default => $this->registerCommandHooks($event),
             };
         } catch (Throwable $e) {
@@ -115,7 +116,7 @@ final class CommandStartingListener
             return;
         }
 
-        $this->nightwatch->configureGlobalCommandSampling();
+        $this->nightwatch->configureCommandSampling($event->command);
 
         $this->nightwatch->prepareForCommand($event->command);
 

@@ -1,6 +1,17 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.18.1...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.19.0...1.x)
+
+## [v1.19.0](https://github.com/laravel/nightwatch/compare/v1.18.1...v1.19.0) - 2025-11-25
+
+### What's Changed
+
+* Fix data capture for `queue:listen` by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/299
+* Fix requiring lowest dependencies in CI by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/301
+* Internal improvements by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/300
+* Ignore `schedule:finish` command by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/306
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.18.1...v1.19.0
 
 ## [v1.18.1](https://github.com/laravel/nightwatch/compare/v1.18.0...v1.18.1) - 2025-11-11
 

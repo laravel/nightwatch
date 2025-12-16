@@ -49,7 +49,7 @@
         "orchestra/testbench-core": "^8.0|^9.0|^10.0",
         "orchestra/workbench": "^8.0|^9.0|^10.0",
         "phpstan/phpstan": "^1.0",
-        "phpunit/phpunit": "^10.0|^11.0",
+        "phpunit/phpunit": "^10.0|^11.0|^12.0",
         "singlestoredb/singlestoredb-laravel": "^1.0|^2.0",
         "spatie/laravel-ignition": "^2.0",
         "symfony/mailer": "^6.0|^7.0",

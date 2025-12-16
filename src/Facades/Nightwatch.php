@@ -13,6 +13,8 @@ use function call_user_func;
  * @method static void sample(float $rate = 1)
  * @method static void dontSample()
  * @method static bool sampling()
+ * @method static void captureDefaultVendorCommands(bool $capture = true)
+ * @method static array defaultVendorCommands()
  * @method static mixed ignore(callable $callback)
  * @method static void resume()
  * @method static void pause()
