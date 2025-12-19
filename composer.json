@@ -112,7 +112,10 @@
         "laravel": {
             "providers": [
                 "Laravel\\Nightwatch\\NightwatchServiceProvider"
-            ]
+            ],
+            "aliases": {
+                "Nightwatch": "Laravel\\Nightwatch\\Facades\\Nightwatch"
+            }
         }
     },
     "config": {
