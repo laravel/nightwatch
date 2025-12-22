@@ -12,6 +12,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 
 use function config;
+use function is_string;
 
 /**
  * @internal
@@ -22,7 +23,11 @@ final class DeployCommand extends Command
     /**
      * @var string
      */
-    protected $signature = 'nightwatch:deploy';
+    protected $signature = 'nightwatch:deploy
+        {ref? : The git ref (tag or hash) of the deploy <comment>[default: `NIGHTWATCH_DEPLOY`]</comment>}
+        {--name= : The human-readable name of the deploy}
+        {--url= : A URL with information related to the deploy}
+        {--timestamp= : The timestamp of the deploy <comment>[default: `now()`]</comment>}';
 
     /**
      * @var string
@@ -42,15 +47,21 @@ final class DeployCommand extends Command
 
     public function handle(): int
     {
-        $start = CarbonImmutable::now();
+        $timestamp = is_string($this->option('timestamp')) ? CarbonImmutable::parse($this->option('timestamp')) : CarbonImmutable::now();
+
+        $ref = $this->argument('ref') ?? config('nightwatch.deployment');
+
+        if (! $ref) {
+            $this->components->error('Please configure the [NIGHTWATCH_DEPLOY] environment variable.');
+
+            return 0;
+        }
 
         if (! $this->token) {
             $this->components->error('Please configure the [NIGHTWATCH_TOKEN] environment variable.');
 
             return 0;
         }
-
-        $version = config('nightwatch.deployment') ?? '';
 
         $baseUrl = ! empty($_SERVER['NIGHTWATCH_BASE_URL']) ? $_SERVER['NIGHTWATCH_BASE_URL'] : 'https://nightwatch.laravel.com';
 
@@ -60,9 +71,10 @@ final class DeployCommand extends Command
                 ->acceptJson()
                 ->withToken($this->token)
                 ->post("{$baseUrl}/api/deployments", [
-                    'v' => 1,
-                    'timestamp' => $start->toDateTimeString('microsecond'),
-                    'version' => $version,
+                    'timestamp' => $timestamp->utc()->toDateTimeString('microsecond'),
+                    'ref' => $ref,
+                    'name' => $this->option('name'),
+                    'url' => $this->option('url'),
                 ])
                 ->throw();
 

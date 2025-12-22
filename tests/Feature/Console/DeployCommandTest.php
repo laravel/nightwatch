@@ -17,16 +17,17 @@ class DeployCommandTest extends TestCase
 {
     #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
     #[WithEnv('NIGHTWATCH_DEPLOY', 'v1.2.3')]
-    public function test_it_can_run_the_deploy_command(): void
+    public function test_it_can_run_the_deploy_command_with_no_arguments_when_env_var_is_set(): void
     {
         $this->freezeTime();
         Http::fake([
             '*/api/deployments' => function (Request $request) {
                 $this->assertEquals(['Bearer '.env('NIGHTWATCH_TOKEN')], $request->header('Authorization'));
                 $this->assertEquals([
-                    'v' => 1,
                     'timestamp' => now()->toDateTimeString('microsecond'),
-                    'version' => 'v1.2.3',
+                    'ref' => 'v1.2.3',
+                    'name' => null,
+                    'url' => '',
                 ], $request->data());
 
                 return Http::response('OK');
@@ -39,27 +40,28 @@ class DeployCommandTest extends TestCase
     }
 
     #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
-    public function test_it_can_run_the_deploy_command_without_a_version(): void
+    public function test_it_accepts_arguments_and_options(): void
     {
-        $this->freezeTime();
         Http::fake([
             '*/api/deployments' => function (Request $request) {
                 $this->assertEquals(['Bearer '.env('NIGHTWATCH_TOKEN')], $request->header('Authorization'));
                 $this->assertEquals([
-                    'v' => 1,
-                    'timestamp' => now()->toDateTimeString('microsecond'),
-                    'version' => '',
+                    'timestamp' => '2025-12-22 15:30:45.123456',
+                    'ref' => 'v1.2.3',
+                    'name' => 'Happy Friday!',
+                    'url' => 'https://example.com/deployments/123',
                 ], $request->data());
 
                 return Http::response('OK');
             },
         ]);
 
-        $this->artisan('nightwatch:deploy')
+        $this->artisan('nightwatch:deploy v1.2.3 --timestamp="2025-12-22 15:30:45.123456" --name="Happy Friday!" --url="https://example.com/deployments/123"')
             ->expectsOutputToContain('Deployment sent to Nightwatch successfully.')
             ->assertExitCode(0);
     }
 
+    #[WithEnv('NIGHTWATCH_DEPLOY', 'v1.2.3')]
     public function test_it_fails_when_the_deploy_command_is_run_without_a_token(): void
     {
         $this->app->singleton(DeployCommand::class, fn () => new DeployCommand(token: null));
@@ -70,6 +72,7 @@ class DeployCommandTest extends TestCase
     }
 
     #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
+    #[WithEnv('NIGHTWATCH_DEPLOY', 'v1.2.3')]
     public function test_it_handles_error_responses(): void
     {
         Http::fake([
@@ -82,6 +85,7 @@ class DeployCommandTest extends TestCase
     }
 
     #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
+    #[WithEnv('NIGHTWATCH_DEPLOY', 'v1.2.3')]
     public function test_it_handles_http_errors(): void
     {
         Http::fake([
@@ -94,6 +98,7 @@ class DeployCommandTest extends TestCase
     }
 
     #[WithEnv('NIGHTWATCH_TOKEN', 'test-token')]
+    #[WithEnv('NIGHTWATCH_DEPLOY', 'v1.2.3')]
     public function test_it_handles_connection_errors(): void
     {
         Http::fake([
