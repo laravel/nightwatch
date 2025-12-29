@@ -32,7 +32,7 @@
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.19.0...v1.20.0
 
-## Changes to scheduled task sampling
+### Changes to scheduled task sampling
 
 With this release, scheduled tasks are able to be sampled separately from commands. If you were relying on `NIGHTWATCH_COMMAND_SAMPLE_RATE` to also change sampling of scheduled tasks, you will need to update `NIGHTWATCH_SCHEDULED_TASK_SAMPLE_RATE` accordingly as this takes precedence.
 
