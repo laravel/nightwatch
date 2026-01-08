@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Sensors;
 
 use Illuminate\Database\Events\QueryExecuted;
 use Laravel\Nightwatch\Clock;
+use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Location;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\State\CommandState;
@@ -46,6 +47,7 @@ final class QuerySensor
                 line: $line ?? 0,
                 duration: $durationInMicroseconds,
                 connection: $event->connectionName ?? '', // @phpstan-ignore nullCoalesce.property
+                connectionType: Compatibility::$queryConnectionTypeCapturable ? $event->readWriteType : null,
             ),
             function () use ($event, $record) {
                 $this->executionState->queries++;
@@ -68,6 +70,7 @@ final class QuerySensor
                     'line' => $record->line,
                     'duration' => $record->duration,
                     'connection' => Str::tinyText($record->connection),
+                    'connection_type' => $record->connectionType ?? '',
                 ];
             },
         ];

@@ -39,6 +39,8 @@ final class Compatibility
 
     public static bool $subMinuteScheduledTasksSupported = false;
 
+    public static bool $queryConnectionTypeCapturable = false;
+
     /**
      * @var array{
      *   nightwatch_should_sample?: bool|null,
@@ -113,6 +115,12 @@ final class Compatibility
         if (version_compare($version, '11.5.0', '<')) {
             Event::macro('tap', fn (callable $callable) => tap($this, $callable));
         }
+
+        /**
+         * @see https://github.com/laravel/framework/pull/58156
+         * @see https://github.com/laravel/framework/releases/tag/v12.45.0
+         */
+        self::$queryConnectionTypeCapturable = version_compare($version, '12.45.0', '>=');
     }
 
     /**

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Compatibility;
 use MongoDB\Laravel\Connection as MongoDbConnection;
 use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -93,6 +94,7 @@ class QuerySensorTest extends TestCase
                 'line' => $line,
                 'duration' => 4321,
                 'connection' => $connection,
+                'connection_type' => Compatibility::$queryConnectionTypeCapturable ? 'write' : '',
             ],
         ]);
     }
