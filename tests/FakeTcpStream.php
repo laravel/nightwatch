@@ -18,11 +18,6 @@ class FakeTcpStream
 
     public string $value = '';
 
-    public function __construct()
-    {
-        self::instances()->push($this);
-    }
-
     public static function instances(): Collection
     {
         return self::$instances ??= new Collection;
@@ -34,7 +29,11 @@ class FakeTcpStream
     public function __call(string $name, array $arguments): mixed
     {
         $handler = match ($name) {
-            'stream_open' => fn (string $path, string $mode, int $options, ?string &$openedPath): bool => true,
+            'stream_open' => function (string $path, string $mode, int $options, ?string &$openedPath): bool {
+                self::instances()->push($this);
+
+                return true;
+            },
             'stream_set_option' => fn (int $option, int $arg1, int $arg2): bool => true,
             'stream_write' => function (string $value): int {
                 $this->value .= $value;
@@ -48,6 +47,7 @@ class FakeTcpStream
                 //
             },
             'stream_seek' => fn () => 0,
+            'url_stat' => fn (string $path, int $flags): array|false => false,
             default => throw new RuntimeException("FakeTcpStream method not implemented [{$name}]"),
         };
 
