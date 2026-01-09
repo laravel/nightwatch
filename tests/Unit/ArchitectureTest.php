@@ -36,6 +36,7 @@ class ArchitectureTest extends TestCase
             \Laravel\Nightwatch\Core::class,
             \Laravel\Nightwatch\Facades\Nightwatch::class,
             \Laravel\Nightwatch\Http\Middleware\Sample::class,
+            \Laravel\Nightwatch\QueryConnectionType::class,
             \Laravel\Nightwatch\Records\CacheEvent::class,
             \Laravel\Nightwatch\Records\Command::class,
             \Laravel\Nightwatch\Records\Exception::class,
