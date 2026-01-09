@@ -41,8 +41,8 @@ final class QuerySensor
 
         [$file, $line] = $this->location->forQueryTrace($trace);
 
-        $connectionType = Compatibility::$queryConnectionTypeCapturable
-            ? QueryConnectionType::tryFrom($event->readWriteType) ?? QueryConnectionType::Unknown
+        $connectionType = Compatibility::$queryConnectionTypeCapturable && $event->readWriteType !== null
+            ? QueryConnectionType::from($event->readWriteType)
             : QueryConnectionType::Unknown;
 
         return [
