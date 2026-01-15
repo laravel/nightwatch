@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.21.1...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.22.0...1.x)
+
+## [v1.22.0](https://github.com/laravel/nightwatch/compare/v1.21.1...v1.22.0) - 2026-01-15
+
+### What's Changed
+
+* Update changelog with scheduled task mention by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/317
+* Make `FakeTcpStream` compatible with Monolog 3.10.0 by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/319
+* Capture query connection type (read or write) by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/318
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.21.1...v1.22.0
 
 ## [v1.21.1](https://github.com/laravel/nightwatch/compare/v1.21.0...v1.21.1) - 2025-12-18
 
@@ -31,6 +41,10 @@
 * Disable vendor command sampling by default by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/315
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.19.0...v1.20.0
+
+### Changes to scheduled task sampling
+
+With this release, scheduled tasks are able to be sampled separately from commands. If you were relying on `NIGHTWATCH_COMMAND_SAMPLE_RATE` to also change sampling of scheduled commands, you will need to update `NIGHTWATCH_SCHEDULED_TASK_SAMPLE_RATE` accordingly as this takes precedence.
 
 ## [v1.19.0](https://github.com/laravel/nightwatch/compare/v1.18.1...v1.19.0) - 2025-11-25
 

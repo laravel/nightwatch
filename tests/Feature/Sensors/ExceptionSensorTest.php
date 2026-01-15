@@ -22,7 +22,6 @@ use Tests\TestCase;
 use Throwable;
 
 use function array_map;
-use function base64_encode;
 use function base_path;
 use function collect;
 use function dirname;
@@ -816,14 +815,12 @@ class ExceptionSensorTest extends TestCase
 
         $response->assertServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.message', function ($message) {
-            $this->assertSame(
-                base64_encode($message),
-                base64_encode('SQLSTATE[HY000]: General error: 1 no such table: unknown-table (Connection: sqlite, SQL: select * from "unknown-table" where "foo" = ��#)')
-            );
 
-            return true;
-        });
+        // @see https://github.com/laravel/framework/pull/58218
+        // @see https://github.com/laravel/framework/releases/tag/v12.45.0
+        $ingest->assertLatestWrite('exception:0.message', version_compare($this->app->version(), '12.45.0', '>=')
+            ? 'SQLSTATE[HY000]: General error: 1 no such table: unknown-table (Connection: sqlite, Database: tests/database.sqlite, SQL: select * from "unknown-table" where "foo" = ��#)'
+            : 'SQLSTATE[HY000]: General error: 1 no such table: unknown-table (Connection: sqlite, SQL: select * from "unknown-table" where "foo" = ��#)');
     }
 
     public function test_it_reports_internally_reported_exceptions_as_handled()

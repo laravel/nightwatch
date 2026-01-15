@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Compatibility;
 use MongoDB\Laravel\Connection as MongoDbConnection;
 use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -21,9 +22,11 @@ use SingleStore\Laravel\Connect\Connection as LegacySingleStoreConnection;
 use SingleStore\Laravel\Connect\SingleStoreConnection;
 use Tests\TestCase;
 
+use function array_merge;
 use function base64_encode;
 use function class_exists;
 use function dirname;
+use function fake;
 use function hash;
 use function hex2bin;
 use function in_array;
@@ -93,6 +96,7 @@ class QuerySensorTest extends TestCase
                 'line' => $line,
                 'duration' => 4321,
                 'connection' => $connection,
+                'connection_type' => Compatibility::$queryConnectionTypeCapturable ? 'write' : '',
             ],
         ]);
     }
@@ -351,5 +355,183 @@ class QuerySensorTest extends TestCase
 
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('query:0.connection', '');
+    }
+
+    public function test_it_captures_connection_type_as_write_when_read_and_write_connections_are_not_configured()
+    {
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            return DB::table('users')->get();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.connection_type', Compatibility::$queryConnectionTypeCapturable ? 'write' : '');
+    }
+
+    public function test_it_captures_connection_type_as_read_for_select_query()
+    {
+        $this->configureReadWriteConnection();
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            return DB::table('users')->get();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.connection_type', Compatibility::$queryConnectionTypeCapturable ? 'read' : '');
+    }
+
+    public function test_it_captures_connection_type_as_write_for_write_query()
+    {
+        $this->configureReadWriteConnection();
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            return DB::table('users')->insert([
+                'name' => fake()->name(),
+                'email' => fake()->email(),
+                'password' => fake()->password(),
+            ]);
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.connection_type', Compatibility::$queryConnectionTypeCapturable ? 'write' : '');
+    }
+
+    public function test_it_captures_connection_type_as_write_when_records_have_been_modified_and_sticky_connection_is_enabled()
+    {
+        $this->configureReadWriteConnection(['sticky' => true]);
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            DB::table('users')->insert([
+                'name' => fake()->name(),
+                'email' => fake()->email(),
+                'password' => fake()->password(),
+            ]);
+
+            return DB::table('users')->get();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.connection_type', Compatibility::$queryConnectionTypeCapturable ? 'write' : ''); // insert
+        $ingest->assertLatestWrite('query:1.connection_type', Compatibility::$queryConnectionTypeCapturable ? 'write' : ''); // select
+    }
+
+    public function test_it_captures_connection_type_as_write_for_insert_and_read_for_select_when_sticky_connection_is_disabled()
+    {
+        $this->configureReadWriteConnection(['sticky' => false]);
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            DB::table('users')->insert([
+                'name' => fake()->name(),
+                'email' => fake()->email(),
+                'password' => fake()->password(),
+            ]);
+
+            return DB::table('users')->get();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.connection_type', Compatibility::$queryConnectionTypeCapturable ? 'write' : ''); // insert
+        $ingest->assertLatestWrite('query:1.connection_type', Compatibility::$queryConnectionTypeCapturable ? 'read' : ''); // select
+    }
+
+    public function test_it_captures_connection_type_as_write_when_it_should_use_write_connection_when_reading()
+    {
+        $this->configureReadWriteConnection();
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            return DB::useWriteConnectionWhenReading()->table('users')->get();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.connection_type', Compatibility::$queryConnectionTypeCapturable ? 'write' : '');
+    }
+
+    public function test_it_captures_connection_type_as_write_when_in_a_transaction()
+    {
+        $this->configureReadWriteConnection();
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            DB::beginTransaction();
+
+            $users = DB::table('users')->get();
+
+            DB::rollBack();
+
+            return $users;
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.connection_type', Compatibility::$queryConnectionTypeCapturable ? 'write' : '');
+    }
+
+    public function test_it_captures_connection_type_when_forgetting_modified_records_state()
+    {
+        $this->configureReadWriteConnection(['sticky' => true]);
+
+        $ingest = $this->fakeIngest();
+
+        Route::get('/users', function () {
+            DB::statement('select 1');
+            DB::forgetRecordModificationState();
+            DB::select('select 1');
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.connection_type', Compatibility::$queryConnectionTypeCapturable ? 'write' : '');
+        $ingest->assertLatestWrite('query:1.connection_type', Compatibility::$queryConnectionTypeCapturable ? 'read' : '');
+    }
+
+    private function configureReadWriteConnection(array $options = []): void
+    {
+        $connection = Config::get('database.default');
+        $config = Config::get("database.connections.{$connection}");
+
+        Config::set("database.connections.{$connection}", array_merge($config, [
+            'read' => [
+                'database' => $config['database'],
+            ],
+            'write' => [
+                'database' => $config['database'],
+            ],
+        ], $options));
+
+        DB::purge($connection);
     }
 }
