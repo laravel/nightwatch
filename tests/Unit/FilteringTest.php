@@ -36,6 +36,7 @@ use function preg_replace;
 use function report;
 use function str_contains;
 use function str_replace;
+use function str_starts_with;
 
 class FilteringTest extends TestCase
 {
@@ -451,6 +452,28 @@ class FilteringTest extends TestCase
             return true;
         });
         $ingest->assertLatestWrite('queued-job:0.name', SampledJob::class);
+    }
+
+    public function test_it_can_filter_requests(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/health', fn () => 'ok');
+        Route::get('/api/users', fn () => 'users');
+        Route::get('/dashboard', fn () => 'dashboard');
+
+        Nightwatch::rejectRequests(fn (Request $request) => $request->routePath === '/health');
+        Nightwatch::rejectRequests(fn (Request $request) => str_starts_with($request->routePath, '/api'));
+
+        $this->get('/health');
+        $ingest->forgetWrites();
+
+        $this->get('/api/users');
+        $ingest->forgetWrites();
+
+        $this->get('/dashboard');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.route_path', '/dashboard');
     }
 
     public function test_it_does_not_trigger_recursion_while_filtering()

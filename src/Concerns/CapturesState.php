@@ -500,6 +500,12 @@ trait CapturesState
     {
         [$record, $resolver] = $this->sensor->request($request, $response);
 
+        foreach ($this->rejectRequestCallbacks as $callback) {
+            if ($this->ignore(static fn () => ($callback)($record))) {
+                return;
+            }
+        }
+
         foreach ($this->redactRequestCallbacks as $callback) {
             $this->ignore(static fn () => ($callback)($record));
         }

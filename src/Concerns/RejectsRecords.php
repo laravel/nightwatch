@@ -8,6 +8,7 @@ use Laravel\Nightwatch\Records\Notification;
 use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
+use Laravel\Nightwatch\Records\Request;
 
 /**
  * @internal
@@ -50,6 +51,11 @@ trait RejectsRecords
      * @var list<callable(QueuedJob): bool>
      */
     private array $rejectQueuedJobCallbacks = [];
+
+    /**
+     * @var list<callable(Request): bool>
+     */
+    private array $rejectRequestCallbacks = [];
 
     /**
      * @api
@@ -148,5 +154,15 @@ trait RejectsRecords
     public function rejectQueuedJobs(callable $callback): void
     {
         $this->rejectQueuedJobCallbacks[] = $callback;
+    }
+
+    /**
+     * @api
+     *
+     * @param  callable(Request): bool  $callback
+     */
+    public function rejectRequests(callable $callback): void
+    {
+        $this->rejectRequestCallbacks[] = $callback;
     }
 }
