@@ -980,6 +980,26 @@ class ExceptionSensorTest extends TestCase
             return true;
         });
     }
+
+    public function test_it_limits_group_properties()
+    {
+        $ingest = $this->fakeIngest();
+        $e = new Exception('Whoops!');
+        $longString = str_repeat('x', 1000);
+        $reflectedException = new ReflectionClass($e);
+        $reflectedException->getProperty('file')->setValue($e, $longString);
+        $reflectedException->getProperty('code')->setValue($e, $longString);
+        Route::get('/users', function () use ($e): void {
+            throw $e;
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.file', $longString);
+        $ingest->assertLatestWrite('exception:0.code', $longString);
+    }
 }
 
 final class MyException extends RuntimeException
