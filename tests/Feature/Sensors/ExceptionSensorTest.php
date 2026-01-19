@@ -39,6 +39,7 @@ use function json_encode;
 use function report;
 use function response;
 use function str_contains;
+use function str_repeat;
 use function tap;
 use function trim;
 use function version_compare;
