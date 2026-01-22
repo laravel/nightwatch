@@ -16,7 +16,6 @@ use Tests\TestCase;
 
 use function dirname;
 use function hash;
-use function trim;
 
 class CoreTest extends TestCase
 {
@@ -93,7 +92,8 @@ class CoreTest extends TestCase
     }
 
     #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
-    public function test_it_uses_git_refs_for_deployments_by_default(): void
+    #[WithEnv('NIGHTWATCH_DEPLOY', '82f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    public function test_it_uses_nightwatch_deploy_env_for_deployments_by_default(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/test', function () {
@@ -103,6 +103,52 @@ class CoreTest extends TestCase
         $this->get('/test')->assertOk();
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.deploy', trim(`git describe --tags --always`));
+        $ingest->assertLatestWrite('request:0.deploy', '82f35860d8c7e59fe4d81a3256a2bb34c998acd9');
+    }
+
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
+    #[WithEnv('LARAVEL_CLOUD_COMMIT', '92f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    public function test_it_uses_cloud_commit_env_for_deployments_if_available(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {
+            return 'OK';
+        });
+
+        $this->get('/test')->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.deploy', '92f35860d8c7e59fe4d81a3256a2bb34c998acd9');
+    }
+
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
+    #[WithEnv('FORGE_DEPLOY_COMMIT', '02f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    public function test_it_uses_forge_commit_env_for_deployments_if_available(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {
+            return 'OK';
+        });
+
+        $this->get('/test')->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.deploy', '02f35860d8c7e59fe4d81a3256a2bb34c998acd9');
+    }
+
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
+    #[WithEnv('FORGE_DEPLOY_COMMIT', '82f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    #[WithEnv('NIGHTWATCH_DEPLOY', '12f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    public function test_it_uses_higher_precedent_deploy_env_for_deployments(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {
+            return 'OK';
+        });
+
+        $this->get('/test')->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.deploy', '12f35860d8c7e59fe4d81a3256a2bb34c998acd9');
     }
 }
