@@ -19,6 +19,7 @@ use function call_user_func;
  * @method static void resume()
  * @method static void pause()
  * @method static bool paused()
+ * @method static mixed measure(string $name, callable $callback)
  * @method static void report(\Throwable $e, bool|null $handled = null)
  * @method static void redactExceptions(callable $callback)
  * @method static void redactCacheEvents(callable $callback)

@@ -33,6 +33,7 @@ use Laravel\Nightwatch\Sensors\ExceptionSensor;
 use Laravel\Nightwatch\Sensors\JobAttemptSensor;
 use Laravel\Nightwatch\Sensors\LogSensor;
 use Laravel\Nightwatch\Sensors\MailSensor;
+use Laravel\Nightwatch\Sensors\MeasurementSensor;
 use Laravel\Nightwatch\Sensors\NotificationSensor;
 use Laravel\Nightwatch\Sensors\OutgoingRequestSensor;
 use Laravel\Nightwatch\Sensors\QuerySensor;
@@ -127,6 +128,11 @@ final class SensorManager
      * @var (callable(InputInterface, int): array{0: Command, 1: callable(): array<mixed>})|null
      */
     public $commandSensor;
+
+    /**
+     * @var (callable(string, float, float, string, int): array<mixed>)|null
+     */
+    public $measurementSensor;
 
     /**
      * @param  list<string>  $redactPayloadFields
@@ -308,6 +314,18 @@ final class SensorManager
     }
 
     /**
+     * @return array<mixed>
+     */
+    public function measurement(string $name, float $startMicrotime, float $endMicrotime, string $file, int $line): array
+    {
+        $sensor = $this->measurementSensor ??= new MeasurementSensor(
+            executionState: $this->executionState,
+        );
+
+        return $sensor($name, $startMicrotime, $endMicrotime, $file, $line);
+    }
+
+    /**
      * @return ?array{0: QueuedJob, 1: callable(): array<mixed>}
      */
     public function queuedJob(JobQueueing|JobQueued $event): ?array
@@ -366,6 +384,7 @@ final class SensorManager
         $this->cacheEventSensor = null;
         $this->exceptionSensor = null;
         $this->logSensor = null;
+        $this->measurementSensor = null;
         $this->outgoingRequestSensor = null;
         $this->querySensor = null;
         $this->queuedJobSensor = null;

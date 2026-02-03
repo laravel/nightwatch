@@ -240,6 +240,41 @@ trait CapturesState
 
     /**
      * @api
+     *
+     * @template TReturn
+     *
+     * @param  callable(): TReturn  $callback
+     * @return TReturn
+     */
+    public function measure(string $name, callable $callback): mixed
+    {
+        if (! $this->enabled() || $this->paused) {
+            return $callback();
+        }
+
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, limit: 2);
+        $file = isset($trace[1]['file']) ? $this->sensor->location->normalizeFile($trace[1]['file']) : '';
+        $line = $trace[1]['line'] ?? 0;
+
+        $startMicrotime = $this->clock->microtime();
+
+        try {
+            return $callback();
+        } finally {
+            $endMicrotime = $this->clock->microtime();
+
+            try {
+                $this->ingest->write(
+                    $this->sensor->measurement($name, $startMicrotime, $endMicrotime, $file, $line)
+                );
+            } catch (Throwable $e) {
+                Nightwatch::unrecoverableExceptionOccurred($e);
+            }
+        }
+    }
+
+    /**
+     * @api
      */
     public function report(Throwable $e, ?bool $handled = null): void
     {
