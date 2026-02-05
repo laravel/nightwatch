@@ -42,7 +42,7 @@ final class Compatibility
 
     public static bool $queryConnectionTypeCapturable = false;
 
-    public static bool $aiEventsAvailable = false;
+    public static bool $aiPackageInstalled = false;
 
     /**
      * @var array{
@@ -128,7 +128,7 @@ final class Compatibility
         /**
          * @see https://github.com/laravel/ai
          */
-        self::$aiEventsAvailable = class_exists(\Laravel\Ai\Events\AgentPrompted::class);
+        self::$aiPackageInstalled = class_exists(\Laravel\Ai\Ai::class);
     }
 
     /**

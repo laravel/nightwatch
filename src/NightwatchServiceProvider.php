@@ -39,7 +39,6 @@ use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\ServiceProvider;
-use Laravel\Ai\Events\AgentPrompted;
 use Laravel\Ai\Events\AgentStreamed;
 use Laravel\Ai\Events\AudioGenerated;
 use Laravel\Ai\Events\EmbeddingsGenerated;
@@ -384,11 +383,10 @@ final class NightwatchServiceProvider extends ServiceProvider
         /**
          * @see \Laravel\Nightwatch\Records\AiEvent
          */
-        if (Compatibility::$aiEventsAvailable) {
+        if (Compatibility::$aiPackageInstalled) {
             $events->listen([
                 PromptingAgent::class,
                 StreamingAgent::class,
-                AgentPrompted::class,
                 AgentStreamed::class,
                 InvokingTool::class,
                 ToolInvoked::class,
