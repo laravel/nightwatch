@@ -8,3 +8,11 @@ parameters:
       path: src/Ingest.php
       count: 1
       reportUnmatched: false
+    # Laravel AI package is optional and unpublished - ignore all related errors
+    -
+      message: '#Laravel\\Ai\\#'
+      reportUnmatched: false
+    -
+      identifier: 'property.nonObject'
+      path: src/Sensors/AiEventSensor.php
+      reportUnmatched: false

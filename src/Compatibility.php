@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Context;
 use ReflectionProperty;
 use Symfony\Component\Console\Input\ArgvInput;
 
+use function class_exists;
 use function implode;
 use function method_exists;
 use function tap;
@@ -40,6 +41,8 @@ final class Compatibility
     public static bool $subMinuteScheduledTasksSupported = false;
 
     public static bool $queryConnectionTypeCapturable = false;
+
+    public static bool $aiEventsAvailable = false;
 
     /**
      * @var array{
@@ -121,6 +124,11 @@ final class Compatibility
          * @see https://github.com/laravel/framework/releases/tag/v12.45.0
          */
         self::$queryConnectionTypeCapturable = version_compare($version, '12.45.0', '>=');
+
+        /**
+         * @see https://github.com/laravel/ai
+         */
+        self::$aiEventsAvailable = class_exists(\Laravel\Ai\Events\AgentPrompted::class);
     }
 
     /**

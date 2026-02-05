@@ -61,6 +61,7 @@ final class CommandState
         public int $filesWritten = 0,
         public int $cacheEvents = 0,
         public int $hydratedModels = 0,
+        public int $aiEvents = 0,
         public string $phpVersion = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION.'.'.PHP_RELEASE_VERSION,
         public string $laravelVersion = Application::VERSION,
         public ?Artisan $artisan = null,
@@ -117,6 +118,7 @@ final class CommandState
         $this->filesWritten = 0;
         $this->cacheEvents = 0;
         $this->hydratedModels = 0;
+        $this->aiEvents = 0;
         $this->exceptionPreview = '';
     }
 }

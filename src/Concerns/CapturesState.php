@@ -22,6 +22,20 @@ use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Routing\Route;
+use Laravel\Ai\Events\AgentPrompted;
+use Laravel\Ai\Events\AgentStreamed;
+use Laravel\Ai\Events\AudioGenerated;
+use Laravel\Ai\Events\EmbeddingsGenerated;
+use Laravel\Ai\Events\GeneratingAudio;
+use Laravel\Ai\Events\GeneratingEmbeddings;
+use Laravel\Ai\Events\GeneratingImage;
+use Laravel\Ai\Events\GeneratingTranscription;
+use Laravel\Ai\Events\ImageGenerated;
+use Laravel\Ai\Events\InvokingTool;
+use Laravel\Ai\Events\PromptingAgent;
+use Laravel\Ai\Events\StreamingAgent;
+use Laravel\Ai\Events\ToolInvoked;
+use Laravel\Ai\Events\TranscriptionGenerated;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
@@ -449,6 +463,32 @@ trait CapturesState
         foreach ($this->redactCacheEventCallbacks as $callback) {
             $this->ignore(static fn () => ($callback)($record));
         }
+
+        $this->ingest->write($resolver());
+    }
+
+    /**
+     * @internal
+     */
+    public function aiEvent(
+        PromptingAgent|StreamingAgent|AgentPrompted|AgentStreamed|
+        InvokingTool|ToolInvoked|
+        GeneratingAudio|AudioGenerated|
+        GeneratingEmbeddings|EmbeddingsGenerated|
+        GeneratingImage|ImageGenerated|
+        GeneratingTranscription|TranscriptionGenerated $event
+    ): void {
+        if ($this->paused) {
+            return;
+        }
+
+        $aiEvent = $this->sensor->aiEvent($event);
+
+        if ($aiEvent === null) {
+            return;
+        }
+
+        [$record, $resolver] = $aiEvent;
 
         $this->ingest->write($resolver());
     }

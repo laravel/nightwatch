@@ -39,9 +39,24 @@ use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Ai\Events\AgentPrompted;
+use Laravel\Ai\Events\AgentStreamed;
+use Laravel\Ai\Events\AudioGenerated;
+use Laravel\Ai\Events\EmbeddingsGenerated;
+use Laravel\Ai\Events\GeneratingAudio;
+use Laravel\Ai\Events\GeneratingEmbeddings;
+use Laravel\Ai\Events\GeneratingImage;
+use Laravel\Ai\Events\GeneratingTranscription;
+use Laravel\Ai\Events\ImageGenerated;
+use Laravel\Ai\Events\InvokingTool;
+use Laravel\Ai\Events\PromptingAgent;
+use Laravel\Ai\Events\StreamingAgent;
+use Laravel\Ai\Events\ToolInvoked;
+use Laravel\Ai\Events\TranscriptionGenerated;
 use Laravel\Nightwatch\Console\AgentCommand;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Factories\Logger;
+use Laravel\Nightwatch\Hooks\AiEventListener;
 use Laravel\Nightwatch\Hooks\ArtisanStartingListener;
 use Laravel\Nightwatch\Hooks\CacheEventListener;
 use Laravel\Nightwatch\Hooks\CommandBootedHandler;
@@ -365,6 +380,28 @@ final class NightwatchServiceProvider extends ServiceProvider
         ], (new CacheEventListener($core))(...));
 
         $events->listen(RequestReceived::class, (new OctaneListener($core))(...)); // @phpstan-ignore class.notFound
+
+        /**
+         * @see \Laravel\Nightwatch\Records\AiEvent
+         */
+        if (Compatibility::$aiEventsAvailable) {
+            $events->listen([
+                PromptingAgent::class,
+                StreamingAgent::class,
+                AgentPrompted::class,
+                AgentStreamed::class,
+                InvokingTool::class,
+                ToolInvoked::class,
+                GeneratingAudio::class,
+                AudioGenerated::class,
+                GeneratingEmbeddings::class,
+                EmbeddingsGenerated::class,
+                GeneratingImage::class,
+                ImageGenerated::class,
+                GeneratingTranscription::class,
+                TranscriptionGenerated::class,
+            ], (new AiEventListener($core))(...));
+        }
 
         Queue::createPayloadUsing(new CreateQueuePayloadHandler($core));
 

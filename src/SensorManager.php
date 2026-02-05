@@ -18,6 +18,21 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\Events\JobReleasedAfterException;
+use Laravel\Ai\Events\AgentPrompted;
+use Laravel\Ai\Events\AgentStreamed;
+use Laravel\Ai\Events\AudioGenerated;
+use Laravel\Ai\Events\EmbeddingsGenerated;
+use Laravel\Ai\Events\GeneratingAudio;
+use Laravel\Ai\Events\GeneratingEmbeddings;
+use Laravel\Ai\Events\GeneratingImage;
+use Laravel\Ai\Events\GeneratingTranscription;
+use Laravel\Ai\Events\ImageGenerated;
+use Laravel\Ai\Events\InvokingTool;
+use Laravel\Ai\Events\PromptingAgent;
+use Laravel\Ai\Events\StreamingAgent;
+use Laravel\Ai\Events\ToolInvoked;
+use Laravel\Ai\Events\TranscriptionGenerated;
+use Laravel\Nightwatch\Records\AiEvent;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\Exception;
@@ -27,6 +42,7 @@ use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Records\Request as RequestRecord;
+use Laravel\Nightwatch\Sensors\AiEventSensor;
 use Laravel\Nightwatch\Sensors\CacheEventSensor;
 use Laravel\Nightwatch\Sensors\CommandSensor;
 use Laravel\Nightwatch\Sensors\ExceptionSensor;
@@ -127,6 +143,11 @@ final class SensorManager
      * @var (callable(InputInterface, int): array{0: Command, 1: callable(): array<mixed>})|null
      */
     public $commandSensor;
+
+    /**
+     * @var (callable(PromptingAgent|StreamingAgent|AgentPrompted|AgentStreamed|InvokingTool|ToolInvoked|GeneratingAudio|AudioGenerated|GeneratingEmbeddings|EmbeddingsGenerated|GeneratingImage|ImageGenerated|GeneratingTranscription|TranscriptionGenerated): ?array{0: AiEvent, 1: callable(): array<mixed>})|null
+     */
+    public $aiEventSensor;
 
     /**
      * @param  list<string>  $redactPayloadFields
@@ -361,6 +382,25 @@ final class SensorManager
         return $sensor();
     }
 
+    /**
+     * @return ?array{0: AiEvent, 1: callable(): array<mixed>}
+     */
+    public function aiEvent(
+        PromptingAgent|StreamingAgent|AgentPrompted|AgentStreamed|
+        InvokingTool|ToolInvoked|
+        GeneratingAudio|AudioGenerated|
+        GeneratingEmbeddings|EmbeddingsGenerated|
+        GeneratingImage|ImageGenerated|
+        GeneratingTranscription|TranscriptionGenerated $event
+    ): ?array {
+        $sensor = $this->aiEventSensor ??= new AiEventSensor(
+            executionState: $this->executionState,
+            clock: $this->clock,
+        );
+
+        return $sensor($event);
+    }
+
     public function flush(): void
     {
         $this->cacheEventSensor = null;
@@ -377,5 +417,6 @@ final class SensorManager
         $this->scheduledTaskSensor = null;
         $this->requestSensor = null;
         $this->commandSensor = null;
+        $this->aiEventSensor = null;
     }
 }
