@@ -249,6 +249,20 @@ class CliSamplingTest extends TestCase
         $this->assertEqualsWithDelta(50, $samples, 20);
     }
 
+    #[DataProvider('commandSamplingRates')]
+    public function test_it_applies_configured_command_sample_rate(int $rate, bool $expected): void
+    {
+        $this->core->config['sampling']['commands'] = $rate;
+        Nightwatch::configureCommandSampling('app:example');
+        $this->assertSame($expected, Nightwatch::sampling());
+    }
+
+    public static function commandSamplingRates(): iterable
+    {
+        yield 'not sampling' => [0, false];
+        yield 'sampling' => [1, true];
+    }
+
     public static function vendorCommands(): iterable
     {
         yield ['auth:clear-resets'];
