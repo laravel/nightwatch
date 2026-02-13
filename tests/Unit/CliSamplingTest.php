@@ -13,6 +13,7 @@ use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Console\Sample;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\NullOutput;
 use Tests\TestCase;
@@ -249,6 +250,7 @@ class CliSamplingTest extends TestCase
         $this->assertEqualsWithDelta(50, $samples, 20);
     }
 
+    #[RunInSeparateProcess]
     #[DataProvider('commandSamplingRates')]
     public function test_it_applies_configured_command_sample_rate(int $rate, bool $expected): void
     {
