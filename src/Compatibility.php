@@ -137,7 +137,7 @@ final class Compatibility
         return implode(' ', $tokens);
     }
 
-    public static function addSamplingToContext(bool $sample): void
+    public static function addSamplingToContext(?bool $sample): void
     {
         self::addHiddenContext('nightwatch_should_sample', $sample);
     }
