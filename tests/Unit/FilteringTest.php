@@ -732,16 +732,22 @@ class FilteringTest extends TestCase
 
     public function test_it_restores_context_sampling_state_when_ignoring(): void
     {
+        Compatibility::removeSamplingFromContext();
+
+        Nightwatch::ignore(fn () => null);
+
+        $this->assertNull(Compatibility::getSamplingFromContext(null));
+
         Compatibility::addSamplingToContext(true);
 
         Nightwatch::ignore(fn () => null);
 
-        $this->assertTrue(Compatibility::getSamplingFromContext());
+        $this->assertTrue(Compatibility::getSamplingFromContext(null));
 
         Compatibility::addSamplingToContext(false);
 
         Nightwatch::ignore(fn () => null);
 
-        $this->assertFalse(Compatibility::getSamplingFromContext());
+        $this->assertFalse(Compatibility::getSamplingFromContext(null));
     }
 }
