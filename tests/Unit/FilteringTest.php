@@ -263,6 +263,9 @@ class FilteringTest extends TestCase
         yield 'telescope' => [
             ['telescope:pause-recording', 'telescope:dump-watcher'],
         ];
+        yield 'livewire' => [
+            ['livewire-checksum-failures:127.0.0.1'],
+        ];
     }
 
     public function test_it_can_filter_custom_cache_keys(): void
