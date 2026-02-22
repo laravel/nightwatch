@@ -82,6 +82,14 @@ final class Core
     }
 
     /**
+     * @api
+     */
+    public function digest(): void
+    {
+        $this->finishExecution();
+    }
+
+    /**
      * @internal
      *
      * @return $this
