@@ -23,7 +23,7 @@
         "php": "^8.2",
         "ext-zlib": "*",
         "guzzlehttp/promises": "^2.0",
-        "laravel/framework": "^10.0|^11.0|^12.0",
+        "laravel/framework": "^10.0|^11.0|^12.0|^13.0",
         "monolog/monolog": "^3.6",
         "nesbot/carbon": "^2.0|^3.0",
         "psr/http-message": "^1.0|^2.0",
