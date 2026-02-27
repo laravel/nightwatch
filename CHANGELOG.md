@@ -2,6 +2,10 @@
 
 ## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.22.0...1.x)
 
+### Added
+
+- Laravel 13 support
+
 ## [v1.22.0](https://github.com/laravel/nightwatch/compare/v1.21.1...v1.22.0) - 2026-01-15
 
 ### What's Changed
