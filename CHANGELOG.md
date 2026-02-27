@@ -1,10 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.23.0...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.24.0...1.x)
 
 ### Added
 
 - Laravel 13 support
+
+## [v1.24.0](https://github.com/laravel/nightwatch/compare/v1.23.0...v1.24.0) - 2026-02-27
+
+### What's Changed
+
+* Laravel 13 support by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/335
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.23.0...v1.24.0
 
 ## [v1.23.0](https://github.com/laravel/nightwatch/compare/v1.22.0...v1.23.0) - 2026-02-27
 
