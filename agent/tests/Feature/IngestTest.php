@@ -865,7 +865,6 @@ class IngestTest extends TestCase
         $ingestDetailsBrowser->assertPending([]);
     }
 
-
     public function test_it_stops_ingesting_data_when_exceeding_quota_during_request(): void
     {
         $loop = new LoopFake(runForSeconds: 60);
