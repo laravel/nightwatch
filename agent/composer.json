@@ -62,7 +62,8 @@
             "@php vendor/bin/phpunit"
         ],
         "build": [
-            "bash ./build.sh"
+            "bash ./build.sh",
+            "([ ! \"${CI}\" ] && composer install) || true"
         ],
         "watch": [
             "npm ci",
