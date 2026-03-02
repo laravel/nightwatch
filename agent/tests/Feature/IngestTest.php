@@ -703,7 +703,7 @@ class IngestTest extends TestCase
         $ingestDetailsBrowser->assertPending([]);
     }
 
-    public function test_it_ingests_payloads_before_10_seconds_if_the_buffer_exceeds_the_threshold(): void
+    public function test_it_ingests_payloads_before_10_seconds_if_the_buffer_reaches_the_threshold(): void
     {
         $loop = new LoopFake(runForSeconds: 11);
         $server = new TcpServerFake;

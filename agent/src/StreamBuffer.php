@@ -31,6 +31,11 @@ class StreamBuffer
         return strlen($this->buffer) >= $this->threshold;
     }
 
+    public function willExceedThresholdWith(string $payload): bool
+    {
+        return (strlen($this->buffer) + (strlen($payload) - 2)) > $this->threshold;
+    }
+
     /**
      * @return non-empty-string
      */
