@@ -724,7 +724,7 @@ class IngestTest extends TestCase
             ingestBrowser: $ingestBrowser,
             loop: $loop,
             server: $server,
-            maxBufferLength: 63,
+            maxBufferLength: 62,
         );
 
         $this->assertNull($e, $e?->getMessage() ?? '');
@@ -802,6 +802,69 @@ class IngestTest extends TestCase
         ]);
         $ingestDetailsBrowser->assertPending([]);
     }
+
+    public function test_it_ingests_immediately_when_incoming_payload_will_put_buffer_over_the_threshold(): void
+    {
+        $loop = new LoopFake(runForSeconds: 14);
+        $server = new TcpServerFake;
+        $ingestDetailsBrowser = new BrowserFake([
+            Response::jwt(),
+        ]);
+        $ingestBrowser = new BrowserFake([
+            Response::ingested(),
+            Response::ingested(),
+        ]);
+        $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
+        $loop->addTimer(1, $server->pendingConnection([['t' => 'request']]));
+        $loop->addTimer(2, $server->pendingConnection([['t' => 'request']]));
+        $loop->addTimer(3, $server->pendingConnection([['t' => 'request']]));
+
+        [$output, $e] = $this->runAgent(
+            via: 'source',
+            ingestDetailsBrowser: $ingestDetailsBrowser,
+            ingestBrowser: $ingestBrowser,
+            loop: $loop,
+            server: $server,
+            maxBufferLength: 61,
+        );
+
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $this->assertLogMatches(<<<'OUTPUT'
+        {date} {info} Authentication successful {duration}
+        {date} {info} Ingest successful {duration}
+        {date} {info} Ingest successful {duration}
+        OUTPUT, $output);
+        $ingestBrowser->assertSent([
+            Request::ingest([
+                ['t' => 'request'],
+                ['t' => 'request'],
+                ['t' => 'request'],
+            ]),
+            Request::ingest([
+                ['t' => 'request'],
+            ]),
+        ]);
+        $ingestBrowser->assertProcessing([]);
+        $ingestBrowser->assertPending([]);
+        $loop->assertRun([
+            new Timer(interval: 0, runAt: 0, scheduledAt: 0, scheduledBy: $this->functionName()),
+            new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
+            new Timer(interval: 2, runAt: 2, scheduledAt: 0, scheduledBy: $this->functionName()),
+            new Timer(interval: 3, runAt: 3, scheduledAt: 0, scheduledBy: $this->functionName()),
+            new Timer(interval: 10, runAt: 13, scheduledAt: 3, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+        ]);
+        $loop->assertCanceled([
+            new Timer(interval: 10, canceledAt: 3, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
+        ]);
+        $loop->assertPending([
+            new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+        ]);
+        $ingestDetailsBrowser->assertSent([
+            Request::json('/api/agent-auth'),
+        ]);
+        $ingestDetailsBrowser->assertPending([]);
+    }
+
 
     public function test_it_stops_ingesting_data_when_exceeding_quota_during_request(): void
     {
