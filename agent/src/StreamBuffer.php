@@ -33,6 +33,8 @@ class StreamBuffer
 
     public function willExceedThresholdWith(string $payload): bool
     {
+        // -2 to account for the removal of the `[` and `]` characters when
+        // appending to the stream.
         return (strlen($this->buffer) + (strlen($payload) - 2)) > $this->threshold;
     }
 
