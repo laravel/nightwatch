@@ -58,6 +58,16 @@ class Ingest
 
     public function write(string $payload): void
     {
+        if ($this->buffer->isNotEmpty() && $this->buffer->willExceedThresholdWith($payload)) {
+            if ($this->sendBufferAfterDelayTimer !== null) {
+                $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
+
+                $this->sendBufferAfterDelayTimer = null;
+            }
+
+            $this->digest();
+        }
+
         $this->buffer->write($payload);
 
         if ($this->buffer->reachedThreshold()) {
