@@ -42,12 +42,19 @@ class LogRecordProcessorTest extends TestCase
         $this->travelTo(Date::parse('2000-01-01 00:00:00'));
         $streams = $this->fakeTcpStreams();
         Config::set([
-            'logging.channels.stack.channels' => ['log-stream', 'nightwatch'],
-            'logging.channels.log-stream' => [
+            'logging.channels.stack.channels' => ['log-stream-before', 'nightwatch', 'log-stream-after'],
+            'logging.channels.log-stream-before' => [
                 'driver' => 'monolog',
                 'handler' => \Monolog\Handler\StreamHandler::class,
                 'handler_with' => [
-                    'stream' => 'tcp://log-stream',
+                    'stream' => 'tcp://log-stream-before',
+                ],
+            ],
+            'logging.channels.log-stream-after' => [
+                'driver' => 'monolog',
+                'handler' => \Monolog\Handler\StreamHandler::class,
+                'handler_with' => [
+                    'stream' => 'tcp://log-stream-after',
                 ],
             ],
         ]);
@@ -57,10 +64,11 @@ class LogRecordProcessorTest extends TestCase
         ]);
         $this->core->finishExecution();
 
-        $this->assertCount(2, $streams);
-        [$log, $ingest] = $streams;
+        $this->assertCount(3, $streams);
+        [$before, $after, $ingest] = $streams;
 
-        $this->assertStringContainsString('{"now":"2000-01-01 11:00:00"}', $log->value);
+        $this->assertStringContainsString('{"now":"2000-01-01 11:00:00"}', $before->value);
+        $this->assertStringContainsString('{"now":"2000-01-01 11:00:00"}', $after->value);
         $this->assertStringContainsString('{\"now\":\"2000-01-01 00:00:00.000000+00:00\"}', $ingest->value);
     }
 

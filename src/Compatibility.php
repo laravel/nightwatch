@@ -142,6 +142,11 @@ final class Compatibility
         self::addHiddenContext('nightwatch_should_sample', $sample);
     }
 
+    public static function removeSamplingFromContext(): void
+    {
+        self::addHiddenContext('nightwatch_should_sample', null);
+    }
+
     /**
      * @template T of bool|null
      *

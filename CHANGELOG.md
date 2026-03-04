@@ -1,6 +1,27 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.22.0...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.24.0...1.x)
+
+### Added
+
+- Laravel 13 support
+
+## [v1.24.0](https://github.com/laravel/nightwatch/compare/v1.23.0...v1.24.0) - 2026-02-27
+
+### What's Changed
+
+* Laravel 13 support by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/335
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.23.0...v1.24.0
+
+## [v1.23.0](https://github.com/laravel/nightwatch/compare/v1.22.0...v1.23.0) - 2026-02-27
+
+### What's Changed
+
+* Ignore Livewire checksum failure cache keys by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/331
+* Add `Nightwatch::digest` to proactively transmit events to the agent by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/330
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.22.3...v1.23.0
 
 ## [v1.22.0](https://github.com/laravel/nightwatch/compare/v1.21.1...v1.22.0) - 2026-01-15
 

@@ -263,6 +263,9 @@ class FilteringTest extends TestCase
         yield 'telescope' => [
             ['telescope:pause-recording', 'telescope:dump-watcher'],
         ];
+        yield 'livewire' => [
+            ['livewire-checksum-failures:127.0.0.1'],
+        ];
     }
 
     public function test_it_can_filter_custom_cache_keys(): void
@@ -732,16 +735,22 @@ class FilteringTest extends TestCase
 
     public function test_it_restores_context_sampling_state_when_ignoring(): void
     {
+        Compatibility::removeSamplingFromContext();
+
+        Nightwatch::ignore(fn () => null);
+
+        $this->assertNull(Compatibility::getSamplingFromContext(null));
+
         Compatibility::addSamplingToContext(true);
 
         Nightwatch::ignore(fn () => null);
 
-        $this->assertTrue(Compatibility::getSamplingFromContext());
+        $this->assertTrue(Compatibility::getSamplingFromContext(null));
 
         Compatibility::addSamplingToContext(false);
 
         Nightwatch::ignore(fn () => null);
 
-        $this->assertFalse(Compatibility::getSamplingFromContext());
+        $this->assertFalse(Compatibility::getSamplingFromContext(null));
     }
 }
