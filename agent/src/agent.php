@@ -137,6 +137,9 @@ if ($expectedSignature === false) {
 $debug('Found signature ['.rtrim($expectedSignature).']');
 
 $packageVersion = rtrim(file_get_contents($basePath.'/../../version.txt') ?: '');
+$userAgent = ($_SERVER['NIGHTWATCH_DOCKER_AGENT'] ?? false)
+    ? "NightwatchAgent/{$packageVersion} (Docker)"
+    : "NightwatchAgent/{$packageVersion}";
 
 /*
  * Initialize services...
@@ -153,7 +156,7 @@ $ingestDetailsBrowser = $browserFactory(
         'authorization' => "Bearer {$refreshToken}",
         'content-type' => 'application/json',
         'nightwatch-server' => $server,
-        'user-agent' => 'NightwatchAgent/'.$packageVersion,
+        'user-agent' => $userAgent,
     ],
     baseUrl: rtrim($baseUrl, '/'),
 );

@@ -11,7 +11,7 @@ shutdown() {
 
 trap shutdown TERM INT
 
-php agent/build/agent.phar &
+NIGHTWATCH_DOCKER_AGENT=1 php agent/build/agent.phar &
 child=$!
 
 wait "$child"
