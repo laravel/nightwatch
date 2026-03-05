@@ -1,5 +1,5 @@
 ---
-name: nightwatch-configure
+name: configure-nightwatch
 description: Configures Laravel Nightwatch data collection, sampling rates, filtering rules, and redaction policies. Use when setting up Nightwatch, managing data volume, protecting sensitive data (PII), or optimizing event collection for production workloads.
 license: MIT
 metadata:
