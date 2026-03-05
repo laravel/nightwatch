@@ -30,7 +30,7 @@ class Ingest
      */
     private array $concurrentRequests = [];
 
-    private ?TimerInterface $sendBufferAfterDelayTimer = null;
+    private ?TimerInterface $digestDelayTimer = null;
 
     private StreamBuffer|NullBuffer $buffer;
 
@@ -58,19 +58,21 @@ class Ingest
 
     public function write(string $payload): void
     {
+        if ($this->buffer->isNotEmpty() && $this->buffer->willExceedThresholdWith($payload)) {
+            $this->cancelDigestDelay();
+
+            $this->digest();
+        }
+
         $this->buffer->write($payload);
 
         if ($this->buffer->reachedThreshold()) {
-            if ($this->sendBufferAfterDelayTimer !== null) {
-                $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
-
-                $this->sendBufferAfterDelayTimer = null;
-            }
+            $this->cancelDigestDelay();
 
             $this->digest();
         } elseif ($this->buffer->isNotEmpty()) {
-            $this->sendBufferAfterDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, function () {
-                $this->sendBufferAfterDelayTimer = null;
+            $this->digestDelayTimer ??= $this->loop->addTimer($this->maxBufferDurationInSeconds, function () {
+                $this->digestDelayTimer = null;
 
                 $this->digest();
             });
@@ -82,9 +84,7 @@ class Ingest
      */
     public function forceDigest(): PromiseInterface
     {
-        if ($this->sendBufferAfterDelayTimer !== null) {
-            $this->loop->cancelTimer($this->sendBufferAfterDelayTimer);
-        }
+        $this->cancelDigestDelay();
 
         if ($this->buffer->isNotEmpty()) {
             $this->digest();
@@ -222,5 +222,13 @@ class Ingest
             $stop,
             $refreshIn,
         ];
+    }
+
+    private function cancelDigestDelay(): void
+    {
+        if ($this->digestDelayTimer !== null) {
+            $this->loop->cancelTimer($this->digestDelayTimer);
+            $this->digestDelayTimer = null;
+        }
     }
 }

@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Orchestra\Testbench\Attributes\WithEnv;
@@ -88,5 +89,66 @@ class CoreTest extends TestCase
                 'laravel_version' => '11.33.0',
             ],
         ]);
+    }
+
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
+    #[WithEnv('NIGHTWATCH_DEPLOY', '82f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    public function test_it_uses_nightwatch_deploy_env_for_deployments_by_default(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {
+            return 'OK';
+        });
+
+        $this->get('/test')->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.deploy', '82f35860d8c7e59fe4d81a3256a2bb34c998acd9');
+    }
+
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
+    #[WithEnv('LARAVEL_CLOUD_COMMIT', '92f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    public function test_it_uses_cloud_commit_env_for_deployments_if_available(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {
+            return 'OK';
+        });
+
+        $this->get('/test')->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.deploy', '92f35860d8c7e59fe4d81a3256a2bb34c998acd9');
+    }
+
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
+    #[WithEnv('FORGE_DEPLOY_COMMIT', '02f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    public function test_it_uses_forge_commit_env_for_deployments_if_available(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {
+            return 'OK';
+        });
+
+        $this->get('/test')->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.deploy', '02f35860d8c7e59fe4d81a3256a2bb34c998acd9');
+    }
+
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
+    #[WithEnv('FORGE_DEPLOY_COMMIT', '82f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    #[WithEnv('NIGHTWATCH_DEPLOY', '12f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    public function test_it_uses_higher_precedent_deploy_env_for_deployments(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {
+            return 'OK';
+        });
+
+        $this->get('/test')->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.deploy', '12f35860d8c7e59fe4d81a3256a2bb34c998acd9');
     }
 }

@@ -14,6 +14,11 @@ class NullBuffer
         return false;
     }
 
+    public function willExceedThresholdWith(string $payload): bool
+    {
+        return false;
+    }
+
     /**
      * @return non-empty-string
      */
