@@ -53,6 +53,7 @@ class IngestTest extends TestCase
             'content-encoding' => 'gzip',
             'content-type' => 'application/json',
             'nightwatch-server' => gethostname(),
+            'user-agent' => 'NightwatchAgent/'.rtrim(file_get_contents('../version.txt') ?: ''),
         ], $ingestBrowser->headers);
         $ingestBrowser->assertSent([
             Request::ingest($records),
