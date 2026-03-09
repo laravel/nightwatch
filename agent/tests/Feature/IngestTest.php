@@ -13,7 +13,9 @@ use Tests\TestCase;
 use Tests\Timer;
 
 use function array_fill;
+use function file_get_contents;
 use function gethostname;
+use function rtrim;
 use function str_repeat;
 use function substr;
 
