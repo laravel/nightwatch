@@ -13,7 +13,7 @@ use function now;
 /**
  * @template TModel of \App\Models\User
  *
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<TModel>
+ * @extends Factory<TModel>
  */
 final class UserFactory extends Factory
 {

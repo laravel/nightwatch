@@ -7,8 +7,10 @@ use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Kernel;
 use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Http\Middleware\Sample;
+use Laravel\Nightwatch\Records\Request;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
 
@@ -34,9 +36,9 @@ final class HttpKernelResolvedHandler
 
         try {
             /**
-             * @see \Laravel\Nightwatch\ExecutionStage::End
-             * @see \Laravel\Nightwatch\Records\Request
-             * @see \Laravel\Nightwatch\Core::finishExecution()
+             * @see ExecutionStage::End
+             * @see Request
+             * @see Core::finishExecution()
              */
             $kernel->whenRequestLifecycleIsLongerThan(-1, new RequestLifecycleIsLongerThanHandler($this->nightwatch));
         } catch (Throwable $e) {
@@ -45,7 +47,7 @@ final class HttpKernelResolvedHandler
 
         try {
             /**
-             * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+             * @see ExecutionStage::Terminating
              */
             $kernel->prependMiddleware(GlobalMiddleware::class);
         } catch (Throwable $e) {

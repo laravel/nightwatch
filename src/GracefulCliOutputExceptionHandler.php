@@ -3,8 +3,11 @@
 namespace Laravel\Nightwatch;
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Http\Request;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 use function date;
@@ -45,8 +48,8 @@ final class GracefulCliOutputExceptionHandler implements ExceptionHandler
     }
 
     /**
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @param  Request  $request
+     * @return Response
      */
     public function render($request, Throwable $e)
     {
@@ -54,7 +57,7 @@ final class GracefulCliOutputExceptionHandler implements ExceptionHandler
     }
 
     /**
-     * @param  \Symfony\Component\Console\Output\OutputInterface  $output
+     * @param  OutputInterface  $output
      */
     public function renderForConsole($output, Throwable $e): void
     {

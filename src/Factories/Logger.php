@@ -11,6 +11,7 @@ use Laravel\Nightwatch\State\RequestState;
 use Monolog\Logger as Monolog;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 /**
  * @internal
@@ -27,7 +28,7 @@ final class Logger
     }
 
     /**
-     * @param  array<string, mixed>&array{level: \Psr\Log\LogLevel::*}  $config
+     * @param  array<string, mixed>&array{level: LogLevel::*}  $config
      */
     public function __invoke(array $config): LoggerInterface
     {

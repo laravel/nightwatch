@@ -69,12 +69,23 @@ use Laravel\Nightwatch\Hooks\RouteMatchedListener;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\Hooks\TerminatingListener;
 use Laravel\Nightwatch\Http\Middleware\Sample;
+use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\Command;
+use Laravel\Nightwatch\Records\Exception;
+use Laravel\Nightwatch\Records\JobAttempt;
+use Laravel\Nightwatch\Records\Mail;
+use Laravel\Nightwatch\Records\Notification;
+use Laravel\Nightwatch\Records\OutgoingRequest;
+use Laravel\Nightwatch\Records\Query;
+use Laravel\Nightwatch\Records\QueuedJob;
+use Laravel\Nightwatch\Records\Request;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Support\Uuid;
 use Laravel\Octane\Events\RequestReceived;
 use Livewire\Livewire;
 use Livewire\LivewireManager;
+use Psr\Log\LogLevel;
 use Ramsey\Uuid\Uuid as BaseUuid;
 use Throwable;
 
@@ -115,7 +126,7 @@ final class NightwatchServiceProvider extends ServiceProvider
      *         ignore_notifications?: bool,
      *         ignore_outgoing_requests?: bool,
      *         ignore_queries?: bool,
-     *         log_level?: \Psr\Log\LogLevel::*,
+     *         log_level?: LogLevel::*,
      *     },
      *     token?: string,
      *     deployment?: string,
@@ -299,7 +310,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     private function registerCommands(): void
     {
         $this->commands([
-            Console\AgentCommand::class,
+            AgentCommand::class,
             Console\StatusCommand::class,
         ]);
     }
@@ -318,37 +329,37 @@ final class NightwatchServiceProvider extends ServiceProvider
         //
 
         /**
-         * @see \Laravel\Nightwatch\Records\Query
+         * @see Query
          */
         $events->listen(QueryExecuted::class, (new QueryExecutedListener($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\Records\Exception
+         * @see Exception
          */
         $this->callAfterResolving(ExceptionHandler::class, (new ExceptionHandlerResolvedHandler($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\Records\QueuedJob
+         * @see QueuedJob
          */
         $events->listen([JobQueueing::class, JobQueued::class], (new QueuedJobListener($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\Records\Notification
+         * @see Notification
          */
         $events->listen([NotificationSending::class, NotificationSent::class], (new NotificationListener($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\Records\Mail
+         * @see Mail
          */
         $events->listen([MessageSending::class, MessageSent::class], (new MailListener($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\Records\OutgoingRequest
+         * @see OutgoingRequest
          */
         $this->callAfterResolving(Http::class, (new HttpClientFactoryResolvedHandler($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\Records\CacheEvent
+         * @see CacheEvent
          */
         $events->listen([
             RetrievingKey::class,
@@ -392,7 +403,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         /** @var Core<RequestState|CommandState> $core */
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         * @see ExecutionStage::Terminating
          */
         $events->listen(Terminating::class, (new TerminatingListener($core))(...));
     }
@@ -405,43 +416,43 @@ final class NightwatchServiceProvider extends ServiceProvider
         // TODO resolve the kernel inline rather than in the listener.
 
         /**
-         * @see \Laravel\Nightwatch\State\RequestState::$user
+         * @see RequestState::$user
          *
          * TODO handle this on the queue
          */
         $events->listen(Logout::class, (new LogoutListener($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::BeforeMiddleware
+         * @see ExecutionStage::BeforeMiddleware
          */
         $this->app->booted((new RequestBootedHandler($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Action
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         * @see ExecutionStage::Action
+         * @see ExecutionStage::Terminating
          */
         $events->listen(RouteMatched::class, (new RouteMatchedListener($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Render
+         * @see ExecutionStage::Render
          */
         $events->listen(PreparingResponse::class, (new PreparingResponseListener($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::AfterMiddleware
+         * @see ExecutionStage::AfterMiddleware
          */
         $events->listen(ResponsePrepared::class, (new ResponsePreparedListener($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Sending
+         * @see ExecutionStage::Sending
          */
         $events->listen(RequestHandled::class, (new RequestHandledListener($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::End
-         * @see \Laravel\Nightwatch\Records\Request
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-         * @see \Laravel\Nightwatch\Core::finishExecution()
+         * @see ExecutionStage::End
+         * @see Request
+         * @see ExecutionStage::Terminating
+         * @see Core::finishExecution()
          */
         $this->callAfterResolving(HttpKernelContract::class, (new HttpKernelResolvedHandler($core))(...));
 
@@ -457,34 +468,34 @@ final class NightwatchServiceProvider extends ServiceProvider
         $kernel = $this->app->make(ConsoleKernelContract::class);
 
         /**
-         * @see \Laravel\Nightwatch\State\CommandState::$artisan
+         * @see CommandState::$artisan
          */
         $events->listen(ArtisanStarting::class, (new ArtisanStartingListener($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Action
+         * @see ExecutionStage::Action
          */
         $this->app->booted((new CommandBootedHandler($core))(...));
 
         /**
-         * @see \Laravel\Nightwatch\State\CommandState::$name
+         * @see CommandState::$name
          *
          * Commands...
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-         * @see \Laravel\Nightwatch\ExecutionStage::End
-         * @see \Laravel\Nightwatch\Records\Command
-         * @see \Laravel\Nightwatch\Core::finishExecution()
+         * @see ExecutionStage::Terminating
+         * @see ExecutionStage::End
+         * @see Command
+         * @see Core::finishExecution()
          *
          * Jobs...
-         * @see \Laravel\Nightwatch\State\CommandState::$source
-         * @see \Laravel\Nightwatch\State\CommandState::flush()
-         * @see \Laravel\Nightwatch\State\CommandState::$timestamp
-         * @see \Laravel\Nightwatch\State\CommandState::$id
-         * @see \Laravel\Nightwatch\Records\JobAttempt
-         * @see \Laravel\Nightwatch\Records\Exception
+         * @see CommandState::$source
+         * @see CommandState::flush()
+         * @see CommandState::$timestamp
+         * @see CommandState::$id
+         * @see JobAttempt
+         * @see Exception
          *
          * Scheduled tasks...
-         * @see \Laravel\Nightwatch\Core::finishExecution()
+         * @see Core::finishExecution()
          */
         $events->listen(CommandStarting::class, (new CommandStartingListener($events, $core, $kernel))(...));
     }

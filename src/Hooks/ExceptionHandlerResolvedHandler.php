@@ -5,6 +5,7 @@ namespace Laravel\Nightwatch\Hooks;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Exceptions\Handler;
 use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\Records\Exception;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
@@ -28,7 +29,7 @@ final class ExceptionHandlerResolvedHandler
         try {
             if ($handler instanceof Handler) {
                 /**
-                 * @see \Laravel\Nightwatch\Records\Exception
+                 * @see Exception
                  */
                 $handler->reportable(new ReportableHandler($this->nightwatch));
             }

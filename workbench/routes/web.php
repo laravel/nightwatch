@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\ExceptionTestController;
 use App\Jobs\MyJob;
 use App\Mail\MyMail;
 use App\Notifications\MyNotification;
@@ -51,4 +52,4 @@ Route::get('/sampled-or-throw', static fn () => [])->middleware([
     Sample::never(),
 ]);
 
-Route::get('/test-exception', App\Http\ExceptionTestController::class);
+Route::get('/test-exception', ExceptionTestController::class);

@@ -19,7 +19,10 @@ use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Queue\Events\Looping;
 use Illuminate\Queue\Events\WorkerStopping;
 use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Laravel\Nightwatch\Records\Command;
+use Laravel\Nightwatch\Records\JobAttempt;
 use Laravel\Nightwatch\State\CommandState;
 use Throwable;
 
@@ -66,10 +69,10 @@ final class CommandStartingListener
         $this->nightwatch->configureForJobs();
 
         /**
-         * @see \Laravel\Nightwatch\Core::finishExecution()
-         * @see \Laravel\Nightwatch\State\CommandState::flush()
-         * @see \Laravel\Nightwatch\State\CommandState::$timestamp
-         * @see \Laravel\Nightwatch\State\CommandState::$id
+         * @see Core::finishExecution()
+         * @see CommandState::flush()
+         * @see CommandState::$timestamp
+         * @see CommandState::$id
          */
         $this->events->listen([
             Looping::class,
@@ -80,8 +83,8 @@ final class CommandStartingListener
         ], (new WorkerLifecycleListener($this->nightwatch))(...));
 
         /**
-         * @see \Laravel\Nightwatch\Records\JobAttempt
-         * @see \Laravel\Nightwatch\Core::finishExecution()
+         * @see JobAttempt
+         * @see Core::finishExecution()
          */
         $this->events->listen([
             JobProcessed::class,
@@ -101,7 +104,7 @@ final class CommandStartingListener
         $this->events->listen(ScheduledTaskStarting::class, (new ScheduledTaskStartingListener($this->nightwatch))(...));
 
         /**
-         * @see \Laravel\Nightwatch\Core::finishExecution()
+         * @see Core::finishExecution()
          */
         $this->events->listen([
             ScheduledTaskFinished::class,
@@ -121,14 +124,14 @@ final class CommandStartingListener
         $this->nightwatch->prepareForCommand($event->command);
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+         * @see ExecutionStage::Terminating
          */
         $this->events->listen(CommandFinished::class, (new CommandFinishedListener($this->nightwatch))(...));
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::End
-         * @see \Laravel\Nightwatch\Records\Command
-         * @see \Laravel\Nightwatch\Core::finishExecution()
+         * @see ExecutionStage::End
+         * @see Command
+         * @see Core::finishExecution()
          */
         $this->kernel->whenCommandLifecycleIsLongerThan(-1, new CommandLifecycleIsLongerThanHandler($this->nightwatch));
     }

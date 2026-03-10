@@ -1,5 +1,7 @@
 <?php
 
+use Composer\Autoload\ClassLoader;
+
 // When we run the agent within a Laravel application, the consuming Laravel
 // application will have run its own autoloader. When this happens, Composer
 // fills the `$GLOBALS['__composer_autoload_files']` variable with all
@@ -24,7 +26,7 @@
 $composerAutoloadFiles = $GLOBALS['__composer_autoload_files'] ?? [];
 $GLOBALS['__composer_autoload_files'] = [];
 
-/** @var \Composer\Autoload\ClassLoader $autoloader */
+/** @var ClassLoader $autoloader */
 $autoloader = require __DIR__.'/../vendor/autoload.php';
 
 $GLOBALS['__composer_autoload_files'] = $composerAutoloadFiles;

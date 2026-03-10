@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 use Laravel\Nightwatch\Hooks\LogRecordProcessor;
+use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\LogRecord;
 use RuntimeException;
@@ -45,14 +46,14 @@ class LogRecordProcessorTest extends TestCase
             'logging.channels.stack.channels' => ['log-stream-before', 'nightwatch', 'log-stream-after'],
             'logging.channels.log-stream-before' => [
                 'driver' => 'monolog',
-                'handler' => \Monolog\Handler\StreamHandler::class,
+                'handler' => StreamHandler::class,
                 'handler_with' => [
                     'stream' => 'tcp://log-stream-before',
                 ],
             ],
             'logging.channels.log-stream-after' => [
                 'driver' => 'monolog',
-                'handler' => \Monolog\Handler\StreamHandler::class,
+                'handler' => StreamHandler::class,
                 'handler_with' => [
                     'stream' => 'tcp://log-stream-after',
                 ],
@@ -80,7 +81,7 @@ class LogRecordProcessorTest extends TestCase
             'logging.channels.stack.channels' => ['log-stream', 'nightwatch'],
             'logging.channels.log-stream' => [
                 'driver' => 'monolog',
-                'handler' => \Monolog\Handler\StreamHandler::class,
+                'handler' => StreamHandler::class,
                 'handler_with' => [
                     'stream' => 'tcp://log-stream',
                 ],

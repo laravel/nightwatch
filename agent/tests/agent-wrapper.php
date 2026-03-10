@@ -1,5 +1,9 @@
 <?php
 
+use Tests\BrowserFake;
+use Tests\LoopFake;
+use Tests\TcpServerFake;
+
 require_once __DIR__.'./../src/Contracts/Browser.php';
 require_once __DIR__.'/../src/Contracts/Clock.php';
 require_once __DIR__.'./../vendor/react/event-loop/src/LoopInterface.php';
@@ -34,7 +38,7 @@ if (! is_array($payload)) {
     exit(1);
 }
 
-/** @var array{listenOn: string, viaPhar: bool, ingestDetailsBrowser: \Tests\BrowserFake|null, ingestBrowser: \Tests\BrowserFake|null, loop: \Tests\LoopFake|null, server: \Tests\TcpServerFake|null, silent: bool|null, quiet: bool|null, verbose: bool|null, maxBufferLength: int|null }  $payload */
+/** @var array{listenOn: string, viaPhar: bool, ingestDetailsBrowser: BrowserFake|null, ingestBrowser: BrowserFake|null, loop: LoopFake|null, server: TcpServerFake|null, silent: bool|null, quiet: bool|null, verbose: bool|null, maxBufferLength: int|null }  $payload */
 [
     'listenOn' => $listenOn,
     'viaPhar' => $viaPhar,
@@ -80,8 +84,8 @@ if ($viaPhar === false) {
     });
 
     $browsers = [
-        $ingestDetailsBrowser ?? new Tests\BrowserFake,
-        $ingestBrowser ?? new Tests\BrowserFake,
+        $ingestDetailsBrowser ?? new BrowserFake,
+        $ingestBrowser ?? new BrowserFake,
     ];
 
     $browserFactory = function (

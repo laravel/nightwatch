@@ -3,7 +3,19 @@
 namespace Tests\Unit;
 
 use FilesystemIterator;
+use Laravel\Nightwatch\Console\Sample;
 use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\Facades\Nightwatch;
+use Laravel\Nightwatch\QueryConnectionType;
+use Laravel\Nightwatch\Records\CacheEvent;
+use Laravel\Nightwatch\Records\Command;
+use Laravel\Nightwatch\Records\Exception;
+use Laravel\Nightwatch\Records\Mail;
+use Laravel\Nightwatch\Records\Notification;
+use Laravel\Nightwatch\Records\OutgoingRequest;
+use Laravel\Nightwatch\Records\Query;
+use Laravel\Nightwatch\Records\QueuedJob;
+use Laravel\Nightwatch\Records\Request;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
@@ -32,21 +44,21 @@ class ArchitectureTest extends TestCase
     public function test_classes_are_internal(): void
     {
         $except = [
-            \Laravel\Nightwatch\Console\Sample::class,
-            \Laravel\Nightwatch\Core::class,
-            \Laravel\Nightwatch\Facades\Nightwatch::class,
+            Sample::class,
+            Core::class,
+            Nightwatch::class,
             \Laravel\Nightwatch\Http\Middleware\Sample::class,
-            \Laravel\Nightwatch\QueryConnectionType::class,
-            \Laravel\Nightwatch\Records\CacheEvent::class,
-            \Laravel\Nightwatch\Records\Command::class,
-            \Laravel\Nightwatch\Records\Exception::class,
-            \Laravel\Nightwatch\Records\Exception::class,
-            \Laravel\Nightwatch\Records\Mail::class,
-            \Laravel\Nightwatch\Records\Notification::class,
-            \Laravel\Nightwatch\Records\OutgoingRequest::class,
-            \Laravel\Nightwatch\Records\Query::class,
-            \Laravel\Nightwatch\Records\QueuedJob::class,
-            \Laravel\Nightwatch\Records\Request::class,
+            QueryConnectionType::class,
+            CacheEvent::class,
+            Command::class,
+            Exception::class,
+            Exception::class,
+            Mail::class,
+            Notification::class,
+            OutgoingRequest::class,
+            Query::class,
+            QueuedJob::class,
+            Request::class,
         ];
 
         foreach ($this->classes() as $class) {

@@ -3,6 +3,7 @@
 namespace Laravel\Nightwatch\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use Laravel\Nightwatch\Core;
 use Throwable;
 
 use function call_user_func;
@@ -38,7 +39,7 @@ use function call_user_func;
  * @method static void rejectQueries(callable $callback)
  * @method static void rejectQueuedJobs(callable $callback)
  *
- * @see \Laravel\Nightwatch\Core
+ * @see Core
  */
 final class Nightwatch extends Facade
 {
@@ -52,7 +53,7 @@ final class Nightwatch extends Facade
      */
     public static function getFacadeAccessor(): string
     {
-        return \Laravel\Nightwatch\Core::class;
+        return Core::class;
     }
 
     /**

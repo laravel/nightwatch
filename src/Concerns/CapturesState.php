@@ -560,13 +560,13 @@ trait CapturesState
         $middleware = $route->middleware();
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Action
+         * @see ExecutionStage::Action
          */
         $middleware[] = RouteMiddleware::class;
 
         if (! Compatibility::$terminatingEventExists) {
             /**
-             * @see \Laravel\Nightwatch\ExecutionStage::Terminating
+             * @see ExecutionStage::Terminating
              */
             array_unshift($middleware, GlobalMiddleware::class);
         }

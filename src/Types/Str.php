@@ -10,7 +10,7 @@ use function substr;
 /**
  * @internal
  *
- * @mixin \Illuminate\Support\Str
+ * @mixin SupportStr
  */
 final class Str
 {

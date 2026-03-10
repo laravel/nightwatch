@@ -4,6 +4,7 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Illuminate\Http\Client\Factory;
 use Laravel\Nightwatch\Core;
+use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Throwable;
@@ -26,7 +27,7 @@ final class HttpClientFactoryResolvedHandler
     {
         try {
             /**
-             * @see \Laravel\Nightwatch\Records\OutgoingRequest
+             * @see OutgoingRequest
              */
             $factory->globalMiddleware($this->nightwatch->guzzleMiddleware());
         } catch (Throwable $e) {
