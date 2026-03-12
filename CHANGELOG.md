@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.24.2...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.24.3...1.x)
+
+## [v1.24.3](https://github.com/laravel/nightwatch/compare/v1.24.2...v1.24.3) - 2026-03-12
+
+### What's Changed
+
+* Add VAPOR_COMMIT_HASH fallback for NIGHTWATCH_DEPLOY by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/343
+* Sync versions by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/344
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.24.2...v1.24.3
 
 ## [v1.24.2](https://github.com/laravel/nightwatch/compare/v1.24.1...v1.24.2) - 2026-03-10
 
