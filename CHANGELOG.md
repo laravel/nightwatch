@@ -1,10 +1,21 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.24.0...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.24.1...1.x)
 
 ### Added
 
 - Laravel 13 support
+
+## [v1.24.1](https://github.com/laravel/nightwatch/compare/v1.24.0...v1.24.1) - 2026-03-12
+
+### What's Changed
+
+* Restore local dependencies after running the build command by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/338
+* Ingest records immediately when next payload will exceed buffer limit by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/336
+* Refactor agent digest timer handling by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/337
+* Add sensible fallbacks for `NIGHTWATCH_DEPLOY` by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/323
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.24.0...v1.24.1
 
 ## [v1.24.0](https://github.com/laravel/nightwatch/compare/v1.23.0...v1.24.0) - 2026-02-27
 
