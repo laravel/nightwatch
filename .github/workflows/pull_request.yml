@@ -241,11 +241,13 @@ jobs:
           key: ${{ runner.os }}-package-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-package-composer
 
-      - name: Install shift upgraded version of Single Store
+      - name: Install shift upgraded dependencies for Laravel 13
         if: ${{ matrix.laravel == 13 }}
         run: |
           composer config repositories.single-store vcs https://github.com/laravel-shift/singlestoredb-laravel-driver.git
-          composer require --dev  singlestoredb/singlestoredb-laravel:dev-l13-compatibility --no-update
+          composer require --dev singlestoredb/singlestoredb-laravel:dev-l13-compatibility --no-update
+          composer config repositories.mongodb vcs https://github.com/laravel-shift/laravel-mongodb.git
+          composer require --dev mongodb/laravel-mongodb:dev-l13-compatibility
 
       - name: Require Laravel Version
         run: composer require laravel/framework:^${{ matrix.laravel }} --no-update
