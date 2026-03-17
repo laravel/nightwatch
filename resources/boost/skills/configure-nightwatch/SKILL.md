@@ -10,17 +10,6 @@ metadata:
 
 This skill helps configure Laravel Nightwatch data collection to balance observability, performance, and privacy. Covers sampling strategies, filtering rules, and redaction methods across all event types.
 
-## When to Use This Skill
-
-Invoke when:
-
-- Setting up Nightwatch for the first time
-- Reducing data volume or event quota usage
-- Protecting sensitive data (PII, credentials, tokens)
-- Configuring production monitoring
-- Optimizing for high-traffic applications
-- Understanding filtering vs sampling vs redaction
-
 ## Documentation Reference
 
 The [Nightwatch Documentation](https://nightwatch.laravel.com/docs) is the definitive and up-to-date source of information for all Nightwatch configuration options. This skill provides practical guidance and common patterns, but always consult the official documentation as the primary source of truth for specific details, environment variables, and API behavior. The documentation includes comprehensive coverage of:
