@@ -12,11 +12,9 @@ use Tests\TcpServerFake;
 use Tests\TestCase;
 use Tests\Timer;
 
-use function file_get_contents;
 use function gethostname;
 use function json_encode;
 use function preg_quote;
-use function rtrim;
 use function str_repeat;
 use function strlen;
 
@@ -202,7 +200,7 @@ class IngestDetailsRepositoryTest extends TestCase
             'authorization' => "Bearer {$token}",
             'content-type' => 'application/json',
             'nightwatch-server' => gethostname(),
-            'user-agent' => 'NightwatchAgent/'.rtrim(file_get_contents('../version.txt') ?: ''),
+            'user-agent' => 'NightwatchAgent/'.self::packageVersion(),
         ], $browser->headers);
         $browser->assertSent([
             Request::json('/api/agent-auth'),
