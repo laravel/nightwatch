@@ -55,7 +55,7 @@ abstract class TestCase extends BaseTestCase
         ?int $maxBufferLength = null,
     ): array {
         $output = '';
-        $port = rand(9000, 9999);
+        $port = random_int(8000, 9999);
         $payloadFile = __DIR__.'/test-payload';
         $listenOn ??= "127.0.0.1:{$port}";
 
