@@ -56,7 +56,7 @@ class Ingest
         $this->buffer = $this->streamBufferBackup = $buffer;
     }
 
-    public function write(string $payload): void
+    public function write(Payload $payload): void
     {
         if ($this->buffer->isNotEmpty() && $this->buffer->willExceedThresholdWith($payload)) {
             $this->cancelDigestDelay();
@@ -111,15 +111,6 @@ class Ingest
 
         if (count($this->concurrentRequests) >= $this->concurrentRequestLimit) {
             call_user_func($this->onIngestError, "Exceeded concurrent request limit. [{$this->concurrentRequestLimit}] requests are processing", 0.0);
-
-            return;
-        }
-
-        // TODO determine what level is optimal here
-        $payload = gzencode($payload);
-
-        if ($payload === false) {
-            call_user_func($this->onIngestError, 'Unable to compress payload.', 0.0);
 
             return;
         }

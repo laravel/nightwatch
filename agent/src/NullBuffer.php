@@ -4,7 +4,7 @@ namespace Laravel\NightwatchAgent;
 
 class NullBuffer
 {
-    public function write(string $payload): void
+    public function write(Payload $payload): void
     {
         //
     }
@@ -14,7 +14,7 @@ class NullBuffer
         return false;
     }
 
-    public function willExceedThresholdWith(string $payload): bool
+    public function willExceedThresholdWith(Payload $payload): bool
     {
         return false;
     }

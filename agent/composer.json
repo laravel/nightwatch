@@ -20,6 +20,7 @@
     "require": {
         "php": "^8.2",
         "ext-zlib": "*",
+        "clue/zlib-react": "^1.2.0",
         "psr/http-message": "^1.1",
         "react/event-loop": "^1.5",
         "react/http": "^1.11",

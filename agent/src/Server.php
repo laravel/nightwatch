@@ -75,7 +75,7 @@ class Server
                     return;
                 }
 
-                call_user_func($this->onPayloadReceived, $payload->value);
+                call_user_func($this->onPayloadReceived, $payload);
             });
 
             $connection->on('error', function (Throwable $e): void {

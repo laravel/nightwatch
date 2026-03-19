@@ -51,4 +51,17 @@ class Payload
     {
         return $this->version === self::EXPECTED_PAYLOAD_VERSION;
     }
+
+    public function pull(): string
+    {
+        $value = $this->value;
+
+        $this->length = null;
+        $this->version = '';
+        $this->complete = false;
+        $this->tokenHash = '';
+        $this->value = '';
+
+        return $value;
+    }
 }

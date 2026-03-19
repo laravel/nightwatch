@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Laravel\NightwatchAgent\Payload;
 use Laravel\NightwatchAgent\StreamBuffer;
 use Tests\TestCase;
 
@@ -13,38 +14,50 @@ class StreamBufferTest extends TestCase
     {
         $buffer = new StreamBuffer(100);
 
-        $this->assertSame('{"records":[]}', $buffer->pull());
+        $this->assertSame('{"records":[]}', gzdecode($buffer->pull()));
     }
 
     public function test_it_can_write_and_pull_a_single_record(): void
     {
         $buffer = new StreamBuffer(100);
+        $payload = new Payload;
+        $payload->append('28:v1:a1b2c3d:[{"t":"request"}]');
 
-        $buffer->write('[{"id":1}]');
+        $buffer->write($payload);
 
-        $this->assertSame('{"records":[{"id":1}]}', $buffer->pull());
+        $this->assertSame('{"records":[{"t":"request"}]}', gzdecode($buffer->pull()));
     }
 
     public function test_it_can_write_and_pull_two_records(): void
     {
         $buffer = new StreamBuffer(100);
+        $payload = new Payload;
+        $payload->append('28:v1:a1b2c3d:[{"t":"request"}]');
+        $buffer->write($payload);
+        $payload = new Payload;
+        $payload->append('28:v1:a1b2c3d:[{"u":"request"}]');
+        $buffer->write($payload);
 
-        $buffer->write('[{"id":1}]');
-        $buffer->write('[{"id":2}]');
-
-        $this->assertSame('{"records":[{"id":1},{"id":2}]}', $buffer->pull());
+        $this->assertSame('{"records":[{"t":"request"},{"u":"request"}]}', gzdecode($buffer->pull()));
     }
 
     public function test_it_can_write_and_pull_many_records(): void
     {
         $buffer = new StreamBuffer(100);
+        $payload = new Payload;
+        $payload->append('20:v1:a1b2c3d:[{"id":1}]');
+        $buffer->write($payload);
+        $payload = new Payload;
+        $payload->append('20:v1:a1b2c3d:[{"id":2}]');
+        $buffer->write($payload);
+        $payload = new Payload;
+        $payload->append('20:v1:a1b2c3d:[{"id":3}]');
+        $buffer->write($payload);
+        $payload = new Payload;
+        $payload->append('20:v1:a1b2c3d:[{"id":4}]');
+        $buffer->write($payload);
 
-        $buffer->write('[{"id":1}]');
-        $buffer->write('[{"id":2}]');
-        $buffer->write('[{"id":3}]');
-        $buffer->write('[{"id":4}]');
-
-        $this->assertSame('{"records":[{"id":1},{"id":2},{"id":3},{"id":4}]}', $buffer->pull());
+        $this->assertSame('{"records":[{"id":1},{"id":2},{"id":3},{"id":4}]}', gzdecode($buffer->pull()));
     }
 
     public function test_it_has_not_reached_threshold_when_empty(): void
@@ -57,8 +70,10 @@ class StreamBufferTest extends TestCase
     public function test_it_has_not_reached_threshold_when_under_threshold(): void
     {
         $buffer = new StreamBuffer(100);
+        $payload = new Payload;
+        $payload->append('119:v1:a1b2c3d:['.str_repeat('a', 99).']');
 
-        $buffer->write(str_repeat('a', 99));
+        $buffer->write($payload);
 
         $this->assertFalse($buffer->reachedThreshold());
     }
@@ -66,8 +81,10 @@ class StreamBufferTest extends TestCase
     public function test_it_has_reached_threshold_when_length_matches_threshold(): void
     {
         $buffer = new StreamBuffer(100);
+        $payload = new Payload;
+        $payload->append('120:v1:a1b2c3d:['.str_repeat('a', 100).']');
 
-        $buffer->write('['.str_repeat('a', 100).']');
+        $buffer->write($payload);
 
         $this->assertTrue($buffer->reachedThreshold());
     }
@@ -75,8 +92,10 @@ class StreamBufferTest extends TestCase
     public function test_it_has_reached_threshold_when_length_is_over_threshold(): void
     {
         $buffer = new StreamBuffer(100);
+        $payload = new Payload;
+        $payload->append('121:v1:a1b2c3d:['.str_repeat('a', 101).']');
 
-        $buffer->write('['.str_repeat('a', 101).']');
+        $buffer->write($payload);
 
         $this->assertTrue($buffer->reachedThreshold());
     }
@@ -84,8 +103,10 @@ class StreamBufferTest extends TestCase
     public function test_it_pulling_resets_reached_threshold_state(): void
     {
         $buffer = new StreamBuffer(100);
+        $payload = new Payload;
+        $payload->append('121:v1:a1b2c3d:['.str_repeat('a', 101).']');
 
-        $buffer->write('['.str_repeat('a', 101).']');
+        $buffer->write($payload);
         $this->assertTrue($buffer->reachedThreshold());
         $buffer->pull();
 
@@ -95,10 +116,12 @@ class StreamBufferTest extends TestCase
     public function test_it_empties_the_buffer_while_pulling(): void
     {
         $buffer = new StreamBuffer(100);
+        $payload = new Payload;
+        $payload->append('28:v1:a1b2c3d:[{"t":"request"}]');
 
-        $buffer->write('[{"id":1}]');
+        $buffer->write($payload);
 
-        $this->assertSame('{"records":[{"id":1}]}', $buffer->pull());
-        $this->assertSame('{"records":[]}', $buffer->pull());
+        $this->assertSame('{"records":[{"t":"request"}]}', gzdecode($buffer->pull()));
+        $this->assertSame('{"records":[]}', gzdecode($buffer->pull()));
     }
 }

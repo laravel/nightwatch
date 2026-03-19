@@ -4,8 +4,78 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bdf7765f9e60f8805ea1f07fdb11d34a",
+    "content-hash": "cbdea6b2d179988daeff54ba47d55d28",
     "packages": [
+        {
+            "name": "clue/zlib-react",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/clue/reactphp-zlib.git",
+                "reference": "b76b0ae357c3461d9abb98986a16263d8c121f16"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/clue/reactphp-zlib/zipball/b76b0ae357c3461d9abb98986a16263d8c121f16",
+                "reference": "b76b0ae357c3461d9abb98986a16263d8c121f16",
+                "shasum": ""
+            },
+            "require": {
+                "ext-zlib": "*",
+                "php": ">=7.0",
+                "react/stream": "^1.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.6 || ^6.5",
+                "react/event-loop": "^1.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Clue\\React\\Zlib\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Christian Lück",
+                    "email": "christian@clue.engineering"
+                }
+            ],
+            "description": "Streaming zlib compressor and decompressor for ReactPHP, supporting compression and decompression of GZIP, ZLIB and raw DEFLATE formats.",
+            "homepage": "https://github.com/clue/reactphp-zlib",
+            "keywords": [
+                "RFC 1950",
+                "RFC 1951",
+                "RFC 1952",
+                "compression",
+                "decompression",
+                "deflate",
+                "gz",
+                "gzip",
+                "inflate",
+                "reactphp",
+                "zlib"
+            ],
+            "support": {
+                "issues": "https://github.com/clue/reactphp-zlib/issues",
+                "source": "https://github.com/clue/reactphp-zlib/tree/v1.2.0"
+            },
+            "funding": [
+                {
+                    "url": "https://clue.engineering/support",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/clue",
+                    "type": "github"
+                }
+            ],
+            "time": "2023-08-04T14:26:48+00:00"
+        },
         {
             "name": "evenement/evenement",
             "version": "v3.0.2",
