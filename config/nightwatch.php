@@ -3,7 +3,7 @@
 return [
     'enabled' => env('NIGHTWATCH_ENABLED', true),
     'token' => env('NIGHTWATCH_TOKEN'),
-    'deployment' => env('NIGHTWATCH_DEPLOY', env('LARAVEL_CLOUD_COMMIT', env('FORGE_DEPLOY_COMMIT'))),
+    'deployment' => env('NIGHTWATCH_DEPLOY', env('LARAVEL_CLOUD_COMMIT', env('FORGE_DEPLOY_COMMIT', env('VAPOR_COMMIT_HASH')))),
     'server' => env('NIGHTWATCH_SERVER', (string) gethostname()),
     'capture_exception_source_code' => env('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', true),
     'capture_request_payload' => env('NIGHTWATCH_CAPTURE_REQUEST_PAYLOAD', false),

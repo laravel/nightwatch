@@ -151,4 +151,19 @@ class CoreTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.deploy', '12f35860d8c7e59fe4d81a3256a2bb34c998acd9');
     }
+
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
+    #[WithEnv('VAPOR_COMMIT_HASH', '02f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    public function test_it_uses_vapor_commit_hash_for_deployments_if_available(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/test', function () {
+            return 'OK';
+        });
+
+        $this->get('/test')->assertOk();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.deploy', '02f35860d8c7e59fe4d81a3256a2bb34c998acd9');
+    }
 }
