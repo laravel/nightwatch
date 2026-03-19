@@ -74,7 +74,7 @@ class StreamBuffer
 
     private function refreshCompressor()
     {
-        $this->compressor = new Compressor(ZLIB_ENCODING_GZIP, 5);
+        $this->compressor = new Compressor(ZLIB_ENCODING_GZIP, $_SERVER['NIGHTWATCH_AGENT_COMPRESSION_LEVEL'] ?? -1);
         $this->compressor->on('data', function (string $data) {
             $this->buffer .= $data;
         });
