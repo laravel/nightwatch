@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.24.3...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.24.4...1.x)
+
+## [v1.24.4](https://github.com/laravel/nightwatch/compare/v1.24.3...v1.24.4) - 2026-03-18
+
+### What's Changed
+
+* Widen dependency versions by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/347
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.24.3...v1.24.4
 
 ## [v1.24.3](https://github.com/laravel/nightwatch/compare/v1.24.2...v1.24.3) - 2026-03-12
 
