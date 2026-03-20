@@ -1,10 +1,42 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.24.0...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.24.4...1.x)
 
-### Added
+## [v1.24.4](https://github.com/laravel/nightwatch/compare/v1.24.3...v1.24.4) - 2026-03-18
 
-- Laravel 13 support
+### What's Changed
+
+* Widen dependency versions by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/347
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.24.3...v1.24.4
+
+## [v1.24.3](https://github.com/laravel/nightwatch/compare/v1.24.2...v1.24.3) - 2026-03-12
+
+### What's Changed
+
+* Add VAPOR_COMMIT_HASH fallback for NIGHTWATCH_DEPLOY by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/343
+* Sync versions by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/344
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.24.2...v1.24.3
+
+## [v1.24.2](https://github.com/laravel/nightwatch/compare/v1.24.1...v1.24.2) - 2026-03-10
+
+### What's Changed
+
+* Set user-agent on agent ingest requests by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/341
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.24.1...v1.24.2
+
+## [v1.24.1](https://github.com/laravel/nightwatch/compare/v1.24.0...v1.24.1) - 2026-03-04
+
+### What's Changed
+
+* Restore local dependencies after running the build command by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/338
+* Ingest records immediately when next payload will exceed buffer limit by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/336
+* Refactor agent digest timer handling by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/337
+* Add sensible fallbacks for `NIGHTWATCH_DEPLOY` by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/323
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.24.0...v1.24.1
 
 ## [v1.24.0](https://github.com/laravel/nightwatch/compare/v1.23.0...v1.24.0) - 2026-02-27
 
@@ -14,7 +46,7 @@
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.23.0...v1.24.0
 
-## [v1.23.0](https://github.com/laravel/nightwatch/compare/v1.22.0...v1.23.0) - 2026-02-27
+## [v1.23.0](https://github.com/laravel/nightwatch/compare/v1.22.3...v1.23.0) - 2026-02-27
 
 ### What's Changed
 
@@ -22,6 +54,31 @@
 * Add `Nightwatch::digest` to proactively transmit events to the agent by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/330
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.22.3...v1.23.0
+
+## [v1.22.3](https://github.com/laravel/nightwatch/compare/v1.22.2...v1.22.3) - 2026-02-19
+
+### What's Changed
+
+* Allow logs to bubble up through other channels in the stack by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/328
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.22.2...v1.22.3
+
+## [v1.22.2](https://github.com/laravel/nightwatch/compare/v1.22.1...v1.22.2) - 2026-02-16
+
+### What's Changed
+
+* Ensure `Nightwatch::ignore` does not override sampling when unset by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/327
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.22.1...v1.22.2
+
+## [v1.22.1](https://github.com/laravel/nightwatch/compare/v1.22.0...v1.22.1) - 2026-01-28
+
+### What's Changed
+
+* Remove contributing docs by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/322
+* Extend allowed length for group properties by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/321
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.22.0...v1.22.1
 
 ## [v1.22.0](https://github.com/laravel/nightwatch/compare/v1.21.1...v1.22.0) - 2026-01-15
 
@@ -232,7 +289,7 @@ With this release, scheduled tasks are able to be sampled separately from comman
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.13.2...v1.13.3
 
-## [v1.13.2](https://github.com/laravel/nightwatch/compare/v1.5.0...v1.13.2) - 2025-08-25
+## [v1.13.2](https://github.com/laravel/nightwatch/compare/v1.13.1...v1.13.2) - 2025-08-25
 
 ### What's Changed
 
@@ -241,7 +298,7 @@ With this release, scheduled tasks are able to be sampled separately from comman
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.13.1...v1.13.2
 
-## [v1.13.1](https://github.com/laravel/nightwatch/compare/v1.13.0...v1.13.1) - 2025-08-21
+## [v1.13.1](https://github.com/laravel/nightwatch/compare/v1.13.0...v1.13.1) - 2025-08-20
 
 ### What's Changed
 
@@ -337,7 +394,7 @@ With this release, scheduled tasks are able to be sampled separately from comman
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.10.5...v1.10.6
 
-## [v1.10.5](https://github.com/laravel/nightwatch/compare/v1.10.4...v1.10.5) - 2025-07-07
+## [v1.10.5](https://github.com/laravel/nightwatch/compare/v1.10.4...v1.10.5) - 2025-07-06
 
 ### What's Changed
 
@@ -408,7 +465,7 @@ With this release, scheduled tasks are able to be sampled separately from comman
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.8.4...v1.9.0
 
-## [v1.8.4](https://github.com/laravel/nightwatch/compare/v1.7.4...v1.8.4) - 2025-06-19
+## [v1.8.4](https://github.com/laravel/nightwatch/compare/v1.7.4...v1.8.4) - 2025-06-25
 
 ### What's Changed
 
@@ -426,7 +483,7 @@ With this release, scheduled tasks are able to be sampled separately from comman
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.7.3...v1.7.4
 
-## [v1.7.3](https://github.com/laravel/nightwatch/compare/v1.7.2...v1.7.3) - 2025-06-18
+## [v1.7.3](https://github.com/laravel/nightwatch/compare/v1.7.2...v1.7.3) - 2025-06-17
 
 ### What's Changed
 
@@ -464,7 +521,7 @@ With this release, scheduled tasks are able to be sampled separately from comman
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.6.0...v1.7.0
 
-## [v1.6.0](https://github.com/laravel/nightwatch/compare/v1.5.1...v1.6.0) - 2025-06-12
+## [v1.6.0](https://github.com/laravel/nightwatch/compare/v1.5.1...v1.6.0) - 2025-06-13
 
 ### What's Changed
 
@@ -476,7 +533,7 @@ With this release, scheduled tasks are able to be sampled separately from comman
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.5.1...v1.6.0
 
-## [v1.5.1](https://github.com/laravel/nightwatch/compare/v1.5.0...v1.5.1) - 2025-05-21
+## [v1.5.1](https://github.com/laravel/nightwatch/compare/v1.5.0...v1.5.1) - 2025-05-20
 
 ### What's Changed
 

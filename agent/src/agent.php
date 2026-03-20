@@ -178,6 +178,7 @@ $ingestBrowser = $browserFactory(
         'content-encoding' => 'gzip',
         'content-type' => 'application/json',
         'nightwatch-server' => $server,
+        'user-agent' => 'NightwatchAgent/'.$packageVersion,
     ],
 );
 
