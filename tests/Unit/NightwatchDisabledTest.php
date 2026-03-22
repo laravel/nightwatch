@@ -2,10 +2,10 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Facades\Nightwatch;
-use Illuminate\Support\Env;
 use RuntimeException;
 use Tests\TestCase;
 
