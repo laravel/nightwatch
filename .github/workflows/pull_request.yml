@@ -246,8 +246,6 @@ jobs:
         run: |
           composer config repositories.single-store vcs https://github.com/laravel-shift/singlestoredb-laravel-driver.git
           composer require --dev singlestoredb/singlestoredb-laravel:dev-l13-compatibility --no-update
-          composer config repositories.mongodb vcs https://github.com/laravel-shift/laravel-mongodb.git
-          composer require --dev mongodb/laravel-mongodb:dev-l13-compatibility --no-update
 
       - name: Require Laravel Version
         run: composer require laravel/framework:^${{ matrix.laravel }} --no-update
