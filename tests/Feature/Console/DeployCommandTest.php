@@ -25,7 +25,8 @@ class DeployCommandTest extends TestCase
                 $this->assertEquals(['Bearer '.env('NIGHTWATCH_TOKEN')], $request->header('Authorization'));
                 $this->assertEquals([
                     'timestamp' => now()->toDateTimeString('microsecond'),
-                    'ref' => 'v1.2.3',
+                    'deploy' => 'v1.2.3',
+                    'ref' => null,
                     'name' => null,
                     'url' => '',
                 ], $request->data());
@@ -47,7 +48,8 @@ class DeployCommandTest extends TestCase
                 $this->assertEquals(['Bearer '.env('NIGHTWATCH_TOKEN')], $request->header('Authorization'));
                 $this->assertEquals([
                     'timestamp' => '2025-12-22 15:30:45.123456',
-                    'ref' => 'v1.2.3',
+                    'deploy' => 'v1.2.3',
+                    'ref' => 'abcd1234',
                     'name' => 'Happy Friday!',
                     'url' => 'https://example.com/deployments/123',
                 ], $request->data());
@@ -56,7 +58,7 @@ class DeployCommandTest extends TestCase
             },
         ]);
 
-        $this->artisan('nightwatch:deploy v1.2.3 --timestamp="2025-12-22 15:30:45.123456" --name="Happy Friday!" --url="https://example.com/deployments/123"')
+        $this->artisan('nightwatch:deploy v1.2.3 --ref=abcd1234 --timestamp="2025-12-22 15:30:45.123456" --name="Happy Friday!" --url="https://example.com/deployments/123"')
             ->expectsOutputToContain('Deployment sent to Nightwatch successfully.')
             ->assertExitCode(0);
     }

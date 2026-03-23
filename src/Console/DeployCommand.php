@@ -24,7 +24,8 @@ final class DeployCommand extends Command
      * @var string
      */
     protected $signature = 'nightwatch:deploy
-        {ref? : The git ref (tag or hash) of the deploy <comment>[default: `NIGHTWATCH_DEPLOY`]</comment>}
+        {deploy? : A unique value for the deploy <comment>[default: `NIGHTWATCH_DEPLOY`]</comment>}
+        {--ref= : The git ref (tag or hash) of the deploy}
         {--name= : The human-readable name of the deploy}
         {--url= : A URL with information related to the deploy}
         {--timestamp= : The timestamp of the deploy <comment>[default: `now()`]</comment>}';
@@ -32,12 +33,7 @@ final class DeployCommand extends Command
     /**
      * @var string
      */
-    protected $description = 'Notify Nightwatch of a deployment.';
-
-    /**
-     * @var bool
-     */
-    protected $hidden = true;
+    protected $description = 'Send deployment metadata to Nightwatch.';
 
     public function __construct(
         #[SensitiveParameter] private ?string $token,
@@ -49,9 +45,9 @@ final class DeployCommand extends Command
     {
         $timestamp = is_string($this->option('timestamp')) ? CarbonImmutable::parse($this->option('timestamp')) : CarbonImmutable::now();
 
-        $ref = $this->argument('ref') ?? config('nightwatch.deployment');
+        $deploy = $this->argument('deploy') ?? config('nightwatch.deployment');
 
-        if (! $ref) {
+        if (! $deploy) {
             $this->components->error('Please configure the [NIGHTWATCH_DEPLOY] environment variable.');
 
             return 0;
@@ -72,7 +68,8 @@ final class DeployCommand extends Command
                 ->withToken($this->token)
                 ->post("{$baseUrl}/api/deployments", [
                     'timestamp' => $timestamp->utc()->toDateTimeString('microsecond'),
-                    'ref' => $ref,
+                    'deploy' => $deploy,
+                    'ref' => $this->option('ref'),
                     'name' => $this->option('name'),
                     'url' => $this->option('url'),
                 ])
