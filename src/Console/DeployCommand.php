@@ -17,7 +17,7 @@ use function is_string;
 /**
  * @internal
  */
-#[AsCommand(name: 'nightwatch:deploy', description: 'Notify Nightwatch of a deployment.')]
+#[AsCommand(name: 'nightwatch:deploy', description: 'Send deployment metadata to Nightwatch.')]
 final class DeployCommand extends Command
 {
     /**
