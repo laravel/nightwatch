@@ -5,14 +5,31 @@ namespace Tests\Integration;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
+use function fclose;
+use function fsockopen;
 use function str_contains;
 
 class HealthCheckTest extends TestCase
 {
     public function test_it_errors_when_agent_is_not_running(): void
     {
-        $process = Process::fromShellCommandline('php '.__DIR__.'/../../nightwatch-status')
-            ->setTimeout(2);
+        $port = 2407;
+
+        for ($i = 0; $i < 30; $i++) {
+            $socket = @fsockopen('127.0.0.1', $port, $errorCode, $errorMessage, 1);
+
+            if ($socket) {
+                fclose($socket);
+                $port++;
+
+                continue;
+            }
+            break;
+        }
+
+        $process = Process::fromShellCommandline('php '.__DIR__.'/../../nightwatch-status', env: [
+            'NIGHTWATCH_INGEST_URI' => '127.0.0.1:'.$port,
+        ])->setTimeout(2);
 
         $process->run();
 
