@@ -107,7 +107,7 @@ class CoreTest extends TestCase
     }
 
     #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
-    #[WithEnv('LARAVEL_CLOUD_COMMIT', '92f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    #[WithEnv('LARAVEL_CLOUD_DEPLOY_UUID', '92f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
     public function test_it_uses_cloud_commit_env_for_deployments_if_available(): void
     {
         $ingest = $this->fakeIngest();
