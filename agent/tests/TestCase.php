@@ -18,9 +18,9 @@ use function implode;
 use function is_array;
 use function is_file;
 use function is_string;
-use function rand;
 use function rtrim;
 use function serialize;
+use function str_contains;
 use function str_replace;
 use function substr;
 use function unlink;
@@ -53,66 +53,75 @@ abstract class TestCase extends BaseTestCase
         ?string &$listenOn = null,
         ?int $maxBufferLength = null,
     ): array {
-        $output = '';
-        $port = rand(9000, 9999);
         $payloadFile = __DIR__.'/test-payload';
-        $listenOn ??= "127.0.0.1:{$port}";
+        $specifiedListenOn = is_string($listenOn);
 
-        try {
-            $write = file_put_contents($payloadFile, serialize([
-                'listenOn' => $listenOn,
-                'viaPhar' => $via === 'phar',
-                'ingestDetailsBrowser' => $ingestDetailsBrowser,
-                'ingestBrowser' => $ingestBrowser,
-                'loop' => $loop,
-                'server' => $server,
-                'silent' => $silent,
-                'quiet' => $quiet,
-                'verbose' => $verbose,
-                'maxBufferLength' => $maxBufferLength,
-            ]));
+        for ($i = 0; $i < 30; $i++) {
+            $output = '';
+            $listenOn = $specifiedListenOn ? $listenOn : '127.0.0.1:'.(2407 + $i);
 
-            if ($write === false) {
-                throw new RuntimeException('Unable to write test payload file.');
-            }
+            try {
+                $write = file_put_contents($payloadFile, serialize([
+                    'listenOn' => $listenOn,
+                    'viaPhar' => $via === 'phar',
+                    'ingestDetailsBrowser' => $ingestDetailsBrowser,
+                    'ingestBrowser' => $ingestBrowser,
+                    'loop' => $loop,
+                    'server' => $server,
+                    'silent' => $silent,
+                    'quiet' => $quiet,
+                    'verbose' => $verbose,
+                    'maxBufferLength' => $maxBufferLength,
+                ]));
 
-            $process = Process::fromShellCommandline('php '.__DIR__.'/agent-wrapper.php')
-                ->setTimeout($timeout);
-
-            $process->mustRun(function (string $type, string $o) use ($until, $process, &$output) {
-                $output .= $o;
-
-                if ($until && $until($output)) {
-                    $process->stop(1);
+                if ($write === false) {
+                    throw new RuntimeException('Unable to write test payload file.');
                 }
-            });
-        } catch (ProcessFailedException $e) {
-            if ($e->getProcess()->getExitCode() === 143) {
-                return [$output, null];
-            }
 
-            return [$output, $e];
-        } catch (Throwable $e) {
-            return [$output, $e];
-        } finally {
-            if (is_file($payloadFile)) {
-                $payload = file_get_contents($payloadFile);
+                $process = Process::fromShellCommandline('php '.__DIR__.'/agent-wrapper.php')
+                    ->setTimeout($timeout);
 
-                if ($payload !== false) {
-                    $payload = unserialize($payload);
+                $process->mustRun(function (string $type, string $o) use ($until, $process, &$output) {
+                    $output .= $o;
 
-                    if (is_array($payload)) {
-                        /** @var array{ingestDetailsBrowser: BrowserFake, ingestBrowser: BrowserFake, loop: LoopFake, server: TcpServerFake, silent: bool, quiet: bool }  $payload */
-                        $ingestDetailsBrowser = $payload['ingestDetailsBrowser'];
-                        $ingestBrowser = $payload['ingestBrowser'];
-                        $loop = $payload['loop'];
-                        $server = $payload['server'];
-                        $silent = $payload['silent'];
-                        $quiet = $payload['quiet'];
+                    if ($until && $until($output)) {
+                        $process->stop(1);
                     }
+                });
+
+                break;
+            } catch (ProcessFailedException $e) {
+                if ($e->getProcess()->getExitCode() === 143) {
+                    return [$output, null];
                 }
 
-                unlink($payloadFile);
+                if (! $specifiedListenOn && str_contains($output, 'Address already in use')) {
+                    continue;
+                }
+
+                return [$output, $e];
+            } catch (Throwable $e) {
+                return [$output, $e];
+            } finally {
+                if (is_file($payloadFile)) {
+                    $payload = file_get_contents($payloadFile);
+
+                    if ($payload !== false) {
+                        $payload = unserialize($payload);
+
+                        if (is_array($payload)) {
+                            /** @var array{ingestDetailsBrowser: BrowserFake, ingestBrowser: BrowserFake, loop: LoopFake, server: TcpServerFake, silent: bool, quiet: bool }  $payload */
+                            $ingestDetailsBrowser = $payload['ingestDetailsBrowser'];
+                            $ingestBrowser = $payload['ingestBrowser'];
+                            $loop = $payload['loop'];
+                            $server = $payload['server'];
+                            $silent = $payload['silent'];
+                            $quiet = $payload['quiet'];
+                        }
+                    }
+
+                    unlink($payloadFile);
+                }
             }
         }
 

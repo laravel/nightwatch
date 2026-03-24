@@ -208,8 +208,11 @@ jobs:
     strategy:
       matrix:
         php: [8.2, 8.3, 8.4, 8.5]
-        laravel: [10, 11, 12]
+        laravel: [10, 11, 12, 13]
         prefer-lowest: ["0", "1"]
+        exclude:
+          - php: 8.2
+            laravel: 13
 
     name: Test package [PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }}${{ matrix.prefer-lowest == '1' && ', prefer lowest' || '' }}]
 
@@ -237,6 +240,12 @@ jobs:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-package-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-package-composer
+
+      - name: Install shift upgraded dependencies for Laravel 13
+        if: ${{ matrix.laravel == 13 }}
+        run: |
+          composer config repositories.single-store vcs https://github.com/laravel-shift/singlestoredb-laravel-driver.git
+          composer require --dev singlestoredb/singlestoredb-laravel:dev-l13-compatibility --no-update
 
       - name: Require Laravel Version
         run: composer require laravel/framework:^${{ matrix.laravel }} --no-update
