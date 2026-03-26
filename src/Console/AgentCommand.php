@@ -8,7 +8,10 @@ use Illuminate\Contracts\Foundation\Application;
 use Laravel\Nightwatch\GracefulCliOutputExceptionHandler;
 use SensitiveParameter;
 use Symfony\Component\Console\Attribute\AsCommand;
+use RuntimeException;
 use Throwable;
+
+use function str_contains;
 
 /**
  * @internal
@@ -55,6 +58,10 @@ final class AgentCommand extends Command
         $refreshToken = $this->token;
 
         $listenOn = $this->option('listen-on') ?? $this->ingestUri;
+
+        if ($listenOn && $listenOn === $this->ingestUri && str_contains($listenOn, ',')) {
+            throw new RuntimeException("The application has been configured to use multiple Nightwatch agents [{$listenOn}]. This means you must specify the `--listen-on` option when starting the agent to configure where each agent should listen.");
+        }
 
         $authenticationConnectionTimeout = $this->option('auth-connection-timeout');
 

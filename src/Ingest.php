@@ -6,18 +6,26 @@ use Deprecated;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use RuntimeException;
 
+use function array_map;
 use function call_user_func;
+use function count;
+use function explode;
 use function Nightwatch\fclose_safely;
 use function Nightwatch\fread_all;
 use function Nightwatch\fwrite_all;
 use function Nightwatch\stream_configure_read_timeout;
+use function random_int;
+use function trim;
 
 /**
  * @internal
  */
 final class Ingest implements IngestContract
 {
-    private string $transmitTo;
+    /**
+     * @var callable(): string
+     */
+    private $transmitToResolver;
 
     private bool $shouldDigestWhenBufferIsFull = true;
 
@@ -32,7 +40,13 @@ final class Ingest implements IngestContract
         public RecordsBuffer $buffer,
         private string $tokenHash,
     ) {
-        $this->transmitTo = "tcp://{$transmitTo}";
+        $transmitTo = array_map(static fn (string $uri) => 'tcp://'.trim($uri), explode(',', $transmitTo));
+
+        $maxIndex = count($transmitTo) - 1;
+
+        $this->transmitToResolver = $maxIndex === 0
+            ? static fn () => $transmitTo[0]
+            : static fn () => $transmitTo[random_int(0, $maxIndex)];
     }
 
     public function write(array $record): void
@@ -99,7 +113,7 @@ final class Ingest implements IngestContract
      */
     private function createStream()
     {
-        return call_user_func($this->streamFactory, $this->transmitTo, $this->connectionTimeout);
+        return call_user_func($this->streamFactory, call_user_func($this->transmitToResolver), $this->connectionTimeout);
     }
 
     /**
