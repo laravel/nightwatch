@@ -185,6 +185,7 @@ trait CapturesState
             'model:prune',
             'nightwatch:agent',
             'nightwatch:status',
+            'octane:status',
             'queue:monitor',
             'reverb:start',
             'schedule:list',
