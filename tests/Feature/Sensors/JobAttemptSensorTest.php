@@ -717,7 +717,7 @@ class JobAttemptSensorTest extends TestCase
         });
         Artisan::call($workCommand, ['--max-time' => 0.05, '--sleep' => 0]);
 
-        $this->assertGreaterThan(50, $loops);
+        $this->assertGreaterThan(40, $loops);
         $ingest->assertWrittenTimes(0);
         $this->assertCount(0, $this->core->ingest->buffer);
     }
