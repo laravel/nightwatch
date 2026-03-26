@@ -27,6 +27,7 @@ use Illuminate\Queue\SqsQueue;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -970,6 +971,68 @@ class JobAttemptSensorTest extends TestCase
         $ingest->assertWrite(0, 'queued-job:0.job_id', 'aeadd430-44e6-4b79-a441-02459d797f3a');
         $ingest->assertWrite(1, 'queued-job:0.execution_id', '1c10c584-8146-426c-a820-03374466b198');
         $ingest->assertWrite(1, 'queued-job:0.job_id', '4aabf241-39d0-408f-abbc-2907e100e02f');
+    }
+
+    public function test_it_can_handle_serialization_errors()
+    {
+        $this->setUpEnvironment('queue:work');
+        $ingest = $this->fakeIngest();
+        $uuids = [
+            $jobId = 'e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd',
+            $attemptId = '02cb9091-8973-427f-8d3f-042f2ec4e862',
+        ];
+        $this->core->uuid->uuidResolver = function () use (&$uuids) {
+            return array_shift($uuids) ?? Uuid::uuid4();
+        };
+
+        ProcessedJob::dispatch();
+        DB::table('jobs')->update(['payload' => json_encode(json_decode(<<<'JSON'
+            {"uuid":"9347c1d9-b8e3-434b-bd99-56aea81dadb7","displayName":"Tests\\Feature\\Sensors\\MissingJob","job":"Illuminate\\Queue\\CallQueuedHandler@call","maxTries":null,"maxExceptions":null,"failOnTimeout":false,"backoff":null,"timeout":null,"retryUntil":null,"data":{"commandName":"Tests\\Feature\\Sensors\\MissingJob","command":"O:32:\"Tests\\Feature\\Sensors\\MissingJob\":0:{}","batchId":null},"createdAt":946688523,"nightwatch":{"job_id":"e2cb5fa7-6c2e-4bc5-82c9-45e79c3e8fdd"},"illuminate:log:context":{"data":[],"hidden":{"nightwatch_trace_id":"s:36:\"0d3ca349-e222-4982-ac23-2343692de258\";","nightwatch_should_sample":"N;","nightwatch_user_id":"s:0:\"\";"}},"delay":null}
+            JSON, flags: JSON_THROW_ON_ERROR), flags: JSON_THROW_ON_ERROR)]);
+        Artisan::call('queue:work', $this->workCommands()['queue:work'][1]);
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:*', function ($exceptions) {
+            $this->assertCount(1, $exceptions);
+            $this->assertSame('Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}', $exceptions[0]['message']);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('job-attempt:*', [
+            [
+                'v' => 1,
+                't' => 'job-attempt',
+                'timestamp' => 946688523.456789,
+                'deploy' => 'v1.2.3',
+                'server' => 'web-01',
+                '_group' => hash('xxh128', 'Tests\Feature\Sensors\MissingJob'),
+                'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                'user' => '',
+                'job_id' => $jobId,
+                'attempt_id' => $attemptId,
+                'attempt' => 1,
+                'name' => 'Tests\Feature\Sensors\MissingJob',
+                'connection' => 'database',
+                'queue' => 'default',
+                'status' => 'failed',
+                'duration' => 0,
+                'exceptions' => 1,
+                'logs' => 0,
+                'queries' => 5,
+                'lazy_loads' => 0,
+                'jobs_queued' => 0,
+                'mail' => 0,
+                'notifications' => 0,
+                'outgoing_requests' => 0,
+                'files_read' => 0,
+                'files_written' => 0,
+                'cache_events' => 0,
+                'hydrated_models' => 0,
+                'peak_memory_usage' => 1234,
+                'exception_preview' => 'Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}',
+                'context' => Compatibility::$contextExists ? '{}' : '',
+            ],
+        ]);
     }
 
     public function test_queue_workers_that_remove_successful_jobs_and_make_network_call_to_determine_attempts_like_beanstalkd_can_capture_attempts(): void
