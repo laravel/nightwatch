@@ -309,9 +309,6 @@ Redaction modifies captured data to remove or obfuscate sensitive information. U
 ```bash
 # Customize redacted headers
 NIGHTWATCH_REDACT_HEADERS=Authorization,Cookie,Proxy-Authorization,X-API-Key
-
-# Disable header collection entirely
-NIGHTWATCH_IGNORE_REQUEST_HEADERS=true
 ```
 
 **Redact request payloads** (disabled by default):
