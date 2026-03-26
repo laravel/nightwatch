@@ -261,6 +261,7 @@ class CliSamplingTest extends TestCase
         yield ['model:prune'];
         yield ['nightwatch:agent'];
         yield ['nightwatch:status'];
+        yield ['octane:status'];
         yield ['queue:monitor'];
         yield ['reverb:start'];
         yield ['schedule:list'];
