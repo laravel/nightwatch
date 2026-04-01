@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.25.0...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.26.0...1.x)
+
+## [v1.26.0](https://github.com/laravel/nightwatch/compare/v1.25.0...v1.26.0) - 2026-04-01
+
+### What's Changed
+
+* Create `nightwatch:deploy` command by [@sbourouis](https://github.com/sbourouis) in https://github.com/laravel/nightwatch/pull/282
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.25.0...v1.26.0
 
 ## [v1.25.0](https://github.com/laravel/nightwatch/compare/v1.24.4...v1.25.0) - 2026-03-31
 
