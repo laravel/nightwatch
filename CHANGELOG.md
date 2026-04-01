@@ -1,6 +1,25 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.24.4...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.25.0...1.x)
+
+## [v1.25.0](https://github.com/laravel/nightwatch/compare/v1.24.4...v1.25.0) - 2026-03-31
+
+#### What's Changed
+
+* Add Laravel 13 to CI by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/339
+* Add configure-nightwatch Boost skill by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/nightwatch/pull/333
+* Auto-select port in tests by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/349
+* Fix flaky test by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/353
+* Update Boost skills by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/354
+* Ignore `octane:status` vendor command by default by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/352
+* Add test for incomplete class job attempt and exception collection by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/355
+* Switch to unique deploy UUID for deployment config by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/350
+
+### New Contributors
+
+* [@pushpak1300](https://github.com/pushpak1300) made their first contribution in https://github.com/laravel/nightwatch/pull/333
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.24.4...v1.25.0
 
 ## [v1.24.4](https://github.com/laravel/nightwatch/compare/v1.24.3...v1.24.4) - 2026-03-18
 

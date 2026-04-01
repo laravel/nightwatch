@@ -107,7 +107,7 @@ class CoreTest extends TestCase
     }
 
     #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
-    #[WithEnv('LARAVEL_CLOUD_COMMIT', '92f35860d8c7e59fe4d81a3256a2bb34c998acd9')]
+    #[WithEnv('LARAVEL_CLOUD_DEPLOY_UUID', 'cca312d8-2b81-45c1-822b-3ff0bf944c2c')]
     public function test_it_uses_cloud_commit_env_for_deployments_if_available(): void
     {
         $ingest = $this->fakeIngest();
@@ -118,7 +118,7 @@ class CoreTest extends TestCase
         $this->get('/test')->assertOk();
 
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.deploy', '92f35860d8c7e59fe4d81a3256a2bb34c998acd9');
+        $ingest->assertLatestWrite('request:0.deploy', 'cca312d8-2b81-45c1-822b-3ff0bf944c2c');
     }
 
     #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]

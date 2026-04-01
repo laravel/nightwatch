@@ -36,7 +36,7 @@ NIGHTWATCH_IGNORE_QUERIES=true               # Or filter specific queries progra
 ```bash
 # Disable sensitive data collection
 NIGHTWATCH_CAPTURE_REQUEST_PAYLOAD=false
-NIGHTWATCH_IGNORE_REQUEST_HEADERS=true
+NIGHTWATCH_REDACT_HEADERS=Authorization,Cookie,Proxy-Authorization,X-XSRF-TOKEN
 
 # Or use redaction in AppServiceProvider
 ```
