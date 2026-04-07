@@ -9,6 +9,7 @@ return [
     'capture_request_payload' => env('NIGHTWATCH_CAPTURE_REQUEST_PAYLOAD', false),
     'redact_payload_fields' => explode(',', env('NIGHTWATCH_REDACT_PAYLOAD_FIELDS', '_token,password,password_confirmation')),
     'redact_headers' => explode(',', env('NIGHTWATCH_REDACT_HEADERS', 'Authorization,Cookie,Proxy-Authorization,X-XSRF-TOKEN')),
+    'trace_seed_header' => env('NIGHTWATCH_TRACE_SEED_HEADER', 'CF-Ray'),
 
     'sampling' => [
         'requests' => env('NIGHTWATCH_REQUEST_SAMPLE_RATE', 1.0),

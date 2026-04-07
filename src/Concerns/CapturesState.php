@@ -719,7 +719,7 @@ trait CapturesState
     /**
      * @internal
      */
-    public function prepareForNextRequest(): void
+    public function prepareForNextRequest(?string $traceSeed = null): void
     {
         /** @var Core<RequestState> $this */
         $this->flush();
@@ -731,7 +731,7 @@ trait CapturesState
         $this->executionState->timestamp = $timestamp;
         $this->executionState->currentExecutionStageStartedAtMicrotime = $timestamp;
 
-        $trace = $this->uuid->make();
+        $trace = $this->uuid->make($traceSeed);
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
         Compatibility::addTraceIdToContext($trace);

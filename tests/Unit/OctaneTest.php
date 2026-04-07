@@ -94,4 +94,13 @@ class OctaneTest extends TestCase
         $this->assertSame(ExecutionStage::BeforeMiddleware, $this->core->executionState->stage);
         $this->assertSame('6', $this->core->executionState->user->id());
     }
+
+    public function test_it_generates_deterministic_trace_from_seed(): void
+    {
+        $this->core->prepareForNextRequest('abc123-SJC');
+
+        $this->assertSame('71c3ec7d-4f08-5b8c-82cd-9e2a0d970ebc', $this->core->executionState->trace);
+        $this->assertSame('71c3ec7d-4f08-5b8c-82cd-9e2a0d970ebc', $this->core->executionState->id()->jsonSerialize());
+        $this->assertSame('71c3ec7d-4f08-5b8c-82cd-9e2a0d970ebc', Compatibility::getTraceIdFromContext());
+    }
 }

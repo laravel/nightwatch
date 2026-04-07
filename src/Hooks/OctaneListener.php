@@ -16,15 +16,19 @@ final class OctaneListener
     /**
      * @param  Core<RequestState|CommandState>  $nightwatch
      */
-    public function __construct(private Core $nightwatch)
-    {
+    public function __construct(
+        private Core $nightwatch,
+        private string $traceSeedHeader,
+    ) {
         //
     }
 
     public function __invoke(RequestReceived $event): void // @phpstan-ignore class.notFound
     {
         try {
-            $this->nightwatch->prepareForNextRequest();
+            $this->nightwatch->prepareForNextRequest(
+                $this->traceSeedHeader !== '' ? $event->request->header($this->traceSeedHeader) : null
+            );
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }
