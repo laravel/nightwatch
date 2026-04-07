@@ -27,7 +27,7 @@ final class OctaneListener
     {
         try {
             $this->nightwatch->prepareForNextRequest(
-                $this->traceSeedHeader !== '' ? $event->request->header($this->traceSeedHeader) : null
+                $this->traceSeedHeader !== '' ? $event->request->header($this->traceSeedHeader) : null // @phpstan-ignore class.notFound
             );
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
