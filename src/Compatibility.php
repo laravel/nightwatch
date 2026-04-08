@@ -9,6 +9,7 @@ use ReflectionProperty;
 use Symfony\Component\Console\Input\ArgvInput;
 
 use function implode;
+use function is_string;
 use function method_exists;
 use function tap;
 use function value;
@@ -174,6 +175,13 @@ final class Compatibility
         return self::getHiddenContext('nightwatch_trace_id', $default);
     }
 
+    public static function getCloudRequestIdFromContext(): ?string
+    {
+        $value = self::getHiddenContext('laravel_cloud_request_id');
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
     public static function addUserIdToContext(string $id): void
     {
         self::addHiddenContext('nightwatch_user_id', $id);
@@ -205,7 +213,7 @@ final class Compatibility
      * @see https://github.com/laravel/framework/pull/49730
      * @see https://github.com/laravel/framework/releases/tag/v11.0.0
      *
-     * @param  'nightwatch_trace_id'|'nightwatch_should_sample'|'nightwatch_user_id'  $key
+     * @param  'laravel_cloud_request_id'|'nightwatch_trace_id'|'nightwatch_should_sample'|'nightwatch_user_id'  $key
      */
     private static function getHiddenContext(string $key, mixed $default = null): mixed
     {

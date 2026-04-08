@@ -2,8 +2,6 @@
 
 namespace Laravel\Nightwatch\Support;
 
-use Ramsey\Uuid\Uuid as BaseUuid;
-
 use function call_user_func;
 
 /**
@@ -11,8 +9,6 @@ use function call_user_func;
  */
 final class Uuid
 {
-    private const UUID_SEED = 'd7b1993d-1268-4f10-88e1-6fab60dbc51b';
-
     /**
      * @param  (callable(): string)  $uuidResolver
      */
@@ -21,12 +17,8 @@ final class Uuid
         //
     }
 
-    public function make(?string $from = null): string
+    public function make(): string
     {
-        if ($from !== null && $from !== '') {
-            return BaseUuid::uuid5(self::UUID_SEED, $from)->toString();
-        }
-
         return call_user_func($this->uuidResolver);
     }
 }

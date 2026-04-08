@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\MyNotification;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -95,12 +96,25 @@ class OctaneTest extends TestCase
         $this->assertSame('6', $this->core->executionState->user->id());
     }
 
-    public function test_it_generates_deterministic_trace_from_seed(): void
+    public function test_it_uses_cloud_request_id_from_context_as_trace(): void
     {
-        $this->core->prepareForNextRequest('abc123-SJC');
+        Context::addHidden('laravel_cloud_request_id', '00000000-0000-0000-0000-000000000099');
 
-        $this->assertSame('71c3ec7d-4f08-5b8c-82cd-9e2a0d970ebc', $this->core->executionState->trace);
-        $this->assertSame('71c3ec7d-4f08-5b8c-82cd-9e2a0d970ebc', $this->core->executionState->id()->jsonSerialize());
-        $this->assertSame('71c3ec7d-4f08-5b8c-82cd-9e2a0d970ebc', Compatibility::getTraceIdFromContext());
+        $this->core->prepareForNextRequest();
+
+        $this->assertSame('00000000-0000-0000-0000-000000000099', $this->core->executionState->trace);
+        $this->assertSame('00000000-0000-0000-0000-000000000099', $this->core->executionState->id()->jsonSerialize());
+        $this->assertSame('00000000-0000-0000-0000-000000000099', Compatibility::getTraceIdFromContext());
+    }
+
+    public function test_it_falls_back_to_uuid_when_cloud_request_id_is_not_in_context(): void
+    {
+        $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-FALLBACK0001';
+
+        $this->core->prepareForNextRequest();
+
+        $this->assertSame('00000000-0000-0000-0000-FALLBACK0001', $this->core->executionState->trace);
+        $this->assertSame('00000000-0000-0000-0000-FALLBACK0001', $this->core->executionState->id()->jsonSerialize());
+        $this->assertSame('00000000-0000-0000-0000-FALLBACK0001', Compatibility::getTraceIdFromContext());
     }
 }

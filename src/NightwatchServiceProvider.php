@@ -83,8 +83,6 @@ use function class_exists;
 use function defined;
 use function hash;
 use function microtime;
-use function strtoupper;
-use function strtr;
 use function substr;
 
 /**
@@ -128,7 +126,6 @@ final class NightwatchServiceProvider extends ServiceProvider
      *     capture_request_payload?: bool,
      *     redact_payload_fields?: string[],
      *     redact_headers?: string[],
-     *     trace_seed_header?: string,
      *  }
      */
     private array $nightwatchConfig;
@@ -245,10 +242,8 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $clock = new Clock;
         $uuid = new Uuid(static fn () => BaseUuid::uuid4()->toString());
-        $traceSeedHeader = $this->nightwatchConfig['trace_seed_header'] ?? '';
-        $traceSeedServerKey = $traceSeedHeader !== '' ? 'HTTP_'.strtoupper(strtr($traceSeedHeader, '-', '_')) : '';
-        $traceSeed = $this->isRequest && $traceSeedServerKey !== '' ? ($_SERVER[$traceSeedServerKey] ?? null) : null;
-        $executionState = $this->executionState($uuid->make($traceSeed));
+        $trace = Compatibility::getCloudRequestIdFromContext() ?? $uuid->make();
+        $executionState = $this->executionState($trace);
         $tokenHash = substr(hash('xxh128', $this->nightwatchConfig['token'] ?? ''), 0, 7);
 
         $this->app->instance(Core::class, $this->core = new Core(
@@ -380,7 +375,7 @@ final class NightwatchServiceProvider extends ServiceProvider
             KeyForgetFailed::class,
         ], (new CacheEventListener($core))(...));
 
-        $events->listen(RequestReceived::class, (new OctaneListener($core, $this->nightwatchConfig['trace_seed_header'] ?? ''))(...)); // @phpstan-ignore class.notFound
+        $events->listen(RequestReceived::class, (new OctaneListener($core))(...)); // @phpstan-ignore class.notFound
 
         Queue::createPayloadUsing(new CreateQueuePayloadHandler($core));
 
