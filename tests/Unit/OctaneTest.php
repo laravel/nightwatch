@@ -98,6 +98,10 @@ class OctaneTest extends TestCase
 
     public function test_it_uses_cloud_request_id_from_context_as_trace(): void
     {
+        if (! Compatibility::$contextExists) {
+            $this->markTestSkipped('Context facade is not available.');
+        }
+
         Context::addHidden('laravel_cloud_request_id', '00000000-0000-0000-0000-000000000099');
 
         $this->core->prepareForNextRequest();

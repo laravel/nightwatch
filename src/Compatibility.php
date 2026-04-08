@@ -5,11 +5,11 @@ namespace Laravel\Nightwatch;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Str;
 use ReflectionProperty;
 use Symfony\Component\Console\Input\ArgvInput;
 
 use function implode;
-use function is_string;
 use function method_exists;
 use function tap;
 use function value;
@@ -179,7 +179,7 @@ final class Compatibility
     {
         $value = self::getHiddenContext('laravel_cloud_request_id');
 
-        return is_string($value) && $value !== '' ? $value : null;
+        return Str::isUuid($value) ? $value : null;
     }
 
     public static function addUserIdToContext(string $id): void
