@@ -19,7 +19,6 @@ use function is_array;
 use function is_file;
 use function is_string;
 use function preg_quote;
-use function random_int;
 use function rtrim;
 use function serialize;
 use function str_contains;
