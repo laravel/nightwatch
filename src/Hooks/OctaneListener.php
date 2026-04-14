@@ -24,7 +24,8 @@ final class OctaneListener
     public function __invoke(RequestReceived $event): void // @phpstan-ignore class.notFound
     {
         try {
-            $this->nightwatch->prepareForNextRequest();
+            /** @phpstan-ignore class.notFound */
+            $this->nightwatch->prepareForNextRequest($event->request);
         } catch (Throwable $e) {
             $this->nightwatch->report($e);
         }

@@ -45,6 +45,7 @@ use function array_unshift;
 use function debug_backtrace;
 use function env;
 use function in_array;
+use function is_string;
 use function memory_reset_peak_usage;
 use function preg_match;
 use function preg_split;
@@ -719,7 +720,7 @@ trait CapturesState
     /**
      * @internal
      */
-    public function prepareForNextRequest(): void
+    public function prepareForNextRequest(Request $request): void
     {
         /** @var Core<RequestState> $this */
         $this->flush();
@@ -731,10 +732,21 @@ trait CapturesState
         $this->executionState->timestamp = $timestamp;
         $this->executionState->currentExecutionStageStartedAtMicrotime = $timestamp;
 
-        $trace = $this->uuid->make();
+        $trace = $this->resolveCloudRequestId($request) ?? $this->uuid->make();
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
         Compatibility::addTraceIdToContext($trace);
+    }
+
+    private function resolveCloudRequestId(Request $request): ?string
+    {
+        if (! Compatibility::isLaravelCloud()) {
+            return null;
+        }
+
+        $requestId = $request->header('X-Request-ID');
+
+        return is_string($requestId) && $requestId !== '' ? $requestId : null;
     }
 
     /**

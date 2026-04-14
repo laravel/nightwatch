@@ -9,6 +9,7 @@ use ReflectionProperty;
 use Symfony\Component\Console\Input\ArgvInput;
 
 use function implode;
+use function is_string;
 use function method_exists;
 use function tap;
 use function value;
@@ -172,6 +173,17 @@ final class Compatibility
     public static function getTraceIdFromContext(mixed $default = null): mixed
     {
         return self::getHiddenContext('nightwatch_trace_id', $default);
+    }
+
+    public static function getCloudRequestId(): ?string
+    {
+        if (! self::isLaravelCloud()) {
+            return null;
+        }
+
+        $requestId = $_SERVER['HTTP_X_REQUEST_ID'] ?? null;
+
+        return is_string($requestId) && $requestId !== '' ? $requestId : null;
     }
 
     public static function addUserIdToContext(string $id): void
