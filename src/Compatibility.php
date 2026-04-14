@@ -5,7 +5,6 @@ namespace Laravel\Nightwatch;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Context;
-use Illuminate\Support\Str;
 use ReflectionProperty;
 use Symfony\Component\Console\Input\ArgvInput;
 
@@ -175,13 +174,6 @@ final class Compatibility
         return self::getHiddenContext('nightwatch_trace_id', $default);
     }
 
-    public static function getCloudRequestIdFromContext(): ?string
-    {
-        $value = self::getHiddenContext('laravel_cloud_request_id');
-
-        return Str::isUuid($value) ? $value : null;
-    }
-
     public static function addUserIdToContext(string $id): void
     {
         self::addHiddenContext('nightwatch_user_id', $id);
@@ -190,6 +182,12 @@ final class Compatibility
     public static function getUserIdFromContext(): string
     {
         return (string) self::getHiddenContext('nightwatch_user_id'); // @phpstan-ignore cast.string
+    }
+
+    public static function isLaravelCloud(): bool
+    {
+        return ($_ENV['LARAVEL_CLOUD'] ?? false) === '1' ||
+               ($_SERVER['LARAVEL_CLOUD'] ?? false) === '1';
     }
 
     /**
@@ -213,7 +211,7 @@ final class Compatibility
      * @see https://github.com/laravel/framework/pull/49730
      * @see https://github.com/laravel/framework/releases/tag/v11.0.0
      *
-     * @param  'laravel_cloud_request_id'|'nightwatch_trace_id'|'nightwatch_should_sample'|'nightwatch_user_id'  $key
+     * @param  'nightwatch_trace_id'|'nightwatch_should_sample'|'nightwatch_user_id'  $key
      */
     private static function getHiddenContext(string $key, mixed $default = null): mixed
     {

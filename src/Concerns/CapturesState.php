@@ -731,7 +731,7 @@ trait CapturesState
         $this->executionState->timestamp = $timestamp;
         $this->executionState->currentExecutionStageStartedAtMicrotime = $timestamp;
 
-        $trace = Compatibility::getCloudRequestIdFromContext() ?? $this->uuid->make();
+        $trace = $this->uuid->make();
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
         Compatibility::addTraceIdToContext($trace);

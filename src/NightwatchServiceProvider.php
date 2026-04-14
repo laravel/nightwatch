@@ -26,6 +26,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Events\Terminating;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Client\Factory as Http;
+use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSending;
@@ -82,6 +83,7 @@ use Throwable;
 use function class_exists;
 use function defined;
 use function hash;
+use function is_string;
 use function microtime;
 use function substr;
 
@@ -242,7 +244,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $clock = new Clock;
         $uuid = new Uuid(static fn () => BaseUuid::uuid4()->toString());
-        $trace = Compatibility::getCloudRequestIdFromContext() ?? $uuid->make();
+        $trace = $this->resolveTraceId($uuid);
         $executionState = $this->executionState($trace);
         $tokenHash = substr(hash('xxh128', $this->nightwatchConfig['token'] ?? ''), 0, 7);
 
@@ -557,6 +559,20 @@ final class NightwatchServiceProvider extends ServiceProvider
                 user: $this->userProvider(),
             );
         }
+    }
+
+    private function resolveTraceId(Uuid $uuid): string
+    {
+        if ($this->isRequest && Compatibility::isLaravelCloud()) {
+            $request = $this->app->make(Request::class);
+            $cloudRequestId = $request->header('X-Request-ID');
+
+            if (is_string($cloudRequestId) && $cloudRequestId !== '') {
+                return $cloudRequestId;
+            }
+        }
+
+        return $uuid->make();
     }
 
     private function userProvider(): UserProvider
