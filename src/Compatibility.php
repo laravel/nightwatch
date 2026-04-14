@@ -9,7 +9,6 @@ use ReflectionProperty;
 use Symfony\Component\Console\Input\ArgvInput;
 
 use function implode;
-use function is_string;
 use function method_exists;
 use function tap;
 use function value;
@@ -181,9 +180,7 @@ final class Compatibility
             return null;
         }
 
-        $requestId = $_SERVER['HTTP_X_REQUEST_ID'] ?? null;
-
-        return is_string($requestId) && $requestId !== '' ? $requestId : null;
+        return $_SERVER['HTTP_X_REQUEST_ID'] ?? null;
     }
 
     public static function addUserIdToContext(string $id): void

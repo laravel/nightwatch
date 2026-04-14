@@ -242,8 +242,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $clock = new Clock;
         $uuid = new Uuid(static fn () => BaseUuid::uuid4()->toString());
-        $trace = ($this->isRequest ? Compatibility::getCloudRequestId() : null) ?? $uuid->make();
-        $executionState = $this->executionState($trace);
+        $executionState = $this->executionState(($this->isRequest ? Compatibility::getCloudRequestId() : null) ?? $uuid->make());
         $tokenHash = substr(hash('xxh128', $this->nightwatchConfig['token'] ?? ''), 0, 7);
 
         $this->app->instance(Core::class, $this->core = new Core(
