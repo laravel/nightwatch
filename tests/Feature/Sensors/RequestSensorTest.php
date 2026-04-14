@@ -1154,7 +1154,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
 
         $ingest->forgetWrites();
-        $this->core->prepareForNextRequest();
+        $this->core->prepareForNextRequest(Request::create('/'));
 
         preg_match('/wire:initial-data="([^"]+)"/', $response->getContent(), $matches);
         $snapshot = json_decode(html_entity_decode($matches[1]), true);
@@ -1223,7 +1223,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
 
         $ingest->forgetWrites();
-        $this->core->prepareForNextRequest();
+        $this->core->prepareForNextRequest(Request::create('/'));
 
         preg_match('/wire:snapshot="([^"]+)"/', $response->getContent(), $matches);
         $snapshot = html_entity_decode($matches[1]);
@@ -1279,7 +1279,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_action', '\Illuminate\Routing\ViewController');
 
         $ingest->forgetWrites();
-        $this->core->prepareForNextRequest();
+        $this->core->prepareForNextRequest(Request::create('/'));
 
         preg_match_all('/wire:snapshot="([^"]+)"/', $response->getContent(), $matches);
         $snapshot1 = html_entity_decode($matches[1][0]);
