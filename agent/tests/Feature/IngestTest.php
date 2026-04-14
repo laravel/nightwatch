@@ -13,9 +13,7 @@ use Tests\TestCase;
 use Tests\Timer;
 
 use function array_fill;
-use function file_get_contents;
 use function gethostname;
-use function rtrim;
 use function str_repeat;
 use function substr;
 
@@ -55,7 +53,7 @@ class IngestTest extends TestCase
             'content-encoding' => 'gzip',
             'content-type' => 'application/json',
             'nightwatch-server' => gethostname(),
-            'user-agent' => 'NightwatchAgent/'.rtrim(file_get_contents('../version.txt') ?: ''),
+            'user-agent' => 'NightwatchAgent/'.self::packageVersion(),
         ], $ingestBrowser->headers);
         $ingestBrowser->assertSent([
             Request::ingest($records),

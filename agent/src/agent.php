@@ -198,7 +198,7 @@ $ingest = new Ingest(
 $server = new Server(
     serverResolver: $serverResolver ?? static fn (): ServerInterface => new TcpServer($listenOn),
     tokenHash: $tokenHash,
-    onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]"),
+    onServerStarted: static fn () => $info("Nightwatch agent initiated: Listening on [{$listenOn}]; Version [{$packageVersion}]"),
     onServerError: static fn (string $message) => $error("Server error: {$message}"),
     onConnectionError: static fn (string $message) => $error("Connection error: {$message}"),
     onPayloadReceived: $ingest->write(...),

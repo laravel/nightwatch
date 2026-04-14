@@ -18,6 +18,7 @@ use function implode;
 use function is_array;
 use function is_file;
 use function is_string;
+use function preg_quote;
 use function rtrim;
 use function serialize;
 use function str_contains;
@@ -135,8 +136,11 @@ abstract class TestCase extends BaseTestCase
 
     protected function assertLogMatches(string $expected, string $actual, bool $silent = false, bool $quiet = false, bool $verbose = false): self
     {
+        $version = self::packageVersion();
+        $version = preg_quote($version);
+
         if (! $quiet && ! $silent) {
-            $expected = "{date} {info} Nightwatch agent initiated: Listening on \[127.0.0.1:\d{4}\]\n{$expected}";
+            $expected = "{date} {info} Nightwatch agent initiated: Listening on \[127.0.0.1:\d{4}\]; Version \[{$version}\]\n{$expected}";
         }
 
         if ($verbose) {
@@ -191,6 +195,15 @@ abstract class TestCase extends BaseTestCase
         }
 
         return substr(hash('xxh128', $refreshToken), 0, 7);
+    }
+
+    public static function packageVersion(): string
+    {
+        $version = rtrim(file_get_contents(__DIR__.'/../../version.txt') ?: '');
+
+        self::assertMatchesRegularExpression('/^\d+\.\d+\.\d+$/', $version);
+
+        return $version;
     }
 
     public static function getSignature(): string
