@@ -174,12 +174,8 @@ final class Compatibility
         return self::getHiddenContext('nightwatch_trace_id', $default);
     }
 
-    public static function getCloudRequestId(): ?string
+    public static function getRequestId(): ?string
     {
-        if (! self::isLaravelCloud()) {
-            return null;
-        }
-
         return $_SERVER['HTTP_X_REQUEST_ID'] ?? null;
     }
 

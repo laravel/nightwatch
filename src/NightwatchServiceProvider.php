@@ -242,7 +242,10 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $clock = new Clock;
         $uuid = new Uuid(static fn () => BaseUuid::uuid4()->toString());
-        $executionState = $this->executionState(($this->isRequest ? Compatibility::getCloudRequestId() : null) ?? $uuid->make());
+        $trace = $this->isRequest && Compatibility::isLaravelCloud()
+            ? Compatibility::getRequestId() ?? $uuid->make()
+            : $uuid->make();
+        $executionState = $this->executionState($trace);
         $tokenHash = substr(hash('xxh128', $this->nightwatchConfig['token'] ?? ''), 0, 7);
 
         $this->app->instance(Core::class, $this->core = new Core(
