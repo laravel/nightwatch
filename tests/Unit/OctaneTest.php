@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Orchestra\Testbench\Attributes\WithEnv;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -29,13 +30,6 @@ class OctaneTest extends TestCase
         $this->forceRequestExecutionState();
 
         parent::setUp();
-    }
-
-    protected function tearDown(): void
-    {
-        unset($_ENV['LARAVEL_CLOUD'], $_SERVER['LARAVEL_CLOUD'], $_SERVER['HTTP_X_REQUEST_ID']);
-
-        parent::tearDown();
     }
 
     public function test_it_prepares_for_next_request(): void
@@ -103,10 +97,9 @@ class OctaneTest extends TestCase
         $this->assertSame('6', $this->core->executionState->user->id());
     }
 
+    #[WithEnv('LARAVEL_CLOUD', '1')]
     public function test_it_uses_cloud_request_id_as_trace(): void
     {
-        $_ENV['LARAVEL_CLOUD'] = '1';
-
         $request = Request::create('/', 'GET', [], [], [], [
             'HTTP_X_REQUEST_ID' => '00000000-0000-0000-0000-000000000099',
         ]);
@@ -133,10 +126,9 @@ class OctaneTest extends TestCase
         $this->assertSame('00000000-0000-0000-0000-FALLBACK0001', Compatibility::getTraceIdFromContext());
     }
 
+    #[WithEnv('LARAVEL_CLOUD', '1')]
     public function test_it_falls_back_to_uuid_when_header_is_missing_on_laravel_cloud(): void
     {
-        $_ENV['LARAVEL_CLOUD'] = '1';
-
         $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-FALLBACK0002';
 
         $this->core->prepareForRequest(Request::create('/'));
