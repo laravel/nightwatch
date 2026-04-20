@@ -732,21 +732,12 @@ trait CapturesState
         $this->executionState->timestamp = $timestamp;
         $this->executionState->currentExecutionStageStartedAtMicrotime = $timestamp;
 
-        $trace = $this->resolveCloudRequestId($request) ?? $this->uuid->make();
+        $trace = Compatibility::isLaravelCloud()
+            ? $request->header('X-Request-ID') ?? $this->uuid->make()
+            : $this->uuid->make();
         $this->executionState->trace = $trace;
         $this->executionState->setId($trace);
         Compatibility::addTraceIdToContext($trace);
-    }
-
-    private function resolveCloudRequestId(Request $request): ?string
-    {
-        if (! Compatibility::isLaravelCloud()) {
-            return null;
-        }
-
-        $requestId = $request->header('X-Request-ID');
-
-        return is_string($requestId) && $requestId !== '' ? $requestId : null;
     }
 
     /**
