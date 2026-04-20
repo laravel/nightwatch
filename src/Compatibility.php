@@ -43,6 +43,8 @@ final class Compatibility
 
     public static bool $queryConnectionTypeCapturable = false;
 
+    public static bool $isLaravelCloud = false;
+
     /**
      * @var array{
      *   nightwatch_should_sample?: bool|null,
@@ -123,6 +125,11 @@ final class Compatibility
          * @see https://github.com/laravel/framework/releases/tag/v12.45.0
          */
         self::$queryConnectionTypeCapturable = version_compare($version, '12.45.0', '>=');
+
+        self::$isLaravelCloud = function_exists('laravel_cloud')
+            ? laravel_cloud()
+            : (($_ENV['LARAVEL_CLOUD'] ?? false) === '1' || ($_SERVER['LARAVEL_CLOUD'] ?? false) === '1');
+
     }
 
     /**
@@ -184,16 +191,6 @@ final class Compatibility
     public static function getUserIdFromContext(): string
     {
         return (string) self::getHiddenContext('nightwatch_user_id'); // @phpstan-ignore cast.string
-    }
-
-    public static function isLaravelCloud(): bool
-    {
-        if (function_exists('laravel_cloud')) {
-            return laravel_cloud();
-        }
-
-        return ($_ENV['LARAVEL_CLOUD'] ?? false) === '1' ||
-               ($_SERVER['LARAVEL_CLOUD'] ?? false) === '1';
     }
 
     /**

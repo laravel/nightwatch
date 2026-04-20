@@ -731,7 +731,7 @@ trait CapturesState
         $this->executionState->timestamp = $timestamp;
         $this->executionState->currentExecutionStageStartedAtMicrotime = $timestamp;
 
-        $trace = Compatibility::isLaravelCloud()
+        $trace = Compatibility::$isLaravelCloud
             ? ($request->headers->get('X-Request-ID') ?? $this->uuid->make())
             : $this->uuid->make();
         $this->executionState->trace = $trace;

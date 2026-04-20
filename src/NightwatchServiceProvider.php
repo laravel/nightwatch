@@ -242,7 +242,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $clock = new Clock;
         $uuid = new Uuid(static fn () => BaseUuid::uuid4()->toString());
-        $trace = $this->isRequest && Compatibility::isLaravelCloud()
+        $trace = $this->isRequest && Compatibility::$isLaravelCloud
             ? ($_SERVER['HTTP_X_REQUEST_ID'] ?? $uuid->make())
             : $uuid->make();
         $executionState = $this->executionState($trace);
