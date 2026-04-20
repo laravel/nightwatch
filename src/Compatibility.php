@@ -174,11 +174,6 @@ final class Compatibility
         return self::getHiddenContext('nightwatch_trace_id', $default);
     }
 
-    public static function getRequestId(): ?string
-    {
-        return $_SERVER['HTTP_X_REQUEST_ID'] ?? null;
-    }
-
     public static function addUserIdToContext(string $id): void
     {
         self::addHiddenContext('nightwatch_user_id', $id);
@@ -191,6 +186,10 @@ final class Compatibility
 
     public static function isLaravelCloud(): bool
     {
+        if (function_exists('laravel_cloud')) {
+            return laravel_cloud();
+        }
+
         return ($_ENV['LARAVEL_CLOUD'] ?? false) === '1' ||
                ($_SERVER['LARAVEL_CLOUD'] ?? false) === '1';
     }
