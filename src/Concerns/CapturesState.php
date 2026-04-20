@@ -720,7 +720,7 @@ trait CapturesState
     /**
      * @internal
      */
-    public function prepareForNextRequest(Request $request): void
+    public function prepareForRequest(Request $request): void
     {
         /** @var Core<RequestState> $this */
         $this->flush();

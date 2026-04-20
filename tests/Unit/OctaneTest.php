@@ -76,7 +76,7 @@ class OctaneTest extends TestCase
 
         $this->core->uuid->uuidResolver = fn () => '8B4F773A-81AB-4273-97D5-C7BECBC173BE';
         $this->core->clock->microtimeResolver = fn () => 56789;
-        $this->core->prepareForNextRequest(Request::create('/next'));
+        $this->core->prepareForRequest(Request::create('/next'));
 
         $this->actingAs(new GenericUser([
             'id' => 6,
@@ -111,7 +111,7 @@ class OctaneTest extends TestCase
             'HTTP_X_REQUEST_ID' => '00000000-0000-0000-0000-000000000099',
         ]);
 
-        $this->core->prepareForNextRequest($request);
+        $this->core->prepareForRequest($request);
 
         $this->assertSame('00000000-0000-0000-0000-000000000099', $this->core->executionState->trace);
         $this->assertSame('00000000-0000-0000-0000-000000000099', $this->core->executionState->id()->jsonSerialize());
@@ -126,7 +126,7 @@ class OctaneTest extends TestCase
             'HTTP_X_REQUEST_ID' => '00000000-0000-0000-0000-000000000099',
         ]);
 
-        $this->core->prepareForNextRequest($request);
+        $this->core->prepareForRequest($request);
 
         $this->assertSame('00000000-0000-0000-0000-FALLBACK0001', $this->core->executionState->trace);
         $this->assertSame('00000000-0000-0000-0000-FALLBACK0001', $this->core->executionState->id()->jsonSerialize());
@@ -139,7 +139,7 @@ class OctaneTest extends TestCase
 
         $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-FALLBACK0002';
 
-        $this->core->prepareForNextRequest(Request::create('/'));
+        $this->core->prepareForRequest(Request::create('/'));
 
         $this->assertSame('00000000-0000-0000-0000-FALLBACK0002', $this->core->executionState->trace);
         $this->assertSame('00000000-0000-0000-0000-FALLBACK0002', $this->core->executionState->id()->jsonSerialize());
