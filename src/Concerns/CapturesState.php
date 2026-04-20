@@ -45,7 +45,6 @@ use function array_unshift;
 use function debug_backtrace;
 use function env;
 use function in_array;
-use function is_string;
 use function memory_reset_peak_usage;
 use function preg_match;
 use function preg_split;
