@@ -129,7 +129,6 @@ final class Compatibility
         self::$isLaravelCloud = function_exists('laravel_cloud')
             ? laravel_cloud()
             : (($_ENV['LARAVEL_CLOUD'] ?? false) === '1' || ($_SERVER['LARAVEL_CLOUD'] ?? false) === '1');
-
     }
 
     /**
