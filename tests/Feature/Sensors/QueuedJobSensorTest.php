@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
+use Illuminate\Queue\Attributes\Queue;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\InteractsWithQueue;
@@ -278,6 +279,27 @@ class QueuedJobSensorTest extends TestCase
             'aeadd430-44e6-4b79-a441-02459d797f3a',
         ], $jobIdsInDatabase);
     }
+
+    public function test_it_supports_enum_based_queues(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::post('/users', function (): void {
+            $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-000000000000';
+            MyJob::dispatch()->onQueue(Queues::MyQueue);
+            MyJobWithEnumQueue::dispatch();
+        });
+
+        $response = $this->post('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('queued-job:*', function ($jobs) {
+            $this->assertCount(2, $jobs);
+            return true;
+        });
+        $ingest->assertLatestWrite('queued-job:0.queue', 'my-queue');
+        $ingest->assertLatestWrite('queued-job:1.queue', 'my-queue');
+    }
 }
 
 final class MyJob implements ShouldQueue
@@ -331,5 +353,21 @@ class MyQueuedMail extends Mailable
         return new Content(
             view: 'mail',
         );
+    }
+}
+
+enum Queues: string
+{
+    case MyQueue = 'my-queue';
+}
+
+#[Queue(Queues::MyQueue)]
+class MyJobWithEnumQueue implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public function handle()
+    {
+        //
     }
 }
