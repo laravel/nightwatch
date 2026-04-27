@@ -131,7 +131,7 @@ final class QueuedJobSensor
 
     private function parseQueue(string|BackedEnum $queue): string
     {
-        return is_string($queue) ? $queue : $queue->value;
+        return is_string($queue) ? $queue : (string) $queue->value;
     }
 
     private function resolveQueuedListenerQueue(CallQueuedListener $listener): ?string
