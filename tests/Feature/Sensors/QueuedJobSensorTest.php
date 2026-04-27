@@ -295,6 +295,7 @@ class QueuedJobSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('queued-job:*', function ($jobs) {
             $this->assertCount(2, $jobs);
+
             return true;
         });
         $ingest->assertLatestWrite('queued-job:0.queue', 'my-queue');
