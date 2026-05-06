@@ -37,7 +37,7 @@ final class ScheduledTaskListener
         }
 
         if ($event instanceof ScheduledTaskSkipped) {
-            $this->nightwatch->prepareForNextScheduledTask($event->task);
+            $this->nightwatch->prepareForScheduledTask($event->task);
         }
 
         try {

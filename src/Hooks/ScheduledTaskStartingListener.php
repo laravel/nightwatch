@@ -24,7 +24,7 @@ final class ScheduledTaskStartingListener
     public function __invoke(ScheduledTaskStarting $event): void
     {
         try {
-            $this->nightwatch->prepareForNextScheduledTask($event->task);
+            $this->nightwatch->prepareForScheduledTask($event->task);
         } catch (Throwable $e) {
             $this->nightwatch->report($e, handled: true);
         }
