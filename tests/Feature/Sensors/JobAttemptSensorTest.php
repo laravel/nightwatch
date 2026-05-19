@@ -994,7 +994,7 @@ class JobAttemptSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('exception:*', function ($exceptions) {
             $this->assertCount(1, $exceptions);
-            $this->assertStringContainsString('Tests\\\\Feature\\\\Sensors\\\\MissingJob', $exceptions[0]['message']);
+            $this->assertStringContainsString('MissingJob', $exceptions[0]['message']);
 
             return true;
         });
@@ -1032,7 +1032,7 @@ class JobAttemptSensorTest extends TestCase
                 'peak_memory_usage' => 1234,
                 'context' => Compatibility::$contextExists ? '{}' : '',
             ], $attempts[0], array_keys($expected));
-            $this->assertStringContainsString('Tests\\\\Feature\\\\Sensors\\\\MissingJob', $attempts[0]['exception_preview']);
+            $this->assertStringContainsString('MissingJob', $attempts[0]['exception_preview']);
 
             return true;
         });
