@@ -1042,7 +1042,7 @@ class JobAttemptSensorTest extends TestCase
                 $this->assertStringContainsString('Illuminate\Queue\CallQueuedHandler::commandShouldBeDebounced()', $attempts[0]['exception_preview']);
                 $this->assertStringContainsString('Tests\Feature\Sensors\MissingJob', $attempts[0]['exception_preview']);
             } else {
-                $this->assertSame('Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\Feature\\Sensors\\MissingJob"}', $attempts[0]['exception_preview']);
+                $this->assertSame('Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}', $attempts[0]['exception_preview']);
             }
 
             return true;
