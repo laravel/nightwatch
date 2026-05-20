@@ -994,7 +994,12 @@ class JobAttemptSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('exception:*', function ($exceptions) {
             $this->assertCount(1, $exceptions);
-            $this->assertSame('Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}', $exceptions[0]['message']);
+
+            if (version_compare(Application::VERSION, '13.6.0', '>=')) {
+                $this->assertSame('Illuminate\Queue\CallQueuedHandler::commandShouldBeDebounced(): The script tried to access a property on an incomplete object. Please ensure that the class definition "Tests\Feature\Sensors\MissingJob" of the object you are trying to operate on was loaded _before_ unserialize() gets called or provide an autoloader to load the class definition', $exceptions[0]['message']);
+            } else {
+                $this->assertSame('Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}', $exceptions[0]['message']);
+            }
 
             return true;
         });
@@ -1029,7 +1034,9 @@ class JobAttemptSensorTest extends TestCase
                 'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
-                'exception_preview' => 'Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}',
+                'exception_preview' => version_compare(Application::VERSION, '13.6.0', '>=')
+                    ? 'Illuminate\Queue\CallQueuedHandler::commandShouldBeDebounced(): The script tried to access a property on an incomplete object. Please ensure that the class definition "Tests\Feature\Sensors\MissingJob" of the object you are trying to operate on was loaded'
+                    : 'Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}',
                 'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
