@@ -101,7 +101,7 @@ class OctaneTest extends TestCase
     public function test_it_uses_cloud_request_id_as_trace(): void
     {
         $request = Request::create('/', 'GET', [], [], [], [
-            'HTTP_X_REQUEST_ID' => '00000000-0000-0000-0000-000000000099',
+            'HTTP_CLOUD_REQUEST_ID' => '00000000-0000-0000-0000-000000000099',
         ]);
 
         $this->core->prepareForRequest($request);
@@ -116,7 +116,7 @@ class OctaneTest extends TestCase
         $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-FALLBACK0001';
 
         $request = Request::create('/', 'GET', [], [], [], [
-            'HTTP_X_REQUEST_ID' => '00000000-0000-0000-0000-000000000099',
+            'HTTP_CLOUD_REQUEST_ID' => '00000000-0000-0000-0000-000000000099',
         ]);
 
         $this->core->prepareForRequest($request);
