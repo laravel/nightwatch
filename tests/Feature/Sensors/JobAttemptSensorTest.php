@@ -994,12 +994,18 @@ class JobAttemptSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('exception:*', function ($exceptions) {
             $this->assertCount(1, $exceptions);
-            $this->assertSame('Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}', $exceptions[0]['message']);
+
+            if (version_compare(Application::VERSION, '13.6.0', '>=')) {
+                $this->assertSame('Illuminate\Queue\CallQueuedHandler::commandShouldBeDebounced(): The script tried to access a property on an incomplete object. Please ensure that the class definition "Tests\Feature\Sensors\MissingJob" of the object you are trying to operate on was loaded _before_ unserialize() gets called or provide an autoloader to load the class definition', $exceptions[0]['message']);
+            } else {
+                $this->assertSame('Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}', $exceptions[0]['message']);
+            }
 
             return true;
         });
-        $ingest->assertLatestWrite('job-attempt:*', [
-            [
+        $ingest->assertLatestWrite('job-attempt:*', function ($attempts) use ($jobId, $attemptId) {
+            $this->assertCount(1, $attempts);
+            $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                 'v' => 1,
                 't' => 'job-attempt',
                 'timestamp' => 946688523.456789,
@@ -1029,10 +1035,18 @@ class JobAttemptSensorTest extends TestCase
                 'cache_events' => 0,
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
-                'exception_preview' => 'Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}',
                 'context' => Compatibility::$contextExists ? '{}' : '',
-            ],
-        ]);
+            ], $attempts[0], array_keys($expected));
+
+            if (version_compare(Application::VERSION, '13.6.0', '>=')) {
+                $this->assertStringContainsString('Illuminate\Queue\CallQueuedHandler::commandShouldBeDebounced()', $attempts[0]['exception_preview']);
+                $this->assertStringContainsString('Tests\Feature\Sensors\MissingJob', $attempts[0]['exception_preview']);
+            } else {
+                $this->assertSame('Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}', $attempts[0]['exception_preview']);
+            }
+
+            return true;
+        });
     }
 
     public function test_queue_workers_that_remove_successful_jobs_and_make_network_call_to_determine_attempts_like_beanstalkd_can_capture_attempts(): void
