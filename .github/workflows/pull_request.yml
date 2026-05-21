@@ -112,17 +112,23 @@ jobs:
 
     steps:
       - uses: actions/create-github-app-token@v1
+        if: github.actor != 'dependabot[bot]'
         id: app-token
         with:
           app-id: ${{ vars.NIGHTWATCH_PERMISSIONS_APP_ID }}
           private-key: ${{ secrets.NIGHTWATCH_PERMISSIONS_APP_PRIVATE_KEY }}
 
       - name: Checkout repository
+        if: github.actor != 'dependabot[bot]'
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
           token: ${{ steps.app-token.outputs.token }}
           ref: ${{ github.head_ref }}
+
+      - name: Checkout repository
+        if: github.actor == 'dependabot[bot]'
+        uses: actions/checkout@v4
 
       - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
         uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
@@ -177,17 +183,23 @@ jobs:
 
     steps:
       - uses: actions/create-github-app-token@v1
+        if: github.actor != 'dependabot[bot]'
         id: app-token
         with:
           app-id: ${{ vars.NIGHTWATCH_PERMISSIONS_APP_ID }}
           private-key: ${{ secrets.NIGHTWATCH_PERMISSIONS_APP_PRIVATE_KEY }}
 
       - name: Checkout repository
+        if: github.actor != 'dependabot[bot]'
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
           token: ${{ steps.app-token.outputs.token }}
           ref: ${{ github.head_ref }}
+
+      - name: Checkout repository
+        if: github.actor == 'dependabot[bot]'
+        uses: actions/checkout@v4
 
       - name: Build agent
         id: build-agent
@@ -195,7 +207,16 @@ jobs:
           composer build
           echo "version=$(cat build/signature.txt)" >> "$GITHUB_OUTPUT"
 
+      - name: Check for uncommitted agent changes
+        if: github.actor == 'dependabot[bot]'
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::Agent build produced changes that need to be committed. Push an empty commit to this branch to re-run with write permissions."
+            exit 1
+          fi
+
       - id: commit-agent
+        if: github.actor != 'dependabot[bot]'
         uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9
         with:
           default_author: github_actions
@@ -205,7 +226,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build_agent
-    if: ${{ needs.build_agent.outputs.agent-committed == 'false' }}
+    if: ${{ needs.build_agent.outputs.agent-committed != 'true' }}
 
     services:
       redis:
@@ -271,7 +292,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build_agent
-    if: ${{ needs.build_agent.outputs.agent-committed == 'false' }}
+    if: ${{ needs.build_agent.outputs.agent-committed != 'true' }}
     defaults:
       run:
         working-directory: ./agent
