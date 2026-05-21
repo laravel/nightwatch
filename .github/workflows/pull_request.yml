@@ -28,7 +28,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
           php-version: ${{ env.minimum_supported_php_version }}
           extensions: ${{ env.package_extensions }}
@@ -74,7 +74,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
           php-version: ${{ env.minimum_supported_php_version }}
           extensions: ${{ env.agent_extensions }}
@@ -111,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@v3
         if: github.actor != 'dependabot[bot]'
         id: app-token
         with:
@@ -128,10 +128,10 @@ jobs:
 
       - name: Checkout repository
         if: github.actor == 'dependabot[bot]'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
           php-version: ${{ env.minimum_supported_php_version }}
           extensions: ${{ env.package_extensions }}
@@ -160,7 +160,7 @@ jobs:
       - name: Run Pint
         run: vendor/bin/pint
 
-      - uses: EndBug/add-and-commit@v9
+      - uses: EndBug/add-and-commit@v10
         with:
           default_author: github_actions
           message: "Fix code styling"
@@ -182,7 +182,7 @@ jobs:
         working-directory: ./agent
 
     steps:
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@v3
         if: github.actor != 'dependabot[bot]'
         id: app-token
         with:
@@ -199,7 +199,7 @@ jobs:
 
       - name: Checkout repository
         if: github.actor == 'dependabot[bot]'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build agent
         id: build-agent
@@ -217,7 +217,7 @@ jobs:
 
       - id: commit-agent
         if: github.actor != 'dependabot[bot]'
-        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9
+        uses: EndBug/add-and-commit@290ea2c423ad77ca9c62ae0f5b224379612c0321 # v10.0.0
         with:
           default_author: github_actions
           message: "Bump agent version to ${{ steps.build-agent.outputs.version }}"
@@ -253,7 +253,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup PHP ${{ matrix.php }} and tooling
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
           php-version: ${{ matrix.php }}
           extensions: ${{ env.package_extensions }}
@@ -310,7 +310,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup PHP ${{ matrix.php }} and tooling
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
           php-version: ${{ matrix.php }}
           extensions: ${{ env.agent_extensions }}
