@@ -93,6 +93,58 @@ class ScheduledTaskSensorTest extends TestCase
         ]);
     }
 
+    public function test_it_ingests_processed_tasks_with_vapor_schedule_command(): void
+    {
+        $ingest = $this->fakeIngest();
+        $line = __LINE__ + 1;
+        $task = $this->app[Schedule::class]->call(fn () => $this->travelTo(now()->addMicroseconds(1_000_000)))->everyMinute();
+        $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
+
+        Artisan::command('vapor:schedule', function () {
+            $this->call('schedule:run');
+        });
+
+        Artisan::call('vapor:schedule');
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('scheduled-task:*', [
+            [
+                'v' => 1,
+                't' => 'scheduled-task',
+                'timestamp' => 946688523.456789,
+                'deploy' => 'v1.2.3',
+                'server' => 'scheduler-01',
+                '_group' => hash('xxh128', "{$name},{$task->expression},{$task->timezone}"),
+                'trace_id' => '00000000-0000-0000-0000-000000000000',
+                'name' => $name,
+                'cron' => '* * * * *',
+                'timezone' => 'UTC',
+                'repeat_seconds' => 0,
+                'without_overlapping' => false,
+                'on_one_server' => false,
+                'run_in_background' => false,
+                'even_in_maintenance_mode' => false,
+                'status' => 'processed',
+                'duration' => 1_000_000,
+                'exceptions' => 0,
+                'logs' => 0,
+                'queries' => 0,
+                'lazy_loads' => 0,
+                'jobs_queued' => 0,
+                'mail' => 0,
+                'notifications' => 0,
+                'outgoing_requests' => 0,
+                'files_read' => 0,
+                'files_written' => 0,
+                'cache_events' => 0,
+                'hydrated_models' => 0,
+                'peak_memory_usage' => 1234,
+                'exception_preview' => '',
+                'context' => Compatibility::$contextExists ? '{}' : '',
+            ],
+        ]);
+    }
+
     public function test_it_ingests_skipped_tasks(): void
     {
         $ingest = $this->fakeIngest();
