@@ -996,8 +996,10 @@ class JobAttemptSensorTest extends TestCase
             $this->assertCount(1, $exceptions);
 
             if (version_compare(Application::VERSION, '13.6.0', '>=')) {
+                $this->assertSame('ErrorException', $exceptions[0]['class']);
                 $this->assertSame('Illuminate\Queue\CallQueuedHandler::commandShouldBeDebounced(): The script tried to access a property on an incomplete object. Please ensure that the class definition "Tests\Feature\Sensors\MissingJob" of the object you are trying to operate on was loaded _before_ unserialize() gets called or provide an autoloader to load the class definition', $exceptions[0]['message']);
             } else {
+                $this->assertSame('Exception', $exceptions[0]['class']);
                 $this->assertSame('Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}', $exceptions[0]['message']);
             }
 
