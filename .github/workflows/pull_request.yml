@@ -12,6 +12,9 @@ env:
   package_extensions: none, mbstring, curl, ctype, tokenizer, mongodb, xml, pdo, fileinfo, dom, xmlwriter, simplexml, sqlite3, pdo_sqlite, posix, redis
   agent_extensions: none, mbstring, curl, ctype, dom, simplexml, tokenizer, xml, xmlwriter, iconv
 
+permissions:
+  contents: read
+
 jobs:
   ## Run coding standards and static analysis before building the agent
   package_static_analysis:
@@ -20,10 +23,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
         with:
           php-version: ${{ env.minimum_supported_php_version }}
           extensions: ${{ env.package_extensions }}
@@ -37,7 +42,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-package-composer-${{ hashFiles('**/composer.json') }}
@@ -64,10 +69,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
         with:
           php-version: ${{ env.minimum_supported_php_version }}
           extensions: ${{ env.agent_extensions }}
@@ -81,7 +88,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-agent-composer-${{ hashFiles('**/composer.lock') }}
@@ -113,8 +120,9 @@ jobs:
 
       - name: Checkout repository
         if: github.actor != 'dependabot[bot]'
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
+          persist-credentials: false
           token: ${{ steps.app-token.outputs.token }}
           ref: ${{ github.head_ref }}
 
@@ -123,7 +131,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup PHP ${{ env.minimum_supported_php_version }} and tooling
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
         with:
           php-version: ${{ env.minimum_supported_php_version }}
           extensions: ${{ env.package_extensions }}
@@ -137,7 +145,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-package-composer-${{ hashFiles('**/composer.json') }}
@@ -183,8 +191,9 @@ jobs:
 
       - name: Checkout repository
         if: github.actor != 'dependabot[bot]'
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
+          persist-credentials: false
           token: ${{ steps.app-token.outputs.token }}
           ref: ${{ github.head_ref }}
 
@@ -208,7 +217,7 @@ jobs:
 
       - id: commit-agent
         if: github.actor != 'dependabot[bot]'
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9
         with:
           default_author: github_actions
           message: "Bump agent version to ${{ steps.build-agent.outputs.version }}"
@@ -239,10 +248,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Setup PHP ${{ matrix.php }} and tooling
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
         with:
           php-version: ${{ matrix.php }}
           extensions: ${{ env.package_extensions }}
@@ -256,7 +267,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-package-composer-${{ hashFiles('**/composer.json') }}
@@ -294,10 +305,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Setup PHP ${{ matrix.php }} and tooling
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
         with:
           php-version: ${{ matrix.php }}
           extensions: ${{ env.agent_extensions }}
@@ -311,7 +324,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-agent-composer-${{ hashFiles('**/composer.lock') }}

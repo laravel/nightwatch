@@ -14,6 +14,9 @@ on:
           - minor
           - major
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     name: Publish release
@@ -34,8 +37,9 @@ jobs:
           private-key: ${{ secrets.NIGHTWATCH_PERMISSIONS_APP_PRIVATE_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
+          persist-credentials: false
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Fetch last release tag
@@ -111,14 +115,14 @@ jobs:
 
       - name: Generate release notes
         id: notes
-        uses: RedCrafter07/release-notes-action@main
+        uses: RedCrafter07/release-notes-action@31674bfa3a219e7c661fc0c5b7b3851c741b9965 # main
         with:
           tag-name: v${{ steps.bump-version.outputs.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: "1.x"
 
       - name: Update Changelog
-        uses: stefanzweifel/changelog-updater-action@v1
+        uses: stefanzweifel/changelog-updater-action@a938690fad7edf25368f37e43a1ed1b34303eb36 # v1
         with:
           release-notes: "#${{ steps.notes.outputs.release-notes }}"
           latest-version: "v${{ steps.bump-version.outputs.version }}"
@@ -132,7 +136,7 @@ jobs:
           tag: "v${{ steps.bump-version.outputs.version }}"
           push: true
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
         with:
           generate_release_notes: false
           body: ${{ steps.notes.outputs.release-notes }}
