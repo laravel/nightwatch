@@ -1,6 +1,17 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.26.0...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.27.0...1.x)
+
+## [v1.27.0](https://github.com/laravel/nightwatch/compare/v1.26.0...v1.27.0) - 2026-05-21
+
+### What's Changed
+
+* Standardise naming conventions by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/359
+* Fix Laravel 13 serialization test by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/366
+* Handle `vapor:schedule` for sub-minute scheduling by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/368
+* Add more test assertions by [@jessarcher](https://github.com/jessarcher) in https://github.com/laravel/nightwatch/pull/369
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/1.26.1...v1.27.0
 
 ## [v1.26.0](https://github.com/laravel/nightwatch/compare/v1.25.0...v1.26.0) - 2026-04-01
 
