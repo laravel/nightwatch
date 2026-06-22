@@ -6,6 +6,9 @@ use Carbon\CarbonImmutable;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\CurlHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Promise\Create;
+use GuzzleHttp\Promise\PromiseInterface;
+use GuzzleHttp\Psr7\Response as Psr7Response;
 use GuzzleHttp\Psr7\StreamDecoratorTrait;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
@@ -88,7 +91,7 @@ class OutgoingRequestSensorTest extends TestCase
         });
         Http::fake([
             'https://laravel.com' => function () {
-                return Http::response(new NoReadStream(null), headers: ['Content-Length' => 5432]);
+                return $this->streamResponse(new NoReadStream(null), ['Content-Length' => 5432]);
             },
         ]);
 
@@ -109,7 +112,7 @@ class OutgoingRequestSensorTest extends TestCase
 
         Http::fake([
             'https://laravel.com' => function ($request) {
-                return Http::response(new NoReadStream(5432));
+                return $this->streamResponse(new NoReadStream(5432));
             },
         ]);
 
@@ -130,7 +133,7 @@ class OutgoingRequestSensorTest extends TestCase
 
         Http::fake([
             'https://laravel.com' => function ($request) {
-                return Http::response(new NoReadStream(null));
+                return $this->streamResponse(new NoReadStream(null));
             },
         ]);
 
@@ -169,7 +172,7 @@ class OutgoingRequestSensorTest extends TestCase
         });
         Http::fake([
             'https://laravel.com' => function () {
-                return Http::response(new NoReadStream(null));
+                return $this->streamResponse(new NoReadStream(null));
             },
         ]);
 
@@ -222,6 +225,11 @@ class OutgoingRequestSensorTest extends TestCase
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('outgoing-request:0.url', 'https://laravel.com');
+    }
+
+    private function streamResponse(StreamInterface $body, array $headers = []): PromiseInterface
+    {
+        return Create::promiseFor(new Psr7Response(200, $headers, $body));
     }
 }
 
