@@ -134,13 +134,13 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private static bool $booted = false;
 
-    private static ?string $trace = null;
+    private static ?string $initialTrace = null;
 
     public function register(): void
     {
-        if (self::$trace) {
+        if (self::$initialTrace) {
             // `config:cache` command reboots the framework so we capture the trace on first boot and restore it subsequently
-            Compatibility::addTraceIdToContext(self::$trace);
+            Compatibility::addTraceIdToContext(self::$initialTrace);
 
             return;
         }
@@ -262,7 +262,7 @@ final class NightwatchServiceProvider extends ServiceProvider
         $trace = $this->isRequest && Compatibility::$isLaravelCloud
             ? ($_SERVER['HTTP_CLOUD_REQUEST_ID'] ?? $uuid->make())
             : $uuid->make();
-        self::$trace = $trace;
+        self::$initialTrace = $trace;
         $executionState = $this->executionState($trace);
         $tokenHash = substr(hash('xxh128', $this->nightwatchConfig['token'] ?? ''), 0, 7);
 
@@ -544,12 +544,6 @@ final class NightwatchServiceProvider extends ServiceProvider
         });
     }
 
-    public static function flushState(): void
-    {
-        self::$booted = false;
-        self::$trace = null;
-    }
-
     private function executionState(string $trace): RequestState|CommandState
     {
         Compatibility::addTraceIdToContext($trace);
@@ -595,5 +589,11 @@ final class NightwatchServiceProvider extends ServiceProvider
             fn () => $this->core->userDetailsResolver,
             fn () => $this->core->report(...),
         );
+    }
+
+    public static function flushState(): void
+    {
+        self::$booted = false;
+        self::$initialTrace = null;
     }
 }
