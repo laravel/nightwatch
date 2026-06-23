@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Laravel\Nightwatch\NightwatchServiceProvider;
 use Laravel\Nightwatch\Records\CacheEvent;
 use Laravel\Nightwatch\Records\Command;
 use Laravel\Nightwatch\Records\Exception;
@@ -619,6 +620,7 @@ class FilteringTest extends TestCase
     public function test_it_can_redact_commands(): void
     {
         $this->forceCommandExecutionState();
+        NightwatchServiceProvider::flushState();
         $this->refreshApplication();
         parent::setUp();
         $this->app[ConsoleKernel::class]->rerouteSymfonyCommandEvents();
