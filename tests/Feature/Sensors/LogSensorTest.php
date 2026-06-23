@@ -7,7 +7,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\NightwatchServiceProvider;
 use Monolog\LogRecord;
 use RuntimeException;
 use Tests\TestCase;
@@ -275,7 +274,6 @@ class LogSensorTest extends TestCase
     {
         Env::getRepository()->set('LOG_LEVEL', 'warning');
 
-        NightwatchServiceProvider::flushState();
         $this->refreshApplication();
         parent::setUp();
 
@@ -309,7 +307,6 @@ class LogSensorTest extends TestCase
         Env::getRepository()->set('LOG_LEVEL', 'debug');
         Env::getRepository()->set('NIGHTWATCH_LOG_LEVEL', 'warning');
 
-        NightwatchServiceProvider::flushState();
         $this->refreshApplication();
         parent::setUp();
 
