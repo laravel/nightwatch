@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.28.0...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.28.1...1.x)
+
+## [v1.28.1](https://github.com/laravel/nightwatch/compare/v1.28.0...v1.28.1) - 2026-06-23
+
+### What's Changed
+
+* Fix tests broken against latest dependencies by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/384
+* Capture and restore first trace on initial framework boot by [@jradtilbrook](https://github.com/jradtilbrook) in https://github.com/laravel/nightwatch/pull/383
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.28.0...v1.28.1
 
 ## [v1.28.0](https://github.com/laravel/nightwatch/compare/v1.27.0...v1.28.0) - 2026-06-04
 
