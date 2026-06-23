@@ -18,7 +18,6 @@ use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Ingest;
-use Laravel\Nightwatch\NightwatchServiceProvider;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -78,8 +77,6 @@ abstract class TestCase extends OrchestraTestCase
         if (method_exists(WorkCommand::class, 'flushState')) {
             WorkCommand::flushState();
         }
-
-        NightwatchServiceProvider::flushState();
 
         unset($this->core);
 
