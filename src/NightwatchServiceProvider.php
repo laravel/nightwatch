@@ -132,6 +132,8 @@ final class NightwatchServiceProvider extends ServiceProvider
 
     private ?Throwable $registerException = null;
 
+    private static ?string $initialTrace = null;
+
     public function register(): void
     {
         try {
@@ -242,7 +244,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $clock = new Clock;
         $uuid = new Uuid(static fn () => BaseUuid::uuid4()->toString());
-        $trace = $this->isRequest && Compatibility::$isLaravelCloud
+        $trace = self::$initialTrace ??= $this->isRequest && Compatibility::$isLaravelCloud
             ? ($_SERVER['HTTP_CLOUD_REQUEST_ID'] ?? $uuid->make())
             : $uuid->make();
         $executionState = $this->executionState($trace);
@@ -571,5 +573,10 @@ final class NightwatchServiceProvider extends ServiceProvider
             fn () => $this->core->userDetailsResolver,
             fn () => $this->core->report(...),
         );
+    }
+
+    public static function flushState(): void
+    {
+        self::$initialTrace = null;
     }
 }
