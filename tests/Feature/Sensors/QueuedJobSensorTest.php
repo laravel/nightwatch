@@ -289,7 +289,7 @@ class QueuedJobSensorTest extends TestCase
 
         if (class_exists('Illuminate\Queue\Attributes\Queue')) {
             $queueAttributeTypes = (new ReflectionClass('Illuminate\Queue\Attributes\Queue'))->getConstructor()->getParameters()[0]->getType();
-            $queueAttributeSupportsEnum = $queueAttributeTypes instanceof ReflectionNamedType && $queueAttributeTypes->getName() === 'string';
+            $queueAttributeSupportsEnum = $queueAttributeTypes instanceof ReflectionNamedType && $queueAttributeTypes->getName() !== 'string';
         }
 
         $ingest = $this->fakeIngest();
