@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Context;
 use ReflectionProperty;
 use Symfony\Component\Console\Input\ArgvInput;
 
+use function function_exists;
 use function implode;
+use function laravel_cloud;
 use function method_exists;
 use function tap;
 use function value;
@@ -40,6 +42,8 @@ final class Compatibility
     public static bool $subMinuteScheduledTasksSupported = false;
 
     public static bool $queryConnectionTypeCapturable = false;
+
+    public static bool $isLaravelCloud = false;
 
     /**
      * @var array{
@@ -121,6 +125,10 @@ final class Compatibility
          * @see https://github.com/laravel/framework/releases/tag/v12.45.0
          */
         self::$queryConnectionTypeCapturable = version_compare($version, '12.45.0', '>=');
+
+        self::$isLaravelCloud = function_exists('laravel_cloud')
+            ? laravel_cloud()
+            : (($_ENV['LARAVEL_CLOUD'] ?? false) === '1' || ($_SERVER['LARAVEL_CLOUD'] ?? false) === '1');
     }
 
     /**

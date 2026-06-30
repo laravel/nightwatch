@@ -7,6 +7,7 @@ use App\Mail\MyMail;
 use App\Models\User;
 use App\Notifications\MyNotification;
 use Illuminate\Auth\GenericUser;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Orchestra\Testbench\Attributes\WithEnv;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -68,7 +70,7 @@ class OctaneTest extends TestCase
 
         $this->core->uuid->uuidResolver = fn () => '8B4F773A-81AB-4273-97D5-C7BECBC173BE';
         $this->core->clock->microtimeResolver = fn () => 56789;
-        $this->core->prepareForNextRequest();
+        $this->core->prepareForRequest(Request::create('/next'));
 
         $this->actingAs(new GenericUser([
             'id' => 6,
@@ -93,5 +95,46 @@ class OctaneTest extends TestCase
         $this->assertSame(56789.0, $this->core->executionState->currentExecutionStageStartedAtMicrotime);
         $this->assertSame(ExecutionStage::BeforeMiddleware, $this->core->executionState->stage);
         $this->assertSame('6', $this->core->executionState->user->id());
+    }
+
+    #[WithEnv('LARAVEL_CLOUD', '1')]
+    public function test_it_uses_cloud_request_id_as_trace(): void
+    {
+        $request = Request::create('/', 'GET', [], [], [], [
+            'HTTP_CLOUD_REQUEST_ID' => '00000000-0000-0000-0000-000000000099',
+        ]);
+
+        $this->core->prepareForRequest($request);
+
+        $this->assertSame('00000000-0000-0000-0000-000000000099', $this->core->executionState->trace);
+        $this->assertSame('00000000-0000-0000-0000-000000000099', $this->core->executionState->id()->jsonSerialize());
+        $this->assertSame('00000000-0000-0000-0000-000000000099', Compatibility::getTraceIdFromContext());
+    }
+
+    public function test_it_falls_back_to_uuid_when_not_on_laravel_cloud(): void
+    {
+        $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-FALLBACK0001';
+
+        $request = Request::create('/', 'GET', [], [], [], [
+            'HTTP_CLOUD_REQUEST_ID' => '00000000-0000-0000-0000-000000000099',
+        ]);
+
+        $this->core->prepareForRequest($request);
+
+        $this->assertSame('00000000-0000-0000-0000-FALLBACK0001', $this->core->executionState->trace);
+        $this->assertSame('00000000-0000-0000-0000-FALLBACK0001', $this->core->executionState->id()->jsonSerialize());
+        $this->assertSame('00000000-0000-0000-0000-FALLBACK0001', Compatibility::getTraceIdFromContext());
+    }
+
+    #[WithEnv('LARAVEL_CLOUD', '1')]
+    public function test_it_falls_back_to_uuid_when_header_is_missing_on_laravel_cloud(): void
+    {
+        $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-FALLBACK0002';
+
+        $this->core->prepareForRequest(Request::create('/'));
+
+        $this->assertSame('00000000-0000-0000-0000-FALLBACK0002', $this->core->executionState->trace);
+        $this->assertSame('00000000-0000-0000-0000-FALLBACK0002', $this->core->executionState->id()->jsonSerialize());
+        $this->assertSame('00000000-0000-0000-0000-FALLBACK0002', Compatibility::getTraceIdFromContext());
     }
 }
