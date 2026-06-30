@@ -6,10 +6,12 @@ use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
+use Illuminate\Queue\Attributes\Queue;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Illuminate\Queue\InteractsWithQueue;
@@ -23,12 +25,16 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Compatibility;
 use Ramsey\Uuid\Uuid;
+use ReflectionClass;
+use ReflectionNamedType;
 use Tests\TestCase;
 
 use function array_shift;
+use function class_exists;
 use function hash;
 use function json_decode;
 use function now;
+use function version_compare;
 
 class QueuedJobSensorTest extends TestCase
 {
@@ -278,6 +284,37 @@ class QueuedJobSensorTest extends TestCase
             'aeadd430-44e6-4b79-a441-02459d797f3a',
         ], $jobIdsInDatabase);
     }
+
+    public function test_it_supports_enum_based_queues(): void
+    {
+        $this->markTestSkippedWhen(version_compare(Application::VERSION, '11.22.0', '<'), 'Enums not supported for queue names');
+
+        $queueAttributeSupportsEnum = false;
+
+        if (class_exists('Illuminate\Queue\Attributes\Queue')) {
+            $queueAttributeTypes = (new ReflectionClass('Illuminate\Queue\Attributes\Queue'))->getConstructor()->getParameters()[0]->getType();
+            $queueAttributeSupportsEnum = $queueAttributeTypes instanceof ReflectionNamedType && $queueAttributeTypes->getName() !== 'string';
+        }
+
+        $ingest = $this->fakeIngest();
+        Route::post('/users', function () use ($queueAttributeSupportsEnum): void {
+            $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-000000000000';
+            MyJob::dispatch()->onQueue(Queues::MyQueue);
+            $queueAttributeSupportsEnum && MyJobWithEnumQueue::dispatch();
+        });
+
+        $response = $this->post('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('queued-job:*', function ($jobs) use ($queueAttributeSupportsEnum) {
+            $this->assertCount($queueAttributeSupportsEnum ? 2 : 1, $jobs);
+
+            return true;
+        });
+        $ingest->assertLatestWrite('queued-job:0.queue', 'my-queue');
+        $queueAttributeSupportsEnum && $ingest->assertLatestWrite('queued-job:1.queue', 'my-queue');
+    }
 }
 
 final class MyJob implements ShouldQueue
@@ -331,5 +368,21 @@ class MyQueuedMail extends Mailable
         return new Content(
             view: 'mail',
         );
+    }
+}
+
+enum Queues: string
+{
+    case MyQueue = 'my-queue';
+}
+
+#[Queue(Queues::MyQueue)]
+class MyJobWithEnumQueue implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public function handle()
+    {
+        //
     }
 }
