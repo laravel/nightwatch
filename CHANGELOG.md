@@ -1,6 +1,6 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.28.3...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.28.4...1.x)
 
 ## [v1.28.2](https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2) - 2026-06-24
 
@@ -9,6 +9,16 @@
 * Revert "Capture and restore first trace on initial framework boot (#3… by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/386
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2
+
+## [v1.28.4](https://github.com/laravel/nightwatch/compare/v1.28.3...v1.28.4) - 2026-06-30
+
+### What's Changed
+
+* Support direct connection types by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/390
+* Bump the github-actions group across 1 directory with 5 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/382
+* Support enum queues via Queue attribute by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/361
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.28.3...v1.28.4
 
 ## [v1.28.3](https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.3) - 2026-06-24
 
