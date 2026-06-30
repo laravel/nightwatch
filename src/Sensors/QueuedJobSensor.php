@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use BackedEnum;
 use Illuminate\Events\CallQueuedListener;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
@@ -112,7 +113,7 @@ final class QueuedJobSensor
         $queue = $event->queue;
 
         if ($queue !== null) {
-            return $queue;
+            return $this->parseQueue($queue);
         }
 
         if (is_object($event->job)) {
@@ -126,6 +127,11 @@ final class QueuedJobSensor
         }
 
         return $queue ?? $this->connectionConfig[$event->connectionName]['queue'] ?? '';
+    }
+
+    private function parseQueue(string|BackedEnum $queue): string
+    {
+        return is_string($queue) ? $queue : (string) $queue->value;
     }
 
     private function resolveQueuedListenerQueue(CallQueuedListener $listener): ?string
