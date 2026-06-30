@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Compatibility;
 use Ramsey\Uuid\Uuid;
+use ReflectionClass;
+use ReflectionNamedType;
 use Tests\TestCase;
 
 use function array_shift;
@@ -284,6 +286,8 @@ class QueuedJobSensorTest extends TestCase
     public function test_it_supports_enum_based_queues(): void
     {
         $queueAttributeExists = class_exists('Illuminate\Queue\Attributes\Queue');
+        $queueAttributeAccepts = (new ReflectionClass('Illuminate\Queue\Attributes\Queue'))->getConstructor()->getParameters()[0]->getType();
+        $this->markTestSkippedWhen($queueAttributeAccepts instanceof ReflectionNamedType && $queueAttributeAccepts->getName() === 'string', 'Enum not supported for queue attribute');
 
         $ingest = $this->fakeIngest();
         Route::post('/users', function () use ($queueAttributeExists): void {
