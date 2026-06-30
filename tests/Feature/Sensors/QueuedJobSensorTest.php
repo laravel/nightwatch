@@ -27,6 +27,7 @@ use Ramsey\Uuid\Uuid;
 use Tests\TestCase;
 
 use function array_shift;
+use function class_exists;
 use function hash;
 use function json_decode;
 use function now;
@@ -282,24 +283,26 @@ class QueuedJobSensorTest extends TestCase
 
     public function test_it_supports_enum_based_queues(): void
     {
+        $queueAttributeExists = class_exists('Illuminate\Queue\Attributes\Queue');
+
         $ingest = $this->fakeIngest();
-        Route::post('/users', function (): void {
+        Route::post('/users', function () use ($queueAttributeExists): void {
             $this->core->uuid->uuidResolver = fn () => '00000000-0000-0000-0000-000000000000';
             MyJob::dispatch()->onQueue(Queues::MyQueue);
-            MyJobWithEnumQueue::dispatch();
+            $queueAttributeExists && MyJobWithEnumQueue::dispatch();
         });
 
         $response = $this->post('/users');
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('queued-job:*', function ($jobs) {
-            $this->assertCount(2, $jobs);
+        $ingest->assertLatestWrite('queued-job:*', function ($jobs) use ($queueAttributeExists) {
+            $this->assertCount($queueAttributeExists ? 2 : 1, $jobs);
 
             return true;
         });
         $ingest->assertLatestWrite('queued-job:0.queue', 'my-queue');
-        $ingest->assertLatestWrite('queued-job:1.queue', 'my-queue');
+        $queueAttributeExists && $ingest->assertLatestWrite('queued-job:1.queue', 'my-queue');
     }
 }
 
