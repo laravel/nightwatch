@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Mail\Mailable;
@@ -33,6 +34,7 @@ use function class_exists;
 use function hash;
 use function json_decode;
 use function now;
+use function version_compare;
 
 class QueuedJobSensorTest extends TestCase
 {
@@ -285,6 +287,8 @@ class QueuedJobSensorTest extends TestCase
 
     public function test_it_supports_enum_based_queues(): void
     {
+        $this->markTestSkippedWhen(version_compare(Application::VERSION, '11.22.0', '<'), 'Enums not supported for queue names');
+
         $queueAttributeSupportsEnum = false;
 
         if (class_exists('Illuminate\Queue\Attributes\Queue')) {
