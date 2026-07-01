@@ -58,21 +58,21 @@ $baseUrl ??= $_SERVER['NIGHTWATCH_BASE_URL'] ?? 'https://nightwatch.laravel.com'
 $listenOn ??= $_SERVER['NIGHTWATCH_INGEST_URI'] ?? '127.0.0.1:2407';
 /** @var string $listenOn */
 /** @var ?float $authenticationConnectionTimeout */
-$authenticationConnectionTimeout ??= 5;
+$authenticationConnectionTimeout ??= 5; // @phpstan-ignore varTag.nativeType
 /** @var ?float $authenticationTimeout */
-$authenticationTimeout ??= 10;
+$authenticationTimeout ??= 10; // @phpstan-ignore varTag.nativeType
 /** @var ?float $ingestConnectionTimeout */
-$ingestConnectionTimeout ??= 5;
+$ingestConnectionTimeout ??= 5; // @phpstan-ignore varTag.nativeType
 /** @var ?float $ingestTimeout */
-$ingestTimeout ??= 10;
+$ingestTimeout ??= 10; // @phpstan-ignore varTag.nativeType
 /** @var ?string $server */
-$server ??= (string) gethostname();
+$server ??= (string) gethostname(); // @phpstan-ignore varTag.nativeType
 /** @var ?bool $silent */
-$silent ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'critical'; // @phpstan-ignore argument.type
+$silent ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'critical'; // @phpstan-ignore argument.type, varTag.nativeType
 /** @var ?bool $quiet */
-$quiet ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'error'; // @phpstan-ignore argument.type
+$quiet ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'error'; // @phpstan-ignore argument.type, varTag.nativeType
 /** @var ?bool $verbose */
-$verbose ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'verbose'; // @phpstan-ignore argument.type
+$verbose ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'verbose'; // @phpstan-ignore argument.type, varTag.nativeType
 
 /*
  * Prepare loop...
@@ -115,7 +115,7 @@ $error = static function (string $message) use ($silent, $stdErr): void {
 
 $tokenHash = substr(hash('xxh128', $refreshToken), 0, 7);
 /** @var ?string $basePath */
-$basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__);
+$basePath ??= str_replace(['phar://', '/agent.phar/src'], '', __DIR__); // @phpstan-ignore varTag.nativeType
 $envoyerPath = preg_replace('#^(.*?)/releases/\d+/(.*)$#', '$1/current/$2', $basePath) ?? '';
 
 if (is_file($envoyerPath.'/signature.txt') && realpath($envoyerPath) === $basePath) {
