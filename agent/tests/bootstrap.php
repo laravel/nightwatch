@@ -14,11 +14,13 @@ if (! ($_SERVER['CI'] ?? false)) {
 }
 
 $hasRealNightwatchCredentials = ! empty($_SERVER['NIGHTWATCH_BASE_URL']) && ! empty($_SERVER['NIGHTWATCH_TOKEN']);
+$fallbackNightwatchBaseUrl = 'https://nightwatch.laravel.com';
+$fallbackNightwatchToken = 'fakepkxoLBIOgPE0PZWadR0Ge1zHBh31ATOzXN9bBboZ';
 
 $nightwatchEnvironment = [
-    'NIGHTWATCH_BASE_URL' => ! empty($_SERVER['NIGHTWATCH_BASE_URL']) ? $_SERVER['NIGHTWATCH_BASE_URL'] : 'https://nightwatch.laravel.com',
+    'NIGHTWATCH_BASE_URL' => ! empty($_SERVER['NIGHTWATCH_BASE_URL']) ? $_SERVER['NIGHTWATCH_BASE_URL'] : $fallbackNightwatchBaseUrl,
     'NIGHTWATCH_HAS_REAL_CREDENTIALS' => $hasRealNightwatchCredentials ? '1' : '0',
-    'NIGHTWATCH_TOKEN' => ! empty($_SERVER['NIGHTWATCH_TOKEN']) ? $_SERVER['NIGHTWATCH_TOKEN'] : 'fakepkxoLBIOgPE0PZWadR0Ge1zHBh31ATOzXN9bBboZ',
+    'NIGHTWATCH_TOKEN' => ! empty($_SERVER['NIGHTWATCH_TOKEN']) ? $_SERVER['NIGHTWATCH_TOKEN'] : $fallbackNightwatchToken,
 ];
 
 foreach ($nightwatchEnvironment as $key => $value) {
