@@ -29,6 +29,7 @@ class HealthCheckTest extends TestCase
 
         $process = Process::fromShellCommandline('php '.__DIR__.'/../../nightwatch-status', env: [
             'NIGHTWATCH_INGEST_URI' => '127.0.0.1:'.$port,
+            'NIGHTWATCH_TOKEN' => self::nightwatchToken(),
         ])->setTimeout(2);
 
         $process->run();
@@ -40,11 +41,16 @@ class HealthCheckTest extends TestCase
 
     public function test_it_can_check_status(): void
     {
+        $this->requireRealNightwatchCredentials();
+
         $process = Process::fromShellCommandline('php '.__DIR__.'/../../nightwatch-status')
             ->setTimeout(2);
         [$output, $e] = $this->runAgent(via: 'phar', timeout: 10, until: function ($output) use ($process, &$listenOn) {
             if (str_contains($output, 'Authentication')) {
-                $process->run(env: ['NIGHTWATCH_INGEST_URI' => $listenOn]);
+                $process->run(env: [
+                    'NIGHTWATCH_INGEST_URI' => $listenOn,
+                    'NIGHTWATCH_TOKEN' => self::nightwatchToken(),
+                ]);
 
                 return true;
             }

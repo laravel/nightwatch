@@ -12,3 +12,17 @@ if (! ($_SERVER['CI'] ?? false)) {
         exit(1);
     }
 }
+
+$hasRealNightwatchCredentials = ! empty($_SERVER['NIGHTWATCH_BASE_URL']) && ! empty($_SERVER['NIGHTWATCH_TOKEN']);
+
+$nightwatchEnvironment = [
+    'NIGHTWATCH_BASE_URL' => ! empty($_SERVER['NIGHTWATCH_BASE_URL']) ? $_SERVER['NIGHTWATCH_BASE_URL'] : 'https://nightwatch.laravel.com',
+    'NIGHTWATCH_HAS_REAL_CREDENTIALS' => $hasRealNightwatchCredentials ? '1' : '0',
+    'NIGHTWATCH_TOKEN' => ! empty($_SERVER['NIGHTWATCH_TOKEN']) ? $_SERVER['NIGHTWATCH_TOKEN'] : 'fakepkxoLBIOgPE0PZWadR0Ge1zHBh31ATOzXN9bBboZ',
+];
+
+foreach ($nightwatchEnvironment as $key => $value) {
+    putenv("{$key}={$value}");
+    $_ENV[$key] = $value;
+    $_SERVER[$key] = $value;
+}
