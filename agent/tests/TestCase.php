@@ -189,41 +189,12 @@ abstract class TestCase extends BaseTestCase
 
     public static function tokenHash(): string
     {
-        return substr(hash('xxh128', self::nightwatchToken()), 0, 7);
-    }
-
-    public static function nightwatchBaseUrl(): string
-    {
-        $baseUrl = $_SERVER['NIGHTWATCH_BASE_URL'] ?? null;
-
-        if (! is_string($baseUrl)) {
-            throw new RuntimeException('NIGHTWATCH_BASE_URL must be a string.');
-        }
-
-        return $baseUrl;
-    }
-
-    public static function nightwatchToken(): string
-    {
-        $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? null;
-
+        $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
         if (! is_string($refreshToken)) {
-            throw new RuntimeException('NIGHTWATCH_TOKEN must be a string.');
+            throw new RuntimeException('NIGHTWATCH_TOKEN invalid');
         }
 
-        return $refreshToken;
-    }
-
-    public static function hasRealNightwatchCredentials(): bool
-    {
-        return ($_SERVER['NIGHTWATCH_HAS_REAL_CREDENTIALS'] ?? null) === '1';
-    }
-
-    protected function requireRealNightwatchCredentials(): void
-    {
-        if (! self::hasRealNightwatchCredentials()) {
-            $this->markTestSkipped('Real Nightwatch credentials are required. Set NIGHTWATCH_BASE_URL and NIGHTWATCH_TOKEN environment variables.');
-        }
+        return substr(hash('xxh128', $refreshToken), 0, 7);
     }
 
     public static function packageVersion(): string

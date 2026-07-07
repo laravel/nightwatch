@@ -52,7 +52,7 @@ $maxBufferLength ??= null;
 $refreshToken ??= $_SERVER['NIGHTWATCH_TOKEN'] ?? '';
 /** @var string $refreshToken */
 /** @var ?string $baseUrl */
-$baseUrl ??= ! empty($_SERVER['NIGHTWATCH_BASE_URL']) ? $_SERVER['NIGHTWATCH_BASE_URL'] : 'https://nightwatch.laravel.com';
+$baseUrl ??= $_SERVER['NIGHTWATCH_BASE_URL'] ?? 'https://nightwatch.laravel.com';
 /** @var string $baseUrl */
 /** @var ?string $listenOn */
 $listenOn ??= $_SERVER['NIGHTWATCH_INGEST_URI'] ?? '127.0.0.1:2407';

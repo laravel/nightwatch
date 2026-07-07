@@ -283,10 +283,15 @@ jobs:
         run: touch tests/database.sqlite
 
       - name: Execute tests
+        if: ${{ secrets.NIGHTWATCH_BASE_URL != '' && secrets.NIGHTWATCH_TOKEN != '' }}
         env:
           NIGHTWATCH_TOKEN: ${{ secrets.NIGHTWATCH_TOKEN }}
           NIGHTWATCH_BASE_URL: ${{ secrets.NIGHTWATCH_BASE_URL }}
         run: vendor/bin/phpunit --order-by=random --coverage-text
+
+      - name: Execute tests without Nightwatch credentials
+        if: ${{ secrets.NIGHTWATCH_BASE_URL == '' || secrets.NIGHTWATCH_TOKEN == '' }}
+        run: vendor/bin/phpunit --order-by=random --coverage-text $(find tests -name '*Test.php' ! -path 'tests/Feature/Console/AgentCommandTest.php' -print)
 
   agent_tests:
     runs-on: ubuntu-latest
@@ -334,10 +339,18 @@ jobs:
         run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
+        if: ${{ secrets.NIGHTWATCH_BASE_URL != '' && secrets.NIGHTWATCH_TOKEN != '' }}
         env:
           NIGHTWATCH_TOKEN: ${{ secrets.NIGHTWATCH_TOKEN }}
           NIGHTWATCH_BASE_URL: ${{ secrets.NIGHTWATCH_BASE_URL }}
         run: vendor/bin/phpunit --order-by=random --coverage-text --show-uncovered-for-coverage-text
+
+      - name: Execute tests without Nightwatch credentials
+        if: ${{ secrets.NIGHTWATCH_BASE_URL == '' || secrets.NIGHTWATCH_TOKEN == '' }}
+        env:
+          NIGHTWATCH_TOKEN: fakepkxoLBIOgPE0PZWadR0Ge1zHBh31ATOzXN9bBboZ
+          NIGHTWATCH_BASE_URL: https://nightwatch.laravel.com
+        run: vendor/bin/phpunit --order-by=random --coverage-text --show-uncovered-for-coverage-text $(find tests -name '*Test.php' ! -path 'tests/Integration/HealthCheckTest.php' ! -path 'tests/Integration/PharTest.php' -print)
 
       - name: Build and test container
         run: |

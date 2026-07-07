@@ -182,10 +182,14 @@ class IngestDetailsRepositoryTest extends TestCase
             loop: $loop,
         );
 
-        $baseUrl = self::nightwatchBaseUrl();
-        $token = self::nightwatchToken();
+        /** @var ?string $baseUrl */
+        $baseUrl = $_SERVER['NIGHTWATCH_BASE_URL'] ?? null;
+        /** @var ?string $token */
+        $token = $_SERVER['NIGHTWATCH_TOKEN'] ?? null;
 
+        $this->assertIsString($baseUrl);
         $this->assertStringStartsWith('https://', $baseUrl);
+        $this->assertIsString($token);
         $this->assertSame(44, strlen($token));
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertSame(10.0, $browser->timeout);
