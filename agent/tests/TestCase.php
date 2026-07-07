@@ -197,7 +197,7 @@ abstract class TestCase extends BaseTestCase
         $baseUrl = $_SERVER['NIGHTWATCH_BASE_URL'] ?? null;
 
         if (! is_string($baseUrl)) {
-            throw new RuntimeException('NIGHTWATCH_BASE_URL invalid');
+            throw new RuntimeException('NIGHTWATCH_BASE_URL must be set and must be a string.');
         }
 
         return $baseUrl;
@@ -208,7 +208,7 @@ abstract class TestCase extends BaseTestCase
         $refreshToken = $_SERVER['NIGHTWATCH_TOKEN'] ?? null;
 
         if (! is_string($refreshToken)) {
-            throw new RuntimeException('NIGHTWATCH_TOKEN invalid');
+            throw new RuntimeException('NIGHTWATCH_TOKEN must be set and must be a string.');
         }
 
         return $refreshToken;
@@ -222,7 +222,7 @@ abstract class TestCase extends BaseTestCase
     protected function requireRealNightwatchCredentials(): void
     {
         if (! self::hasRealNightwatchCredentials()) {
-            $this->markTestSkipped('Real Nightwatch credentials are not configured for this environment.');
+            $this->markTestSkipped('Real Nightwatch credentials are required. Set NIGHTWATCH_BASE_URL and NIGHTWATCH_TOKEN environment variables.');
         }
     }
 
