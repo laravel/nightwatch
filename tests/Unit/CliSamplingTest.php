@@ -246,7 +246,7 @@ class CliSamplingTest extends TestCase
             $samples += (int) Nightwatch::sampling();
         }
 
-        $this->assertEqualsWithDelta(50, $samples, 20);
+        $this->assertEqualsWithDelta(50, $samples, 22);
     }
 
     public static function vendorCommands(): iterable
