@@ -66,7 +66,7 @@ final class SensorManager
     public $cacheEventSensor;
 
     /**
-     * @var (callable(Throwable, null|bool): array{0: Exception, 1: callable(): array<mixed>})|null
+     * @var (callable(Throwable, null|bool): ?array{0: Exception, 1: callable(): array<mixed>})|null
      */
     public $exceptionSensor;
 
