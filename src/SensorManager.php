@@ -8,6 +8,7 @@ use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSending;
@@ -250,15 +251,16 @@ final class SensorManager
     }
 
     /**
-     * @return array{0: Exception, 1: callable(): array<mixed>}
+     * @return ?array{0: Exception, 1: callable(): array<mixed>}
      */
-    public function exception(Throwable $e, ?bool $handled): array
+    public function exception(Throwable $e, ?bool $handled): ?array
     {
         $sensor = $this->exceptionSensor ??= new ExceptionSensor(
             executionState: $this->executionState,
             clock: $this->clock,
             location: $this->location,
             captureSourceCode: $this->captureExceptionSourceCode,
+            exceptionHandler: $this->container->make(ExceptionHandler::class),
         );
 
         return $sensor($e, $handled);

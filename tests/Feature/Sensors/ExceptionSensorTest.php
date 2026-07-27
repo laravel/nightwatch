@@ -1001,6 +1001,21 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('exception:0.file', $longString);
         $ingest->assertLatestWrite('exception:0.code', $longString);
     }
+
+    public function test_reporting_exceptions_directly_to_core_still_respects_ignore_rules(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function (): void {
+            //
+        });
+
+        $this->post('/users', ['_method' => '__construct'])
+            ->assertStatus(405);
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWriteRecordCount(1);
+        $ingest->assertLatestWrite('request:0.exceptions', 0);
+    }
 }
 
 final class MyException extends RuntimeException
