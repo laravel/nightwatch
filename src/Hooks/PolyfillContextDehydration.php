@@ -45,7 +45,7 @@ final class PolyfillContextDehydration
                 ],
             ];
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
 
             return $payload;
         }

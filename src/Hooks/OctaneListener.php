@@ -26,7 +26,7 @@ final class OctaneListener
         try {
             $this->nightwatch->prepareForRequest($event->request); // @phpstan-ignore class.notFound
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

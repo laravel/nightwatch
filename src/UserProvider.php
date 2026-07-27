@@ -181,7 +181,7 @@ final class UserProvider
 
         $report = call_user_func($this->reportResolver);
 
-        $report($e, true);
+        $report($e, handled: true);
     }
 
     /**
