@@ -6,7 +6,8 @@ use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskSkipped;
-use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Config\Repository as Config;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSending;
@@ -140,7 +141,7 @@ final class SensorManager
         private bool $captureRequestPayload,
         private array $redactPayloadFields,
         private array $redactHeaders,
-        private Repository $config,
+        private Container $container,
     ) {
         //
     }
@@ -315,7 +316,7 @@ final class SensorManager
         $sensor = $this->queuedJobSensor ??= new QueuedJobSensor(
             executionState: $this->executionState,
             clock: $this->clock,
-            connectionConfig: $this->config->get('queue.connections') ?? [], // @phpstan-ignore argument.type
+            connectionConfig: $this->container->make(Config::class)->get('queue.connections') ?? [], // @phpstan-ignore argument.type
         );
 
         return $sensor($event);
@@ -329,7 +330,7 @@ final class SensorManager
         $sensor = $this->jobAttemptSensor ??= new JobAttemptSensor(
             commandState: $this->executionState, // @phpstan-ignore argument.type
             clock: $this->clock,
-            connectionConfig: $this->config->get('queue.connections') ?? [], // @phpstan-ignore argument.type
+            connectionConfig: $this->container->make(Config::class)->get('queue.connections') ?? [], // @phpstan-ignore argument.type
         );
 
         return $sensor($event);
