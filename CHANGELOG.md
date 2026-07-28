@@ -1,6 +1,6 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.28.4...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.28.5...1.x)
 
 ## [v1.28.2](https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2) - 2026-06-24
 
@@ -9,6 +9,22 @@
 * Revert "Capture and restore first trace on initial framework boot (#3… by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/386
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2
+
+## [v1.28.5](https://github.com/laravel/nightwatch/compare/v1.28.4...v1.28.5) - 2026-07-28
+
+### What's Changed
+
+* Update agent dependencies with dependabot by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/391
+* Bump the composer group in /agent with 3 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/392
+* Bump the github-actions group with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/393
+* Bump phpstan/phpstan from 2.2.2 to 2.2.3 in /agent in the composer group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/395
+* Bump the github-actions group with 4 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/396
+* Bump docker/login-action from 4.3.0 to 4.4.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/400
+* Bump the composer group in /agent with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/399
+* Bump softprops/action-gh-release from 3.0.1 to 3.0.2 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/401
+* Respect `ExceptionHandler::dontReport` rules when NW manually reports exceptions in hooks by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/404
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.28.4...v1.28.5
 
 ## [v1.28.4](https://github.com/laravel/nightwatch/compare/v1.28.3...v1.28.4) - 2026-06-30
 
