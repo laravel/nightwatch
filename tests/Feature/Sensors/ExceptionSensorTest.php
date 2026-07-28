@@ -4,13 +4,13 @@ namespace Tests\Feature\Sensors;
 
 use Carbon\CarbonImmutable;
 use Exception;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Facades\Nightwatch;
@@ -1020,7 +1020,7 @@ class ExceptionSensorTest extends TestCase
 
         $ingest->forgetWrites();
 
-        Exceptions::dontReport(MyException::class);
+        $this->app[ExceptionHandler::class]->dontReport(MyException::class);
         report(new MyException('Whoops 1!'));
         $this->core->report(new MyException('Whoops 2!'), handled: true);
         $this->core->report(new MyException('Whoops 3!'), handled: false);
