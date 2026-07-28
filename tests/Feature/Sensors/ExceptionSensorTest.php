@@ -1020,7 +1020,7 @@ class ExceptionSensorTest extends TestCase
 
         $ingest->forgetWrites();
 
-        $this->app[ExceptionHandler::class]->dontReport(MyException::class);
+        $this->app[ExceptionHandler::class]->ignore(MyException::class);
         report(new MyException('Whoops 1!'));
         $this->core->report(new MyException('Whoops 2!'), handled: true);
         $this->core->report(new MyException('Whoops 3!'), handled: false);
