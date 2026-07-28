@@ -34,7 +34,7 @@ final class PolyfillContextHydration
                 'nightwatch_user_id' => $nightwatch['nightwatch_user_id'] ?? '',
             ];
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
 
             Compatibility::$context = [];
         }

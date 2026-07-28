@@ -272,7 +272,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 captureRequestPayload: (bool) ($this->nightwatchConfig['capture_request_payload'] ?? false),
                 redactPayloadFields: $this->nightwatchConfig['redact_payload_fields'] ?? ['_token', 'password', 'password_confirmation'],
                 redactHeaders: $this->nightwatchConfig['redact_headers'] ?? ['Authorization', 'Cookie', 'Proxy-Authorization', 'X-XSRF-TOKEN'],
-                config: $this->config,
+                container: $this->app,
             ),
             executionState: $executionState,
             clock: $clock,

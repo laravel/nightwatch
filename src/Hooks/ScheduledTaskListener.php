@@ -29,7 +29,7 @@ final class ScheduledTaskListener
         // We report the exception here because the scheduler handles it after the task has finished and the data is ingested.
         // This ensures that the exception is captured in the scheduled task record.
         if ($event instanceof ScheduledTaskFailed) {
-            $this->nightwatch->report($event->exception);
+            $this->nightwatch->report($event->exception, handled: false);
         }
 
         if ($this->isFinishedEventForFailedTask($event)) {

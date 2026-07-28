@@ -29,7 +29,7 @@ final class ContextDehydratingHandler
                 $context->addHidden('nightwatch_user_id', $this->nightwatch->executionState->user->resolvedUserId());
             }
         } catch (Throwable $e) {
-            $this->nightwatch->report($e);
+            $this->nightwatch->report($e, handled: true);
         }
     }
 }

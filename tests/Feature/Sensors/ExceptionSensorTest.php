@@ -4,6 +4,7 @@ namespace Tests\Feature\Sensors;
 
 use Carbon\CarbonImmutable;
 use Exception;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
@@ -1000,6 +1001,47 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('exception:0.file', $longString);
         $ingest->assertLatestWrite('exception:0.code', $longString);
+    }
+
+    public function test_manually_reporting_exceptions_respects_ignore_rules(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        report(new MyException('Whoops 1!'));
+        $this->core->report(new MyException('Whoops 2!'), handled: true);
+        $this->core->report(new MyException('Whoops 3!'), handled: false);
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWriteRecordCount(3);
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops 1!');
+        $ingest->assertLatestWrite('exception:1.message', 'Whoops 2!');
+        $ingest->assertLatestWrite('exception:2.message', 'Whoops 3!');
+
+        $ingest->forgetWrites();
+
+        $this->app[ExceptionHandler::class]->ignore(MyException::class);
+        report(new MyException('Whoops 1!'));
+        $this->core->report(new MyException('Whoops 2!'), handled: true);
+        $this->core->report(new MyException('Whoops 3!'), handled: false);
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(0);
+    }
+
+    public function test_suspicious_operation_exceptions_is_ignored_when_thrown_in_hooks(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function (): void {
+            //
+        });
+
+        $this->post('/users', ['_method' => '__construct'])
+            ->assertStatus(405);
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWriteRecordCount(1);
+        $ingest->assertLatestWrite('request:0.exceptions', 0);
     }
 }
 

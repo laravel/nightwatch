@@ -2,6 +2,7 @@
 
 namespace Laravel\Nightwatch\Sensors;
 
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Bootstrap\HandleExceptions;
 use Illuminate\View\ViewException;
 use Laravel\Nightwatch\Clock;
@@ -48,15 +49,20 @@ final class ExceptionSensor
         private Clock $clock,
         private Location $location,
         private bool $captureSourceCode,
+        private ExceptionHandler $exceptionHandler,
     ) {
         //
     }
 
     /**
-     * @return array{0: Exception, 1: callable(): array<mixed>}
+     * @return ?array{0: Exception, 1: callable(): array<mixed>}
      */
-    public function __invoke(Throwable $e, ?bool $handled): array
+    public function __invoke(Throwable $e, ?bool $handled): ?array
     {
+        if ($handled !== null && ! $this->exceptionHandler->shouldReport($e)) {
+            return null;
+        }
+
         $nowMicrotime = $this->clock->microtime();
         [$file, $line] = $this->location->forException($e);
         $normalizedException = match ($e->getPrevious()) {
