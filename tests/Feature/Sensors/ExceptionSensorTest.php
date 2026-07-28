@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Facades\Nightwatch;
@@ -1002,7 +1003,33 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertLatestWrite('exception:0.code', $longString);
     }
 
-    public function test_reporting_exceptions_directly_to_core_still_respects_ignore_rules(): void
+    public function test_manually_reporting_exceptions_respects_ignore_rules(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        report(new MyException('Whoops 1!'));
+        $this->core->report(new MyException('Whoops 2!'), handled: true);
+        $this->core->report(new MyException('Whoops 3!'), handled: false);
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWriteRecordCount(3);
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops 1!');
+        $ingest->assertLatestWrite('exception:1.message', 'Whoops 2!');
+        $ingest->assertLatestWrite('exception:2.message', 'Whoops 3!');
+
+        $ingest->forgetWrites();
+
+        Exceptions::dontReport(MyException::class);
+        report(new MyException('Whoops 1!'));
+        $this->core->report(new MyException('Whoops 2!'), handled: true);
+        $this->core->report(new MyException('Whoops 3!'), handled: false);
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(0);
+    }
+
+    public function test_suspicious_operation_exceptions_is_ignored_when_thrown_in_hooks(): void
     {
         $ingest = $this->fakeIngest();
         Route::get('/users', function (): void {
