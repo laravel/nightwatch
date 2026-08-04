@@ -23,7 +23,6 @@ use Illuminate\Queue\Events\JobReleasedAfterException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Jobs\DatabaseJob;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\SqsQueue;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Date;
@@ -37,6 +36,7 @@ use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Vapor\Console\Commands\VaporWorkCommand;
 use Laravel\Vapor\Events\LambdaEvent;
+use Laravel\Vapor\Queue\VaporQueue;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Ramsey\Uuid\Uuid;
@@ -110,7 +110,9 @@ class JobAttemptSensorTest extends TestCase
 
         $mockSqsConnector = Mockery::mock(SqsConnector::class);
         $mockSqsConnector->shouldReceive('connect')
-            ->andReturn(new SqsQueue($mockSqsClient, 'default'));
+            ->andReturn(new VaporQueue($mockSqsClient, 'default'));
+
+        $mockSqsClient->allows('getOverflowStorage')->andReturn([]);
 
         $this->app['queue']->extend('sqs', fn () => $mockSqsConnector);
 
