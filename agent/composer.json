@@ -30,7 +30,7 @@
     "require-dev": {
         "ext-pcntl": "*",
         "evenement/evenement": "^3.0",
-        "laravel/pint": "1.29.3",
+        "laravel/pint": "1.30.0",
         "phpstan/phpstan": "^2.1.6",
         "phpunit/phpunit": "^11.5.3",
         "symfony/process": "^7.2",

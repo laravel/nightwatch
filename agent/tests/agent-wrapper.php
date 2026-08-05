@@ -111,11 +111,11 @@ if ($viaPhar === false) {
 }
 
 if ($viaPhar) {
-    call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop, $silent, $quiet, $verbose, $maxBufferLength) { // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
+    call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop, $silent, $quiet, $verbose, $maxBufferLength) {
         require __DIR__.'/../build/agent.phar';
     });
 } else {
-    call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop, $silent, $quiet, $verbose, $maxBufferLength) {  // @phpstan-ignore closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse, closure.unusedUse
+    call_user_func(static function () use ($listenOn, $browserFactory, $serverResolver, $loop, $silent, $quiet, $verbose, $maxBufferLength) {
         $clock = $loop?->clock;
 
         $basePath = __DIR__.'/../build';
