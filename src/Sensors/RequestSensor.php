@@ -152,7 +152,7 @@ final class RequestSensor
                     'exception_preview' => Str::tinyText($this->requestState->exceptionPreview),
                     'context' => $this->serializedContext(),
                     'headers' => rescue(
-                        fn () => Str::text(json_encode((object) $this->redactHeaders($record->headers, $this->redactHeaders)->all(), JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)),
+                        fn () => Str::text(json_encode((object) $this->redactHeaders($record->headers, $this->redactHeaders)->all(), flags: JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)),
                         '{"_nightwatch_error":"Failed to serialize headers"}',
                         static function ($e) {
                             Nightwatch::unrecoverableExceptionOccurred($e);
