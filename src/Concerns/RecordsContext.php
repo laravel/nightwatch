@@ -22,7 +22,7 @@ trait RecordsContext
         }
 
         try {
-            return Str::text(json_encode((object) Context::all(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION));
+            return Str::text(json_encode((object) Context::all(), JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);
 

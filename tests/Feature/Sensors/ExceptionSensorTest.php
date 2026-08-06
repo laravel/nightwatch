@@ -136,7 +136,7 @@ class ExceptionSensorTest extends TestCase
                         }, $frame['args'])).')',
                         'code' => null,
                     ], $trace),
-                ]),
+                ], JSON_UNESCAPED_SLASHES),
                 'handled' => false,
                 'php_version' => '8.4.1',
                 'laravel_version' => '11.33.0',
@@ -214,7 +214,7 @@ class ExceptionSensorTest extends TestCase
                         }, $frame['args'])).')',
                         'code' => null,
                     ], $trace),
-                ]),
+                ], JSON_UNESCAPED_SLASHES),
                 'handled' => true,
                 'php_version' => '8.4.1',
                 'laravel_version' => '11.33.0',
@@ -432,7 +432,7 @@ class ExceptionSensorTest extends TestCase
                 'source' => '()',
                 'code' => null,
             ],
-        ]));
+        ], JSON_UNESCAPED_SLASHES));
     }
 
     public function test_it_handles_the_line_in_the_trace(): void
@@ -480,7 +480,7 @@ class ExceptionSensorTest extends TestCase
                 'source' => '()',
                 'code' => null,
             ],
-        ]));
+        ], JSON_UNESCAPED_SLASHES));
     }
 
     public function test_it_handles_the_class_in_the_trace(): void
@@ -528,7 +528,7 @@ class ExceptionSensorTest extends TestCase
                 'source' => 'TheClass()',
                 'code' => null,
             ],
-        ]));
+        ], JSON_UNESCAPED_SLASHES));
     }
 
     public function test_it_handles_the_function_in_the_trace(): void
@@ -576,7 +576,7 @@ class ExceptionSensorTest extends TestCase
                 'source' => 'the_function()',
                 'code' => null,
             ],
-        ]));
+        ], JSON_UNESCAPED_SLASHES));
     }
 
     public function test_it_handles_the_args_in_the_trace(): void
@@ -644,7 +644,7 @@ class ExceptionSensorTest extends TestCase
                 'source' => '(null, bool, int, float, string, array, stdClass, Tests\Feature\Sensors\MyEnum, Closure, resource, resource (closed))',
                 'code' => null,
             ],
-        ]));
+        ], JSON_UNESCAPED_SLASHES));
 
         fclose($resourceToClose);
     }
@@ -684,7 +684,7 @@ class ExceptionSensorTest extends TestCase
                 'source' => '(foo: int, bar: int)',
                 'code' => null,
             ],
-        ]));
+        ], JSON_UNESCAPED_SLASHES));
     }
 
     public function test_it_handles_ini_setting_disabling_args_in_exceptions(): void
@@ -728,7 +728,21 @@ class ExceptionSensorTest extends TestCase
 
         $response->assertServerError();
         $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '"file":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Route.php:'));
+        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '"file":"vendor/laravel/framework/src/Illuminate/Routing/Route.php:'));
+    }
+
+    public function test_it_does_not_escape_slashes_in_the_trace(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function (): void {
+            throw new RuntimeException;
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '"file":"vendor/laravel/framework/src/Illuminate/Routing/Route.php:'));
     }
 
     public function test_it_can_manually_report_exceptions(): void
@@ -784,7 +798,7 @@ class ExceptionSensorTest extends TestCase
                         }, $frame['args'])).')',
                         'code' => null,
                     ], $trace),
-                ]),
+                ], JSON_UNESCAPED_SLASHES),
                 'handled' => false,
                 'php_version' => '8.4.1',
                 'laravel_version' => '11.33.0',
@@ -981,6 +995,61 @@ class ExceptionSensorTest extends TestCase
 
             return true;
         });
+    }
+
+    #[WithEnv('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', '1')]
+    public function test_it_captures_exceptions_when_the_source_code_contains_non_utf_8_characters(): void
+    {
+        $unrecoverableExceptions = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions): void {
+            $unrecoverableExceptions[] = $e;
+        });
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function (): void {
+            require base_path('tests/fixtures/non-utf-8-source-code.php');
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.class', 'RuntimeException');
+        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
+        $ingest->assertLatestWrite('exception:0.code', '999');
+        $ingest->assertLatestWrite('exception:0.file', 'tests/fixtures/non-utf-8-source-code.php');
+        $ingest->assertLatestWrite('exception:0.line', 4);
+        $ingest->assertLatestWrite('exception:0.trace', function ($trace) {
+            $frames = collect(json_decode($trace, associative: true));
+
+            $frame = $frames->firstWhere('file', 'tests/fixtures/non-utf-8-source-code.php:4');
+
+            $this->assertIsArray($frame);
+            $this->assertEquals([
+                1 => '<?php',
+                2 => '',
+                3 => "// The following comment contains a non UTF-8 character: Caf\u{FFFD}",
+                4 => 'throw new \\RuntimeException(\'Whoops!\', 999);',
+                5 => '',
+            ], $frame['code']);
+
+            return true;
+        });
+        $this->assertSame([], $unrecoverableExceptions);
+    }
+
+    #[WithEnv('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', '1')]
+    public function test_it_does_not_escape_unicode_characters_in_the_trace(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function (): void {
+            require base_path('tests/fixtures/unicode-source-code.php');
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, 'café'));
     }
 
     public function test_it_limits_group_properties()
