@@ -211,7 +211,7 @@ final class ExceptionSensor
         $this->fileObjects = [];
         $this->capturedCodeFrames = 0;
 
-        return json_encode($trace, flags: JSON_THROW_ON_ERROR);
+        return json_encode($trace, flags: JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 
     private function fetchSourceCode(mixed $file, mixed $line, int $context = 5): ?stdClass

@@ -357,4 +357,24 @@ class LogSensorTest extends TestCase
         $ingest->assertLatestWrite('log:0.context', '{"context":1.0}');
         $ingest->assertLatestWrite('log:0.extra', '{"extra":2.0}');
     }
+
+    public function test_it_does_not_escape_slashes_in_context_and_extra(): void
+    {
+        $ingest = $this->fakeIngest();
+        Log::channel('nightwatch')->pushProcessor(fn (LogRecord $record) => $record->with(extra: [
+            'url' => 'https://example.com/path',
+        ]));
+        Route::get('/users', function (): void {
+            Log::channel('nightwatch')->info('Hello world!', [
+                'url' => 'https://example.com/path',
+            ]);
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('log:0.context', '{"url":"https://example.com/path"}');
+        $ingest->assertLatestWrite('log:0.extra', '{"url":"https://example.com/path"}');
+    }
 }
