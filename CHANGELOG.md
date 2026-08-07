@@ -1,6 +1,6 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.28.5...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.28.6...1.x)
 
 ## [v1.28.2](https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2) - 2026-06-24
 
@@ -9,6 +9,17 @@
 * Revert "Capture and restore first trace on initial framework boot (#3… by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/386
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2
+
+## [v1.28.6](https://github.com/laravel/nightwatch/compare/v1.28.5...v1.28.6) - 2026-08-07
+
+### What's Changed
+
+* Bump the github-actions group with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/405
+* Bump docker/login-action from 4.5.0 to 4.6.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/408
+* Bump the composer group in /agent with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/407
+* Improved JSON encoding by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/410
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.28.5...v1.28.6
 
 ## [v1.28.5](https://github.com/laravel/nightwatch/compare/v1.28.4...v1.28.5) - 2026-07-28
 
