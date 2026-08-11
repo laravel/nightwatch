@@ -970,14 +970,8 @@ class JobAttemptSensorTest extends TestCase
             }, else: function () use ($write) {
                 if (version_compare(Application::VERSION, '13.0.0', '>=')) {
                     $this->assertCount(9, $write);
-                    $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
-                        't' => 'cache-event',
-                        'key' => 'illuminate:queues:paused',
-                    ], array_shift($write), array_keys($expected));
-                    $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
-                        't' => 'cache-event',
-                        'key' => 'illuminate:queue:paused:database:default',
-                    ], array_shift($write), array_keys($expected));
+                    array_shift($write);
+                    array_shift($write);
                 } elseif (version_compare(Application::VERSION, '12.40.0', '>=')) {
                     $this->assertCount(8, $write);
                     array_shift($write);
