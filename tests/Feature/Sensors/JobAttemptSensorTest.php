@@ -761,7 +761,27 @@ class JobAttemptSensorTest extends TestCase
                 return true;
             },
             'queue:listen' => function ($write) {
-                if (version_compare(Application::VERSION, '12.40.0', '>=')) {
+                if (version_compare(Application::VERSION, '13.0.0', '>=')) {
+                    $this->assertCount(7, $write);
+                    $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                        't' => 'cache-event',
+                        'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                        'execution_source' => 'job',
+                        'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                        'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                        'execution_stage' => 'action',
+                        'key' => 'illuminate:queues:paused',
+                    ], array_shift($write), array_keys($expected));
+                    $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                        't' => 'cache-event',
+                        'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                        'execution_source' => 'job',
+                        'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                        'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                        'execution_stage' => 'action',
+                        'key' => 'illuminate:queue:paused:database:default',
+                    ], array_shift($write), array_keys($expected));
+                } elseif (version_compare(Application::VERSION, '12.40.0', '>=')) {
                     $this->assertCount(6, $write);
                     $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                         't' => 'cache-event',
@@ -821,7 +841,27 @@ class JobAttemptSensorTest extends TestCase
                 return true;
             },
             default => function ($write) {
-                if (version_compare(Application::VERSION, '12.40.0', '>=')) {
+                if (version_compare(Application::VERSION, '13.0.0', '>=')) {
+                    $this->assertCount(8, $write);
+                    $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                        't' => 'cache-event',
+                        'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                        'execution_source' => 'job',
+                        'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                        'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                        'execution_stage' => 'action',
+                        'key' => 'illuminate:queues:paused',
+                    ], array_shift($write), array_keys($expected));
+                    $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
+                        't' => 'cache-event',
+                        'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
+                        'execution_source' => 'job',
+                        'execution_id' => '02cb9091-8973-427f-8d3f-042f2ec4e862',
+                        'execution_preview' => 'Tests\Feature\Sensors\ProcessedJob',
+                        'execution_stage' => 'action',
+                        'key' => 'illuminate:queue:paused:database:default',
+                    ], array_shift($write), array_keys($expected));
+                } elseif (version_compare(Application::VERSION, '12.40.0', '>=')) {
                     $this->assertCount(7, $write);
                     $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                         't' => 'cache-event',
@@ -928,7 +968,11 @@ class JobAttemptSensorTest extends TestCase
                     'outgoing_requests' => 0,
                 ], $write[0], array_keys($expected));
             }, else: function () use ($write) {
-                if (version_compare(Application::VERSION, '12.40.0', '>=')) {
+                if (version_compare(Application::VERSION, '13.0.0', '>=')) {
+                    $this->assertCount(9, $write);
+                    array_shift($write);
+                    array_shift($write);
+                } elseif (version_compare(Application::VERSION, '12.40.0', '>=')) {
                     $this->assertCount(8, $write);
                     array_shift($write);
                 } else {
