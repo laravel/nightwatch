@@ -247,7 +247,7 @@ class FilteringTest extends TestCase
             ['laravel_vapor_job_attempts:123', 'laravel_vapor_job_attemps:456'],
         ];
         yield 'illuminate' => [
-            ['illuminate:foundation:down', 'illuminate:queue:restart'],
+            ['illuminate:foundation:down', 'illuminate:queue:restart', 'illuminate:queues:paused', 'illuminate:queue:paused:database:default'],
         ];
         yield 'scheduler' => [
             ['framework/schedule-40bd001563085fc35165329ea1ff5c5ecbdbbeef', 'framework/schedule-4d134bc072212ace2df1ff934946c12e96a45fe1'],
