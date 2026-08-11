@@ -761,7 +761,7 @@ class JobAttemptSensorTest extends TestCase
                 return true;
             },
             'queue:listen' => function ($write) {
-                if (version_compare(Application::VERSION, '13.0.0', '>=')) {
+                if (version_compare(Application::VERSION, '13.25.0', '>=')) {
                     $this->assertCount(7, $write);
                     $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                         't' => 'cache-event',
@@ -841,7 +841,7 @@ class JobAttemptSensorTest extends TestCase
                 return true;
             },
             default => function ($write) {
-                if (version_compare(Application::VERSION, '13.0.0', '>=')) {
+                if (version_compare(Application::VERSION, '13.25.0', '>=')) {
                     $this->assertCount(8, $write);
                     $this->assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys($expected = [
                         't' => 'cache-event',
@@ -968,7 +968,7 @@ class JobAttemptSensorTest extends TestCase
                     'outgoing_requests' => 0,
                 ], $write[0], array_keys($expected));
             }, else: function () use ($write) {
-                if (version_compare(Application::VERSION, '13.0.0', '>=')) {
+                if (version_compare(Application::VERSION, '13.25.0', '>=')) {
                     $this->assertCount(9, $write);
                     array_shift($write);
                     array_shift($write);
