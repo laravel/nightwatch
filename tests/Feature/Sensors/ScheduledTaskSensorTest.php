@@ -26,6 +26,7 @@ use function dirname;
 use function hash;
 use function json_decode;
 use function now;
+use function version_compare;
 
 class ScheduledTaskSensorTest extends TestCase
 {
