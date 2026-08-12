@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Queue\InteractsWithQueue;
@@ -467,8 +468,7 @@ class ScheduledTaskSensorTest extends TestCase
 
         Artisan::call('schedule:run');
 
-        $ingest->dump();
-        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrittenTimes(version_compare(Application::VERSION, '12.18.0 ', '>=') ? 2 : 1);
         $ingest->assertLatestWrite('scheduled-task:0.name', 'php artisan app:fly tokyo');
     }
 
@@ -501,7 +501,7 @@ class ScheduledTaskSensorTest extends TestCase
 
         Artisan::call('schedule:run');
 
-        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrittenTimes(version_compare(Application::VERSION, '12.18.0 ', '>=') ? 2 : 1);
         $ingest->assertLatestWrite('scheduled-task:0.name', 'find ./storage/logs -type f -mtime +7 -delete');
     }
 
