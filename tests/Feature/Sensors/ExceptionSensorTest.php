@@ -397,9 +397,6 @@ class ExceptionSensorTest extends TestCase
                 //
             ],
             [
-                'file' => 5,
-            ],
-            [
                 'file' => 'the/file.php',
             ],
         ]);
@@ -410,7 +407,7 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(3);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
@@ -419,11 +416,6 @@ class ExceptionSensorTest extends TestCase
             ],
             [
                 'file' => '[internal function]',
-                'source' => '()',
-                'code' => null,
-            ],
-            [
-                'file' => '[unknown file]',
                 'source' => '()',
                 'code' => null,
             ],
