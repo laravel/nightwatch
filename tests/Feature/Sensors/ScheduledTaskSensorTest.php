@@ -467,6 +467,7 @@ class ScheduledTaskSensorTest extends TestCase
 
         Artisan::call('schedule:run');
 
+        $ingest->dump();
         $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('scheduled-task:0.name', 'php artisan app:fly tokyo');
     }

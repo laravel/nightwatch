@@ -170,4 +170,11 @@ class FakeIngest implements IngestContract
     {
         dd($this->decodedWrites()->all());
     }
+
+    public function dump(): self
+    {
+        dump($this->decodedWrites()->all());
+
+        return $this;
+    }
 }
