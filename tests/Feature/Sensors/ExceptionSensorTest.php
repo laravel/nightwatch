@@ -609,11 +609,6 @@ class ExceptionSensorTest extends TestCase
             ],
             [
                 'file' => '[internal function]',
-                'source' => '()',
-                'code' => null,
-            ],
-            [
-                'file' => '[internal function]',
                 'source' => '(null, bool, int, float, string, array, stdClass, Tests\Feature\Sensors\MyEnum, Closure, resource, resource (closed))',
                 'code' => null,
             ],
