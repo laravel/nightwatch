@@ -100,8 +100,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:*', [
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:*', [
             [
                 'v' => 3,
                 't' => 'exception',
@@ -156,9 +156,9 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0._group', hash('xxh128', "Tests\Feature\Sensors\MyException,999,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"));
-        $ingest->assertLatestWrite('exception:0.code', '999');
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0._group', hash('xxh128', "Tests\Feature\Sensors\MyException,999,tests/Feature/Sensors/ExceptionSensorTest.php,{$line}"));
+        $ingest->assertWrite(0, 'exception:0.code', '999');
     }
 
     public function test_it_can_ingest_reported_exceptions(): void
@@ -234,7 +234,7 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.exceptions', 3);
     }
 
@@ -286,13 +286,13 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('exception');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.line', 0);
-        $ingest->assertLatestWrite('exception:0.file', 'workbench/resources/views/exception.blade.php');
-        $ingest->assertLatestWrite('exception:0.class', 'Exception');
-        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
-        $ingest->assertLatestWrite('exception:0.code', '999');
-        $ingest->assertLatestWrite('exception:0._group', hash('xxh128', 'Exception,999,workbench/resources/views/exception.blade.php,'));
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.line', 0);
+        $ingest->assertWrite(0, 'exception:0.file', 'workbench/resources/views/exception.blade.php');
+        $ingest->assertWrite(0, 'exception:0.class', 'Exception');
+        $ingest->assertWrite(0, 'exception:0.message', 'Whoops!');
+        $ingest->assertWrite(0, 'exception:0.code', '999');
+        $ingest->assertWrite(0, 'exception:0._group', hash('xxh128', 'Exception,999,workbench/resources/views/exception.blade.php,'));
     }
 
     public function test_it_handles_spatie_view_exceptions(): void
@@ -306,13 +306,13 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('exception');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.line', 6);
-        $ingest->assertLatestWrite('exception:0.file', 'workbench/resources/views/exception.blade.php');
-        $ingest->assertLatestWrite('exception:0.class', 'Exception');
-        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
-        $ingest->assertLatestWrite('exception:0.code', '999');
-        $ingest->assertLatestWrite('exception:0._group', hash('xxh128', 'Exception,999,workbench/resources/views/exception.blade.php,6'));
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.line', 6);
+        $ingest->assertWrite(0, 'exception:0.file', 'workbench/resources/views/exception.blade.php');
+        $ingest->assertWrite(0, 'exception:0.class', 'Exception');
+        $ingest->assertWrite(0, 'exception:0.message', 'Whoops!');
+        $ingest->assertWrite(0, 'exception:0.code', '999');
+        $ingest->assertWrite(0, 'exception:0._group', hash('xxh128', 'Exception,999,workbench/resources/views/exception.blade.php,6'));
     }
 
     public function test_it_skips_internal_frames_on_php_errors(): void
@@ -327,12 +327,12 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.message', 'Undefined array key 0');
-        $ingest->assertLatestWrite('exception:0.class', 'ErrorException');
-        $ingest->assertLatestWrite('exception:0.file', 'tests/Feature/Sensors/ExceptionSensorTest.php');
-        $ingest->assertLatestWrite('exception:0.line', $line);
-        $ingest->assertLatestWrite('exception:0.trace', function ($trace) use ($line) {
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.message', 'Undefined array key 0');
+        $ingest->assertWrite(0, 'exception:0.class', 'ErrorException');
+        $ingest->assertWrite(0, 'exception:0.file', 'tests/Feature/Sensors/ExceptionSensorTest.php');
+        $ingest->assertWrite(0, 'exception:0.line', $line);
+        $ingest->assertWrite(0, 'exception:0.trace', function ($trace) use ($line) {
             $trace = json_decode($trace, associative: true);
 
             $this->assertSame('tests/Feature/Sensors/ExceptionSensorTest.php:'.$line, $trace[0]['file']);
@@ -364,9 +364,9 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.file', 'app/Models/User.php');
-        $ingest->assertLatestWrite('exception:0.line', 0);
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.file', 'app/Models/User.php');
+        $ingest->assertWrite(0, 'exception:0.line', 0);
     }
 
     public function test_it_captures_handled_and_unhandled_exceptions(): void
@@ -382,9 +382,9 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.handled', true);
-        $ingest->assertLatestWrite('exception:1.handled', false);
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.handled', false);
+        $ingest->assertWrite(1, 'exception:0.handled', true);
     }
 
     public function test_it_handles_the_file_in_the_trace(): void
@@ -410,8 +410,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', json_encode([
+        $ingest->assertWrittenTimes(3);
+        $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
@@ -458,8 +458,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', json_encode([
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
@@ -506,8 +506,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', json_encode([
+        $ingest->assertWrittenTimes(3);
+        $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
@@ -554,8 +554,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', json_encode([
+        $ingest->assertWrittenTimes(3);
+        $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
@@ -617,8 +617,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', json_encode([
+        $ingest->assertWrittenTimes(3);
+        $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
@@ -672,8 +672,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', json_encode([
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
                 'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
                 'source' => '',
@@ -699,21 +699,21 @@ class ExceptionSensorTest extends TestCase
         ini_set('zend.exception_ignore_args', '1');
         $response = $this->get('/users');
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         if (version_compare(PHP_VERSION, '8.4', '<')) {
-            $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => ! str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
+            $ingest->assertWrite(0, 'exception:0.trace', fn ($trace) => ! str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
         } else {
-            $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => ! str_contains($trace, trim(json_encode('{closure:'.static::class.'::'.$function.'():'.$line.'}(Illuminate\\Http\\Request)'), '"')));
+            $ingest->assertWrite(0, 'exception:0.trace', fn ($trace) => ! str_contains($trace, trim(json_encode('{closure:'.static::class.'::'.$function.'():'.$line.'}(Illuminate\\Http\\Request)'), '"')));
         }
 
         ini_set('zend.exception_ignore_args', '0');
         $response = $this->get('/users');
         $response->assertServerError();
-        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrittenTimes(4);
         if (version_compare(PHP_VERSION, '8.4', '<')) {
-            $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
+            $ingest->assertWrite(2, 'exception:0.trace', fn ($trace) => str_contains($trace, '{closure}(Illuminate\\\\Http\\\\Request)'));
         } else {
-            $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, trim(json_encode('{closure:'.static::class.'::'.$function.'():'.$line.'}(Illuminate\\Http\\Request)'), '"')));
+            $ingest->assertWrite(2, 'exception:0.trace', fn ($trace) => str_contains($trace, trim(json_encode('{closure:'.static::class.'::'.$function.'():'.$line.'}(Illuminate\\Http\\Request)'), '"')));
         }
     }
 
@@ -727,8 +727,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '"file":"vendor/laravel/framework/src/Illuminate/Routing/Route.php:'));
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.trace', fn ($trace) => str_contains($trace, '"file":"vendor/laravel/framework/src/Illuminate/Routing/Route.php:'));
     }
 
     public function test_it_does_not_escape_slashes_in_the_trace(): void
@@ -741,8 +741,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, '"file":"vendor/laravel/framework/src/Illuminate/Routing/Route.php:'));
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.trace', fn ($trace) => str_contains($trace, '"file":"vendor/laravel/framework/src/Illuminate/Routing/Route.php:'));
     }
 
     public function test_it_can_manually_report_exceptions(): void
@@ -762,8 +762,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertOk();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:*', [
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:*', [
             [
                 'v' => 3,
                 't' => 'exception',
@@ -816,8 +816,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.code', 'HY000');
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.code', 'HY000');
     }
 
     public function test_it_can_capture_exception_messages_containing_binary(): void
@@ -830,11 +830,11 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
 
         // @see https://github.com/laravel/framework/pull/58218
         // @see https://github.com/laravel/framework/releases/tag/v12.45.0
-        $ingest->assertLatestWrite('exception:0.message', version_compare($this->app->version(), '12.45.0', '>=')
+        $ingest->assertWrite(0, 'exception:0.message', version_compare($this->app->version(), '12.45.0', '>=')
             ? 'SQLSTATE[HY000]: General error: 1 no such table: unknown-table (Connection: sqlite, Database: tests/database.sqlite, SQL: select * from "unknown-table" where "foo" = ��#)'
             : 'SQLSTATE[HY000]: General error: 1 no such table: unknown-table (Connection: sqlite, SQL: select * from "unknown-table" where "foo" = ��#)');
     }
@@ -863,8 +863,8 @@ class ExceptionSensorTest extends TestCase
 
         $response = $this->get('/test-exception');
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', function ($value) {
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.trace', function ($value) {
             $frames = collect(json_decode($value, true));
 
             $this->assertEquals([
@@ -987,8 +987,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', function ($trace) {
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.trace', function ($trace) {
             $trace = collect(json_decode($trace, associative: true));
 
             $this->assertCount(10, $trace->where(fn ($frame) => is_array($frame['code'])));
@@ -1012,13 +1012,13 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.class', 'RuntimeException');
-        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
-        $ingest->assertLatestWrite('exception:0.code', '999');
-        $ingest->assertLatestWrite('exception:0.file', 'tests/fixtures/non-utf-8-source-code.php');
-        $ingest->assertLatestWrite('exception:0.line', 4);
-        $ingest->assertLatestWrite('exception:0.trace', function ($trace) {
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.class', 'RuntimeException');
+        $ingest->assertWrite(0, 'exception:0.message', 'Whoops!');
+        $ingest->assertWrite(0, 'exception:0.code', '999');
+        $ingest->assertWrite(0, 'exception:0.file', 'tests/fixtures/non-utf-8-source-code.php');
+        $ingest->assertWrite(0, 'exception:0.line', 4);
+        $ingest->assertWrite(0, 'exception:0.trace', function ($trace) {
             $frames = collect(json_decode($trace, associative: true));
 
             $frame = $frames->firstWhere('file', 'tests/fixtures/non-utf-8-source-code.php:4');
@@ -1048,8 +1048,8 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.trace', fn ($trace) => str_contains($trace, 'café'));
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.trace', fn ($trace) => str_contains($trace, 'café'));
     }
 
     public function test_it_limits_group_properties()
@@ -1067,9 +1067,9 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.file', $longString);
-        $ingest->assertLatestWrite('exception:0.code', $longString);
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.file', $longString);
+        $ingest->assertWrite(0, 'exception:0.code', $longString);
     }
 
     public function test_manually_reporting_exceptions_respects_ignore_rules(): void
@@ -1081,11 +1081,11 @@ class ExceptionSensorTest extends TestCase
         $this->core->report(new MyException('Whoops 3!'), handled: false);
         $ingest->digest();
 
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWriteRecordCount(3);
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.message', 'Whoops 3!');
+        $ingest->assertLatestWriteRecordCount(2);
         $ingest->assertLatestWrite('exception:0.message', 'Whoops 1!');
         $ingest->assertLatestWrite('exception:1.message', 'Whoops 2!');
-        $ingest->assertLatestWrite('exception:2.message', 'Whoops 3!');
 
         $ingest->forgetWrites();
 

@@ -208,7 +208,7 @@ class ScheduledTaskSensorTest extends TestCase
 
         Artisan::call('schedule:run');
 
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('scheduled-task:*', [
             [
                 'v' => 1,
@@ -245,7 +245,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
-        $ingest->assertLatestWrite('exception:0.message', 'Unhandled error');
+        $ingest->assertWrite(0, 'exception:0.message', 'Unhandled error');
     }
 
     public function test_it_ingests_tasks_run_in_background(): void
@@ -467,7 +467,7 @@ class ScheduledTaskSensorTest extends TestCase
 
         Artisan::call('schedule:run');
 
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('scheduled-task:0.name', 'php artisan app:fly tokyo');
     }
 
@@ -500,7 +500,7 @@ class ScheduledTaskSensorTest extends TestCase
 
         Artisan::call('schedule:run');
 
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('scheduled-task:0.name', 'find ./storage/logs -type f -mtime +7 -delete');
     }
 
