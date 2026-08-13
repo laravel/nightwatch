@@ -328,13 +328,13 @@ class ExceptionSensorTest extends TestCase
         $response = $this->get('/nested-exception');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:0.class', 'RuntimeException');
-        $ingest->assertLatestWrite('exception:0.message', 'Whoops!');
-        $ingest->assertLatestWrite('exception:0.handled', true);
-        $ingest->assertLatestWrite('exception:1.class', 'RuntimeException');
-        $ingest->assertLatestWrite('exception:1.message', 'Whoops!');
-        $ingest->assertLatestWrite('exception:1.handled', false);
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(1, 'exception:0.class', 'RuntimeException');
+        $ingest->assertWrite(1, 'exception:0.message', 'Whoops!');
+        $ingest->assertWrite(1, 'exception:0.handled', true);
+        $ingest->assertWrite(0, 'exception:0.class', 'RuntimeException');
+        $ingest->assertWrite(0, 'exception:0.message', 'Whoops!');
+        $ingest->assertWrite(0, 'exception:0.handled', false);
     }
 
     public function test_it_skips_internal_frames_on_php_errors(): void
