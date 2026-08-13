@@ -13,6 +13,7 @@ use PHPUnit\Framework\Assert;
 
 use function collect;
 use function dd;
+use function dump;
 use function explode;
 use function is_array;
 use function json_decode;
@@ -169,5 +170,12 @@ class FakeIngest implements IngestContract
     public function dd(): never
     {
         dd($this->decodedWrites()->all());
+    }
+
+    public function dump(): self
+    {
+        dump($this->decodedWrites()->all());
+
+        return $this;
     }
 }

@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Illuminate\Queue\InteractsWithQueue;
@@ -25,6 +26,7 @@ use function dirname;
 use function hash;
 use function json_decode;
 use function now;
+use function version_compare;
 
 class ScheduledTaskSensorTest extends TestCase
 {
@@ -208,7 +210,7 @@ class ScheduledTaskSensorTest extends TestCase
 
         Artisan::call('schedule:run');
 
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('scheduled-task:*', [
             [
                 'v' => 1,
@@ -245,7 +247,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'context' => Compatibility::$contextExists ? '{}' : '',
             ],
         ]);
-        $ingest->assertLatestWrite('exception:0.message', 'Unhandled error');
+        $ingest->assertWrite(0, 'exception:0.message', 'Unhandled error');
     }
 
     public function test_it_ingests_tasks_run_in_background(): void
@@ -467,7 +469,7 @@ class ScheduledTaskSensorTest extends TestCase
 
         Artisan::call('schedule:run');
 
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(version_compare(Application::VERSION, '12.18.0 ', '>=') ? 2 : 1);
         $ingest->assertLatestWrite('scheduled-task:0.name', 'php artisan app:fly tokyo');
     }
 
@@ -500,7 +502,7 @@ class ScheduledTaskSensorTest extends TestCase
 
         Artisan::call('schedule:run');
 
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(version_compare(Application::VERSION, '12.18.0 ', '>=') ? 2 : 1);
         $ingest->assertLatestWrite('scheduled-task:0.name', 'find ./storage/logs -type f -mtime +7 -delete');
     }
 

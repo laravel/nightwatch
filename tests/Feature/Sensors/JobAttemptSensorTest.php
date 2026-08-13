@@ -193,7 +193,7 @@ class JobAttemptSensorTest extends TestCase
         FailedJob::dispatch();
         Artisan::call($workCommand, [...$workOptions, '--tries' => 2]);
 
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('job-attempt:*', [
             [
                 'v' => 1,
@@ -301,7 +301,7 @@ class JobAttemptSensorTest extends TestCase
         FailedJob::dispatch();
         Artisan::call($workCommand, $workOptions);
 
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('job-attempt:*', [
             [
                 'v' => 1,
@@ -565,11 +565,11 @@ class JobAttemptSensorTest extends TestCase
             Artisan::call($workCommand, $options);
         });
 
-        $ingest->assertWrittenTimes(2);
-        $ingest->assertWrite(0, 'job-attempt:0.attempt', 1);
+        $ingest->assertWrittenTimes(4);
         $ingest->assertWrite(0, 'exception:0.message', 'Job failed');
-        $ingest->assertWrite(1, 'job-attempt:0.attempt', 2);
-        $ingest->assertWrite(1, 'exception:0.message', 'Job failed');
+        $ingest->assertWrite(1, 'job-attempt:0.attempt', 1);
+        $ingest->assertWrite(2, 'exception:0.message', 'Job failed');
+        $ingest->assertWrite(3, 'job-attempt:0.attempt', 2);
     }
 
     #[DataProvider('workCommands')]
@@ -702,9 +702,9 @@ class JobAttemptSensorTest extends TestCase
             Artisan::call($workCommand, $options);
         });
 
-        $ingest->assertWrittenTimes(2);
-        $ingest->assertWrite(0, 'job-attempt:0.exception_preview', 'Job failed');
-        $ingest->assertWrite(1, 'job-attempt:0.exception_preview', '');
+        $ingest->assertWrittenTimes(3);
+        $ingest->assertWrite(1, 'job-attempt:0.exception_preview', 'Job failed');
+        $ingest->assertWrite(2, 'job-attempt:0.exception_preview', '');
     }
 
     #[DataProvider('workCommands')]
@@ -1037,8 +1037,8 @@ class JobAttemptSensorTest extends TestCase
             JSON, flags: JSON_THROW_ON_ERROR), flags: JSON_THROW_ON_ERROR)]);
         Artisan::call('queue:work', $this->workCommands()['queue:work'][1]);
 
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('exception:*', function ($exceptions) {
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:*', function ($exceptions) {
             $this->assertCount(1, $exceptions);
 
             if (version_compare(Application::VERSION, '13.6.0', '>=')) {
