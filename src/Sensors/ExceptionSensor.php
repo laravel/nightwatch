@@ -65,14 +65,11 @@ final class ExceptionSensor
 
         $nowMicrotime = $this->clock->microtime();
         [$file, $line] = $this->location->forException($e);
-        $normalizedException = match ($e->getPrevious()) {
-            null => $e,
-            default => match (true) {
-                $e instanceof ViewException,
-                $e instanceof IgnitionViewException => $e->getPrevious(),
-                default => $e,
-            },
-        };
+        $normalizedException = $e;
+
+        while (($normalizedException instanceof ViewException || $normalizedException instanceof IgnitionViewException) && $normalizedException->getPrevious() !== null) {
+            $normalizedException = $normalizedException->getPrevious();
+        }
 
         $handled ??= $this->wasManuallyReported($normalizedException);
 

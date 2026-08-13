@@ -8,6 +8,7 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +45,7 @@ use function str_repeat;
 use function tap;
 use function trim;
 use function version_compare;
+use function view;
 
 class ExceptionSensorTest extends TestCase
 {
@@ -313,6 +315,26 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertWrite(0, 'exception:0.message', 'Whoops!');
         $ingest->assertWrite(0, 'exception:0.code', '999');
         $ingest->assertWrite(0, 'exception:0._group', hash('xxh128', 'Exception,999,workbench/resources/views/exception.blade.php,6'));
+    }
+
+    public function test_it_unwraps_deeply_nested_view_exceptions(): void
+    {
+        (fn () => $this->namespace = 'App')->call($this->app);
+        Blade::anonymousComponentPath(__DIR__.'/components', 'tests');
+
+        $ingest = $this->fakeIngest();
+        Route::get('/nested-exception', fn () => view()->file(__DIR__.'/foo.blade.php')->render());
+
+        $response = $this->get('/nested-exception');
+
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(1, 'exception:0.class', 'RuntimeException');
+        $ingest->assertWrite(1, 'exception:0.message', 'Whoops!');
+        $ingest->assertWrite(1, 'exception:0.handled', true);
+        $ingest->assertWrite(0, 'exception:0.class', 'RuntimeException');
+        $ingest->assertWrite(0, 'exception:0.message', 'Whoops!');
+        $ingest->assertWrite(0, 'exception:0.handled', false);
     }
 
     public function test_it_skips_internal_frames_on_php_errors(): void
