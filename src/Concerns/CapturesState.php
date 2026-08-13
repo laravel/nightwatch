@@ -259,6 +259,8 @@ trait CapturesState
 
         try {
             if ($e instanceof FatalError) {
+                $this->ingest->flush();
+
                 if ($this->sampling) {
                     $this->ingest->writeNow($this->sensor->fatalError($e));
                 }
@@ -275,7 +277,11 @@ trait CapturesState
                     $this->ignore(static fn () => ($callback)($record));
                 }
 
-                $this->ingest->write($resolver());
+                if ($this->sampling && ! $record->handled) {
+                    $this->ingest->writeNow($resolver());
+                } else {
+                    $this->ingest->write($resolver());
+                }
             }
         } catch (Throwable $e) {
             Nightwatch::unrecoverableExceptionOccurred($e);

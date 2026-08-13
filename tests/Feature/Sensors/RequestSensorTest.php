@@ -391,7 +391,7 @@ class RequestSensorTest extends TestCase
         $response = $this->get('/users');
 
         $response->assertServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.exceptions', 2);
         $ingest->assertLatestWrite('request:0.exception_preview', 'Unhandled error');
     }
@@ -1130,7 +1130,7 @@ class RequestSensorTest extends TestCase
             ]);
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', function ($payload) {
             $payload = json_decode($payload, true);
             $this->assertSame([
@@ -1170,7 +1170,7 @@ class RequestSensorTest extends TestCase
         ]);
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', function ($payload) {
             $payload = json_decode($payload, true);
             $this->assertSame([
@@ -1200,7 +1200,7 @@ class RequestSensorTest extends TestCase
         ]);
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', function ($payload) {
             $payload = json_decode($payload, true);
             $this->assertSame([
@@ -1226,7 +1226,7 @@ class RequestSensorTest extends TestCase
         ], options: JSON_PRESERVE_ZERO_FRACTION);
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', function ($payload) {
             $payload = json_decode($payload, true);
             $this->assertSame(2.0, $payload['amount']);
@@ -1248,7 +1248,7 @@ class RequestSensorTest extends TestCase
         ]);
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', fn ($payload) => str_contains($payload, '"url":"https://example.com/path"'));
     }
 
@@ -1265,7 +1265,7 @@ class RequestSensorTest extends TestCase
         ]);
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', fn ($payload) => str_contains($payload, 'café'));
     }
 
@@ -1286,7 +1286,7 @@ class RequestSensorTest extends TestCase
             ]);
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', function ($payload) {
             $payload = json_decode($payload, true);
             $this->assertSame([
@@ -1320,7 +1320,7 @@ class RequestSensorTest extends TestCase
             ]);
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', function ($payload) {
             $payload = json_decode($payload, true);
             $this->assertSame([
@@ -1352,7 +1352,7 @@ class RequestSensorTest extends TestCase
             ]);
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', '{"_nightwatch_error":"NOT_ENABLED"}');
     }
 
@@ -1367,7 +1367,7 @@ class RequestSensorTest extends TestCase
         $response = $this->json('GET', '/register?redirect=1');
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', '');
 
         $ingest->forgetWrites();
@@ -1375,7 +1375,7 @@ class RequestSensorTest extends TestCase
         $response = $this->json('GET', '/register?redirect=1', ['foo' => 'bar']);
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', '{"foo":"bar","_nightwatch_files":[]}');
 
         $ingest->forgetWrites();
@@ -1383,7 +1383,7 @@ class RequestSensorTest extends TestCase
         $response = $this->json('GET', '/register?redirect=1', ['foo' => UploadedFile::fake()->create('avatar.jpg', 1, 'image/jpeg')]);
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', '{"_nightwatch_files":{"foo":{"originalName":"avatar.jpg","size":1024,"error":0}}}');
     }
 
@@ -1407,7 +1407,7 @@ class RequestSensorTest extends TestCase
         );
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', '{"_nightwatch_error":"UNSUPPORTED_CONTENT_TYPE"}');
 
         $ingest->forgetWrites();
@@ -1424,7 +1424,7 @@ class RequestSensorTest extends TestCase
         );
 
         $response->assertInternalServerError();
-        $ingest->assertWrittenTimes(1);
+        $ingest->assertWrittenTimes(2);
         $ingest->assertLatestWrite('request:0.payload', '{"_nightwatch_error":"UNSUPPORTED_CONTENT_TYPE"}');
     }
 

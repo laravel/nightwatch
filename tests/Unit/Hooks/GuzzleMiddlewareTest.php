@@ -17,7 +17,7 @@ class GuzzleMiddlewareTest extends TestCase
         $this->core->sensor->exceptionSensor = function ($e) use (&$exceptions): array {
             $exceptions[] = $e;
 
-            return [[], fn () => []];
+            return [(object) ['handled' => true], fn () => []];
         };
         $thrownInMicrotimeResolver = false;
         $this->core->clock->microtimeResolver = function () use (&$thrownInMicrotimeResolver): float {
