@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Nightwatch\Events\IngestingEvents;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Payload;
@@ -581,6 +582,26 @@ class IngestTest extends TestCase
 
         $this->assertSame(6, $count);
         $this->assertCount(4, StreamWrapper::type('stream_open'));
+    }
+
+    public function test_a_listener_can_stop_ingestion_using_the_rate_limiter(): void
+    {
+        Event::listen(function (IngestingEvents $event) {
+            return ! RateLimiter::attempt(
+                key: 'nightwatch-events-test',
+                maxAttempts: 2,
+                callback: fn () => true,
+                decaySeconds: 3600,
+            );
+        });
+
+        for ($i = 0; $i < 4; $i++) {
+            $this->core->ingest->writeNow(FakeRecord::make());
+        }
+
+        $this->assertCount(2, StreamWrapper::type('stream_open'));
+
+        RateLimiter::clear('nightwatch-events-test');
     }
 
     public function test_digest_dispatches_an_event_containing_the_buffered_records_before_writing(): void
