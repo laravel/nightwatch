@@ -22,6 +22,7 @@ use function fopen;
 use function implode;
 use function json_encode;
 use function phpversion;
+use function report;
 use function str_repeat;
 use function stream_wrapper_register;
 use function stream_wrapper_unregister;
@@ -582,6 +583,24 @@ class IngestTest extends TestCase
 
         $this->assertSame(6, $count);
         $this->assertCount(4, StreamWrapper::type('stream_open'));
+    }
+
+    public function test_an_exception_thrown_by_a_listener_is_treated_as_unrecoverable_and_ingestion_continues(): void
+    {
+        $exceptions = [];
+        Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$exceptions): void {
+            $exceptions[] = $e;
+        });
+        Event::listen(IngestingEvents::class, function (IngestingEvents $event) {
+            throw new RuntimeException('Whoops!');
+        });
+
+        report('Original exception');
+        $this->core->finishExecution();
+
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Whoops!', $exceptions[0]->getMessage());
+        $this->assertCount(0, StreamWrapper::type('stream_open'));
     }
 
     public function test_a_listener_can_stop_ingestion_using_the_rate_limiter(): void
