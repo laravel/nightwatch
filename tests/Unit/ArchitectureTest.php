@@ -34,6 +34,7 @@ class ArchitectureTest extends TestCase
         $except = [
             \Laravel\Nightwatch\Console\Sample::class,
             \Laravel\Nightwatch\Core::class,
+            \Laravel\Nightwatch\Events\IngestingEvents::class,
             \Laravel\Nightwatch\Facades\Nightwatch::class,
             \Laravel\Nightwatch\Http\Middleware\Sample::class,
             \Laravel\Nightwatch\QueryConnectionType::class,

@@ -43,6 +43,14 @@ final class RecordsBuffer implements Countable
         return count($this->records);
     }
 
+    /**
+     * @return list<array<mixed>>
+     */
+    public function all(): array
+    {
+        return $this->records;
+    }
+
     public function pull(string $tokenHash): Payload
     {
         if ($this->records === []) {

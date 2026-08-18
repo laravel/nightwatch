@@ -3,6 +3,8 @@
 namespace Tests\Unit;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Event;
+use Laravel\Nightwatch\Events\IngestingEvents;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Payload;
 use RuntimeException;
@@ -546,6 +548,98 @@ class IngestTest extends TestCase
 
         $this->assertCount(4, $writes);
         $this->assertSame(str_repeat('10012:'.Payload::PAYLOAD_VERSION.':'.$tokenHash.':['.implode(',', array_fill(0, 500, json_encode(FakeRecord::make()))).']', 2), implode('', $writes));
+    }
+
+    public function test_write_now_dispatches_an_event_containing_the_records_before_writing(): void
+    {
+        $events = [];
+        Event::listen(IngestingEvents::class, function (IngestingEvents $event) use (&$events) {
+            $events[] = $event;
+        });
+        $record = FakeRecord::make();
+
+        $this->core->ingest->writeNow($record);
+
+        $this->assertCount(1, $events);
+        $this->assertSame([$record], $events[0]->records);
+    }
+
+    public function test_a_listener_can_stop_write_now_from_ingesting_by_returning_false(): void
+    {
+        $count = 0;
+        Event::listen(IngestingEvents::class, function (IngestingEvents $event) use (&$count) {
+            $count++;
+
+            if ($count === 3 || $count === 4) {
+                return false;
+            }
+        });
+
+        for ($i = 0; $i < 6; $i++) {
+            $this->core->ingest->writeNow(FakeRecord::make());
+        }
+
+        $this->assertSame(6, $count);
+        $this->assertCount(4, StreamWrapper::type('stream_open'));
+    }
+
+    public function test_digest_dispatches_an_event_containing_the_buffered_records_before_writing(): void
+    {
+        $events = [];
+        Event::listen(IngestingEvents::class, function (IngestingEvents $event) use (&$events) {
+            $events[] = $event;
+        });
+        $records = [FakeRecord::make(), FakeRecord::make(), FakeRecord::make()];
+
+        foreach ($records as $record) {
+            $this->core->ingest->write($record);
+        }
+        $this->core->ingest->digest();
+
+        $this->assertCount(1, $events);
+        $this->assertSame($records, $events[0]->records);
+    }
+
+    public function test_digest_does_not_dispatch_an_event_when_the_buffer_is_empty(): void
+    {
+        $events = [];
+        Event::listen(IngestingEvents::class, function (IngestingEvents $event) use (&$events) {
+            $events[] = $event;
+        });
+
+        $this->core->ingest->digest();
+
+        $this->assertCount(0, $events);
+    }
+
+    public function test_a_listener_can_stop_digest_from_ingesting_by_returning_false(): void
+    {
+        Event::listen(IngestingEvents::class, fn () => false);
+
+        $this->core->ingest->write(FakeRecord::make());
+        $this->core->ingest->write(FakeRecord::make());
+        $this->core->ingest->digest();
+
+        $this->assertCount(0, StreamWrapper::type('stream_open'));
+        $this->assertSame(0, $this->core->ingest->buffer->count());
+    }
+
+    public function test_write_auto_digesting_after_reaching_the_threshold_dispatches_an_event_and_can_be_stopped(): void
+    {
+        $count = 0;
+        Event::listen(IngestingEvents::class, function (IngestingEvents $event) use (&$count) {
+            $count++;
+
+            return false;
+        });
+
+        for ($i = 0; $i < 500; $i++) {
+            $this->core->ingest->write(FakeRecord::make());
+        }
+
+        $this->assertSame(1, $count);
+        $this->assertCount(0, StreamWrapper::type('stream_open'));
+        $this->assertSame(0, $this->core->ingest->buffer->count());
     }
 
     public function test_it_closes_the_stream_if_an_error_occurs_while_writing(): void

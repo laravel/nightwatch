@@ -3,7 +3,9 @@
 namespace Laravel\Nightwatch;
 
 use Deprecated;
+use Illuminate\Contracts\Events\Dispatcher;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
+use Laravel\Nightwatch\Events\IngestingEvents;
 use RuntimeException;
 
 use function call_user_func;
@@ -31,6 +33,7 @@ final class Ingest implements IngestContract
         public $streamFactory,
         public RecordsBuffer $buffer,
         private string $tokenHash,
+        private Dispatcher $events,
     ) {
         $this->transmitTo = "tcp://{$transmitTo}";
     }
@@ -46,6 +49,10 @@ final class Ingest implements IngestContract
 
     public function writeNow(array $record): void
     {
+        if (! $this->dispatchIngestingEvents([$record])) {
+            return;
+        }
+
         $this->transmit(Payload::json([$record], $this->tokenHash));
     }
 
@@ -72,7 +79,25 @@ final class Ingest implements IngestContract
 
     public function digest(): void
     {
+        if (! $this->dispatchIngestingEvents($this->buffer->all())) {
+            $this->buffer->flush();
+
+            return;
+        }
+
         $this->transmit($this->buffer->pull($this->tokenHash));
+    }
+
+    /**
+     * @param  list<array<mixed>>  $records
+     */
+    private function dispatchIngestingEvents(array $records): bool
+    {
+        if ($records === []) {
+            return true;
+        }
+
+        return $this->events->until(new IngestingEvents($records)) !== false;
     }
 
     private function transmit(Payload $payload): void

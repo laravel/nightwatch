@@ -260,6 +260,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                     length: $this->nightwatchConfig['ingest']['event_buffer'] ?? 500,
                 ),
                 tokenHash: $tokenHash,
+                events: $this->app->make(Dispatcher::class),
             ),
             sensor: new SensorManager(
                 executionState: $executionState,
