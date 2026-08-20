@@ -88,6 +88,7 @@ final class ExceptionSensor
             ),
             function () use ($nowMicrotime, $record, $normalizedException) {
                 $this->executionState->exceptions++;
+                $file = $this->location->hashSerializedClosure($record->file);
 
                 return [
                     'v' => 3,
@@ -95,7 +96,7 @@ final class ExceptionSensor
                     'timestamp' => $nowMicrotime,
                     'deploy' => $this->executionState->deploy,
                     'server' => $this->executionState->server,
-                    '_group' => hash('xxh128', $record->class.','.$record->code.','.$record->file.','.$record->line),
+                    '_group' => hash('xxh128', $record->class.','.$record->code.','.$file.','.$record->line),
                     'trace_id' => $this->executionState->trace,
                     'execution_source' => $this->executionState->source,
                     'execution_id' => $this->executionState->id(),
@@ -103,7 +104,7 @@ final class ExceptionSensor
                     'execution_stage' => $this->executionState->stage,
                     'user' => $this->executionState->user->id(),
                     'class' => Str::text($record->class),
-                    'file' => Str::text($record->file),
+                    'file' => Str::text($file),
                     'line' => $record->line ?? 0,
                     'message' => Str::text($record->message),
                     'code' => Str::text((string) $record->code),
@@ -136,7 +137,9 @@ final class ExceptionSensor
             // Insert the exception location as the first frame.
             // This matches the behavior of Symfony's exception renderer.
             [
-                'file' => $this->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                'file' => $this->location->hashSerializedClosure(
+                    $this->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                ),
                 'source' => '',
                 'code' => $this->fetchSourceCode($e->getFile(), $e->getLine()),
             ],
@@ -152,7 +155,7 @@ final class ExceptionSensor
             $file = match (true) {
                 ! isset($frame['file']) => '[internal function]',
                 ! is_string($frame['file']) => '[unknown file]', // @phpstan-ignore booleanNot.alwaysFalse
-                default => $this->location->normalizeFile($frame['file']),
+                default => $this->location->hashSerializedClosure($this->location->normalizeFile($frame['file'])),
             };
 
             if (isset($frame['line']) && is_int($frame['line'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue

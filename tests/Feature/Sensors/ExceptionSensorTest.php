@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Laravel\Nightwatch\Records\Exception as ExceptionRecord;
+use Laravel\SerializableClosure\SerializableClosure;
+use Laravel\SerializableClosure\Support\ClosureStream;
 use Orchestra\Testbench\Attributes\WithEnv;
 use ReflectionClass;
 use RuntimeException;
@@ -38,12 +41,15 @@ use function ini_set;
 use function is_array;
 use function json_decode;
 use function json_encode;
+use function preg_match;
 use function report;
 use function response;
+use function serialize;
 use function str_contains;
 use function str_repeat;
 use function tap;
 use function trim;
+use function unserialize;
 use function version_compare;
 use function view;
 
@@ -443,6 +449,40 @@ class ExceptionSensorTest extends TestCase
             ],
             [
                 'file' => 'the/file.php',
+                'source' => '()',
+                'code' => null,
+            ],
+        ], JSON_UNESCAPED_SLASHES));
+    }
+
+    public function test_it_hashes_serialized_closure_files_in_the_trace(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            $e = new Exception('Whoops!');
+            $reflectedException = new ReflectionClass($e);
+            $reflectedException->getProperty('trace')->setValue($e, [
+                [
+                    'file' => ClosureStream::STREAM_PROTO.'://function () { return 1; }',
+                ],
+            ]);
+
+            report($e);
+        })));
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', json_encode([
+            [
+                'file' => 'laravel-serializable-closure://9fadf0d136e0465c0407b1c75a5cf646',
+                'source' => '',
+                'code' => null,
+            ],
+            [
+                'file' => ClosureStream::STREAM_PROTO.'://'.hash('xxh128', 'function () { return 1; }'),
                 'source' => '()',
                 'code' => null,
             ],
@@ -1060,6 +1100,43 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'exception:0.file', $longString);
         $ingest->assertWrite(0, 'exception:0.code', $longString);
+    }
+
+    public function test_it_replaces_serialized_closure_source_code_with_a_hash_and_uses_the_hashed_file_for_grouping(): void
+    {
+        $ingest = $this->fakeIngest();
+        Route::get('/users', function (): void {
+            $closure = unserialize(serialize(new SerializableClosure(function (): void {
+                throw new RuntimeException('Whoops!');
+            })));
+
+            $closure();
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.file', 'laravel-serializable-closure://ddc5a4f594d48751013d24e777a4420e');
+        $ingest->assertWrite(0, 'exception:0._group', hash('xxh128', "RuntimeException,0,laravel-serializable-closure://ddc5a4f594d48751013d24e777a4420e,3"));
+    }
+
+    public function test_it_gives_serialized_closure_to_redaction_hooks(): void
+    {
+        $ingest = $this->fakeIngest();
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            // This is the raw code
+            report(new RuntimeException('Whoops!'));
+        })));
+
+        $record = null;
+        Nightwatch::redactExceptions(function (ExceptionRecord $r) use (&$record) {
+            $record = $r;
+        });
+
+        $closure();
+
+        $this->assertStringContainsString('// This is the raw code', $record->file);
     }
 
     public function test_manually_reporting_exceptions_respects_ignore_rules(): void

@@ -7,6 +7,7 @@ use ReflectionClass;
 use Tests\TestCase;
 
 use function base_path;
+use function preg_match;
 use function public_path;
 
 class LocationTest extends TestCase
@@ -247,5 +248,32 @@ class LocationTest extends TestCase
         ]);
 
         $this->assertSame(['vendor/foo/bar/Baz1.php', 9], $file);
+    }
+
+    public function test_it_replaces_serialized_closure_source_code_with_a_hash_when_normalizing_files(): void
+    {
+        $location = $this->core->sensor->location;
+
+        $file = $location->hashSerializedClosure('laravel-serializable-closure://function () { return 1; }');
+
+        $this->assertSame('laravel-serializable-closure://88a9f580a6e062ce6073f8c4996355aa', $file);
+    }
+
+    public function test_it_replaces_multiline_serialized_closure_source_code_with_a_hash(): void
+    {
+        $location = $this->core->sensor->location;
+
+        $file = $location->hashSerializedClosure("laravel-serializable-closure://function () {\n    \$path = 'laravel-serializable-closure://nested';\n\n    throw new \RuntimeException(\$path);\n}");
+
+        $this->assertSame('laravel-serializable-closure://e697f6e4ee9460f410d68c3259401ddc', $file);
+    }
+
+    public function test_it_does_not_replace_files_merely_resembling_the_serialized_closure_protocol(): void
+    {
+        $location = $this->core->sensor->location;
+
+        $file = $location->hashSerializedClosure('app/laravel-serializable-closure services/MyService.php');
+
+        $this->assertSame('app/laravel-serializable-closure services/MyService.php', $file);
     }
 }

@@ -3,10 +3,12 @@
 namespace Laravel\Nightwatch;
 
 use Illuminate\View\ViewException;
+use Laravel\SerializableClosure\Support\ClosureStream;
 use Spatie\LaravelIgnition\Exceptions\ViewException as IgnitionViewException;
 use Throwable;
 
 use function array_key_exists;
+use function hash;
 use function implode;
 use function ltrim;
 use function preg_match;
@@ -19,6 +21,8 @@ use function substr;
  */
 final class Location
 {
+    private const SERIALIZABLE_CLOSURE_PROTOCOL = ClosureStream::STREAM_PROTO.'://';
+
     private string $basePath;
 
     private string $artisanPath;
@@ -205,6 +209,15 @@ final class Location
         }
 
         return substr($file, strlen($this->basePath));
+    }
+
+    public function hashSerializedClosure(string $file): string
+    {
+        if (str_starts_with($file, self::SERIALIZABLE_CLOSURE_PROTOCOL)) {
+            return self::SERIALIZABLE_CLOSURE_PROTOCOL.hash('xxh128', substr($file, strlen(self::SERIALIZABLE_CLOSURE_PROTOCOL)));
+        }
+
+        return $file;
     }
 
     public function setBasePath(string $path): self
