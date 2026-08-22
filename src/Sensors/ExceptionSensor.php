@@ -138,7 +138,7 @@ final class ExceptionSensor
             // This matches the behavior of Symfony's exception renderer.
             [
                 'file' => $this->location->hashSerializedClosure(
-                    $this->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                    $this->location->normalizeFilePath($e->getFile()).':'.$e->getLine(),
                 ),
                 'source' => '',
                 'code' => $this->fetchSourceCode($e->getFile(), $e->getLine()),
@@ -155,7 +155,7 @@ final class ExceptionSensor
             $file = match (true) {
                 ! isset($frame['file']) => '[internal function]',
                 ! is_string($frame['file']) => '[unknown file]', // @phpstan-ignore booleanNot.alwaysFalse
-                default => $this->location->hashSerializedClosure($this->location->normalizeFile($frame['file'])),
+                default => $this->location->hashSerializedClosure($this->location->normalizeFilePath($frame['file'])),
             };
 
             if (isset($frame['line']) && is_int($frame['line'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue

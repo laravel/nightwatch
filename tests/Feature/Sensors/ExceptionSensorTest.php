@@ -130,7 +130,7 @@ class ExceptionSensorTest extends TestCase
                 'code' => '0',
                 'trace' => json_encode([
                     [
-                        'file' => $this->core->sensor->location->normalizeFile(__FILE__).':'.$line,
+                        'file' => $this->core->sensor->location->normalizeFilePath(__FILE__).':'.$line,
                         'source' => '',
                         'code' => null,
                     ],
@@ -208,7 +208,7 @@ class ExceptionSensorTest extends TestCase
                 'code' => '0',
                 'trace' => json_encode([
                     [
-                        'file' => $this->core->sensor->location->normalizeFile(__FILE__).':'.$line,
+                        'file' => $this->core->sensor->location->normalizeFilePath(__FILE__).':'.$line,
                         'source' => '',
                         'code' => null,
                     ],
@@ -438,7 +438,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
-                'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                'file' => $this->core->sensor->location->normalizeFilePath($e->getFile()).':'.$e->getLine(),
                 'source' => '',
                 'code' => null,
             ],
@@ -655,7 +655,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
-                'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                'file' => $this->core->sensor->location->normalizeFilePath($e->getFile()).':'.$e->getLine(),
                 'source' => '',
                 'code' => null,
             ],
@@ -705,7 +705,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
-                'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                'file' => $this->core->sensor->location->normalizeFilePath($e->getFile()).':'.$e->getLine(),
                 'source' => '',
                 'code' => null,
             ],

@@ -271,7 +271,7 @@ final class SensorManager
      */
     public function fatalError(Throwable $e): array
     {
-        $file = $this->location->normalizeFile($e->getFile());
+        $file = $this->location->normalizeFilePath($e->getFile());
 
         return [
             'v' => 3,
