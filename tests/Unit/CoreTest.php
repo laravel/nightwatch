@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Laravel\SerializableClosure\SerializableClosure;
+use Laravel\SerializableClosure\Support\ClosureStream;
 use Orchestra\Testbench\Attributes\WithEnv;
 use RuntimeException;
 use Symfony\Component\ErrorHandler\Error\FatalError;
@@ -16,6 +18,8 @@ use Tests\TestCase;
 
 use function dirname;
 use function hash;
+use function serialize;
+use function unserialize;
 
 class CoreTest extends TestCase
 {
@@ -89,6 +93,32 @@ class CoreTest extends TestCase
                 'laravel_version' => '11.33.0',
             ],
         ]);
+    }
+
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
+    public function test_it_hashes_serialized_closures_when_ingesting_fatal_errors(): void
+    {
+        $ingest = $this->fakeIngest();
+        $this->app->setBasePath($base = dirname($this->app->basePath()));
+        $this->core->sensor->location->setBasePath($base);
+        $code = "function (): void {\n            throw new \\RuntimeException('Whoops!');\n        }";
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            throw new RuntimeException('Whoops!');
+        })));
+
+        try {
+            $closure();
+        } catch (RuntimeException $e) {
+            //
+        }
+
+        // A fatal error occurring within a serialized closure is reported
+        // against the closure's stream.
+        $this->core->report(new FatalError('Out of memory', 0, ['file' => $e->getFile(), 'line' => $e->getLine()], 0));
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.file', ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code));
+        $ingest->assertLatestWrite('exception:0._group', hash('xxh128', "Symfony\Component\ErrorHandler\Error\FatalError,0,".ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).",{$e->getLine()}"));
     }
 
     public function test_it_flushes_buffered_records_before_reporting_a_fatal_error(): void
