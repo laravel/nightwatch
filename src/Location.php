@@ -70,7 +70,7 @@ final class Location
             // First, we want to find the location in the end-user application:
             if (! $this->isVendorFile($frame['file'])) {
                 return [
-                    $this->normalizeFile($frame['file']),
+                    $this->normalizeFilePath($frame['file']),
                     $frame['line'] ?? null,
                 ];
             }
@@ -85,7 +85,7 @@ final class Location
         }
 
         if ($nonInternalFile !== null) {
-            $nonInternalFile = $this->normalizeFile($nonInternalFile);
+            $nonInternalFile = $this->normalizeFilePath($nonInternalFile);
         }
 
         return [
@@ -124,7 +124,7 @@ final class Location
         }
 
         return [
-            $this->normalizeFile($matches['path']),
+            $this->normalizeFilePath($matches['path']),
             null,
         ];
     }
@@ -135,7 +135,7 @@ final class Location
     private function fromSpatieViewException(IgnitionViewException $e): array
     {
         return [
-            $this->normalizeFile($e->getFile()),
+            $this->normalizeFilePath($e->getFile()),
             $e->getLine(),
         ];
     }
@@ -147,7 +147,7 @@ final class Location
     {
         if (! $this->isVendorFile($e->getFile())) {
             return [
-                $this->normalizeFile($e->getFile()),
+                $this->normalizeFilePath($e->getFile()),
                 $e->getLine(),
             ];
         }
@@ -159,7 +159,7 @@ final class Location
         }
 
         return [
-            $this->normalizeFile($e->getFile()),
+            $this->normalizeFilePath($e->getFile()),
             $e->getLine(),
         ];
     }
@@ -173,7 +173,7 @@ final class Location
         foreach ($trace as $frame) {
             if (isset($frame['file']) && ! $this->isVendorFile($frame['file'])) {
                 return [
-                    $this->normalizeFile($frame['file']),
+                    $this->normalizeFilePath($frame['file']),
                     $frame['line'] ?? null,
                 ];
             }
@@ -202,7 +202,7 @@ final class Location
         return str_starts_with($file, $this->basePath) && ! $this->isVendorFile($file) && ! $this->isInternalFile($file);
     }
 
-    public function normalizeFile(string $file): string
+    public function normalizeFilePath(string $file): string
     {
         if (! str_starts_with($file, $this->basePath)) {
             return $file;
