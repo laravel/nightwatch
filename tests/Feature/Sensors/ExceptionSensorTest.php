@@ -41,7 +41,6 @@ use function ini_set;
 use function is_array;
 use function json_decode;
 use function json_encode;
-use function preg_match;
 use function report;
 use function response;
 use function serialize;
@@ -50,6 +49,7 @@ use function str_repeat;
 use function tap;
 use function trim;
 use function unserialize;
+use function usort;
 use function version_compare;
 use function view;
 
@@ -489,6 +489,232 @@ class ExceptionSensorTest extends TestCase
         ], JSON_UNESCAPED_SLASHES));
     }
 
+    public function test_it_hashes_serialized_closures_in_the_trace_source(): void
+    {
+        $ingest = $this->fakeIngest();
+        $code = "function (): void {\n            \\report(new \\RuntimeException('Whoops!'));\n        }";
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            report(new RuntimeException('Whoops!'));
+        })));
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', function (string $trace) use ($code) {
+            $closureSources = collect(json_decode($trace, true, flags: JSON_THROW_ON_ERROR))
+                ->pluck('source')
+                ->filter(fn (string $source) => str_contains($source, '{closure'))
+                ->values()
+                ->all();
+
+            $this->assertCount(1, $closureSources);
+            $this->assertSame(version_compare(PHP_VERSION, '8.4', '<') ? [
+                self::class.'::{closure}()',
+            ] : [
+                self::class.'::{closure:'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':2}()',
+            ], $closureSources);
+            $this->assertStringNotContainsString($trace, 'Whoops');
+
+            return true;
+        });
+    }
+
+    public function test_it_hashes_nested_closures_within_serialized_closures_in_the_trace_source(): void
+    {
+        $ingest = $this->fakeIngest();
+        $code = "function (): void {\n            \$nested = function (): void {\n                \$deeplyNested = function (): void {\n                    \\report(new \\RuntimeException('Whoops!'));\n                };\n\n                \$deeplyNested();\n            };\n\n            \$nested();\n        }";
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            $nested = function (): void {
+                $deeplyNested = function (): void {
+                    report(new RuntimeException('Whoops!'));
+                };
+
+                $deeplyNested();
+            };
+
+            $nested();
+        })));
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', function (string $trace) use ($code) {
+            $sources = collect(json_decode($trace, true, flags: JSON_THROW_ON_ERROR))
+                ->pluck('source')
+                ->filter(fn (string $source) => str_contains($source, '{closure'))
+                ->values()
+                ->all();
+
+            // A closure declared within a serialized closure is named in terms of
+            // its parent, so the source may contain nested closure names. This
+            // nests another layer deep to ensure we don't only handle a single
+            // level of nesting. All frames refer to the same stream, and so the
+            // same hash. Closures are only named after the file they were
+            // declared in from PHP 8.4, so there is nothing to hash before then.
+            $this->assertCount(3, $sources);
+            $this->assertSame(version_compare(PHP_VERSION, '8.4', '<') ? [
+                self::class.'::{closure}()',
+                self::class.'::{closure}()',
+                self::class.'::{closure}()',
+            ] : [
+                self::class.'::{closure:{closure:{closure:'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':2}:3}:4}()',
+                self::class.'::{closure:{closure:'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':2}:3}()',
+                self::class.'::{closure:'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':2}()',
+            ], $sources);
+
+            $this->assertStringNotContainsString($trace, 'Whoops');
+
+            return true;
+        });
+    }
+
+    public function test_it_hashes_serialized_closures_within_serialized_closures_in_the_trace_source(): void
+    {
+        $ingest = $this->fakeIngest();
+        $code = "function (): void {\n            \$nested = \\unserialize(\\serialize(new \\Laravel\\SerializableClosure\\SerializableClosure(function (): void {\n                \\report(new \\RuntimeException('Whoops!'));\n            })));\n\n            \$nested();\n        }";
+        $nestedCode = "function (): void {\n                \\report(new \\RuntimeException('Whoops!'));\n            }";
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            $nested = unserialize(serialize(new SerializableClosure(function (): void {
+                report(new RuntimeException('Whoops!'));
+            })));
+
+            $nested();
+        })));
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', function (string $trace) use ($code, $nestedCode) {
+            $sources = collect(json_decode($trace, true, flags: JSON_THROW_ON_ERROR))
+                ->pluck('source')
+                ->filter(fn (string $source) => str_contains($source, '{closure'))
+                ->values()
+                ->all();
+
+            // A serialized closure is never nested within another serialized
+            // closure's stream: each stream only ever contains its own code. A
+            // single trace may however reference several distinct streams. Closures
+            // are only named after the file they were declared in from PHP 8.4, so
+            // there is nothing to hash before then.
+            $this->assertCount(2, $sources);
+            $this->assertSame(version_compare(PHP_VERSION, '8.4', '<') ? [
+                self::class.'::{closure}()',
+                self::class.'::{closure}()',
+            ] : [
+                self::class.'::{closure:'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $nestedCode).':2}()',
+                self::class.'::{closure:'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':2}()',
+            ], $sources);
+
+            $this->assertStringNotContainsString($trace, 'Whoops');
+
+            return true;
+        });
+    }
+
+    public function test_it_hashes_serialized_closures_with_a_comment_resembling_the_closure_name_suffix_in_the_trace_source(): void
+    {
+        $ingest = $this->fakeIngest();
+        $code = "function (): void {\n            // This comment looks like the end of the closure name: :2}()\n            \\report(new \\RuntimeException('Whoops!'));\n        }";
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            // This comment looks like the end of the closure name: :2}()
+            report(new RuntimeException('Whoops!'));
+        })));
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', function (string $trace) use ($code) {
+            $closureSources = collect(json_decode($trace, true, flags: JSON_THROW_ON_ERROR))
+                ->pluck('source')
+                ->filter(fn (string $source) => str_contains($source, '{closure'))
+                ->values()
+                ->all();
+
+            // The closure's own source contains a comment that looks like the
+            // ":<line>}()" suffix appended to a hashed closure name. The hash
+            // must be computed over the entire closure source, not truncated
+            // at the first lookalike occurrence within the comment.
+            $this->assertCount(1, $closureSources);
+            $this->assertSame(version_compare(PHP_VERSION, '8.4', '<') ? [
+                self::class.'::{closure}()',
+            ] : [
+                self::class.'::{closure:'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':2}()',
+            ], $closureSources);
+
+            $this->assertStringNotContainsString($trace, 'Whoops');
+
+            return true;
+        });
+    }
+
+    public function test_it_hashes_serialized_closures_with_a_comment_resembling_a_nested_closure_name_in_the_trace_source(): void
+    {
+        $ingest = $this->fakeIngest();
+        $code = "function (): void {\n            // This comment looks like a nested closure name: {closure:{closure:foo:2}:3}\n            \\report(new \\RuntimeException('Whoops!'));\n        }";
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            // This comment looks like a nested closure name: {closure:{closure:foo:2}:3}
+            report(new RuntimeException('Whoops!'));
+        })));
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', function (string $trace) use ($code) {
+            $closureSources = collect(json_decode($trace, true, flags: JSON_THROW_ON_ERROR))
+                ->pluck('source')
+                ->filter(fn (string $source) => str_contains($source, '{closure'))
+                ->values()
+                ->all();
+
+            // The closure's own source contains a comment resembling the nested
+            // closure names the code may be wrapped in. Only the names wrapping
+            // the code determine how much of the name is not code, so the ones
+            // within the comment must not be counted.
+            $this->assertCount(1, $closureSources);
+            $this->assertSame(version_compare(PHP_VERSION, '8.4', '<') ? [
+                self::class.'::{closure}()',
+            ] : [
+                self::class.'::{closure:'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':2}()',
+            ], $closureSources);
+
+            $this->assertStringNotContainsString($trace, 'Whoops');
+
+            return true;
+        });
+    }
+
+    public function test_it_hashes_serialized_closures_invoked_by_internal_functions_in_the_trace_source(): void
+    {
+        $ingest = $this->fakeIngest();
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            $array = [2, 1];
+
+            usort($array, function ($a, $b): int {
+                report(new RuntimeException('Whoops!'));
+
+                return 0;
+            });
+        })));
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', function (string $trace) {
+            // The closure is invoked by an internal function, so the frame it is
+            // named in carries no file of its own.
+            $this->assertStringNotContainsString('$array = [2, 1];', $trace);
+            $this->assertStringNotContainsString('usort($array, function', $trace);
+
+            return true;
+        });
+    }
+
     public function test_it_handles_the_line_in_the_trace(): void
     {
         $ingest = $this->fakeIngest();
@@ -515,7 +741,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
-                'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                'file' => $this->core->sensor->location->normalizeFilePath($e->getFile()).':'.$e->getLine(),
                 'source' => '',
                 'code' => null,
             ],
@@ -560,7 +786,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
-                'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                'file' => $this->core->sensor->location->normalizeFilePath($e->getFile()).':'.$e->getLine(),
                 'source' => '',
                 'code' => null,
             ],
@@ -600,7 +826,7 @@ class ExceptionSensorTest extends TestCase
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'exception:0.trace', json_encode([
             [
-                'file' => $this->core->sensor->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                'file' => $this->core->sensor->location->normalizeFilePath($e->getFile()).':'.$e->getLine(),
                 'source' => '',
                 'code' => null,
             ],
@@ -814,7 +1040,7 @@ class ExceptionSensorTest extends TestCase
                 'code' => '0',
                 'trace' => json_encode([
                     [
-                        'file' => $this->core->sensor->location->normalizeFile(__FILE__).':'.$line,
+                        'file' => $this->core->sensor->location->normalizeFilePath(__FILE__).':'.$line,
                         'source' => '',
                         'code' => null,
                     ],
@@ -1118,7 +1344,7 @@ class ExceptionSensorTest extends TestCase
         $response->assertServerError();
         $ingest->assertWrittenTimes(2);
         $ingest->assertWrite(0, 'exception:0.file', 'laravel-serializable-closure://ddc5a4f594d48751013d24e777a4420e');
-        $ingest->assertWrite(0, 'exception:0._group', hash('xxh128', "RuntimeException,0,laravel-serializable-closure://ddc5a4f594d48751013d24e777a4420e,3"));
+        $ingest->assertWrite(0, 'exception:0._group', hash('xxh128', 'RuntimeException,0,laravel-serializable-closure://ddc5a4f594d48751013d24e777a4420e,3'));
     }
 
     public function test_it_gives_serialized_closure_to_redaction_hooks(): void

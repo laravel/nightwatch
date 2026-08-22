@@ -31,6 +31,7 @@ use function is_string;
 use function json_encode;
 use function max;
 use function rtrim;
+use function str_replace;
 
 /**
  * @internal
@@ -145,6 +146,10 @@ final class ExceptionSensor
             ],
         ];
 
+        $previousSerializedClosureFile = $this->location->isSerializedClosureFile($e->getFile())
+            ? $e->getFile()
+            : null;
+
         foreach ($e->getTrace() as $i => $frame) {
             if ($i < 2 && ($frame['class'] ?? '') === HandleExceptions::class) {
                 // Skip internal frames when a PHP error has been converted to an ErrorException
@@ -173,7 +178,11 @@ final class ExceptionSensor
             }
 
             if (isset($frame['function']) && is_string($frame['function'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue, isset.offset
-                $source .= $frame['function'];
+                if ($previousSerializedClosureFile) {
+                    $source .= str_replace($previousSerializedClosureFile, $this->location->hashSerializedClosure($previousSerializedClosureFile), $frame['function']);
+                } else {
+                    $source .= $frame['function'];
+                }
             }
 
             $source .= '(';
@@ -206,6 +215,10 @@ final class ExceptionSensor
                 'source' => $source,
                 'code' => $this->fetchSourceCode($frame['file'] ?? null, $frame['line'] ?? null),
             ];
+
+            $previousSerializedClosureFile = $this->location->isSerializedClosureFile($frame['file'] ?? '')
+                ? $frame['file']
+                : null;
         }
 
         $this->fileObjects = [];

@@ -211,9 +211,14 @@ final class Location
         return substr($file, strlen($this->basePath));
     }
 
+    public function isSerializedClosureFile(string $file): ?string
+    {
+        return str_starts_with($file, self::SERIALIZABLE_CLOSURE_PROTOCOL);
+    }
+
     public function hashSerializedClosure(string $file): string
     {
-        if (str_starts_with($file, self::SERIALIZABLE_CLOSURE_PROTOCOL)) {
+        if ($this->isSerializedClosureFile($file)) {
             return self::SERIALIZABLE_CLOSURE_PROTOCOL.hash('xxh128', substr($file, strlen(self::SERIALIZABLE_CLOSURE_PROTOCOL)));
         }
 
