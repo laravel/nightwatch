@@ -715,6 +715,128 @@ class ExceptionSensorTest extends TestCase
         });
     }
 
+    #[WithEnv('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', '1')]
+    public function test_it_captures_the_source_code_of_serialized_closures(): void
+    {
+        $ingest = $this->fakeIngest();
+        $code = "function (): void {\n            \\report(new \\RuntimeException('Whoops!'));\n        }";
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            report(new RuntimeException('Whoops!'));
+        })));
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', function (string $trace) use ($code) {
+            $frames = collect(json_decode($trace, associative: true));
+
+            // The code is hashed out of the file and the source...
+            $this->assertSame(ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code.':3'), $frames[0]['file']);
+            $this->assertSame(self::class.'::{closure:'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':2}()', $frames[1]['source']);
+
+            // ...but it is still captured as the frame's code.
+            $this->assertEquals([
+                1 => '<?php',
+                2 => 'return function (): void {',
+                3 => "            \\report(new \\RuntimeException('Whoops!'));",
+                4 => '        };',
+            ], $frames[0]['code']);
+
+            return true;
+        });
+    }
+
+    #[WithEnv('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', '1')]
+    public function test_it_captures_a_limited_number_of_lines_from_long_serialized_closures(): void
+    {
+        $ingest = $this->fakeIngest();
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            $a = 1;
+            $b = 2;
+            $c = 3;
+            $d = 4;
+            $e = 5;
+            $f = 6;
+            $g = 7;
+            $h = 8;
+
+            report(new RuntimeException('Whoops!'));
+
+            $i = 9;
+            $j = 10;
+            $k = 11;
+            $l = 12;
+            $m = 13;
+            $n = 14;
+            $o = 15;
+            $p = 16;
+        })));
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', function (string $trace) {
+            $frames = collect(json_decode($trace, associative: true));
+
+            // Only the lines surrounding the exception are captured, rather than
+            // the closure in its entirety.
+            $this->assertEquals([
+                7 => '            $e = 5;',
+                8 => '            $f = 6;',
+                9 => '            $g = 7;',
+                10 => '            $h = 8;',
+                11 => '',
+                12 => "            \\report(new \\RuntimeException('Whoops!'));",
+                13 => '',
+                14 => '            $i = 9;',
+                15 => '            $j = 10;',
+                16 => '            $k = 11;',
+                17 => '            $l = 12;',
+            ], $frames[0]['code']);
+
+            return true;
+        });
+    }
+
+    #[WithEnv('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', '1')]
+    public function test_it_captures_the_source_code_of_frames_within_serialized_closures(): void
+    {
+        $ingest = $this->fakeIngest();
+        $code = "function (): void {\n            \$nested = function (): void {\n                \\report(new \\RuntimeException('Whoops!'));\n            };\n\n            \$nested();\n        }";
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            $nested = function (): void {
+                report(new RuntimeException('Whoops!'));
+            };
+
+            $nested();
+        })));
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', function (string $trace) use ($code) {
+            $frames = collect(json_decode($trace, associative: true));
+
+            // The frame the nested closure was called from is within the stream,
+            // so its code is captured from the stream too.
+            $this->assertSame(ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':7', $frames[1]['file']);
+            $this->assertEquals([
+                2 => 'return function (): void {',
+                3 => '            $nested = function (): void {',
+                4 => "                \\report(new \\RuntimeException('Whoops!'));",
+                5 => '            };',
+                6 => '',
+                7 => '            $nested();',
+                8 => '        };',
+            ], $frames[1]['code']);
+
+            return true;
+        });
+    }
+
     public function test_it_handles_the_line_in_the_trace(): void
     {
         $ingest = $this->fakeIngest();

@@ -211,7 +211,7 @@ final class Location
         return substr($file, strlen($this->basePath));
     }
 
-    public function isSerializedClosureFile(string $file): ?string
+    public function isSerializedClosureFile(string $file): bool
     {
         return str_starts_with($file, self::SERIALIZABLE_CLOSURE_PROTOCOL);
     }

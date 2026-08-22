@@ -237,7 +237,7 @@ final class ExceptionSensor
             return null;
         }
 
-        if (! $this->location->isApplicationFile($file)) {
+        if (! $this->location->isApplicationFile($file) && ! $this->location->isSerializedClosureFile($file)) {
             return null;
         }
 
