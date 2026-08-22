@@ -71,7 +71,7 @@ final class QuerySensor
                     'execution_stage' => $this->executionState->stage,
                     'user' => $this->executionState->user->id(),
                     'sql' => Str::mediumText($record->sql),
-                    'file' => Str::tinyText($record->file),
+                    'file' => Str::tinyText($this->location->hashSerializedClosure($record->file)),
                     'line' => $record->line,
                     'duration' => $record->duration,
                     'connection' => Str::tinyText($record->connection),

@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\Facades\Nightwatch;
+use Laravel\Nightwatch\Records\Query as QueryRecord;
+use Laravel\SerializableClosure\SerializableClosure;
+use Laravel\SerializableClosure\Support\ClosureStream;
 use MongoDB\Laravel\Connection as MongoDbConnection;
 use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -31,6 +35,8 @@ use function hash;
 use function hex2bin;
 use function in_array;
 use function now;
+use function serialize;
+use function unserialize;
 
 class QuerySensorTest extends TestCase
 {
@@ -118,6 +124,30 @@ class QuerySensorTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('query:0.file', 'tests/Feature/Sensors/QuerySensorTest.php');
         $ingest->assertLatestWrite('query:0.line', $line);
+    }
+
+    public function test_it_hashes_serialized_closures_in_the_file(): void
+    {
+        $ingest = $this->fakeIngest();
+        $code = "function (): void {\n            \\Illuminate\\Support\\Facades\\DB::table('users')->where('id', 1)->get();\n        }";
+        $records = [];
+        Nightwatch::redactQueries(function (QueryRecord $record) use (&$records): void {
+            $records[] = $record;
+        });
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            DB::table('users')->where('id', 1)->get();
+        })));
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('query:0.file', ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code));
+        $ingest->assertLatestWrite('query:0.line', 3);
+
+        // Redaction hooks are given the original code, so they may act on it.
+        $this->assertCount(1, $records);
+        $this->assertSame(ClosureStream::STREAM_PROTO.'://'.$code, $records[0]->file);
     }
 
     public function test_it_captures_aggregate_query_data_on_the_request(): void
