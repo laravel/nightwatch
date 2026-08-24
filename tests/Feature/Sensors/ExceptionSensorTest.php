@@ -18,7 +18,9 @@ use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Records\Exception as ExceptionRecord;
 use Laravel\SerializableClosure\SerializableClosure;
 use Laravel\SerializableClosure\Support\ClosureStream;
+use Laravel\SerializableClosure\UnsignedSerializableClosure;
 use Orchestra\Testbench\Attributes\WithEnv;
+use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionClass;
 use RuntimeException;
 use Spatie\LaravelIgnition\IgnitionServiceProvider;
@@ -713,6 +715,139 @@ class ExceptionSensorTest extends TestCase
 
             return true;
         });
+    }
+
+    #[DataProvider('serializedClosures')]
+    public function test_it_hashes_serialized_closures_however_they_are_serialized(string $variant): void
+    {
+        $ingest = $this->fakeIngest();
+        $code = "function (): void {\n                \\report(new \\RuntimeException('Whoops!'));\n            }";
+        $closure = match ($variant) {
+            'signed' => unserialize(serialize(new SerializableClosure(function (): void {
+                report(new RuntimeException('Whoops!'));
+            }))),
+            'unsigned' => unserialize(serialize(new UnsignedSerializableClosure(function (): void {
+                report(new RuntimeException('Whoops!'));
+            }))),
+        };
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.file', ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code));
+        $ingest->assertLatestWrite('exception:0._group', hash('xxh128', 'RuntimeException,0,'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).',3'));
+        $ingest->assertLatestWrite('exception:0.trace', function (string $trace) use ($code) {
+            $frames = collect(json_decode($trace, associative: true));
+
+            $this->assertSame(ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code.':3'), $frames[0]['file']);
+            $this->assertSame(version_compare(PHP_VERSION, '8.4', '<')
+                ? self::class.'::{closure}()'
+                : self::class.'::{closure:'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':2}()', $frames[1]['source']);
+
+            return true;
+        });
+
+        // Nothing anywhere in the payload carries the closure's code.
+        $this->assertStringNotContainsString('function (): void {', $ingest->latestWriteAsString());
+    }
+
+    public static function serializedClosures(): iterable
+    {
+        yield 'signed' => ['signed'];
+        yield 'unsigned' => ['unsigned'];
+    }
+
+    public function test_it_hashes_serialized_closures_in_anonymous_class_names_in_the_trace_source(): void
+    {
+        $ingest = $this->fakeIngest();
+        $code = "function (): void {\n            \$object = new class\n            {\n                public function boom(): void\n                {\n                    \\report(new \\RuntimeException('Whoops!'));\n                }\n            };\n\n            \$object->boom();\n        }";
+        $closure = unserialize(serialize(new SerializableClosure(function (): void {
+            $object = new class
+            {
+                public function boom(): void
+                {
+                    report(new RuntimeException('Whoops!'));
+                }
+            };
+
+            $object->boom();
+        })));
+
+        $closure();
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.trace', function (string $trace) use ($code) {
+            $source = collect(json_decode($trace, associative: true))
+                ->pluck('source')
+                ->first(fn (string $source) => str_contains($source, 'class@anonymous'));
+
+            // An anonymous class' name is suffixed with a volatile id, which we
+            // take from the actual name so the rest may be asserted in full.
+            $id = Str::between($source, ':3$', '->boom()');
+
+            $this->assertSame("class@anonymous\0".ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':3$'.$id.'->boom()', $source);
+            $this->assertStringNotContainsString('$object = new class', $trace);
+
+            return true;
+        });
+    }
+
+    public function test_it_hashes_serialized_closures_in_the_message(): void
+    {
+        $ingest = $this->fakeIngest();
+        $code = "function (int \$x): int {\n            return \$x;\n        }";
+        $records = [];
+        Nightwatch::redactExceptions(function (ExceptionRecord $record) use (&$records): void {
+            $records[] = $record;
+        });
+        $closure = unserialize(serialize(new SerializableClosure(function (int $x): int {
+            return $x;
+        })));
+
+        try {
+            $closure('not an int');
+        } catch (Throwable $e) {
+            report($e);
+        }
+
+        $ingest->digest();
+
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('exception:0.file', ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code));
+        // PHP names the closure in the message, which embeds its code. Closures
+        // are only named after the file they were declared in from PHP 8.4, so
+        // there is nothing to hash before then.
+        $ingest->assertLatestWrite('exception:0.message', version_compare(PHP_VERSION, '8.4', '<')
+            ? self::class.'::{closure}(): Argument #1 ($x) must be of type int, string given'
+            : self::class.'::{closure:'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':2}(): Argument #1 ($x) must be of type int, string given');
+
+        // Redaction hooks are given the original code, so they may act on it.
+        $this->assertCount(1, $records);
+        $this->assertSame(version_compare(PHP_VERSION, '8.4', '<')
+            ? self::class.'::{closure}(): Argument #1 ($x) must be of type int, string given'
+            : self::class.'::{closure:'.ClosureStream::STREAM_PROTO.'://'.$code.':2}(): Argument #1 ($x) must be of type int, string given', $records[0]->message);
+    }
+
+    public function test_it_hashes_serialized_closures_in_the_exception_preview(): void
+    {
+        $ingest = $this->fakeIngest();
+        $code = "function (int \$x): int {\n            return \$x;\n        }";
+        $closure = unserialize(serialize(new SerializableClosure(function (int $x): int {
+            return $x;
+        })));
+        Route::get('/users', function () use ($closure): void {
+            $closure('not an int');
+        });
+
+        $response = $this->get('/users');
+
+        $response->assertServerError();
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertLatestWrite('request:0.exception_preview', version_compare(PHP_VERSION, '8.4', '<')
+            ? self::class.'::{closure}(): Argument #1 ($x) must be of type int, string given'
+            : self::class.'::{closure:'.ClosureStream::STREAM_PROTO.'://'.hash('xxh128', $code).':2}(): Argument #1 ($x) must be of type int, string given');
     }
 
     #[WithEnv('NIGHTWATCH_CAPTURE_EXCEPTION_SOURCE_CODE', '1')]

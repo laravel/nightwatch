@@ -75,7 +75,9 @@ final class ExceptionSensor
         $handled ??= $this->wasManuallyReported($normalizedException);
 
         if (! $handled) {
-            $this->executionState->exceptionPreview = $normalizedException->getMessage();
+            $this->executionState->exceptionPreview = $this->location->isSerializedClosureFile($file)
+                ? str_replace($file, $this->location->hashSerializedClosure($file), $normalizedException->getMessage())
+                : $normalizedException->getMessage();
         }
 
         return [
@@ -107,7 +109,10 @@ final class ExceptionSensor
                     'class' => Str::text($record->class),
                     'file' => Str::text($file),
                     'line' => $record->line ?? 0,
-                    'message' => Str::text($record->message),
+                    // $file has had any serialized closure file paths replaced with their hash
+                    // Any exception messages that contain the serialized closure file path
+                    // will have it replaced with the hash
+                    'message' => Str::text(str_replace($record->file, $file, $record->message)),
                     'code' => Str::text((string) $record->code),
                     'trace' => Str::mediumText($this->serializeTrace($normalizedException)),
                     'handled' => $record->handled,
@@ -178,11 +183,11 @@ final class ExceptionSensor
             }
 
             if (isset($frame['function']) && is_string($frame['function'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue, isset.offset
-                if ($previousSerializedClosureFile) {
-                    $source .= str_replace($previousSerializedClosureFile, $this->location->hashSerializedClosure($previousSerializedClosureFile), $frame['function']);
-                } else {
-                    $source .= $frame['function'];
-                }
+                $source .= $frame['function'];
+            }
+
+            if ($previousSerializedClosureFile) {
+                $source = str_replace($previousSerializedClosureFile, $this->location->hashSerializedClosure($previousSerializedClosureFile), $source);
             }
 
             $source .= '(';
