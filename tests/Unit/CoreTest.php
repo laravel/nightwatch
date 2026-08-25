@@ -5,7 +5,10 @@ namespace Tests\Unit;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Laravel\Nightwatch\Events\IngestingEvents;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Orchestra\Testbench\Attributes\WithEnv;
@@ -42,6 +45,23 @@ class CoreTest extends TestCase
         $this->assertTrue($this->core->ingest->thrownInDigest);
         $this->assertCount(1, $exceptions);
         $this->assertSame('Whoops!', $exceptions[0]->getMessage());
+    }
+
+    public function test_records_captured_while_an_ingesting_events_listener_runs_are_not_included_in_the_batch(): void
+    {
+        $ingest = $this->fakeIngest();
+
+        Event::listen(IngestingEvents::class, function (IngestingEvents $event) {
+            Cache::get('triggered-by-listener');
+        });
+
+        Cache::get('original-key');
+        $this->core->finishExecution();
+
+        $records = $ingest->decodedWrites()->last();
+
+        $this->assertCount(1, $records);
+        $this->assertSame('original-key', $records[0]['key']);
     }
 
     #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
