@@ -91,7 +91,7 @@ class OutgoingRequestSensorTest extends TestCase
         });
         Http::fake([
             'https://laravel.com' => function () {
-                return $this->streamResponse(new NoReadStream(null), ['Content-Length' => 5432]);
+                return $this->streamResponse(new NoReadStream(null), ['Content-Length' => '5432']);
             },
         ]);
 
