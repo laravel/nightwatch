@@ -15,12 +15,15 @@ use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Compatibility;
+use Laravel\Nightwatch\Events\IngestingEvents;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\SensorManager;
@@ -236,6 +239,39 @@ class RequestSensorTest extends TestCase
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.user', 'abc-123');
+    }
+
+    public function test_it_captures_events_triggered_during_an_authenticated_request(): void
+    {
+        $ingest = $this->fakeIngest();
+        $ingestingEvents = [];
+        Event::listen(IngestingEvents::class, function (IngestingEvents $event) use (&$ingestingEvents): void {
+            $ingestingEvents[] = $event;
+        });
+        Route::get('/users', function () {
+            DB::table('users')->get();
+            DB::table('users')->get();
+
+            Cache::put('users:345', 'xxxx');
+            Cache::get('users:345');
+
+            return [];
+        });
+
+        $response = $this->actingAs(new GenericUser(['id' => 'abc-123']))
+            ->get('/users');
+
+        $response->assertOk();
+        $ingest->assertWrittenTimes(1);
+        $ingest->assertLatestWrite('request:0.user', 'abc-123');
+        $ingest->assertLatestWrite('request:0.queries', 2);
+        $ingest->assertLatestWrite('request:0.cache_events', 2);
+
+        // 1 request + 2 queries + 2 cache events + 1 user record, with the
+        // user record excluded from the count.
+        $this->assertCount(1, $ingestingEvents);
+        $ingest->assertLatestWriteRecordCount(6);
+        $this->assertSame(5, $ingestingEvents[0]->eventCount());
     }
 
     public function test_it_captures_query_parameters(): void
