@@ -45,6 +45,7 @@ class ServerTest extends TestCase
             new Timer(interval: 10, runAt: 11, scheduledAt: 1, scheduledBy: 'Laravel\NightwatchAgent\Ingest::write'),
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
+        $loop->assertHasSignalListeners([SIGINT, SIGTERM, SIGQUIT]);
         $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),
         ]);
@@ -121,6 +122,7 @@ class ServerTest extends TestCase
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Incoming payload version has changed
+        {date} {info} Graceful down initiated
         {date} {info} Shutting down
         OUTPUT, $output);
         $loop->assertRun([
@@ -129,6 +131,7 @@ class ServerTest extends TestCase
         $loop->assertPending([
             new Timer(interval: 3_600, runAt: null, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
+        $loop->assertHasSignalListeners([]);
         $this->assertFalse($loop->running);
         $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),

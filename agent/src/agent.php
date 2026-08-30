@@ -16,6 +16,7 @@ use React\Stream\WritableResourceStream;
 
 use function date;
 use function file_get_contents;
+use function function_exists;
 use function gethostname;
 use function hash;
 use function is_file;
@@ -73,6 +74,7 @@ $silent ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'critic
 $quiet ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'error'; // @phpstan-ignore argument.type, varTag.nativeType
 /** @var ?bool $verbose */
 $verbose ??= strtolower($_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'] ?? '') === 'verbose'; // @phpstan-ignore argument.type, varTag.nativeType
+$signalSupport = PHP_OS_FAMILY !== 'Windows' && function_exists('pcntl_signal') && function_exists('pcntl_signal_dispatch');
 
 /*
  * Prepare loop...
@@ -195,6 +197,23 @@ $ingest = new Ingest(
     onOverQuota: static fn (string $message, float $duration) => $error('Ingest attempted ['.round($duration, 3).'s]: '.$message),
 );
 
+$shutdown = static function () use ($info, $loop, $ingest, &$shutdown, $signalSupport) {
+    if ($signalSupport) {
+        /** @var Closure $shutdown */
+        $loop->removeSignal(SIGINT, $shutdown);
+        $loop->removeSignal(SIGTERM, $shutdown);
+        $loop->removeSignal(SIGQUIT, $shutdown);
+    }
+
+    $info('Graceful down initiated');
+
+    $loop->futureTick(static fn () => $ingest->forceDigest()->finally(static function () use ($info, $loop) {
+        $info('Shutting down');
+
+        $loop->futureTick(static fn () => $loop->stop());
+    }));
+};
+
 $server = new Server(
     serverResolver: $serverResolver ?? static fn (): ServerInterface => new TcpServer($listenOn),
     tokenHash: $tokenHash,
@@ -202,14 +221,10 @@ $server = new Server(
     onServerError: static fn (string $message) => $error("Server error: {$message}"),
     onConnectionError: static fn (string $message) => $error("Connection error: {$message}"),
     onPayloadReceived: $ingest->write(...),
-    onInvalidPayloadVersion: static function () use ($info, $loop, $ingest) {
+    onInvalidPayloadVersion: static function () use ($info, $shutdown) {
         $info('Incoming payload version has changed');
 
-        $ingest->forceDigest()->finally(static function () use ($info, $loop) {
-            $loop->stop();
-
-            $info('Shutting down');
-        });
+        $shutdown();
     },
     onInvalidTokenHash: static fn () => $error('Incoming token hash mismatch! Check your application/agent configuration.'),
 );
@@ -225,18 +240,18 @@ $checkSignature = new CheckSignature(
     onShutdownInitiated: static function ($shuttingDownIn) use ($info) {
         $info('Agent signature changed: shutting down in '.$shuttingDownIn.' minutes');
     },
-    onShutdown: static function () use ($info, $loop, $ingest) {
-        $ingest->forceDigest()->finally(static function () use ($info, $loop) {
-            $loop->stop();
-
-            $info('Shutting down');
-        });
-    },
+    onShutdown: $shutdown,
 );
 
 /*
  * Get things rolling...
  */
+
+if ($signalSupport) {
+    $loop->addSignal(SIGINT, $shutdown);
+    $loop->addSignal(SIGTERM, $shutdown);
+    $loop->addSignal(SIGQUIT, $shutdown);
+}
 
 $server->start();
 

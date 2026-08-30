@@ -59,6 +59,8 @@ class HealthCheckTest extends TestCase
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
+        {date} {info} Graceful down initiated
+        {date} {info} Shutting down
         OUTPUT, $output);
     }
 }

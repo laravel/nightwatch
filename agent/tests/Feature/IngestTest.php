@@ -1134,6 +1134,7 @@ class IngestTest extends TestCase
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Incoming payload version has changed
+        {date} {info} Graceful down initiated
         {date} {info} Ingest successful {duration}
         {date} {info} Shutting down
         OUTPUT, $output);
@@ -1182,6 +1183,7 @@ class IngestTest extends TestCase
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Incoming payload version has changed
+        {date} {info} Graceful down initiated
         {date} {info} Shutting down
         OUTPUT, $output);
         $loop->assertRun([
@@ -1230,6 +1232,7 @@ class IngestTest extends TestCase
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Incoming payload version has changed
+        {date} {info} Graceful down initiated
         {date} {info} Ingest successful {duration}
         {date} {info} Shutting down
         OUTPUT, $output);

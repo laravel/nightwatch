@@ -19,7 +19,7 @@ class AgentTest extends TestCase
         $originalSignature = self::getSignature();
         try {
             $loop = new LoopFake(runForSeconds: 60 * 20);
-            $loop->addTimer(1, [self::class, 'writeSignature']);
+            $loop->addTimer(1, [self::class, 'changeSignature']);
             $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
 
             [$output, $e] = $this->runAgent(
@@ -40,6 +40,7 @@ class AgentTest extends TestCase
                 {date} {info} Agent signature changed: shutting down in 3 minutes
                 {date} {info} Agent signature changed: shutting down in 2 minutes
                 {date} {info} Agent signature changed: shutting down in 1 minutes
+                {date} {info} Graceful down initiated
                 {date} {info} Shutting down
                 OUTPUT, $output);
 
@@ -100,7 +101,7 @@ class AgentTest extends TestCase
         $originalSignature = self::getSignature();
         try {
             $loop = new LoopFake(runForSeconds: 61);
-            $loop->addTimer(1, [self::class, 'writeSignature']);
+            $loop->addTimer(1, [self::class, 'changeSignature']);
             $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
 
             [$output, $e] = $this->runAgent(
@@ -148,7 +149,7 @@ class AgentTest extends TestCase
         try {
             $loop = new LoopFake(runForSeconds: 121);
             $loop->addTimer(1, [self::class, 'unlinkSignature']);
-            $loop->addTimer(61, [self::class, 'writeSignature']);
+            $loop->addTimer(61, [self::class, 'changeSignature']);
             $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
 
             [$output, $e] = $this->runAgent(
@@ -175,6 +176,11 @@ class AgentTest extends TestCase
     public static function writeSignature(string $content = "abcd\n"): void
     {
         file_put_contents(self::signaturePath(), $content);
+    }
+
+    public static function changeSignature(): void
+    {
+        self::writeSignature();
     }
 
     public static function touchSignature(): void
