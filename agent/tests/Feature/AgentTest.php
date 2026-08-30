@@ -40,8 +40,8 @@ class AgentTest extends TestCase
                 {date} {info} Agent signature changed: shutting down in 3 minutes
                 {date} {info} Agent signature changed: shutting down in 2 minutes
                 {date} {info} Agent signature changed: shutting down in 1 minutes
-                {date} {info} Graceful down initiated
-                {date} {info} Shutting down
+                {date} {info} Graceful shutdown initiated
+                {date} {info} Shutdown
                 OUTPUT, $output);
 
             $loop->assertRunWithPeriodic([

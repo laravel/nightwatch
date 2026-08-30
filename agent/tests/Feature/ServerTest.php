@@ -122,8 +122,8 @@ class ServerTest extends TestCase
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
         {date} {info} Incoming payload version has changed
-        {date} {info} Graceful down initiated
-        {date} {info} Shutting down
+        {date} {info} Graceful shutdown initiated
+        {date} {info} Shutdown
         OUTPUT, $output);
         $loop->assertRun([
             new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),

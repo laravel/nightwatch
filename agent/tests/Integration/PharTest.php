@@ -15,8 +15,8 @@ class PharTest extends TestCase
         $this->assertNull($e, $e?->getMessage() ?? '');
         $this->assertLogMatches(<<<'OUTPUT'
         {date} {info} Authentication successful {duration}
-        {date} {info} Graceful down initiated
-        {date} {info} Shutting down
+        {date} {info} Graceful shutdown initiated
+        {date} {info} Shutdown
         OUTPUT, $output);
     }
 
@@ -29,7 +29,7 @@ class PharTest extends TestCase
             stopSignal: SIGINT,
         );
 
-        $this->assertStringContainsString('Shutting down', $output, "Agent did not log a clean shutdown after SIGINT.\n=== OUTPUT ===\n{$output}");
+        $this->assertStringContainsString('Shutdown', $output, "Agent did not log a clean shutdown after SIGINT.\n=== OUTPUT ===\n{$output}");
         $this->assertSame(0, $exitCode, "Agent did not exit cleanly after SIGINT (exit code {$exitCode}).\n=== OUTPUT ===\n{$output}");
     }
 
@@ -42,7 +42,7 @@ class PharTest extends TestCase
             stopSignal: SIGTERM,
         );
 
-        $this->assertStringContainsString('Shutting down', $output, "Agent did not log a clean shutdown after SIGTERM.\n=== OUTPUT ===\n{$output}");
+        $this->assertStringContainsString('Shutdown', $output, "Agent did not log a clean shutdown after SIGTERM.\n=== OUTPUT ===\n{$output}");
         $this->assertSame(0, $exitCode, "Agent did not exit cleanly after SIGTERM (exit code {$exitCode}).\n=== OUTPUT ===\n{$output}");
     }
 
@@ -55,7 +55,7 @@ class PharTest extends TestCase
             stopSignal: SIGQUIT,
         );
 
-        $this->assertStringContainsString('Shutting down', $output, "Agent did not log a clean shutdown after SIGQUIT.\n=== OUTPUT ===\n{$output}");
+        $this->assertStringContainsString('Shutdown', $output, "Agent did not log a clean shutdown after SIGQUIT.\n=== OUTPUT ===\n{$output}");
         $this->assertSame(0, $exitCode, "Agent did not exit cleanly after SIGQUIT (exit code {$exitCode}).\n=== OUTPUT ===\n{$output}");
     }
 }

@@ -205,13 +205,13 @@ $shutdown = static function () use ($info, $loop, $ingest, &$shutdown, $signalSu
         $loop->removeSignal(SIGQUIT, $shutdown);
     }
 
-    $info('Graceful down initiated');
+    $info('Graceful shutdown initiated');
 
-    $loop->futureTick(static fn () => $ingest->forceDigest()->finally(static function () use ($info, $loop) {
-        $info('Shutting down');
+    $ingest->forceDigest()->finally(static function () use ($info, $loop) {
+        $info('Shutdown');
 
         $loop->futureTick(static fn () => $loop->stop());
-    }));
+    });
 };
 
 $server = new Server(
