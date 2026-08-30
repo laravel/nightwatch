@@ -197,7 +197,15 @@ $ingest = new Ingest(
     onOverQuota: static fn (string $message, float $duration) => $error('Ingest attempted ['.round($duration, 3).'s]: '.$message),
 );
 
-$shutdown = static function () use ($info, $loop, $ingest, &$shutdown, $signalSupport) {
+$shuttingDown = false;
+
+$shutdown = static function () use ($info, $loop, $ingest, &$shutdown, &$shuttingDown, $signalSupport) {
+    if ($shuttingDown) {
+        return;
+    }
+
+    $shuttingDown = true;
+
     if ($signalSupport) {
         /** @var Closure $shutdown */
         $loop->removeSignal(SIGINT, $shutdown);

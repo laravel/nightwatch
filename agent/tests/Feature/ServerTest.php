@@ -141,6 +141,56 @@ class ServerTest extends TestCase
         $ingestBrowser->assertPending([]);
     }
 
+    public function test_it_only_performs_graceful_shutdown_once_when_triggered_multiple_times(): void
+    {
+        $tokenHash = self::tokenHash();
+
+        $loop = new LoopFake(runForSeconds: 2);
+        $server = new TcpServerFake;
+        $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
+        $ingestBrowser = new BrowserFake([]);
+
+        $loop->addTimer(1, $server->pendingConnection('20:INVALID:'.$tokenHash.':[{}]'));
+        $loop->addTimer(1, $server->pendingConnection('20:INVALID:'.$tokenHash.':[{}]'));
+
+        [$output, $e] = $this->runAgent(
+            via: 'source',
+            ingestDetailsBrowser: $ingestDetailsBrowser,
+            ingestBrowser: $ingestBrowser,
+            loop: $loop,
+            server: $server,
+        );
+
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $server->assertHandled([
+            Connection::ok(),
+            Connection::ok(),
+        ]);
+        $server->assertClosed();
+        $this->assertLogMatches(<<<'OUTPUT'
+        {date} {info} Authentication successful {duration}
+        {date} {info} Incoming payload version has changed
+        {date} {info} Graceful shutdown initiated
+        {date} {info} Shutdown
+        {date} {info} Incoming payload version has changed
+        OUTPUT, $output);
+        $loop->assertRun([
+            new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
+            new Timer(interval: 1, runAt: 1, scheduledAt: 0, scheduledBy: $this->functionName()),
+        ]);
+        $loop->assertPending([
+            new Timer(interval: 3_600, runAt: null, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+        ]);
+        $loop->assertHasSignalListeners([]);
+        $this->assertFalse($loop->running);
+        $ingestDetailsBrowser->assertSent([
+            Request::json('/api/agent-auth'),
+        ]);
+        $ingestDetailsBrowser->assertPending([]);
+        $ingestBrowser->assertSent([]);
+        $ingestBrowser->assertPending([]);
+    }
+
     public function test_it_errors_when_an_incorrect_token_hash_is_received(): void
     {
         $tokenHash = self::tokenHash();
