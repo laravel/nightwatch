@@ -7,7 +7,6 @@ use PHPUnit\Framework\Assert;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\Timer\Timer as ReactTimer;
 use React\EventLoop\TimerInterface;
-use RuntimeException;
 
 use function array_filter;
 use function array_map;
@@ -24,9 +23,14 @@ class LoopFake implements LoopInterface
     public SyncedClock $clock;
 
     /**
-     * @var array<int, array{0: resource, 1: callable}>
+     * @var array<int, resource>
      */
     private array $writeStreams = [];
+
+    /**
+     * @var array<int, callable>
+     */
+    private array $writeListeners = [];
 
     /**
      * @var list<array{runAt: float, scheduledAt: float, scheduledBy: string, interval: float, callback: ?callable, instance: ?TimerInterface, periodic: bool }>
@@ -42,6 +46,16 @@ class LoopFake implements LoopInterface
      * @var list<array{interval: float, runAt: float, scheduledAt: float, scheduledBy: string, periodic: bool }>
      */
     public array $timersRun = [];
+
+    /**
+     * @var list<callable>
+     */
+    private array $futureTicks = [];
+
+    /**
+     * @var list<int>
+     */
+    public array $signals = [];
 
     public bool $running = false;
 
@@ -66,12 +80,15 @@ class LoopFake implements LoopInterface
     }
 
     /**
-     * @param  callable  $listener
      * @param  resource  $stream
+     * @param  callable  $listener
      */
     public function addWriteStream($stream, $listener): void
     {
-        $this->writeStreams[(int) $stream] = [$stream, $listener];
+        $key = (int) $stream;
+
+        $this->writeStreams[$key] = $stream;
+        $this->writeListeners[$key] = $listener;
     }
 
     /**
@@ -87,7 +104,9 @@ class LoopFake implements LoopInterface
      */
     public function removeWriteStream($stream): void
     {
-        unset($this->writeStreams[(int) $stream]);
+        $key = (int) $stream;
+
+        unset($this->writeStreams[$key], $this->writeListeners[$key]);
     }
 
     /**
@@ -197,7 +216,7 @@ class LoopFake implements LoopInterface
      */
     public function futureTick($listener)
     {
-        throw new RuntimeException(__FUNCTION__);
+        $this->futureTicks[] = $listener;
     }
 
     /**
@@ -206,7 +225,7 @@ class LoopFake implements LoopInterface
      */
     public function addSignal($signal, $listener): void
     {
-        throw new RuntimeException(__FUNCTION__);
+        $this->signals[] = $signal;
     }
 
     /**
@@ -215,7 +234,10 @@ class LoopFake implements LoopInterface
      */
     public function removeSignal($signal, $listener): void
     {
-        throw new RuntimeException(__FUNCTION__);
+        $this->signals = array_values(array_filter(
+            $this->signals,
+            static fn (int $registered): bool => $registered !== $signal,
+        ));
     }
 
     public function run(): void
@@ -224,7 +246,7 @@ class LoopFake implements LoopInterface
 
         $stopRunningAt = $this->now + $this->runForSeconds;
 
-        while ($this->running && count($this->pendingTimers)) {
+        while ($this->running && (count($this->pendingTimers) || count($this->futureTicks))) {
             if ($this->now >= $stopRunningAt) {
                 $this->pendingTimers = array_map(fn ($pendingTimer) => [
                     'interval' => $pendingTimer['interval'],
@@ -236,69 +258,98 @@ class LoopFake implements LoopInterface
                     'periodic' => $pendingTimer['periodic'],
                 ], $this->pendingTimers);
 
-                foreach ($this->writeStreams as [$stream, $listener]) {
-                    $listener($stream);
-                }
+                $this->futureTicks = [];
+
+                $this->flushWriteStreams();
 
                 return;
             }
 
+            $this->runFutureTicks();
+
+            $this->runDueTimers();
+
+            if (! $this->running || $this->futureTicks !== []) {
+                $this->flushWriteStreams();
+
+                continue;
+            }
+
+            if ($this->pendingTimers === []) {
+                continue;
+            }
+
+            $this->flushWriteStreams();
+
+            $this->now = $this->pendingTimers[0]['runAt'];
+        }
+
+        $this->futureTicks = [];
+
+        $this->flushWriteStreams();
+    }
+
+    private function runDueTimers(): void
+    {
+        while (($first = $this->pendingTimers[0] ?? null) !== null && $this->now >= $first['runAt']) {
             [
-                'runAt' => $runAt,
                 'scheduledBy' => $scheduledBy,
                 'scheduledAt' => $scheduledAt,
                 'interval' => $interval,
                 'callback' => $callback,
                 'instance' => $timer,
                 'periodic' => $periodic,
-            ] = $this->pendingTimers[0];
+            ] = $first;
+
+            $this->clock->now = $this->now;
 
             /** @var callable $callback */
-            if ($this->now >= $runAt) {
-                $this->clock->now = $this->now;
+            $callback($timer);
 
-                $callback();
+            $this->timersRun[] = [
+                'interval' => $interval,
+                'runAt' => $this->now - $this->startedAt,
+                'scheduledBy' => $scheduledBy,
+                'scheduledAt' => $scheduledAt,
+                'periodic' => $periodic,
+            ];
 
-                $this->timersRun[] = [
-                    'interval' => $interval,
-                    'runAt' => $this->now - $this->startedAt,
-                    'scheduledBy' => $scheduledBy,
-                    'scheduledAt' => $scheduledAt,
-                    'periodic' => $periodic,
-                ];
-
+            if (($this->pendingTimers[0]['instance'] ?? null) === $timer) {
                 if ($periodic) {
                     $this->pendingTimers[0]['runAt'] = $this->now + $interval;
                     $this->sortPendingTimers();
                 } else {
                     array_shift($this->pendingTimers);
                 }
+            }
+        }
+    }
 
-                foreach ($this->writeStreams as [$stream, $listener]) {
-                    $listener($stream);
-                }
+    private function runFutureTicks(): void
+    {
+        $futureTicks = $this->futureTicks;
+        $this->futureTicks = [];
 
+        foreach ($futureTicks as $futureTick) {
+            $futureTick();
+        }
+    }
+
+    private function flushWriteStreams(): void
+    {
+        $streams = $this->writeStreams;
+
+        foreach ($streams as $key => $stream) {
+            if (! isset($this->writeListeners[$key])) {
                 continue;
             }
 
-            foreach ($this->writeStreams as [$stream, $listener]) {
-                $listener($stream);
-            }
-
-            $this->now = $runAt;
-        }
-
-        foreach ($this->writeStreams as [$stream, $listener]) {
-            $listener($stream);
+            ($this->writeListeners[$key])($stream);
         }
     }
 
     public function stop(): void
     {
-        foreach ($this->writeStreams as [$stream, $listener]) {
-            $listener($stream);
-        }
-
         $this->running = false;
     }
 
@@ -383,6 +434,16 @@ class LoopFake implements LoopInterface
         ), $this->timersRun);
 
         Assert::assertEquals($timers, $actual);
+
+        return $this;
+    }
+
+    /**
+     * @param  list<int>  $signals
+     */
+    public function assertHasSignalListeners(array $signals): self
+    {
+        Assert::assertSame($signals, $this->signals);
 
         return $this;
     }
