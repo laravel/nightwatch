@@ -56,6 +56,9 @@
         "symfony/mime": "^6.0|^7.0|^8.0",
         "symfony/var-dumper": "^6.0|^7.0|^8.0"
     },
+    "suggest": {
+        "ext-pcntl": "Allows for graceful shutdown"
+    },
     "autoload": {
         "psr-4": {
             "Laravel\\Nightwatch\\": "src/"

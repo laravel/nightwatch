@@ -3,6 +3,8 @@
 require_once __DIR__.'./../src/Contracts/Browser.php';
 require_once __DIR__.'/../src/Contracts/Clock.php';
 require_once __DIR__.'./../vendor/react/event-loop/src/LoopInterface.php';
+require_once __DIR__.'./../vendor/react/event-loop/src/TimerInterface.php';
+require_once __DIR__.'./../vendor/react/event-loop/src/Timer/Timer.php';
 require_once __DIR__.'./../vendor/evenement/evenement/src/EventEmitterInterface.php';
 require_once __DIR__.'./../vendor/evenement/evenement/src/EventEmitterTrait.php';
 require_once __DIR__.'./../vendor/evenement/evenement/src/EventEmitter.php';

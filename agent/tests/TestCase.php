@@ -18,6 +18,7 @@ use function implode;
 use function is_array;
 use function is_file;
 use function is_string;
+use function microtime;
 use function preg_quote;
 use function rtrim;
 use function serialize;
@@ -26,13 +27,14 @@ use function str_replace;
 use function substr;
 use function unlink;
 use function unserialize;
+use function usleep;
 
 abstract class TestCase extends BaseTestCase
 {
     /**
      * @param  'source'|'phar'  $via
      * @param  (callable(string): bool)  $until
-     * @return array{0: string, 1: Throwable|null}
+     * @return array{0: string, 1: Throwable|null, 2: int|null}
      *
      * @param-out  BrowserFake  $ingestDetailsBrowser
      * @param-out  BrowserFake  $ingestBrowser
@@ -53,12 +55,14 @@ abstract class TestCase extends BaseTestCase
         ?bool $verbose = null,
         ?string &$listenOn = null,
         ?int $maxBufferLength = null,
+        int $stopSignal = SIGTERM,
     ): array {
         $payloadFile = __DIR__.'/test-payload';
         $specifiedListenOn = is_string($listenOn);
 
         for ($i = 0; $i < 30; $i++) {
             $output = '';
+            $exitCode = null;
             $listenOn = $specifiedListenOn ? $listenOn : '127.0.0.1:'.(2407 + $i);
 
             try {
@@ -79,30 +83,50 @@ abstract class TestCase extends BaseTestCase
                     throw new RuntimeException('Unable to write test payload file.');
                 }
 
-                $process = Process::fromShellCommandline('php '.__DIR__.'/agent-wrapper.php')
+                $process = Process::fromShellCommandline('exec php '.__DIR__.'/agent-wrapper.php')
                     ->setTimeout($timeout);
 
-                $process->mustRun(function (string $type, string $o) use ($until, $process, &$output) {
+                $signalSent = false;
+
+                $process->mustRun(function (string $type, string $o) use ($until, $process, $stopSignal, &$output, &$signalSent) {
                     $output .= $o;
 
-                    if ($until && $until($output)) {
-                        $process->stop(1);
+                    if ($signalSent || ! $until || ! $until($output)) {
+                        return;
+                    }
+
+                    $signalSent = true;
+
+                    $process->signal($stopSignal);
+
+                    $deadline = microtime(true) + 3;
+
+                    while ($process->isRunning() && microtime(true) < $deadline) {
+                        usleep(100_000);
+                    }
+
+                    if ($process->isRunning()) {
+                        $process->signal(SIGKILL);
                     }
                 });
 
+                $exitCode = $process->getExitCode();
+
                 break;
             } catch (ProcessFailedException $e) {
-                if ($e->getProcess()->getExitCode() === 143) {
-                    return [$output, null];
+                $exitCode = $e->getProcess()->getExitCode();
+
+                if ($exitCode === 143) {
+                    return [$output, null, $exitCode];
                 }
 
                 if (! $specifiedListenOn && str_contains($output, 'Address already in use')) {
                     continue;
                 }
 
-                return [$output, $e];
+                return [$output, $e, $exitCode];
             } catch (Throwable $e) {
-                return [$output, $e];
+                return [$output, $e, $exitCode];
             } finally {
                 if (is_file($payloadFile)) {
                     $payload = file_get_contents($payloadFile);
@@ -126,7 +150,7 @@ abstract class TestCase extends BaseTestCase
             }
         }
 
-        return [$output, null];
+        return [$output, null, $exitCode];
     }
 
     protected function functionName(): string
