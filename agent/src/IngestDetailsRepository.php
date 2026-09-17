@@ -87,8 +87,6 @@ class IngestDetailsRepository
     {
         $this->overQuota = true;
 
-        $this->loop->cancelTimer($this->refreshTimer); // @phpstan-ignore argument.type
-
         $this->scheduleRefreshIn($refreshIn ?? 60 * 15);
     }
 
@@ -141,7 +139,13 @@ class IngestDetailsRepository
 
     private function scheduleRefreshIn(int|float $seconds): void
     {
+        if ($this->refreshTimer !== null) {
+            $this->loop->cancelTimer($this->refreshTimer);
+        }
+
         $this->refreshTimer = $this->loop->addTimer($seconds, function (): void {
+            $this->refreshTimer = null;
+
             $this->refresh()->then(function (?IngestDetails $ingestDetails): void {
                 if ($ingestDetails) {
                     $this->ingestDetails = resolve($ingestDetails);

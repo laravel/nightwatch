@@ -1296,10 +1296,11 @@ class IngestTest extends TestCase
             new Timer(interval: 11, runAt: 11, scheduledAt: 0, scheduledBy: $this->functionName()),
         ]);
         $loop->assertPending([
-            new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
             new Timer(interval: 3_600, runAt: 3_611, scheduledAt: 11, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
-        $loop->assertCanceled([]);
+        $loop->assertCanceled([
+            new Timer(interval: 3_600, canceledAt: 11, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+        ]);
         $ingestDetailsBrowser->assertSent([
             Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
