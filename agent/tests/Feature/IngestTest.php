@@ -1254,14 +1254,16 @@ class IngestTest extends TestCase
         $ingestBrowser->assertPending([]);
     }
 
-    public function test_it_does_not_ingest_if_token_has_expired(): void
+    public function test_it_refreshes_an_expired_token_before_ingesting(): void
     {
         $loop = new LoopFake(runForSeconds: 12);
         $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([
             Response::jwt(expiresIn: 10),
+            Response::jwt(token: 'NIGHTWATCH_TEST_TOKEN_2'),
         ]);
         $ingestBrowser = new BrowserFake([
+            Response::ingested(),
             Response::ingested(),
         ]);
         $loop->addTimer(10, $server->pendingConnection([['t' => 'request']]));
@@ -1280,10 +1282,12 @@ class IngestTest extends TestCase
         $this->assertLogMatches(<<<'OUTPUT'
             {date} {info} Authentication successful {duration}
             {date} {info} Ingest successful {duration}
-            {date} {error} Ingest failed {duration}: Authentication token expired
+            {date} {info} Authentication successful {duration}
+            {date} {info} Ingest successful {duration}
             OUTPUT, $output);
         $ingestBrowser->assertSent([
-            Request::ingest([['t' => 'request']]),
+            Request::ingest([['t' => 'request']], headers: ['authorization' => 'Bearer NIGHTWATCH_TEST_TOKEN']),
+            Request::ingest([['t' => 'request']], headers: ['authorization' => 'Bearer NIGHTWATCH_TEST_TOKEN_2']),
         ]);
         $ingestBrowser->assertProcessing([]);
         $ingestBrowser->assertPending([]);
@@ -1293,9 +1297,11 @@ class IngestTest extends TestCase
         ]);
         $loop->assertPending([
             new Timer(interval: 3_600, runAt: 3_600, scheduledAt: 0, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
+            new Timer(interval: 3_600, runAt: 3_611, scheduledAt: 11, scheduledBy: 'Laravel\NightwatchAgent\IngestDetailsRepository::scheduleRefreshIn'),
         ]);
         $loop->assertCanceled([]);
         $ingestDetailsBrowser->assertSent([
+            Request::json('/api/agent-auth'),
             Request::json('/api/agent-auth'),
         ]);
         $ingestDetailsBrowser->assertPending([]);

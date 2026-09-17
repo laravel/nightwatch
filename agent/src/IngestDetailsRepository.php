@@ -70,7 +70,17 @@ class IngestDetailsRepository
      */
     public function get(): PromiseInterface
     {
-        return $this->ingestDetails ??= $this->refresh();
+        if ($this->ingestDetails === null) {
+            return $this->ingestDetails = $this->refresh();
+        }
+
+        return $this->ingestDetails->then(function (?IngestDetails $ingestDetails): IngestDetails|PromiseInterface|null {
+            if ($ingestDetails !== null && $this->clock->time() > $ingestDetails->expiresAt) {
+                return $this->ingestDetails = $this->refresh();
+            }
+
+            return $ingestDetails;
+        });
     }
 
     public function markOverQuota(int|float|null $refreshIn = null): void
