@@ -1,6 +1,6 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.30.1...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.30.2...1.x)
 
 ## [v1.28.2](https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2) - 2026-06-24
 
@@ -9,6 +9,14 @@
 * Revert "Capture and restore first trace on initial framework boot (#3… by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/386
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2
+
+## [v1.30.2](https://github.com/laravel/nightwatch/compare/v1.30.1...v1.30.2) - 2026-09-18
+
+### What's Changed
+
+* Refresh expired token before ingesting by [@avosalmon](https://github.com/avosalmon) in https://github.com/laravel/nightwatch/pull/428
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.30.1...v1.30.2
 
 ## [v1.30.1](https://github.com/laravel/nightwatch/compare/v1.30.0...v1.30.1) - 2026-09-16
 
