@@ -70,14 +70,22 @@ class IngestDetailsRepository
      */
     public function get(): PromiseInterface
     {
-        return $this->ingestDetails ??= $this->refresh();
+        if ($this->ingestDetails === null) {
+            return $this->ingestDetails = $this->refresh();
+        }
+
+        return $this->ingestDetails->then(function (?IngestDetails $ingestDetails): IngestDetails|PromiseInterface|null {
+            if ($ingestDetails !== null && $this->clock->time() > $ingestDetails->expiresAt) {
+                return $this->ingestDetails = $this->refresh();
+            }
+
+            return $ingestDetails;
+        });
     }
 
     public function markOverQuota(int|float|null $refreshIn = null): void
     {
         $this->overQuota = true;
-
-        $this->loop->cancelTimer($this->refreshTimer); // @phpstan-ignore argument.type
 
         $this->scheduleRefreshIn($refreshIn ?? 60 * 15);
     }
@@ -131,7 +139,13 @@ class IngestDetailsRepository
 
     private function scheduleRefreshIn(int|float $seconds): void
     {
+        if ($this->refreshTimer !== null) {
+            $this->loop->cancelTimer($this->refreshTimer);
+        }
+
         $this->refreshTimer = $this->loop->addTimer($seconds, function (): void {
+            $this->refreshTimer = null;
+
             $this->refresh()->then(function (?IngestDetails $ingestDetails): void {
                 if ($ingestDetails) {
                     $this->ingestDetails = resolve($ingestDetails);
