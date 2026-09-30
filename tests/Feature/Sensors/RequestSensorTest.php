@@ -67,6 +67,7 @@ class RequestSensorTest extends TestCase
         $this->setExecutionStart(CarbonImmutable::parse('2000-01-01 01:02:03.456789'));
     }
 
+    #[WithEnv('APP_URL', 'http://localhost')]
     public function test_it_can_ingest_requests(): void
     {
         $ingest = $this->fakeIngest();
@@ -274,6 +275,7 @@ class RequestSensorTest extends TestCase
         $this->assertSame(5, $ingestingEvents[0]->eventCount());
     }
 
+    #[WithEnv('APP_URL', 'http://localhost')]
     public function test_it_captures_query_parameters(): void
     {
         $ingest = $this->fakeIngest();
@@ -334,6 +336,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_action', 'App\Http\UserController@index');
     }
 
+    #[WithEnv('APP_URL', 'http://localhost')]
     public function test_it_captures_real_path_and_route_path(): void
     {
         $ingest = $this->fakeIngest();
@@ -374,6 +377,7 @@ class RequestSensorTest extends TestCase
         $this->assertStringNotContainsString('secret', $ingest->latestWriteAsString());
     }
 
+    #[WithEnv('APP_URL', 'http://localhost')]
     public function test_it_does_not_escape_slashes_in_the_wire_payload(): void
     {
         $ingest = $this->fakeIngest();
@@ -502,6 +506,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0._group', hash('xxh128', 'GET|HEAD,{product}.laravel.com,/users/{user}'));
     }
 
+    #[WithEnv('APP_URL', 'http://localhost')]
     public function test_it_handles_the_root_path(): void
     {
         $ingest = $this->fakeIngest();
@@ -515,6 +520,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/');
     }
 
+    #[WithEnv('APP_URL', 'http://localhost')]
     public function test_it_gracefully_handles_non_string_query_string(): void
     {
         $ingest = $this->fakeIngest();
@@ -969,6 +975,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.context', fn ($context) => str_contains($context, 'café'));
     }
 
+    #[WithEnv('APP_URL', 'http://localhost')]
     public function test_it_captures_request_headers(): void
     {
         $ingest = $this->fakeIngest();
@@ -1534,6 +1541,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
     }
 
+    #[WithEnv('APP_URL', 'http://localhost')]
     public function test_livewire_3(): void
     {
         $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '<'), 'Requires Livewire 3');
@@ -1590,6 +1598,7 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
     }
 
+    #[WithEnv('APP_URL', 'http://localhost')]
     public function test_livewire_3_with_multiple_components(): void
     {
         $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '<'), 'Requires Livewire 3');

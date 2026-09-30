@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Route;
 use Laravel\Nightwatch\Compatibility;
+use Orchestra\Testbench\Attributes\WithEnv;
 use Tests\TestCase;
 
 use function hash;
@@ -535,6 +536,7 @@ class CacheEventSensorTest extends TestCase
         ]);
     }
 
+    #[WithEnv('APP_URL', 'http://localhost')]
     public function test_it_can_capture_null_cache_keys(): void
     {
         $ingest = $this->fakeIngest();

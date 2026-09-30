@@ -30,6 +30,7 @@ class UserProviderTest extends TestCase
     {
         Auth::login(new GenericUser([
             'id' => str_repeat('x', 1000),
+            'password' => '',
         ]));
 
         $this->assertSame(1000, strlen(Auth::id()));
@@ -42,6 +43,7 @@ class UserProviderTest extends TestCase
 
         Auth::login(new GenericUser([
             'id' => str_repeat('x', 1000),
+            'password' => '',
         ]));
 
         $this->assertSame(str_repeat('x', 255), $id->jsonSerialize());
