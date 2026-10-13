@@ -8,6 +8,7 @@ use React\Socket\ServerInterface;
 use Throwable;
 
 use function call_user_func;
+use function hash_equals;
 
 class Server
 {
@@ -57,16 +58,16 @@ class Server
                     return;
                 }
 
-                if (! $payload->versionIsValid()) {
-                    $server->close();
-
-                    call_user_func($this->onInvalidPayloadVersion);
+                if (! hash_equals($this->tokenHash, $payload->tokenHash)) {
+                    call_user_func($this->onInvalidTokenHash);
 
                     return;
                 }
 
-                if ($payload->tokenHash !== $this->tokenHash) {
-                    call_user_func($this->onInvalidTokenHash);
+                if (! $payload->versionIsValid()) {
+                    $server->close();
+
+                    call_user_func($this->onInvalidPayloadVersion);
 
                     return;
                 }
