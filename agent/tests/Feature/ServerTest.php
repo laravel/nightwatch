@@ -138,6 +138,48 @@ class ServerTest extends TestCase
         $ingestBrowser->assertPending([]);
     }
 
+    public function test_it_does_not_shut_down_when_an_incorrect_payload_version_is_received_with_an_incorrect_token_hash(): void
+    {
+        $loop = new LoopFake(runForSeconds: 40);
+        $server = new TcpServerFake;
+        $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
+        $ingestBrowser = new BrowserFake([
+            Response::ingested(),
+        ]);
+
+        $loop->addTimer(1, $server->pendingConnection('20:INVALID:BADTOKN:[{}]'));
+        $loop->addTimer(20, $server->pendingConnection([['t' => 'request']]));
+
+        [$output, $e] = $this->runAgent(
+            via: 'source',
+            ingestDetailsBrowser: $ingestDetailsBrowser,
+            ingestBrowser: $ingestBrowser,
+            loop: $loop,
+            server: $server,
+        );
+
+        $this->assertNull($e, $e?->getMessage() ?? '');
+        $server->assertOpen();
+        $server->assertHandled([
+            Connection::ok(),
+            Connection::ok(),
+        ]);
+        $this->assertLogMatches(<<<'OUTPUT'
+        {date} {info} Authentication successful {duration}
+        {date} {error} Incoming token hash mismatch! Check your application/agent configuration.
+        {date} {info} Ingest successful {duration}
+        OUTPUT, $output);
+        $this->assertTrue($loop->running);
+        $ingestDetailsBrowser->assertSent([
+            Request::json('/api/agent-auth'),
+        ]);
+        $ingestBrowser->assertSent([
+            Request::ingest([['t' => 'request']]),
+        ]);
+        $ingestDetailsBrowser->assertPending([]);
+        $ingestBrowser->assertPending([]);
+    }
+
     public function test_it_errors_when_an_incorrect_token_hash_is_received(): void
     {
         $tokenHash = self::tokenHash();
