@@ -115,7 +115,7 @@ jobs:
         if: github.actor != 'dependabot[bot]'
         id: app-token
         with:
-          app-id: ${{ vars.NIGHTWATCH_PERMISSIONS_APP_ID }}
+          client-id: ${{ vars.NIGHTWATCH_PERMISSIONS_APP_ID }}
           private-key: ${{ secrets.NIGHTWATCH_PERMISSIONS_APP_PRIVATE_KEY }}
 
       - name: Checkout repository
@@ -186,7 +186,7 @@ jobs:
         if: github.actor != 'dependabot[bot]'
         id: app-token
         with:
-          app-id: ${{ vars.NIGHTWATCH_PERMISSIONS_APP_ID }}
+          client-id: ${{ vars.NIGHTWATCH_PERMISSIONS_APP_ID }}
           private-key: ${{ secrets.NIGHTWATCH_PERMISSIONS_APP_PRIVATE_KEY }}
 
       - name: Checkout repository
