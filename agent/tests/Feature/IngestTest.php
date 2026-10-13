@@ -1108,6 +1108,8 @@ class IngestTest extends TestCase
 
     public function test_it_sends_pending_records_on_invalid_payload_version(): void
     {
+        $tokenHash = self::tokenHash();
+
         $loop = new LoopFake(runForSeconds: 2);
         $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
@@ -1115,7 +1117,7 @@ class IngestTest extends TestCase
             Response::ingested(),
         ]);
         $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
-        $loop->addTimer(1, $server->pendingConnection('19:INVALID:123456:[{}]'));
+        $loop->addTimer(1, $server->pendingConnection('20:INVALID:'.$tokenHash.':[{}]'));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -1160,11 +1162,13 @@ class IngestTest extends TestCase
 
     public function test_it_does_not_make_ingest_request_on_shutdown_if_buffer_is_currently_empty(): void
     {
+        $tokenHash = self::tokenHash();
+
         $loop = new LoopFake(runForSeconds: 2);
         $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([Response::jwt()]);
         $ingestBrowser = new BrowserFake([]);
-        $loop->addTimer(1, $server->pendingConnection('19:INVALID:123456:[{}]'));
+        $loop->addTimer(1, $server->pendingConnection('20:INVALID:'.$tokenHash.':[{}]'));
 
         [$output, $e] = $this->runAgent(
             via: 'source',
@@ -1202,6 +1206,8 @@ class IngestTest extends TestCase
 
     public function test_it_waits_on_active_requests_on_shutdown(): void
     {
+        $tokenHash = self::tokenHash();
+
         $loop = new LoopFake(runForSeconds: 16);
         $server = new TcpServerFake;
         $ingestDetailsBrowser = new BrowserFake([
@@ -1211,7 +1217,7 @@ class IngestTest extends TestCase
             Response::ingested(duration: 5),
         ]);
         $loop->addTimer(0, $server->pendingConnection([['t' => 'request']]));
-        $loop->addTimer(11, $server->pendingConnection('19:INVALID:123456:[{}]'));
+        $loop->addTimer(11, $server->pendingConnection('20:INVALID:'.$tokenHash.':[{}]'));
 
         [$output, $e] = $this->runAgent(
             via: 'source',

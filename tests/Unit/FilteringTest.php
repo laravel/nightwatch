@@ -27,6 +27,7 @@ use Laravel\Nightwatch\Records\OutgoingRequest;
 use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\Records\Request;
+use Orchestra\Testbench\Attributes\WithEnv;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Symfony\Component\Console\Input\StringInput;
@@ -553,6 +554,7 @@ class FilteringTest extends TestCase
         $ingest->assertLatestWrite('log:0.message', 'Hello');
     }
 
+    #[WithEnv('APP_URL', 'http://localhost')]
     public function test_ignore_prevents_dispatched_jobs_from_being_captured(): void
     {
         $ingest = $this->fakeIngest();
@@ -712,6 +714,7 @@ class FilteringTest extends TestCase
         $ingest->assertLatestWrite('exception:0.message', 'Error in query: select * from users where email = "***@***" or password = "***"');
     }
 
+    #[WithEnv('APP_URL', 'http://localhost')]
     public function test_it_can_redact_requests(): void
     {
         $ingest = $this->fakeIngest();
