@@ -716,11 +716,13 @@ class JobAttemptSensorTest extends TestCase
         $loops = 0;
 
         Queue::looping(function () use (&$loops): void {
-            $loops++;
+            if (++$loops === 100) {
+                $this->app['queue.worker']->shouldQuit = true;
+            }
         });
-        Artisan::call($workCommand, ['--max-time' => 0.05, '--sleep' => 0]);
+        Artisan::call($workCommand, ['--max-time' => 10, '--sleep' => 0]);
 
-        $this->assertGreaterThan(37, $loops); // This is a somewhat arbitrary number. We can update it if CI fails.
+        $this->assertSame(100, $loops);
         $ingest->assertWrittenTimes(0);
         $this->assertCount(0, $this->core->ingest->buffer);
     }
