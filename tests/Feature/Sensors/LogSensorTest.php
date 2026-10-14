@@ -47,16 +47,19 @@ class LogSensorTest extends TestCase
             Log::channel('nightwatch')->info('hello world');
         });
 
+        $before = microtime(true);
         $response = $this->get('/users');
+        $after = microtime(true);
 
         $response->assertOk();
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('request:0.logs', 1);
-        $ingest->assertLatestWrite('log:*', function (array $records) {
+        $ingest->assertLatestWrite('log:*', function (array $records) use ($before, $after) {
             $this->assertCount(1, $records);
             $this->assertArrayHasKey('timestamp', $records[0]);
             $this->assertIsFloat($records[0]['timestamp']);
-            $this->assertEqualsWithDelta($records[0]['timestamp'], microtime(true), 0.1);
+            $this->assertGreaterThanOrEqual($before, $records[0]['timestamp']);
+            $this->assertLessThanOrEqual($after, $records[0]['timestamp']);
             $this->assertSame([
                 'v' => 1,
                 't' => 'log',
