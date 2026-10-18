@@ -81,6 +81,7 @@ use Throwable;
 
 use function class_exists;
 use function defined;
+use function gethostname;
 use function hash;
 use function microtime;
 use function substr;
@@ -540,7 +541,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 id: $trace,
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
-                server: $this->nightwatchConfig['server'] ?? '',
+                server: $this->nightwatchConfig['server'] ?? (string) gethostname(),
                 user: $this->userProvider(),
             );
         } else {
@@ -558,7 +559,7 @@ final class NightwatchServiceProvider extends ServiceProvider
                 id: $trace,
                 currentExecutionStageStartedAtMicrotime: $this->timestamp,
                 deploy: $this->nightwatchConfig['deployment'] ?? '',
-                server: $this->nightwatchConfig['server'] ?? '',
+                server: $this->nightwatchConfig['server'] ?? (string) gethostname(),
                 user: $this->userProvider(),
             );
         }
