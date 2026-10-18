@@ -1,6 +1,6 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.30.3...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.30.4...1.x)
 
 ## [v1.28.2](https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2) - 2026-06-24
 
@@ -9,6 +9,20 @@
 * Revert "Capture and restore first trace on initial framework boot (#3… by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/386
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2
+
+## [v1.30.4](https://github.com/laravel/nightwatch/compare/v1.30.3...v1.30.4) - 2026-10-18
+
+### What's Changed
+
+* Bump the github-actions group with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/430
+* Fix CI warnings by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/433
+* Bump phpstan/phpstan from 2.2.13 to 2.2.14 in /agent in the composer group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/429
+* Remove security policy in favor of the org-wide default by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/nightwatch/pull/434
+* Bump phpstan/phpstan from 2.2.14 to 2.3.1 in /agent in the composer group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/435
+* Bump shivammathur/setup-php from 2.37.2 to 2.40.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/436
+* Resolve server hostname at runtime instead of in config by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/437
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.30.3...v1.30.4
 
 ## [v1.30.3](https://github.com/laravel/nightwatch/compare/v1.30.2...v1.30.3) - 2026-10-13
 
