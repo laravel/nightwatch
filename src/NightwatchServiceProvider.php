@@ -229,7 +229,7 @@ final class NightwatchServiceProvider extends ServiceProvider
     {
         $this->app->singleton(AgentCommand::class, fn () => new AgentCommand(
             token: $this->nightwatchConfig['token'] ?? null,
-            server: $this->nightwatchConfig['server'] ?? null,
+            server: $this->nightwatchConfig['server'] ?? (string) gethostname(),
             ingestUri: $this->nightwatchConfig['ingest']['uri'] ?? null,
         ));
     }
