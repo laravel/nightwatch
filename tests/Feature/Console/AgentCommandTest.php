@@ -4,9 +4,11 @@ namespace Tests\Feature\Console;
 
 use Illuminate\Process\Exceptions\ProcessTimedOutException;
 use Illuminate\Support\Facades\Process;
+use Laravel\Nightwatch\Console\AgentCommand;
 use RuntimeException;
 use Tests\TestCase;
 
+use function gethostname;
 use function sleep;
 use function str_contains;
 
@@ -45,5 +47,12 @@ class AgentCommandTest extends TestCase
         }
 
         $this->assertStringContainsString('Authentication successful', $output);
+    }
+
+    public function test_it_falls_back_to_the_hostname_for_the_server_name(): void
+    {
+        $command = $this->app->make(AgentCommand::class);
+
+        $this->assertSame(gethostname(), (fn () => $this->server)->call($command));
     }
 }
