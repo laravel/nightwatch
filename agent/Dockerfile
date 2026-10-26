@@ -2,8 +2,9 @@ FROM php:8.4-alpine
 
 COPY agent/composer.lock agent/composer.json agent/docker/install-composer.sh /
 
-# install composer and check platform reqs
-RUN ./install-composer.sh \
+# upgrade OS packages (CVE-2026-111497 in brotli-libs), install composer and check platform reqs
+RUN apk upgrade --no-cache \
+    && ./install-composer.sh \
     && php composer.phar check-platform-reqs --lock --no-dev \
     && rm composer.* \
     && rm install-composer.sh
