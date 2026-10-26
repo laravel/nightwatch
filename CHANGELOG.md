@@ -1,6 +1,6 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.30.4...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.30.5...1.x)
 
 ## [v1.28.2](https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2) - 2026-06-24
 
@@ -9,6 +9,15 @@
 * Revert "Capture and restore first trace on initial framework boot (#3… by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/386
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2
+
+## [v1.30.5](https://github.com/laravel/nightwatch/compare/v1.30.4...v1.30.5) - 2026-10-26
+
+### What's Changed
+
+* Bump actions/create-github-app-token from 3.2.0 to 3.3.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/nightwatch/pull/438
+* Authenticate to Docker Hub with OIDC by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/441
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.30.4...v1.30.5
 
 ## [v1.30.4](https://github.com/laravel/nightwatch/compare/v1.30.3...v1.30.4) - 2026-10-18
 
