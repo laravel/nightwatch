@@ -1,6 +1,6 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.30.5...1.x)
+## [Unreleased](https://github.com/laravel/nightwatch/compare/v1.30.6...1.x)
 
 ## [v1.28.2](https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2) - 2026-06-24
 
@@ -9,6 +9,15 @@
 * Revert "Capture and restore first trace on initial framework boot (#3… by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/386
 
 **Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.28.1...v1.28.2
+
+## [v1.30.6](https://github.com/laravel/nightwatch/compare/v1.30.5...v1.30.6) - 2026-10-27
+
+### What's Changed
+
+* Upgrade Alpine packages in the agent image for CVE-2026-111497 (brotli) by [@jamesdangercarpenter](https://github.com/jamesdangercarpenter) in https://github.com/laravel/nightwatch/pull/442
+* Treat all transmission failures as unrecoverable by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/nightwatch/pull/443
+
+**Full Changelog**: https://github.com/laravel/nightwatch/compare/v1.30.5...v1.30.6
 
 ## [v1.30.5](https://github.com/laravel/nightwatch/compare/v1.30.4...v1.30.5) - 2026-10-26
 
