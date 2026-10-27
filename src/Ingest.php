@@ -6,7 +6,9 @@ use Deprecated;
 use Illuminate\Contracts\Events\Dispatcher;
 use Laravel\Nightwatch\Contracts\Ingest as IngestContract;
 use Laravel\Nightwatch\Events\IngestingEvents;
+use Laravel\Nightwatch\Facades\Nightwatch;
 use RuntimeException;
+use Throwable;
 
 use function call_user_func;
 use function Nightwatch\fclose_safely;
@@ -59,11 +61,15 @@ final class Ingest implements IngestContract
             return;
         }
 
-        if (! $this->dispatchIngestingEvents([$record])) {
-            return;
-        }
+        try {
+            if (! $this->dispatchIngestingEvents([$record])) {
+                return;
+            }
 
-        $this->transmit(Payload::json([$record], $this->tokenHash));
+            $this->transmit(Payload::json([$record], $this->tokenHash));
+        } catch (Throwable $e) {
+            Nightwatch::unrecoverableExceptionOccurred($e);
+        }
     }
 
     public function flush(): void
@@ -93,13 +99,17 @@ final class Ingest implements IngestContract
             return;
         }
 
-        if (! $this->dispatchIngestingEvents($this->buffer->all())) {
-            $this->buffer->flush();
+        try {
+            if (! $this->dispatchIngestingEvents($this->buffer->all())) {
+                $this->buffer->flush();
 
-            return;
+                return;
+            }
+
+            $this->transmit($this->buffer->pull($this->tokenHash));
+        } catch (Throwable $e) {
+            Nightwatch::unrecoverableExceptionOccurred($e);
         }
-
-        $this->transmit($this->buffer->pull($this->tokenHash));
     }
 
     /**

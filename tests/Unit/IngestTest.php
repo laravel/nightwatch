@@ -695,6 +695,72 @@ class IngestTest extends TestCase
         $this->assertCount(1, $exceptions);
         $this->assertSame('Whoops!', $exceptions[0]->getMessage());
     }
+
+    public function test_write_auto_digesting_after_reaching_the_threshold_treats_transmission_failures_as_unrecoverable(): void
+    {
+        $this->core->ingest->streamFactory = fn () => throw new RuntimeException('Failed connecting to the agent');
+        $exceptions = collect();
+        Nightwatch::handleUnrecoverableExceptionsUsing($exceptions->push(...));
+
+        for ($i = 0; $i < 500; $i++) {
+            $this->core->ingest->write(FakeRecord::make());
+        }
+
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Failed connecting to the agent', $exceptions[0]->getMessage());
+    }
+
+    public function test_write_now_treats_transmission_failures_as_unrecoverable(): void
+    {
+        $this->core->ingest->streamFactory = fn () => throw new RuntimeException('Failed connecting to the agent');
+        $exceptions = collect();
+        Nightwatch::handleUnrecoverableExceptionsUsing($exceptions->push(...));
+
+        $this->core->ingest->writeNow(FakeRecord::make());
+
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Failed connecting to the agent', $exceptions[0]->getMessage());
+    }
+
+    public function test_write_now_treats_listener_failures_as_unrecoverable(): void
+    {
+        Event::listen(IngestingEvents::class, fn () => throw new RuntimeException('Whoops!'));
+        $exceptions = collect();
+        Nightwatch::handleUnrecoverableExceptionsUsing($exceptions->push(...));
+
+        $this->core->ingest->writeNow(FakeRecord::make());
+
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Whoops!', $exceptions[0]->getMessage());
+        $this->assertCount(0, StreamWrapper::type('stream_open'));
+    }
+
+    public function test_digest_treats_transmission_failures_as_unrecoverable(): void
+    {
+        $this->core->ingest->streamFactory = fn () => throw new RuntimeException('Failed connecting to the agent');
+        $exceptions = collect();
+        Nightwatch::handleUnrecoverableExceptionsUsing($exceptions->push(...));
+
+        $this->core->ingest->write(FakeRecord::make());
+        $this->core->ingest->digest();
+
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Failed connecting to the agent', $exceptions[0]->getMessage());
+    }
+
+    public function test_digest_treats_listener_failures_as_unrecoverable(): void
+    {
+        Event::listen(IngestingEvents::class, fn () => throw new RuntimeException('Whoops!'));
+        $exceptions = collect();
+        Nightwatch::handleUnrecoverableExceptionsUsing($exceptions->push(...));
+
+        $this->core->ingest->write(FakeRecord::make());
+        $this->core->ingest->digest();
+
+        $this->assertCount(1, $exceptions);
+        $this->assertSame('Whoops!', $exceptions[0]->getMessage());
+        $this->assertCount(0, StreamWrapper::type('stream_open'));
+    }
 }
 
 class StreamWrapper

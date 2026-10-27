@@ -4,12 +4,10 @@ namespace Laravel\Nightwatch;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Laravel\Nightwatch\Contracts\Ingest;
-use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Hooks\GuzzleMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
 use Laravel\Nightwatch\Support\Uuid;
-use Throwable;
 use WeakMap;
 
 /**
@@ -96,14 +94,10 @@ final class Core
      */
     public function finishExecution(): self
     {
-        try {
-            if ($this->sampling) {
-                $this->ingest->digest();
-            } else {
-                $this->ingest->flush();
-            }
-        } catch (Throwable $e) {
-            Nightwatch::unrecoverableExceptionOccurred($e);
+        if ($this->sampling) {
+            $this->ingest->digest();
+        } else {
+            $this->ingest->flush();
         }
 
         return $this;
