@@ -87,7 +87,7 @@ class OutgoingRequestSensorTest extends TestCase
     {
         $ingest = $this->fakeIngest();
         Route::post('/users', function (): void {
-            Http::withBody(new NoReadStream(null))->withHeader('Content-Length', 9876)->post('https://laravel.com');
+            Http::withBody(new NoReadStream(null))->withHeader('Content-Length', '9876')->post('https://laravel.com');
         });
         Http::fake([
             'https://laravel.com' => function () {

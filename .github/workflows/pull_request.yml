@@ -48,6 +48,9 @@ jobs:
           key: ${{ runner.os }}-package-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-package-composer
 
+      - name: Require Laravel Version
+        run: composer require laravel/framework:^12.0 --no-update
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
