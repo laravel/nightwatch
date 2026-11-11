@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
-use Laravel\Nightwatch\Compatibility;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\NullOutput;
@@ -87,7 +86,7 @@ class CommandSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
         $ingest->assertLatestWrite('query:0.execution_preview', 'app:build');
@@ -136,8 +135,6 @@ class CommandSensorTest extends TestCase
 
     public function test_it_captures_context(): void
     {
-        $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
-
         $ingest = $this->fakeIngest();
         $model = User::factory()->create();
         Artisan::command('test-context', function () use ($model) {
@@ -221,7 +218,7 @@ class CommandSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }
@@ -237,32 +234,6 @@ class CommandSensorTest extends TestCase
         Artisan::command('child', function (): void {
             //
         });
-
-        $run = function () {
-            $status = Artisan::handle($input = new StringInput('parent'));
-
-            Artisan::terminate($input, $status);
-
-            return $status;
-        };
-
-        $this->assertSame(0, $run());
-        $ingest->assertLatestWrite('command:0.cache_events', 1);
-        $ingest->assertLatestWrite('cache-event:0.execution_stage', 'action');
-    }
-
-    public function test_it_child_commands_do_not_progress_the_modify_execution_stage_when_terminating_event_does_not_exist(): void
-    {
-        $ingest = $this->fakeIngest();
-        Artisan::command('parent', function (): void {
-            Artisan::call('child');
-
-            Cache::get('foo');
-        });
-        Artisan::command('child', function (): void {
-            //
-        });
-        Compatibility::$terminatingEventExists = false;
 
         $run = function () {
             $status = Artisan::handle($input = new StringInput('parent'));

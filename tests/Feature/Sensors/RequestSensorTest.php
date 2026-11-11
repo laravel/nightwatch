@@ -6,7 +6,6 @@ use App\Http\UserController;
 use App\Livewire\Counter;
 use App\Models\User;
 use Carbon\CarbonImmutable;
-use Composer\InstalledVersions;
 use Exception;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Contracts\Http\Kernel;
@@ -16,18 +15,15 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Events\IngestingEvents;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\SensorManager;
-use Livewire\Livewire;
 use Orchestra\Testbench\Attributes\WithEnv;
 use Tests\TestCase;
 
@@ -50,7 +46,6 @@ use function stream_get_meta_data;
 use function strlen;
 use function tap;
 use function tmpfile;
-use function version_compare;
 
 class RequestSensorTest extends TestCase
 {
@@ -120,7 +115,7 @@ class RequestSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
                 'headers' => '{"host":["localhost"],"user-agent":["Symfony"],"accept":["text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"],"accept-language":["en-us,en;q=0.5"],"accept-charset":["ISO-8859-1,utf-8;q=0.7,*;q=0.7"]}',
                 'payload' => '',
             ],
@@ -855,8 +850,6 @@ class RequestSensorTest extends TestCase
 
     public function test_it_captures_context(): void
     {
-        $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
-
         $ingest = $this->fakeIngest();
         $model = User::factory()->create();
         Route::get('/test', function () use ($model) {
@@ -893,8 +886,6 @@ class RequestSensorTest extends TestCase
 
     public function test_it_can_capture_binary_context(): void
     {
-        $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
-
         $unrecoverableExceptions = [];
         Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions): void {
             $unrecoverableExceptions[] = $e;
@@ -919,8 +910,6 @@ class RequestSensorTest extends TestCase
 
     public function test_it_can_capture_non_utf_8_context(): void
     {
-        $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
-
         $unrecoverableExceptions = [];
         Nightwatch::handleUnrecoverableExceptionsUsing(function ($e) use (&$unrecoverableExceptions): void {
             $unrecoverableExceptions[] = $e;
@@ -945,8 +934,6 @@ class RequestSensorTest extends TestCase
 
     public function test_it_does_not_escape_slashes_in_the_context(): void
     {
-        $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
-
         $ingest = $this->fakeIngest();
         Route::get('/test', function () {
             Context::add('url', 'https://example.com/path');
@@ -961,8 +948,6 @@ class RequestSensorTest extends TestCase
 
     public function test_it_does_not_escape_unicode_characters_in_the_context(): void
     {
-        $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
-
         $ingest = $this->fakeIngest();
         Route::get('/test', function () {
             Context::add('text', 'café');
@@ -1471,81 +1456,9 @@ class RequestSensorTest extends TestCase
         $ingest->assertLatestWrite('request:0.payload', '{"_nightwatch_error":"UNSUPPORTED_CONTENT_TYPE"}');
     }
 
-    public function test_livewire_2(): void
-    {
-        $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '>='), 'Requires Livewire 2');
-
-        $ingest = $this->fakeIngest();
-        Config::set('livewire.class_namespace', 'App\\Livewire'); // This is the default for Livewire 3, but we set it here to ensure compatibility with Livewire 2.
-        Route::get('/counter', Counter::class);
-
-        $response = $this
-            ->get('/counter')
-            ->assertOk();
-
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.url', 'http://localhost/counter');
-        $ingest->assertLatestWrite('request:0.route_path', '/counter');
-        $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
-
-        $ingest->forgetWrites();
-        $this->core->prepareForRequest(Request::create('/'));
-
-        preg_match('/wire:initial-data="([^"]+)"/', $response->getContent(), $matches);
-        $snapshot = json_decode(html_entity_decode($matches[1]), true);
-
-        $response = $this
-            ->withHeader('X-Livewire', true)
-            ->post('/livewire/message/counter', [
-                'fingerprint' => $snapshot['fingerprint'],
-                'serverMemo' => $snapshot['serverMemo'],
-                'updates' => [
-                    [
-                        'type' => 'syncInput',
-                        'payload' => [
-                            'name' => 'count',
-                            'value' => 2,
-                        ],
-                    ],
-                    [
-                        'type' => 'callMethod',
-                        'payload' => [
-                            'id' => 'foo',
-                            'method' => 'increment',
-                            'params' => [],
-                        ],
-                    ],
-                    [
-                        'type' => 'callMethod',
-                        'payload' => [
-                            'id' => 'foo',
-                            'method' => 'increment',
-                            'params' => [],
-                        ],
-                    ],
-                    [
-                        'type' => 'callMethod',
-                        'payload' => [
-                            'id' => 'foo',
-                            'method' => 'decrement',
-                            'params' => [],
-                        ],
-                    ],
-                ],
-            ])
-            ->assertOk();
-
-        $ingest->assertWrittenTimes(1);
-        $ingest->assertLatestWrite('request:0.url', 'http://localhost/livewire/message/counter');
-        $ingest->assertLatestWrite('request:0.route_path', '/livewire/message/{name}');
-        $ingest->assertLatestWrite('request:0.route_action', 'App\Livewire\Counter');
-    }
-
     #[WithEnv('APP_URL', 'http://localhost')]
     public function test_livewire_3(): void
     {
-        $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '<'), 'Requires Livewire 3');
-
         $ingest = $this->fakeIngest();
         Route::get('/counter', Counter::class);
 
@@ -1601,8 +1514,6 @@ class RequestSensorTest extends TestCase
     #[WithEnv('APP_URL', 'http://localhost')]
     public function test_livewire_3_with_multiple_components(): void
     {
-        $this->markTestSkippedWhen(version_compare(InstalledVersions::getVersion('livewire/livewire'), '3.0.0', '<'), 'Requires Livewire 3');
-
         $ingest = $this->fakeIngest();
         Route::view('/dashboard', 'dashboard');
 

@@ -15,7 +15,6 @@ use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Records\CacheEvent as CacheEventRecord;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -55,28 +54,21 @@ final class CacheEventSensor
     {
         $now = $this->clock->microtime();
 
-        if (Compatibility::$cacheDurationCapturable) {
-            if (in_array($event::class, self::START_EVENTS, strict: true)) {
-                $this->startTime = $now;
+        if (in_array($event::class, self::START_EVENTS, strict: true)) {
+            $this->startTime = $now;
 
-                return null;
-            }
-
-            if ($this->startTime === null) {
-                throw new RuntimeException('No start time found for ['.$event::class."] event with key [{$event->key}].");
-            }
-
-            $startTime = $this->startTime;
-            $duration = (int) round(($now - $this->startTime) * 1_000_000);
-        } else {
-            $startTime = $now;
-            $duration = 0;
+            return null;
         }
 
+        if ($this->startTime === null) {
+            throw new RuntimeException('No start time found for ['.$event::class."] event with key [{$event->key}].");
+        }
+
+        $startTime = $this->startTime;
+        $duration = (int) round(($now - $this->startTime) * 1_000_000);
+
         /** @var string */
-        $storeName = Compatibility::$cacheStoreNameCapturable
-            ? ($event->storeName ?? '')
-            : '';
+        $storeName = $event->storeName ?? '';
 
         $type = match ($event::class) {
             CacheHit::class => 'hit',

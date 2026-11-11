@@ -121,11 +121,6 @@ final class CommandStartingListener
         $this->nightwatch->prepareForCommand($event->command);
 
         /**
-         * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-         */
-        $this->events->listen(CommandFinished::class, (new CommandFinishedListener($this->nightwatch))(...));
-
-        /**
          * @see \Laravel\Nightwatch\ExecutionStage::End
          * @see \Laravel\Nightwatch\Records\Command
          * @see \Laravel\Nightwatch\Core::finishExecution()

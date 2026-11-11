@@ -115,7 +115,7 @@ final class QueryExecutedListener
 
 ## Compatibility
 
-- **Laravel versions**: Support Laravel 10, 11, and 12
+- **Laravel versions**: Support Laravel 12 and 13
 - **PHP versions**: Minimum PHP 8.2
 - **Backward compatibility**: Maintain backward compatibility within major versions
 - **Compatibility layer**: Use `Compatibility` class for version-specific code

@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\Compatibility;
 use Tests\TestCase;
 
 use function hash;
@@ -66,7 +65,7 @@ class MailSensorTest extends TestCase
                 'timestamp' => 946688523.459289,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
-                '_group' => Compatibility::$mailableClassNameCapturable ? hash('xxh128', 'Tests\Feature\Sensors\MyTestMail') : hash('xxh128', ''),
+                '_group' => hash('xxh128', 'Tests\Feature\Sensors\MyTestMail'),
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_source' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000001',
@@ -74,7 +73,7 @@ class MailSensorTest extends TestCase
                 'execution_stage' => 'action',
                 'user' => '',
                 'mailer' => 'array',
-                'class' => Compatibility::$mailableClassNameCapturable ? 'Tests\Feature\Sensors\MyTestMail' : '',
+                'class' => 'Tests\Feature\Sensors\MyTestMail',
                 'subject' => 'Welcome!',
                 'to' => 3,
                 'cc' => 2,
@@ -105,7 +104,7 @@ class MailSensorTest extends TestCase
                 'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
-                '_group' => Compatibility::$mailableClassNameCapturable ? hash('xxh128', 'Tests\Feature\Sensors\MyTestMarkdownMail') : hash('xxh128', ''),
+                '_group' => hash('xxh128', 'Tests\Feature\Sensors\MyTestMarkdownMail'),
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_source' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000001',
@@ -113,7 +112,7 @@ class MailSensorTest extends TestCase
                 'execution_stage' => 'action',
                 'user' => '',
                 'mailer' => 'array',
-                'class' => Compatibility::$mailableClassNameCapturable ? 'Tests\Feature\Sensors\MyTestMarkdownMail' : '',
+                'class' => 'Tests\Feature\Sensors\MyTestMarkdownMail',
                 'subject' => 'My Test Markdown Mail',
                 'to' => 1,
                 'cc' => 0,

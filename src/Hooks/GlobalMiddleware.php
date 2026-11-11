@@ -4,12 +4,9 @@ namespace Laravel\Nightwatch\Hooks;
 
 use Closure;
 use Illuminate\Http\Request;
-use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
-use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\State\RequestState;
-use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 /**
@@ -18,8 +15,6 @@ use Throwable;
 final class GlobalMiddleware
 {
     private bool $hasHandledRequest = false;
-
-    private bool $hasTerminated = false;
 
     /**
      * @param  Core<RequestState>  $nightwatch
@@ -51,20 +46,5 @@ final class GlobalMiddleware
         }
 
         return $next($request);
-    }
-
-    public function terminate(Request $request, Response $response): void
-    {
-        if ($this->hasTerminated || Compatibility::$terminatingEventExists) {
-            return;
-        }
-
-        $this->hasTerminated = true;
-
-        try {
-            $this->nightwatch->stage(ExecutionStage::Terminating);
-        } catch (Throwable $e) {
-            $this->nightwatch->report($e, handled: true);
-        }
     }
 }

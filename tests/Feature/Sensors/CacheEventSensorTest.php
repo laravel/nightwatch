@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\Compatibility;
 use Orchestra\Testbench\Attributes\WithEnv;
 use Tests\TestCase;
 
@@ -50,14 +49,14 @@ class CacheEventSensorTest extends TestCase
                 'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
-                '_group' => Compatibility::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+                '_group' => hash('xxh128', 'array,users:345'),
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_source' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000001',
                 'execution_preview' => 'POST /users',
                 'execution_stage' => 'action',
                 'user' => '',
-                'store' => Compatibility::$cacheStoreNameCapturable ? 'array' : '',
+                'store' => 'array',
                 'key' => 'users:345',
                 'type' => 'miss',
                 'duration' => 0,
@@ -86,14 +85,14 @@ class CacheEventSensorTest extends TestCase
                 'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
-                '_group' => Compatibility::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+                '_group' => hash('xxh128', 'array,users:345'),
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_source' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000001',
                 'execution_preview' => 'POST /users',
                 'execution_stage' => 'before_middleware',
                 'user' => '',
-                'store' => Compatibility::$cacheStoreNameCapturable ? 'array' : '',
+                'store' => 'array',
                 'key' => 'users:345',
                 'type' => 'write',
                 'duration' => 0,
@@ -105,14 +104,14 @@ class CacheEventSensorTest extends TestCase
                 'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
-                '_group' => Compatibility::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+                '_group' => hash('xxh128', 'array,users:345'),
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_source' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000001',
                 'execution_preview' => 'POST /users',
                 'execution_stage' => 'action',
                 'user' => '',
-                'store' => Compatibility::$cacheStoreNameCapturable ? 'array' : '',
+                'store' => 'array',
                 'key' => 'users:345',
                 'type' => 'hit',
                 'duration' => 0,
@@ -173,7 +172,7 @@ class CacheEventSensorTest extends TestCase
             [
                 'v' => 1,
                 't' => 'cache-event',
-                'timestamp' => Compatibility::$cacheDurationCapturable ? 946688523.456789 : 946688523.459289,
+                'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
                 '_group' => hash('xxh128', ',users:345'),
@@ -186,13 +185,13 @@ class CacheEventSensorTest extends TestCase
                 'store' => '',
                 'key' => 'users:345',
                 'type' => 'hit',
-                'duration' => Compatibility::$cacheDurationCapturable ? 2500 : 0,
+                'duration' => 2500,
                 'ttl' => 0,
             ],
             [
                 'v' => 1,
                 't' => 'cache-event',
-                'timestamp' => Compatibility::$cacheDurationCapturable ? 946688523.456789 : 946688523.459289,
+                'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
                 '_group' => hash('xxh128', ',users:678'),
@@ -205,7 +204,7 @@ class CacheEventSensorTest extends TestCase
                 'store' => '',
                 'key' => 'users:678',
                 'type' => 'miss',
-                'duration' => Compatibility::$cacheDurationCapturable ? 2500 : 0,
+                'duration' => 2500,
                 'ttl' => 0,
             ],
         ]);
@@ -226,17 +225,17 @@ class CacheEventSensorTest extends TestCase
             [
                 'v' => 1,
                 't' => 'cache-event',
-                'timestamp' => Compatibility::$cacheDurationCapturable ? 946688523.456789 : 946688523.456789,
+                'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
-                '_group' => Compatibility::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+                '_group' => hash('xxh128', 'array,users:345'),
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_source' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000001',
                 'execution_preview' => 'POST /users',
                 'execution_stage' => 'action',
                 'user' => '',
-                'store' => Compatibility::$cacheStoreNameCapturable ? 'array' : '',
+                'store' => 'array',
                 'key' => 'users:345',
                 'type' => 'write',
                 'duration' => 0,
@@ -247,8 +246,6 @@ class CacheEventSensorTest extends TestCase
 
     public function test_it_can_ingest_cache_write_failures(): void
     {
-        $this->markTestSkippedWhen(! Compatibility::$cacheFailuresCapturable, 'Requires a more recent framework version');
-
         $ingest = $this->fakeIngest();
         Config::set('cache.stores.custom', [
             'driver' => 'custom',
@@ -327,7 +324,7 @@ class CacheEventSensorTest extends TestCase
             [
                 'v' => 1,
                 't' => 'cache-event',
-                'timestamp' => Compatibility::$cacheDurationCapturable ? 946688523.456789 : 946688523.459289,
+                'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
                 '_group' => hash('xxh128', ',users:345'),
@@ -340,13 +337,13 @@ class CacheEventSensorTest extends TestCase
                 'store' => '',
                 'key' => 'users:345',
                 'type' => 'write',
-                'duration' => Compatibility::$cacheDurationCapturable ? 2500 : 0,
+                'duration' => 2500,
                 'ttl' => 60,
             ],
             [
                 'v' => 1,
                 't' => 'cache-event',
-                'timestamp' => Compatibility::$cacheDurationCapturable ? 946688523.456789 : 946688523.459289,
+                'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
                 '_group' => hash('xxh128', ',users:678'),
@@ -359,7 +356,7 @@ class CacheEventSensorTest extends TestCase
                 'store' => '',
                 'key' => 'users:678',
                 'type' => 'write',
-                'duration' => Compatibility::$cacheDurationCapturable ? 2500 : 0,
+                'duration' => 2500,
                 'ttl' => 60,
             ],
         ]);
@@ -385,14 +382,14 @@ class CacheEventSensorTest extends TestCase
                 'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
-                '_group' => Compatibility::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+                '_group' => hash('xxh128', 'array,users:345'),
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
                 'execution_source' => 'request',
                 'execution_id' => '00000000-0000-0000-0000-000000000001',
                 'execution_preview' => 'POST /users',
                 'execution_stage' => 'action',
                 'user' => '',
-                'store' => Compatibility::$cacheStoreNameCapturable ? 'array' : '',
+                'store' => 'array',
                 'key' => 'users:345',
                 'type' => 'write',
                 'duration' => 0,
@@ -404,7 +401,7 @@ class CacheEventSensorTest extends TestCase
                 'timestamp' => 946688523.456789,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
-                '_group' => Compatibility::$cacheStoreNameCapturable ? hash('xxh128', 'array,users:345') : hash('xxh128', ',users:345'),
+                '_group' => hash('xxh128', 'array,users:345'),
                 'trace_id' => '00000000-0000-0000-0000-000000000000',
 
                 'execution_source' => 'request',
@@ -412,7 +409,7 @@ class CacheEventSensorTest extends TestCase
                 'execution_preview' => 'POST /users',
                 'execution_stage' => 'action',
                 'user' => '',
-                'store' => Compatibility::$cacheStoreNameCapturable ? 'array' : '',
+                'store' => 'array',
                 'key' => 'users:345',
                 'type' => 'delete',
                 'duration' => 0,
@@ -423,8 +420,6 @@ class CacheEventSensorTest extends TestCase
 
     public function test_it_can_ingest_cache_delete_failures(): void
     {
-        $this->markTestSkippedWhen(! Compatibility::$cacheFailuresCapturable, 'Requires a more recent framework version');
-
         $ingest = $this->fakeIngest();
         Config::set('cache.stores.custom', [
             'driver' => 'custom',
@@ -487,8 +482,6 @@ class CacheEventSensorTest extends TestCase
 
     public function test_it_captures_duration_in_microseconds(): void
     {
-        $this->markTestSkippedWhen(! Compatibility::$cacheDurationCapturable, 'Requires a more recent framework version');
-
         $ingest = $this->fakeIngest();
         Config::set('cache.stores.custom', [
             'driver' => 'custom',

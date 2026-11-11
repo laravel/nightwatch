@@ -6,7 +6,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Events\QueryExecuted;
-use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Mail\Mailable;
@@ -23,7 +22,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
-use Laravel\Nightwatch\Compatibility;
 use Ramsey\Uuid\Uuid;
 use ReflectionClass;
 use ReflectionNamedType;
@@ -34,7 +32,6 @@ use function class_exists;
 use function hash;
 use function json_decode;
 use function now;
-use function version_compare;
 
 class QueuedJobSensorTest extends TestCase
 {
@@ -91,16 +88,14 @@ class QueuedJobSensorTest extends TestCase
                 'job_id' => '00000000-0000-0000-0000-000000000000',
                 'name' => 'Tests\Feature\Sensors\MyJob',
                 'connection' => 'database',
-                'queue' => Compatibility::$queueNameCapturable ? 'default' : '',
-                'duration' => Compatibility::$queuedJobDurationCapturable ? 5200 : 0,
+                'queue' => 'default',
+                'duration' => 5200,
             ],
         ]);
     }
 
     public function test_it_falls_back_to_the_connections_default_queue(): void
     {
-        $this->markTestSkippedWhen(! Compatibility::$queueNameCapturable, 'Requires a more recent framework version');
-
         $ingest = $this->fakeIngest();
         Config::set('queue.connections.database.queue', 'connection-default');
         Route::post('/users', function (): void {
@@ -134,8 +129,6 @@ class QueuedJobSensorTest extends TestCase
 
     public function test_it_captures_queued_event_queue_name(): void
     {
-        $this->markTestSkippedWhen(! Compatibility::$queueNameCapturable, 'Requires a more recent framework version');
-
         $ingest = $this->fakeIngest();
         $this->prependListener(QueryExecuted::class, function (QueryExecuted $event) {
             if (! RefreshDatabaseState::$migrated) {
@@ -192,15 +185,13 @@ class QueuedJobSensorTest extends TestCase
             'job_id' => '00000000-0000-0000-0000-000000000002',
             'name' => 'Tests\Feature\Sensors\MyQueuedMail',
             'connection' => 'database',
-            'queue' => Compatibility::$queueNameCapturable ? 'default' : '',
+            'queue' => 'default',
             'duration' => 0,
         ]);
     }
 
     public function test_it_normalizes_sqs_queue_names(): void
     {
-        $this->markTestSkippedWhen(! Compatibility::$queueNameCapturable, 'Requires a more recent framework version');
-
         $ingest = $this->fakeIngest();
         Config::set('queue.connections.my-sqs-queue', [
             'driver' => 'sqs',
@@ -233,7 +224,6 @@ class QueuedJobSensorTest extends TestCase
 
     public function test_it_handles_missing_queue_value(): void
     {
-        $this->markTestSkippedWhen(! Compatibility::$queueNameCapturable, 'Requires a more recent framework version');
         $ingest = $this->fakeIngest();
         $this->prependListener(QueryExecuted::class, function (QueryExecuted $event) {
             if (! RefreshDatabaseState::$migrated) {
@@ -287,8 +277,6 @@ class QueuedJobSensorTest extends TestCase
 
     public function test_it_supports_enum_based_queues(): void
     {
-        $this->markTestSkippedWhen(version_compare(Application::VERSION, '11.22.0', '<'), 'Enums not supported for queue names');
-
         $queueAttributeSupportsEnum = false;
 
         if (class_exists('Illuminate\Queue\Attributes\Queue')) {

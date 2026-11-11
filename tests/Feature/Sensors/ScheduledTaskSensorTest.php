@@ -17,7 +17,6 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Sleep;
-use Laravel\Nightwatch\Compatibility;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Tests\TestCase;
 
@@ -90,7 +89,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }
@@ -142,7 +141,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }
@@ -192,7 +191,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }
@@ -244,7 +243,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Unhandled error',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
         $ingest->assertWrite(0, 'exception:0.message', 'Unhandled error');
@@ -295,7 +294,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }
@@ -306,7 +305,7 @@ class ScheduledTaskSensorTest extends TestCase
         $line = __LINE__ + 1;
         $task = $this->app[Schedule::class]->call(fn () => $this->travelTo(now()->addMicroseconds(30_000_000)))->everyThirtySeconds();
         $name = "Closure at: tests/Feature/Sensors/ScheduledTaskSensorTest.php:{$line}";
-        $repeatSeconds = Compatibility::$subMinuteScheduledTasksSupported ? 30 : 0;
+        $repeatSeconds = 30;
 
         Artisan::call('schedule:run');
 
@@ -324,7 +323,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'name' => $name,
                 'cron' => '* * * * *',
                 'timezone' => 'UTC',
-                'repeat_seconds' => Compatibility::$subMinuteScheduledTasksSupported ? 30 : 0,
+                'repeat_seconds' => 30,
                 'without_overlapping' => false,
                 'on_one_server' => false,
                 'run_in_background' => false,
@@ -345,7 +344,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
 
@@ -382,7 +381,7 @@ class ScheduledTaskSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }
@@ -508,8 +507,6 @@ class ScheduledTaskSensorTest extends TestCase
 
     public function test_it_captures_context(): void
     {
-        $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
-
         $ingest = $this->fakeIngest();
         $model = User::factory()->create();
         $this->app[Schedule::class]->call(function () use ($model) {

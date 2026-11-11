@@ -26,7 +26,6 @@ use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\ExecutionStage;
 use Laravel\Nightwatch\Facades\Nightwatch;
-use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\State\RequestState;
@@ -41,7 +40,6 @@ use Throwable;
 use WeakMap;
 
 use function array_shift;
-use function array_unshift;
 use function debug_backtrace;
 use function env;
 use function in_array;
@@ -576,13 +574,6 @@ trait CapturesState
          * @see \Laravel\Nightwatch\ExecutionStage::Action
          */
         $middleware[] = RouteMiddleware::class;
-
-        if (! Compatibility::$terminatingEventExists) {
-            /**
-             * @see \Laravel\Nightwatch\ExecutionStage::Terminating
-             */
-            array_unshift($middleware, GlobalMiddleware::class);
-        }
 
         $route->action['middleware'] = $middleware;
 

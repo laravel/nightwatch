@@ -11,7 +11,6 @@ use Illuminate\Console\Events\ScheduledTaskSkipped;
 use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Concerns\RecordsContext;
 use Laravel\Nightwatch\State\CommandState;
 use Laravel\Nightwatch\Types\Str;
@@ -50,7 +49,7 @@ final class ScheduledTaskSensor
         $now = $this->clock->microtime();
         $name = $this->normalizeTaskName($event->task);
         $timezone = $event->task->timezone instanceof DateTimeZone ? $event->task->timezone->getName() : $event->task->timezone;
-        $repeatSeconds = Compatibility::$subMinuteScheduledTasksSupported && $event->task->repeatSeconds !== null ? $event->task->repeatSeconds : 0;
+        $repeatSeconds = $event->task->repeatSeconds ?? 0;
 
         return [
             'v' => 1,

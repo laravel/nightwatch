@@ -7,7 +7,6 @@ use Illuminate\Events\CallQueuedListener;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
 use Laravel\Nightwatch\Clock;
-use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Concerns\NormalizesQueue;
 use Laravel\Nightwatch\Records\QueuedJob;
 use Laravel\Nightwatch\State\CommandState;
@@ -67,7 +66,7 @@ final class QueuedJobSensor
                 name: $name,
                 connection: $event->connectionName,
                 queue: $this->normalizeQueue($event->connectionName, $this->resolveQueue($event)),
-                duration: Compatibility::$queuedJobDurationCapturable ? (int) round(($now - $this->startTime) * 1_000_000) : 0,
+                duration: (int) round(($now - $this->startTime) * 1_000_000),
             ),
             function () use ($now, $record) {
                 $this->executionState->jobsQueued++;
@@ -97,10 +96,6 @@ final class QueuedJobSensor
 
     private function resolveQueue(JobQueued $event): string
     {
-        if (! Compatibility::$queueNameCapturable) {
-            return '';
-        }
-
         /**
          * This property has not always had the correct type. It was missing,
          * added, removed, and re-added through time. We will force the type

@@ -38,11 +38,7 @@ class AssociateQueueActivityWithUserIdTest extends TestCase
         $response->assertOk();
         $payloads = DB::table('jobs')->pluck('payload');
         $this->assertCount(1, $payloads);
-        if (Compatibility::$contextExists) {
-            $this->assertStringContainsString('"nightwatch_user_id":"s:3:\"123\";', $payloads[0]);
-        } else {
-            $this->assertStringContainsString('"nightwatch_user_id":"123"', $payloads[0]);
-        }
+        $this->assertStringContainsString('"nightwatch_user_id":"s:3:\"123\";', $payloads[0]);
     }
 
     #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '1')]
@@ -68,13 +64,8 @@ class AssociateQueueActivityWithUserIdTest extends TestCase
         $response->assertOk();
         $payloads = DB::table('jobs')->pluck('payload');
         $this->assertCount(2, $payloads);
-        if (Compatibility::$contextExists) {
-            $this->assertStringContainsString('"nightwatch_user_id":"s:0:\"\";', $payloads[0]);
-            $this->assertStringContainsString('"nightwatch_user_id":"s:3:\"123\";', $payloads[1]);
-        } else {
-            $this->assertStringContainsString('"nightwatch_user_id":""', $payloads[0]);
-            $this->assertStringContainsString('"nightwatch_user_id":"123"', $payloads[1]);
-        }
+        $this->assertStringContainsString('"nightwatch_user_id":"s:0:\"\";', $payloads[0]);
+        $this->assertStringContainsString('"nightwatch_user_id":"s:3:\"123\";', $payloads[1]);
     }
 
     #[WithEnv('NIGHTWATCH_FORCE_COMMAND', '1')]

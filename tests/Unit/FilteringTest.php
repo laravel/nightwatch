@@ -591,15 +591,9 @@ class FilteringTest extends TestCase
         $ingest->assertLatestWrite('query:1.sql', 'insert into "jobs" ("queue", "attempts", "reserved_at", "available_at", "created_at", "payload") values (?, ?, ?, ?, ?, ?)');
         $ingest->assertLatestWrite('request:0.url', 'http://localhost/test');
         [$first, $second, $third] = DB::table('jobs')->orderBy('id')->pluck('payload');
-        if (Compatibility::$contextExists) {
-            $this->assertStringContainsString('"nightwatch_should_sample":"b:1;"', $first);
-            $this->assertStringContainsString('"nightwatch_should_sample":"b:0;"', $second);
-            $this->assertStringContainsString('"nightwatch_should_sample":"b:1;"', $third);
-        } else {
-            $this->assertStringContainsString('"nightwatch_should_sample":true', $first);
-            $this->assertStringContainsString('"nightwatch_should_sample":false', $second);
-            $this->assertStringContainsString('"nightwatch_should_sample":true', $third);
-        }
+        $this->assertStringContainsString('"nightwatch_should_sample":"b:1;"', $first);
+        $this->assertStringContainsString('"nightwatch_should_sample":"b:0;"', $second);
+        $this->assertStringContainsString('"nightwatch_should_sample":"b:1;"', $third);
     }
 
     public function test_it_can_redact_cache_events(): void

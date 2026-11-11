@@ -32,7 +32,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
-use Laravel\Nightwatch\Compatibility;
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Vapor\Console\Commands\VaporWorkCommand;
 use Laravel\Vapor\Events\LambdaEvent;
@@ -172,7 +171,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }
@@ -226,7 +225,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Job failed',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }
@@ -280,7 +279,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }
@@ -334,7 +333,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => 'Job failed',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }
@@ -401,7 +400,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }
@@ -456,7 +455,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }
@@ -510,7 +509,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
         $ingest->assertLatestWrite('mail:*', [
@@ -520,7 +519,7 @@ class JobAttemptSensorTest extends TestCase
                 'timestamp' => 946688523.459289,
                 'deploy' => 'v1.2.3',
                 'server' => 'web-01',
-                '_group' => Compatibility::$mailableClassNameCapturable ? hash('xxh128', 'Tests\Feature\Sensors\JobAttemptMail') : hash('xxh128', ''),
+                '_group' => hash('xxh128', 'Tests\Feature\Sensors\JobAttemptMail'),
                 'trace_id' => '0d3ca349-e222-4982-ac23-2343692de258',
                 'execution_source' => 'job',
                 'execution_id' => $attemptId,
@@ -528,7 +527,7 @@ class JobAttemptSensorTest extends TestCase
                 'execution_stage' => 'action',
                 'user' => '',
                 'mailer' => 'array',
-                'class' => Compatibility::$mailableClassNameCapturable ? 'Tests\Feature\Sensors\JobAttemptMail' : '',
+                'class' => 'Tests\Feature\Sensors\JobAttemptMail',
                 'subject' => 'Job Attempt Mail',
                 'to' => 1,
                 'cc' => 0,
@@ -627,7 +626,7 @@ class JobAttemptSensorTest extends TestCase
                 'hydrated_models' => 0,
                 'peak_memory_usage' => 1234,
                 'exception_preview' => '',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
         $ingest->assertLatestWrite('exception:0', function ($exception) use ($line) {
@@ -648,8 +647,6 @@ class JobAttemptSensorTest extends TestCase
     #[DataProvider('workCommands')]
     public function test_it_captures_context($workCommand, $workOptions, $simulating): void
     {
-        $this->markTestSkippedUnless(Compatibility::$contextExists, 'This test requires the Laravel Context.');
-
         $this->setUpEnvironment($workCommand);
         $ingest = $this->fakeIngest();
 
@@ -1087,7 +1084,7 @@ class JobAttemptSensorTest extends TestCase
                 'exception_preview' => version_compare(Application::VERSION, '13.6.0', '>=')
                     ? 'Illuminate\Queue\CallQueuedHandler::commandShouldBeDebounced(): The script tried to access a property on an incomplete object. Please ensure that the class definition "Tests\Feature\Sensors\MissingJob" of the object you are trying to operate on was loaded'
                     : 'Job is incomplete class: {"__PHP_Incomplete_Class_Name":"Tests\\\\Feature\\\\Sensors\\\\MissingJob"}',
-                'context' => Compatibility::$contextExists ? '{}' : '',
+                'context' => '{}',
             ],
         ]);
     }

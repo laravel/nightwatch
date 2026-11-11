@@ -58,8 +58,6 @@ use Laravel\Nightwatch\Hooks\LogoutListener;
 use Laravel\Nightwatch\Hooks\MailListener;
 use Laravel\Nightwatch\Hooks\NotificationListener;
 use Laravel\Nightwatch\Hooks\OctaneListener;
-use Laravel\Nightwatch\Hooks\PolyfillContextDehydration;
-use Laravel\Nightwatch\Hooks\PolyfillContextHydration;
 use Laravel\Nightwatch\Hooks\PreparingResponseListener;
 use Laravel\Nightwatch\Hooks\QueryExecutedListener;
 use Laravel\Nightwatch\Hooks\QueuedJobListener;
@@ -385,12 +383,7 @@ final class NightwatchServiceProvider extends ServiceProvider
 
         Queue::createPayloadUsing(new CreateQueuePayloadHandler($core));
 
-        if (Compatibility::$contextExists) {
-            Context::dehydrating(new ContextDehydratingHandler($core));
-        } else {
-            Queue::createPayloadUsing(new PolyfillContextDehydration($core));
-            $events->listen((new PolyfillContextHydration($core))(...));
-        }
+        Context::dehydrating(new ContextDehydratingHandler($core));
 
         //
         // -------------------------------------------------------------------------
@@ -522,10 +515,6 @@ final class NightwatchServiceProvider extends ServiceProvider
 
             $listener = new LivewireListener($core);
 
-            // Livewire 2
-            Livewire::listen('component.hydrate.subsequent', $listener->componentHydrateSubsequent(...));
-
-            // Livewire 3
             Livewire::listen('hydrate', $listener->hydrate(...));
         });
     }

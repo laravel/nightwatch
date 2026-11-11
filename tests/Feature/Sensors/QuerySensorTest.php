@@ -18,13 +18,11 @@ use Laravel\Nightwatch\Compatibility;
 use MongoDB\Laravel\Connection as MongoDbConnection;
 use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
-use SingleStore\Laravel\Connect\Connection as LegacySingleStoreConnection;
 use SingleStore\Laravel\Connect\SingleStoreConnection;
 use Tests\TestCase;
 
 use function array_merge;
 use function base64_encode;
-use function class_exists;
 use function dirname;
 use function fake;
 use function hash;
@@ -187,13 +185,11 @@ class QuerySensorTest extends TestCase
             new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql']),
         ];
 
-        if (class_exists(MariaDbConnection::class)) {
-            yield 'mariadb' => [
-                'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
-                hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
-                new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
-            ];
-        }
+        yield 'mariadb' => [
+            'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
+            hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
+            new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
+        ];
 
         yield 'pgsql' => [
             'select * from "users" where "users"."id" in (1, 2, 3) and "id" in (?, ?, ?)',
@@ -216,10 +212,7 @@ class QuerySensorTest extends TestCase
         yield 'singlestore' => [
             'select * from `users` where `users`.`id` in (1, 2, 3) and `id` in (?, ?, ?)',
             hash('xxh128', 'foo,select * from `users` where `users`.`id` in (...?) and `id` in (...?)'),
-            match (true) {
-                class_exists(SingleStoreConnection::class) => new SingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
-                class_exists(LegacySingleStoreConnection::class) => new LegacySingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
-            },
+            new SingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
         ];
 
         yield 'mongodb' => [
@@ -265,13 +258,11 @@ class QuerySensorTest extends TestCase
             new MySqlConnection('test', config: ['name' => 'foo', 'driver' => 'mysql']),
         ];
 
-        if (class_exists(MariaDbConnection::class)) {
-            yield 'mariadb' => [
-                'insert into `users` (`id`, `name`) values (?, ?), (?, ?)',
-                hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
-                new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
-            ];
-        }
+        yield 'mariadb' => [
+            'insert into `users` (`id`, `name`) values (?, ?), (?, ?)',
+            hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
+            new MariaDbConnection('test', config: ['name' => 'foo', 'driver' => 'mariadb']),
+        ];
 
         yield 'pgsql' => [
             'insert into "users" ("id", "name") values (?, ?), (?, ?)',
@@ -294,10 +285,7 @@ class QuerySensorTest extends TestCase
         yield 'singlestore' => [
             'insert into `users` (`id`, `name`) values (?, ?)',
             hash('xxh128', 'foo,insert into `users` (`id`, `name`) values ...'),
-            match (true) {
-                class_exists(SingleStoreConnection::class) => new SingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
-                class_exists(LegacySingleStoreConnection::class) => new LegacySingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
-            },
+            new SingleStoreConnection('test', config: ['name' => 'foo', 'driver' => 'singlestore']),
         ];
 
         yield 'mongodb' => [

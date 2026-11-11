@@ -5,8 +5,6 @@ namespace Tests\Unit\Hooks;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Routing\Route;
-use Laravel\Nightwatch\Compatibility;
-use Laravel\Nightwatch\Hooks\GlobalMiddleware;
 use Laravel\Nightwatch\Hooks\RouteMatchedListener;
 use Laravel\Nightwatch\Hooks\RouteMiddleware;
 use Tests\TestCase;
@@ -24,11 +22,7 @@ class RouteMatchedListenerTest extends TestCase
         $handler = new RouteMatchedListener($this->core);
         $handler($event);
 
-        if (Compatibility::$terminatingEventExists) {
-            $this->assertSame(['api', RouteMiddleware::class], $route->action['middleware']);
-        } else {
-            $this->assertSame([GlobalMiddleware::class, 'api', RouteMiddleware::class], $route->action['middleware']);
-        }
+        $this->assertSame(['api', RouteMiddleware::class], $route->action['middleware']);
     }
 
     public function test_it_gracefully_handles_exceptions(): void

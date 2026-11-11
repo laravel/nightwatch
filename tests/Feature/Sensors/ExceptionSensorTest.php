@@ -900,18 +900,16 @@ class ExceptionSensorTest extends TestCase
             ], $frames->firstWhere('file', 'src/Hooks/RouteMiddleware.php:34')['code']);
 
             $this->assertEquals([
-                48 => '            $this->nightwatch->captureRequestPreview($request);',
-                49 => '        } catch (Throwable $e) {',
-                50 => '            $this->nightwatch->report($e, handled: true);',
-                51 => '        }',
-                52 => '',
-                53 => '        return $next($request);',
-                54 => '    }',
-                55 => '',
-                56 => '    public function terminate(Request $request, Response $response): void',
-                57 => '    {',
-                58 => '        if ($this->hasTerminated || Compatibility::$terminatingEventExists) {',
-            ], $frames->firstWhere('file', 'src/Hooks/GlobalMiddleware.php:53')['code']);
+                43 => '            $this->nightwatch->captureRequestPreview($request);',
+                44 => '        } catch (Throwable $e) {',
+                45 => '            $this->nightwatch->report($e, handled: true);',
+                46 => '        }',
+                47 => '',
+                48 => '        return $next($request);',
+                49 => '    }',
+                50 => '}',
+                51 => '',
+            ], $frames->firstWhere('file', 'src/Hooks/GlobalMiddleware.php:48')['code']);
 
             return true;
         });
