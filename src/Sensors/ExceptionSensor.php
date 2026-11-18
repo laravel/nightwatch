@@ -73,10 +73,6 @@ final class ExceptionSensor
 
         $handled ??= $this->wasManuallyReported($normalizedException);
 
-        if (! $handled) {
-            $this->executionState->exceptionPreview = $normalizedException->getMessage();
-        }
-
         return [
             $record = new Exception(
                 class: $normalizedException::class,
@@ -88,6 +84,10 @@ final class ExceptionSensor
             ),
             function () use ($nowMicrotime, $record, $normalizedException) {
                 $this->executionState->exceptions++;
+
+                if (! $record->handled) {
+                    $this->executionState->exceptionPreview = $record->message;
+                }
 
                 return [
                     'v' => 3,
