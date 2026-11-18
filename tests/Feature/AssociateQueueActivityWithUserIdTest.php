@@ -118,4 +118,26 @@ class AssociateQueueActivityWithUserIdTest extends TestCase
         $ingest->assertWrittenTimes(1);
         $ingest->assertLatestWrite('job-attempt:0.user', '123');
     }
+
+    #[WithEnv('NIGHTWATCH_FORCE_COMMAND', '1')]
+    #[WithEnv('NIGHTWATCH_FORCE_REQUEST', '0')]
+    public function test_it_does_not_leak_the_authenticated_user_between_jobs(): void
+    {
+        $ingest = $this->fakeIngest();
+        $ada = User::factory()->create(['id' => 123]);
+        $grace = User::factory()->create(['id' => 456]);
+        dispatch(fn () => Auth::onceUsingId($ada->id));
+        dispatch(fn () => Auth::onceUsingId($grace->id));
+
+        Artisan::call('queue:work', [
+            '--max-jobs' => 2,
+            '--sleep' => 0,
+            '--stop-when-empty' => true,
+            '--tries' => 1,
+        ]);
+
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'job-attempt:0.user', '123');
+        $ingest->assertWrite(1, 'job-attempt:0.user', '456');
+    }
 }

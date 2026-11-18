@@ -118,5 +118,6 @@ final class CommandState
         $this->cacheEvents = 0;
         $this->hydratedModels = 0;
         $this->exceptionPreview = '';
+        $this->user->flush();
     }
 }
