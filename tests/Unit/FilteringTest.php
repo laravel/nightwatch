@@ -738,6 +738,23 @@ class FilteringTest extends TestCase
         $ingest->assertLatestWrite('request:0.ip', '127.0.*.*');
     }
 
+    public function test_it_redacts_the_exception_preview_with_the_exception_redaction_callbacks(): void
+    {
+        $ingest = $this->fakeIngest();
+        Nightwatch::redactExceptions(function (Exception $exception) {
+            $exception->message = str_replace('secret', '***', $exception->message);
+        });
+        Route::get('/users', function (): void {
+            throw new RuntimeException('Duplicate key: secret');
+        });
+
+        $this->get('/users')->assertServerError();
+
+        $ingest->assertWrittenTimes(2);
+        $ingest->assertWrite(0, 'exception:0.message', 'Duplicate key: ***');
+        $ingest->assertLatestWrite('request:0.exception_preview', 'Duplicate key: ***');
+    }
+
     public function test_it_restores_context_sampling_state_when_ignoring(): void
     {
         Compatibility::removeSamplingFromContext();
