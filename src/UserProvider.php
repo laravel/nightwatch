@@ -26,6 +26,8 @@ final class UserProvider
      */
     private ?array $resolvedDetails;
 
+    private ?Authenticatable $resolvedUser = null;
+
     /**
      * @var (callable(callable(AuthManager): mixed): mixed)
      */
@@ -131,9 +133,12 @@ final class UserProvider
             return null;
         }
 
-        if (isset($this->resolvedDetails)) {
+        if (isset($this->resolvedDetails) && $this->resolvedUser === $user) {
             return $this->resolvedDetails;
         }
+
+        $this->resolvedUser = $user;
+        $this->resolvedDetails = null;
 
         try {
             $id = $user->getAuthIdentifier();
@@ -168,6 +173,7 @@ final class UserProvider
     {
         $this->rememberedUser = null;
         $this->resolvedDetails = null;
+        $this->resolvedUser = null;
         $this->alreadyReportedResolvingUserIdException = false;
     }
 
