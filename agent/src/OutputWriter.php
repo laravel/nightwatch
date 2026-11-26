@@ -31,11 +31,6 @@ class OutputWriter
         }
     }
 
-    /**
-     * The stream's blocking mode is shared with every process that inherited
-     * it, so it stays blocking. Writing only once the loop reports the stream
-     * writable, and never more than PIPE_BUF, keeps a pipe from blocking.
-     */
     private function writeAsync(string $message): void
     {
         if ($this->buffer === '') {
