@@ -5,10 +5,13 @@ namespace Laravel\NightwatchAgent;
 use function fflush;
 use function fwrite;
 use function Nightwatch\fwrite_all;
+use function strlen;
 use function substr;
 
 class OutputWriter
 {
+    private const MAX_BUFFER = 1_048_576;
+
     private string $buffer = '';
 
     /**
@@ -37,14 +40,16 @@ class OutputWriter
             $this->loop->addWriteStream($this->stream, $this->flush(...));
         }
 
-        $this->buffer .= $message;
+        if (strlen($this->buffer) < self::MAX_BUFFER) {
+            $this->buffer .= $message;
+        }
     }
 
     private function flush(): void
     {
         $written = @fwrite($this->stream, substr($this->buffer, 0, 4096));
 
-        $this->buffer = $written ? substr($this->buffer, $written) : '';
+        $this->buffer = $written === false ? '' : substr($this->buffer, $written);
 
         if ($this->buffer === '') {
             $this->loop->removeWriteStream($this->stream);
